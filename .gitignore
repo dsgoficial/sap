@@ -1,0 +1,13 @@
+
+#Log files
+*.log
+.vscode
+
+# APIDOC
+
+src/apidoc
+
+# Dependency directories
+node_modules
+
+necessidades.txt
