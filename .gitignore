@@ -11,3 +11,5 @@ src/apidoc
 node_modules
 
 necessidades.txt
+
+.eslintrc.js

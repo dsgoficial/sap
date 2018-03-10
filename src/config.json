@@ -4,5 +4,6 @@
   "db_port": "5432",
   "db_macro": "macrocontrole",
   "db_user": "controle_app",
-  "db_password": "controle_app"
+  "db_password": "controle_app",
+  "secret": "tassofragoso"
 }

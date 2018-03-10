@@ -1,9 +1,8 @@
-/*
 const Joi = require('joi')
 
-const schema = Joi.object().keys({
-  nome: Joi.string().alphanum().min(1).max(255).required()
+const finaliza = Joi.object().keys({
+  subfase_etapa_id: Joi.number().integer().strict().required(),
+  unidade_trabalho_id: Joi.number().integer().strict().required()
 })
 
-module.exports = schema
-*/
+module.exports.finaliza = finaliza

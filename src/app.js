@@ -27,11 +27,12 @@ app.use(
 
 //Helmet Protection
 app.use(helmet());
-app.use(helmet.noCache()); //Disables cache
+//Disables cache
+app.use(helmet.noCache());
 
 //Lower case query parameters
 app.use((req, res, next) => {
-  for (var key in req.query) {
+  for (let key in req.query) {
     req.query[key.toLowerCase()] = req.query[key];
   }
   next();
@@ -48,6 +49,12 @@ app.get("/", (req, res, next) => {
 app.use("/docs", express.static(path.join(__dirname, "apidoc")));
 
 //Routes
+const loginRoute = require("./login/login_route");
+app.use("/login", loginRoute);
+
+const loginMiddleware = require("./login/login_middleware");
+app.use(loginMiddleware)
+
 const distribuicaoRoute = require("./distribuicao_atividades/distribuicao_route");
 app.use("/distribuicao", distribuicaoRoute);
 
@@ -62,6 +69,7 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   console.log(err.message); //FIXME LOG ERROR
   res.status(err.status || 500).json({
+    success: false,
     message: "Error",
     error: err.message
   });
