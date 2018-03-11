@@ -3,9 +3,9 @@ const config = require("../config.json");
 const jwtSecret = config.secret;
 
 //middleware para verificar o JWT
-var verifyToken = function(req, res, next) {
+const verifyToken = function(req, res, next) {
   //verifica o header authorization para pegar o token
-  var token = req.body.token || req.query.token || req.headers['x-access-token'] || req.headers["authorization"];
+  const token = req.body.token || req.query.token || req.headers['x-access-token'] || req.headers["authorization"];
   //decode token
   if (token) {
     //verifica se o token é valido
@@ -17,8 +17,8 @@ var verifyToken = function(req, res, next) {
           message: "Failed to authenticate token."
         });
       } else {
-        // se tudo estiver ok segue para a próxima rota
-        req.usuarioId = decoded;
+        // se tudo estiver ok segue para a próxima rota com o atributo usuarioId
+        req.usuarioId = decoded.id;
         next();
       }
     });

@@ -1,4 +1,4 @@
-const db = require("../utils/database_connection");
+const db = require("distribuicao_db");
 const controller = {};
 
 const login = async (login, senha) => {

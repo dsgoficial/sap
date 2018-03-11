@@ -53,7 +53,7 @@ const loginRoute = require("./login/login_route");
 app.use("/login", loginRoute);
 
 const loginMiddleware = require("./login/login_middleware");
-app.use(loginMiddleware)
+app.use(loginMiddleware);
 
 const distribuicaoRoute = require("./distribuicao_atividades/distribuicao_route");
 app.use("/distribuicao", distribuicaoRoute);
