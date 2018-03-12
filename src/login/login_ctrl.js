@@ -24,8 +24,9 @@ controller.login = async (usuario, senha) => {
       [usuario]
     );
   } catch (error) {
-    logger.info("Error during login query", {
+    logger.error("Error during login query", {
       context: "login_ctrl",
+      usuario: usuario,
       trace: error
     });
     let err = new Error("Falha durante autenticação.");

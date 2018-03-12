@@ -18,7 +18,7 @@ const verifyToken = function(req, res, next) {
         });
       } else {
         // se tudo estiver ok segue para a próxima rota com o atributo usuarioId
-        req.usuarioId = decoded.id;
+        req.body.usuario_id = decoded.id;
         next();
       }
     });
