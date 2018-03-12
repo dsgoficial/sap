@@ -13,15 +13,12 @@ const router = express.Router();
 router.post("/finaliza", (req, res, next) => {
   let validationResult = Joi.validate(req.body, producaoCtrl);
   if (validationResult.error) {
-    logger.error("Finaliza Post validation error", {
-      context: "distribuicao_route",
-      body: req.body,
-      status: 400
-    });
-    return res.status(400).json({
-      sucess: false,
-      message: "Finalizar deve conter subfase_etapa_id e unidade_trabalho_id."
-    });
+    const err = new Error("Finaliza Post validation error");
+    err.status = 400;
+    err.context = "distribuicao_route";
+    err.information = {};
+    err.information.body = req.body;
+    next(err);
   }
 
   let { finalizaError } = producaoCtrl.finaliza(
@@ -30,10 +27,7 @@ router.post("/finaliza", (req, res, next) => {
     req.body.unidade_trabalho_id
   );
   if (finalizaError) {
-    return res.status(finalizaError.status).json({
-      sucess: false,
-      message: finalizaError.message
-    });
+    next(finalizaError)
   }
 
   logger.info("Atividade finalizada", {
@@ -52,10 +46,7 @@ router.post("/finaliza", (req, res, next) => {
 router.get("/verifica", (req, res, next) => {
   let { verificaError, dados } = producaoCtrl.verifica(req.usuario_id);
   if (verificaError) {
-    return res.status(verificaError.status).json({
-      sucess: false,
-      message: verificaError.message
-    });
+    next(verificaError)
   }
 
   if (dados) {
@@ -85,10 +76,7 @@ router.get("/verifica", (req, res, next) => {
 router.post("/inicia", (req, res, next) => {
   let { iniciaError, dados } = inicia.verifica(req.usuario_id);
   if (iniciaError) {
-    return res.status(iniciaError.status).json({
-      sucess: false,
-      message: iniciaError.message
-    });
+    next(iniciaError)
   }
 
   if (dados) {

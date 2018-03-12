@@ -13,23 +13,17 @@ const router = express.Router();
 router.post("/", (req, res, next) => {
   let validationResult = Joi.validate(req.body, loginModel);
   if (validationResult.error) {
-    logger.error("Login Post validation error", {
-      context: "login_route",
-      body: req.body
-    });
-    return res.status(400).json({
-      sucess: false,
-      message: "Login deve conter usuario e senha.",
-      status: 400
-    });
+    const err = new Error("Login Post validation error");
+    err.status = 400;
+    err.context = "login_route";
+    err.information = {};
+    err.information.body = req.body;
+    next(err);
   }
 
   let { loginError, token } = loginCtrl.login(req.body.usuario, req.body.senha);
   if (loginError) {
-    return res.status(loginError.status).json({
-      sucess: false,
-      message: loginError.message
-    });
+    next(loginError);
   }
 
   logger.info("Authentication success", {

@@ -58,20 +58,25 @@ app.use(loginMiddleware);
 const distribuicaoRoute = require("./distribuicao_atividades/distribuicao_route");
 app.use("/distribuicao", distribuicaoRoute);
 
-// Catch 404 and forward to error handler //FIXME
 app.use((req, res, next) => {
   const err = new Error("Not Found");
   err.status = 404;
+  err.context = "app";
+  err.information = {};
+  const fullUrl = req.protocol + "://" + req.get("host") + req.originalUrl;
+  err.information.url = fullUrl;
   next(err);
 });
 
-// Error handler
+const logger = require("./logger/logger");
 app.use((err, req, res, next) => {
-  console.log(err.message); //FIXME LOG ERROR
+  logger.error(err.message, {
+    context: err.context,
+    information: err.information
+  });
   res.status(err.status || 500).json({
     success: false,
-    message: "Error",
-    error: err.message
+    message: err.message
   });
 });
 

@@ -73,13 +73,12 @@ const calculaFila = async usuario => {
     }
     return { erro: null, prioridade: null };
   } catch (error) {
-    logger.error("Error during queue calculation", {
-      context: "distribuicao_ctrl",
-      usuario_id: usuario,
-      trace: error
-    });
-    let err = new Error("Falha durante calculo da fila.");
+    const err = new Error("Falha durante calculo da fila.");
     err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.usuario_id: usuario_id,
+    err.information.trace = error;
     return { erro: err, prioridade: null };
   }
 };
@@ -180,14 +179,13 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
     });
     return { erro: null, dados: info };
   } catch (error) {
-    logger.error("Error during dadosProducao", {
-      context: "distribuicao_ctrl",
-      subfase_etapa_id: subfase_etapa_id,
-      unidade_trabalho_id: unidade_trabalho_id,
-      trace: error
-    });
-    let err = new Error("Falha durante dadosProducao.");
+    const err = new Error("Falha durante calculo dos dados de Producao.");
     err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.subfase_etapa_id: subfase_etapa_id,
+    err.information.unidade_trabalho_id: unidade_trabalho_id,
+    err.information.trace = error;
     return { erro: err, dados: null };
   }
 };
@@ -217,13 +215,12 @@ controller.verifica = async usuario_id => {
       });
     }
   } catch (error) {
-    logger.error("Error during verification query", {
-      context: "distribuicao_ctrl",
-      usuario_id: usuario_id,
-      trace: error
-    });
-    let err = new Error("Falha durante tentativa de verificação.");
+    const err = new Error("Falha durante tentativa de verificação.");
     err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.usuario_id: usuario_id,
+    err.information.trace = error;
     return { verificaError: err, dados: null };
   }
 };
@@ -244,15 +241,14 @@ controller.finaliza = async (
 
     return { finalizaError: null };
   } catch (error) {
-    logger.error("Error during finalizing query", {
-      context: "distribuicao_ctrl",
-      usuario_id: usuario_id,
-      subfase_etapa_id: subfase_etapa_id,
-      unidade_trabalho_id: unidade_trabalho_id,
-      trace: error
-    });
-    let err = new Error("Falha durante tentativa de finalização.");
+    const err = new Error("Falha durante tentativa de finalização.");
     err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.usuario_id: usuario_id,
+    err.information.subfase_etapa_id: subfase_etapa_id,
+    err.information.unidade_trabalho_id: unidade_trabalho_id,
+    err.information.trace = error;
     return { finalizaError: err };
   }
 };
@@ -309,13 +305,12 @@ controller.inicia = async usuario_id => {
       return { iniciaError: null, dados };
     })
     .catch(error => {
-      logger.error("Error during initializing query", {
-        context: "distribuicao_ctrl",
-        usuario_id: usuario_id,
-        trace: error
-      });
-      let iniciaError = new Error("Falha durante tentativa de inicialização.");
-      iniciaError.status = 500;
+      const err = new Error("Falha durante tentativa de inicialização.");
+      err.status = 500;
+      err.context = "distribuicao_ctrl";
+      err.information = {};
+      err.information.usuario_id: usuario_id,
+      err.information.trace = error;
       return { iniciaError, dados: null };
     });
 };
