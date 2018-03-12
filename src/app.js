@@ -63,21 +63,22 @@ app.use((req, res, next) => {
   err.status = 404;
   err.context = "app";
   err.information = {};
-  const fullUrl = req.protocol + "://" + req.get("host") + req.originalUrl;
-  err.information.url = fullUrl;
+  err.information.url = req.protocol + "://" + req.get("host") + req.originalUrl;
   next(err);
 });
 
-const logger = require("./logger/logger");
+const sendJsonAndLog = require("./logger/sendJsonAndLog");
 app.use((err, req, res, next) => {
-  logger.error(err.message, {
-    context: err.context,
-    information: err.information
-  });
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message
-  });
+  status = err.status || 500
+  sendJsonAndLog(
+    false,
+    err.message,
+    err.context,
+    err.information,
+    res,
+    status,
+    null
+  );
 });
 
 module.exports = app;
