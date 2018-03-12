@@ -2,6 +2,7 @@ const express = require("express");
 const Joi = require("joi");
 
 const logger = require("../logger/logger");
+const sendJsonAndLog = require("../logger/sendJsonAndLog");
 
 const loginCtrl = require("./login_ctrl");
 const loginModel = require("./login_model");
@@ -26,16 +27,10 @@ router.post("/", (req, res, next) => {
     next(loginError);
   }
 
-  logger.info("Authentication success", {
-    context: "login_route",
-    usuario: req.body.usuario,
-    status: 200
-  });
-  return res.status(200).json({
-    sucess: true,
-    message: "Token generated",
-    token: token
-  });
+  (sucess,  message,  context,  information,  res,  status = 200,  dados = null)
+
+  sendJsonAndLog(true, "Authentication success", "login_route", null, res, 200, token)
+
 });
 
 module.exports = router;

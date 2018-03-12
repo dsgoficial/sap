@@ -2,6 +2,7 @@ const express = require("express");
 const Joi = require("joi");
 
 const logger = require("../logger/logger");
+const sendJsonAndLog = require("../logger/sendJsonAndLog");
 
 const producaoCtrl = require("./distribuicao_ctrl");
 const producaoModel = require("./distribuicao_model");
@@ -27,80 +28,87 @@ router.post("/finaliza", (req, res, next) => {
     req.body.unidade_trabalho_id
   );
   if (finalizaError) {
-    next(finalizaError)
+    next(finalizaError);
   }
 
-  logger.info("Atividade finalizada", {
-    context: "login_route",
+  let information = {
     usuario_id: req.usuario_id,
     subfase_etapa_id: req.body.subfase_etapa_id,
-    unidade_trabalho_id: req.body.unidade_trabalho_id,
-    status: 200
-  });
-  return res.status(200).json({
-    sucess: true,
-    message: "Atividade finalizada com sucesso."
-  });
+    unidade_trabalho_id: req.body.unidade_trabalho_id
+  };
+  sendJsonAndLog(
+    true,
+    "Atividade finalizada com sucesso.",
+    "distribuicao_route",
+    information,
+    res,
+    200,
+    null
+  );
 });
 
 router.get("/verifica", (req, res, next) => {
   let { verificaError, dados } = producaoCtrl.verifica(req.usuario_id);
   if (verificaError) {
-    next(verificaError)
+    next(verificaError);
   }
 
+  let information = {
+    usuario_id: req.usuario_id
+  };
   if (dados) {
-    logger.info("Atividade em execução retornada.", {
-      context: "login_route",
-      usuario_id: req.usuario_id,
-      status: 200
-    });
-    return res.status(200).json({
-      sucess: true,
-      message: "Atividade em execução retornada.",
-      dados: dados
-    });
+    sendJsonAndLog(
+      true,
+      "Atividade em execução retornada.",
+      "distribuicao_route",
+      information,
+      res,
+      200,
+      dados
+    );
   } else {
-    logger.info("Sem atividade em execução.", {
-      context: "login_route",
-      usuario_id: req.usuario_id,
-      status: 200
-    });
-    return res.status(200).json({
-      sucess: true,
-      message: "Sem atividade em execução."
-    });
+    sendJsonAndLog(
+      true,
+      "Sem atividade em execução.",
+      "distribuicao_route",
+      information,
+      res,
+      200,
+      null
+    );
   }
 });
 
 router.post("/inicia", (req, res, next) => {
   let { iniciaError, dados } = inicia.verifica(req.usuario_id);
   if (iniciaError) {
-    next(iniciaError)
+    next(iniciaError);
   }
 
+  let information = {
+    usuario_id: req.usuario_id
+  };
+
   if (dados) {
-    logger.info("Atividade iniciada.", {
-      context: "login_route",
-      usuario_id: req.usuario_id,
-      status: 200
-    });
-    return res.status(200).json({
-      sucess: true,
-      message: "Atividade iniciada.",
-      dados: dados
-    });
+    sendJsonAndLog(
+      true,
+      "Atividade iniciada.",
+      "distribuicao_route",
+      information,
+      res,
+      200,
+      dados
+    );
   } else {
-    logger.info("Sem atividades disponíveis para iniciar.", {
-      context: "login_route",
-      usuario_id: req.usuario_id,
-      status: 200
-    });
-    return res.status(200).json({
-      sucess: true,
-      message:
-        "O operador não possui unidades de trabalho disponível. Contate o Gerente."
-    });
+    sendJsonAndLog(
+      true,
+      "Sem atividades disponíveis para iniciar.",
+      "distribuicao_route",
+      information,
+      res,
+      200,
+      null
+    );
   }
 });
 
