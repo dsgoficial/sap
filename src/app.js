@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const helmet = require("helmet");
 
+const sendJsonAndLog = require("./logger/sendJsonAndLog");
+
 const app = express();
 app.disable("x-powered-by");
 
@@ -63,13 +65,13 @@ app.use((req, res, next) => {
   err.status = 404;
   err.context = "app";
   err.information = {};
-  err.information.url = req.protocol + "://" + req.get("host") + req.originalUrl;
+  err.information.url =
+    req.protocol + "://" + req.get("host") + req.originalUrl;
   next(err);
 });
 
-const sendJsonAndLog = require("./logger/sendJsonAndLog");
 app.use((err, req, res, next) => {
-  status = err.status || 500
+  status = err.status || 500;
   sendJsonAndLog(
     false,
     err.message,

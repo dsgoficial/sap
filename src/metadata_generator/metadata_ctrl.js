@@ -2,7 +2,7 @@
 /*
 function generateMetadata(req,res,next,projeto,mi,tipo){
     
-    var query = {}    
+    const query = {}    
     query['ram_50k'] = 'SELECT inom, nome, aquisicao, validacao, edicao, area_continua, data_imagem, data_reambulacao, data_processamento FROM producao.ram_50k where mi = $1'
     
     query['sc_25k'] = 'SELECT inom, nome, aquisicao, reambulacao, validacao, edicao, area_continua, data_imagem FROM producao.sc_25k where mi = $1'
@@ -10,9 +10,9 @@ function generateMetadata(req,res,next,projeto,mi,tipo){
     query['ci_25k'] = 'SELECT inom, nome, levantamento_auditoria, aerotriangulacao, restituicao, aquisicao, reambulacao, validacao, edicao, area_continua, data_imagem FROM producao.ci_25k where mi = $1'
 
 
-    var palavra_chave_query = 'SELECT nome, tipo FROM auxiliar.palavra_chave where mi = $1 and projeto = $2'
+    const palavra_chave_query = 'SELECT nome, tipo FROM auxiliar.palavra_chave where mi = $1 and projeto = $2'
 
-    var xmlTemplate = {}
+    const xmlTemplate = {}
     xmlTemplate.vetorial = {}
     xmlTemplate.vetorial['ram_50k'] = 'template_ram_vetorial.xml'
     xmlTemplate.vetorial['sc_25k'] = 'template_sc25k_vetorial.xml'
@@ -23,10 +23,10 @@ function generateMetadata(req,res,next,projeto,mi,tipo){
     xmlTemplate.matricial['sc_25k'] = 'template_sc25k_matricial.xml'
     xmlTemplate.matricial['ci_25k'] = 'template_ci25k_matricial.xml'
     
-    var dados = {}
+    const dados = {}
     
     db_acervo.task(function (t) {
-      var batch = []
+      const batch = []
       batch.push(t.oneOrNone(query[projeto], [mi]))
       batch.push(t.any(palavra_chave_query, [mi, projeto]))
       return t.batch(batch)
@@ -35,11 +35,11 @@ function generateMetadata(req,res,next,projeto,mi,tipo){
         //mi não existe
         return next()
       }
-      var d = new Date();
-      var data_metadado = d.toISOString().split("T")[0];
+      const d = new Date();
+      const data_metadado = d.toISOString().split("T")[0];
 
       if(projeto === "ram_50k"){
-        var dados = {
+        const dados = {
           uuid: uuid(),
           data_metadado: data_metadado,
           nome: data[0].nome,
@@ -63,7 +63,7 @@ function generateMetadata(req,res,next,projeto,mi,tipo){
       }
 
       if(projeto === "sc_25k"){
-        var dados = {
+        const dados = {
           uuid: uuid(),
           data_metadado: data_metadado,
           nome: data[0].nome,
@@ -80,7 +80,7 @@ function generateMetadata(req,res,next,projeto,mi,tipo){
       }
 
       if(projeto === "ci_25k"){
-        var dados = {
+        const dados = {
           uuid: uuid(),
           data_metadado: data_metadado,
           nome: data[0].nome,

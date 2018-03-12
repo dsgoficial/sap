@@ -1,15 +1,15 @@
 /*
 const uuid = require('uuid/v1');
   
-var settings = require('../config.json')
-var promise = require('bluebird')
-var options = {
+const settings = require('../config.json')
+const promise = require('bluebird')
+const options = {
   promiseLib: promise
 }
 
-var pgp = require('pg-promise')(options)
-var db = pgp(settings.connectionStringControle)
-var db_acervo = pgp(settings.connectionStringAcervo)
+const pgp = require('pg-promise')(options)
+const db = pgp(settings.connectionStringControle)
+const db_acervo = pgp(settings.connectionStringAcervo)
 
 //https://github.com/vitaly-t/pg-promise/wiki/Robust-Listeners
 let connection; // global connection for permanent event listeners
@@ -141,8 +141,8 @@ if (!Date.prototype.toISODate) {
 
 if (!Date.prototype.getWeek) {
   (function() {
-    var today = new Date();
-    var onejan = new Date(today.getFullYear(),0,1);
+    const today = new Date();
+    const onejan = new Date(today.getFullYear(),0,1);
 
     Date.prototype.getWeek = function() {
       return Math.ceil(((this-onejan)/86400000 + onejan.getDay()+1)/7);
@@ -152,8 +152,8 @@ if (!Date.prototype.getWeek) {
 }
 
 function getHorasTrabalhadas(req,res,next){
-  var fim;
-  var inicio;
+  const fim;
+  const inicio;
   db.any('SELECT DISTINCT ON (data::date, usuario) data::date as dia, data, usuario FROM microcontrole.dados where data > current_date - interval \'12\' day ORDER BY usuario, data::date DESC, data DESC;')
     .then(function (data) {
       fim = data
@@ -161,14 +161,14 @@ function getHorasTrabalhadas(req,res,next){
     })
     .then(function (data) {
       inicio = data
-      var horasTrabalhadas = {}
+      const horasTrabalhadas = {}
 
       fim.forEach(function(d){
         if(!(d.usuario in horasTrabalhadas)){
           horasTrabalhadas[d.usuario] = {}
         }
 
-        var dataParsed = d.dia.toISODate();
+        const dataParsed = d.dia.toISODate();
 
         if(!(dataParsed in horasTrabalhadas[d.usuario])){
           horasTrabalhadas[d.usuario][dataParsed] = {}
@@ -182,7 +182,7 @@ function getHorasTrabalhadas(req,res,next){
           horasTrabalhadas[d.usuario] = {}
         }
 
-        var dataParsed = d.dia.toISODate();
+        const dataParsed = d.dia.toISODate();
 
         if(!(dataParsed in horasTrabalhadas[d.usuario])){
           horasTrabalhadas[d.usuario][dataParsed] = {}
@@ -199,25 +199,25 @@ function getHorasTrabalhadas(req,res,next){
 }
 
 function getProdClassesSem(req,res,next,classes){
-  var classStr = classes.join(',')
-  var dataCount
-  var dataProd
-  db.any('select usuario, data::date, operacao, count(*) from microcontrole.dados where classe = ANY(\'{' + classStr + '}\'::varchar[]) AND data > current_date - interval \'366\' day group by usuario' + 
+  const classStr = classes.join(',')
+  const dataCount
+  const dataProd
+  db.any('select usuario, data::date, operacao, count(*) from microcontrole.dados where classe = ANY(\'{' + classStr + '}\'::constchar[]) AND data > current_date - interval \'366\' day group by usuario' + 
           ', data::date, operacao order by usuario')
     .then(function (data) {
       dataCount = data
       return db.any('select usuario, data::date, sum(comprimento) as comprimento, sum(vertices) as vertices from microcontrole.dados where ' +
-                  ' classe = ANY(\'{' + classStr + '}\'::varchar[]) AND data > current_date - interval \'366\' day and operacao = \'INSERT\' group by usuario, data::date')
+                  ' classe = ANY(\'{' + classStr + '}\'::constchar[]) AND data > current_date - interval \'366\' day and operacao = \'INSERT\' group by usuario, data::date')
     })
     .then(function (data) {
       dataProd = data
-      var producao = {}
+      const producao = {}
       dataProd.forEach(function(d){
         if(!(d.usuario in producao)){
           producao[d.usuario] = {}
         }
 
-        var dataParsed = d.data.getWeek();
+        const dataParsed = d.data.getWeek();
 
         if(!(dataParsed in producao[d.usuario])){
           producao[d.usuario][dataParsed] = {}
@@ -234,7 +234,7 @@ function getProdClassesSem(req,res,next,classes){
         if(!(d.usuario in producao)){
           producao[d.usuario] = {}
         }
-        var dataParsed = d.data.getWeek();
+        const dataParsed = d.data.getWeek();
         if(!(dataParsed in producao[d.usuario])){
           producao[d.usuario][dataParsed] = {}
         }
@@ -253,25 +253,25 @@ function getProdClassesSem(req,res,next,classes){
 }
 
 function getProdClasses(req,res,next,classes){
-  var classStr = classes.join(',')
-  var dataCount
-  var dataProd
-  db.any('select usuario, data::date, operacao, count(*) from microcontrole.dados where classe = ANY(\'{' + classStr + '}\'::varchar[]) AND data > current_date - interval \'12\' day group by usuario' + 
+  const classStr = classes.join(',')
+  const dataCount
+  const dataProd
+  db.any('select usuario, data::date, operacao, count(*) from microcontrole.dados where classe = ANY(\'{' + classStr + '}\'::constchar[]) AND data > current_date - interval \'12\' day group by usuario' + 
           ', data::date, operacao order by usuario')
     .then(function (data) {
       dataCount = data
       return db.any('select usuario, data::date, sum(comprimento) as comprimento, sum(vertices) as vertices from microcontrole.dados where ' +
-                  'classe = ANY(\'{' + classStr + '}\'::varchar[]) AND data > current_date - interval \'12\' day and operacao = \'INSERT\' group by usuario, data::date')
+                  'classe = ANY(\'{' + classStr + '}\'::constchar[]) AND data > current_date - interval \'12\' day and operacao = \'INSERT\' group by usuario, data::date')
     })
     .then(function (data) {
       dataProd = data
-      var producao = {}
+      const producao = {}
       dataProd.forEach(function(d){
         if(!(d.usuario in producao)){
           producao[d.usuario] = {}
         }
 
-        var dataParsed = d.data.toISODate();
+        const dataParsed = d.data.toISODate();
 
         if(!(dataParsed in producao[d.usuario])){
           producao[d.usuario][dataParsed] = {}
@@ -287,7 +287,7 @@ function getProdClasses(req,res,next,classes){
         if(!(d.usuario in producao)){
           producao[d.usuario] = {}
         }
-        var dataParsed = d.data.toISODate();
+        const dataParsed = d.data.toISODate();
         if(!(dataParsed in producao[d.usuario])){
           producao[d.usuario][dataParsed] = {}
         }
@@ -324,14 +324,14 @@ function getOperadoresDia(req,res,next){
 
 function getGridVeg(req,res,next,categoria){
 
-  var grids = {}
+  const grids = {}
   db.any('select u.nome_guerra as operador, ut.nome as unidade_trabalho from macrocontrole.execucao_etapa as ee ' + 
   ' INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id' +
   ' LEFT JOIN macrocontrole.usuario AS u ON u.id = ee.operador_atual' +
   ' where ee.data_inicio is not null and ee.data_fim is null, ee.etapa_subfase_id = $1', [categoria])
     .then(function (listUt) {
       db.task(function (t) {
-        var batch = []
+        const batch = []
         listaUt.forEach(function(lista){
           batch.push(t.any('SELECT row, col, controle FROM microcontrole.prod_grade_controle_a where categoria = $1 and unidade_trabalho = $2', [categoria, lista.unidade_trabalho]))
         })      

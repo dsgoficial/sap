@@ -1,5 +1,5 @@
 /*
-  var nunjucks = require('nunjucks');
+  const nunjucks = require('nunjucks');
   app.set('templates', path.join(__dirname, 'src', 'templates'));  
   nunjucks.configure(path.join(__dirname, 'src', 'templates'), {
     autoescape: true,

@@ -1,8 +1,8 @@
 /*
   function getRtm(req,res,next){
-    var rtm = {}
+    const rtm = {}
     db_acervo.task(function (t) {
-      var batch = []
+      const batch = []
       batch.push(t.any('SELECT mi, inom, nome, bloco, levantamento_auditoria, aerotriangulacao, restituicao, aquisicao, reambulacao, validacao, edicao, area_continua, bdgex_matricial, bdgex_vetorial FROM producao.ci_25k  ORDER BY mi'))
       batch.push(t.any('SELECT mi, inom, nome, vetorizacao, validacao, area_continua, bdgex_vetorial FROM producao.pcad_50k  ORDER BY mi'))
       batch.push(t.any('SELECT mi, inom, bloco, nome, aquisicao, validacao, edicao, area_continua, bdgex_matricial, bdgex_vetorial FROM producao.ram_50k  ORDER BY mi'))
