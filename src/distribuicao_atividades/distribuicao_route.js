@@ -10,7 +10,7 @@ const router = express.Router();
 
 //FIXME APIDOC
 
-router.post("/finaliza", (req, res, next) => {
+router.post("/finaliza", async (req, res, next) => {
   let validationResult = Joi.validate(req.body, producaoModel.finaliza);
   if (validationResult.error) {
     const err = new Error("Finaliza Post validation error");
@@ -21,7 +21,7 @@ router.post("/finaliza", (req, res, next) => {
     return next(err);
   }
 
-  let { finalizaError } = producaoCtrl.finaliza(
+  let { finalizaError } = await producaoCtrl.finaliza(
     req.usuario_id,
     req.body.subfase_etapa_id,
     req.body.unidade_trabalho_id
@@ -46,8 +46,8 @@ router.post("/finaliza", (req, res, next) => {
   );
 });
 
-router.get("/verifica", (req, res, next) => {
-  let { verificaError, dados } = producaoCtrl.verifica(req.usuario_id);
+router.get("/verifica", async (req, res, next) => {
+  let { verificaError, dados } = await producaoCtrl.verifica(req.usuario_id);
   if (verificaError) {
     return next(verificaError);
   }
@@ -78,8 +78,8 @@ router.get("/verifica", (req, res, next) => {
   }
 });
 
-router.post("/inicia", (req, res, next) => {
-  let { iniciaError, dados } = inicia.verifica(req.usuario_id);
+router.post("/inicia", async (req, res, next) => {
+  let { iniciaError, dados } = await inicia.verifica(req.usuario_id);
   if (iniciaError) {
     return next(iniciaError);
   }

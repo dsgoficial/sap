@@ -14,7 +14,7 @@
   "scripts": {
     "apidoc": "gulp apidoc",
     "dev": "nodemon src/index.js",
-    "production": "pm2 start src/index.js --name controle-producao"
+    "production": "pm2 start src/index.js --name sap"
   },
   "keywords": [
     "Controle de Produção",
@@ -40,6 +40,7 @@
     "winston-daily-rotate-file": "^2.0.0-rc.2"
   },
   "devDependencies": {
+    "apidoc": "^0.17.6",
     "gulp": "^3.9.1",
     "gulp-apidoc": "^0.2.7",
     "nodemon": "^1.17.1"

@@ -226,7 +226,7 @@ CREATE TABLE macrocontrole.camada(
 	nome VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE macrocontrole.propriedades_camada(
+CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	filtro TEXT,
 	geometria_editavel BOOLEAN NOT NULL,
@@ -235,6 +235,20 @@ CREATE TABLE macrocontrole.propriedades_camada(
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
+CREATE TABLE macrocontrole.tipo_microcontrole(
+	code SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
+(1, 'Monitoramento do canvas'),
+(2, 'Monitoramento da feição');
+
+CREATE TABLE macrocontrole.perfil_monitoramento(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tipo_microcontrole INTEGER REFERENCES macrocontrole.tipo_microcontrole (code),
+	camada_id INTEGER REFERENCES macrocontrole.camada (id),
+);
 --##########################################
 
 
