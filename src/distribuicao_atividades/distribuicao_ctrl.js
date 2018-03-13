@@ -1,5 +1,4 @@
 const db = require("./distribuicao_db");
-const logger = require("../logger/logger");
 
 const controller = {};
 

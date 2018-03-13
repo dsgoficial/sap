@@ -1,7 +1,6 @@
 const express = require("express");
 const Joi = require("joi");
 
-const logger = require("../logger/logger");
 const sendJsonAndLog = require("../logger/sendJsonAndLog");
 
 const producaoCtrl = require("./distribuicao_ctrl");
@@ -12,14 +11,14 @@ const router = express.Router();
 //FIXME APIDOC
 
 router.post("/finaliza", (req, res, next) => {
-  let validationResult = Joi.validate(req.body, producaoCtrl);
+  let validationResult = Joi.validate(req.body, producaoModel.finaliza);
   if (validationResult.error) {
     const err = new Error("Finaliza Post validation error");
     err.status = 400;
     err.context = "distribuicao_route";
     err.information = {};
     err.information.body = req.body;
-    next(err);
+    return next(err);
   }
 
   let { finalizaError } = producaoCtrl.finaliza(
@@ -28,7 +27,7 @@ router.post("/finaliza", (req, res, next) => {
     req.body.unidade_trabalho_id
   );
   if (finalizaError) {
-    next(finalizaError);
+    return next(finalizaError);
   }
 
   let information = {
@@ -36,7 +35,7 @@ router.post("/finaliza", (req, res, next) => {
     subfase_etapa_id: req.body.subfase_etapa_id,
     unidade_trabalho_id: req.body.unidade_trabalho_id
   };
-  sendJsonAndLog(
+  return sendJsonAndLog(
     true,
     "Atividade finalizada com sucesso.",
     "distribuicao_route",
@@ -50,14 +49,14 @@ router.post("/finaliza", (req, res, next) => {
 router.get("/verifica", (req, res, next) => {
   let { verificaError, dados } = producaoCtrl.verifica(req.usuario_id);
   if (verificaError) {
-    next(verificaError);
+    return next(verificaError);
   }
 
   let information = {
     usuario_id: req.usuario_id
   };
   if (dados) {
-    sendJsonAndLog(
+    return sendJsonAndLog(
       true,
       "Atividade em execução retornada.",
       "distribuicao_route",
@@ -67,7 +66,7 @@ router.get("/verifica", (req, res, next) => {
       dados
     );
   } else {
-    sendJsonAndLog(
+    return sendJsonAndLog(
       true,
       "Sem atividade em execução.",
       "distribuicao_route",
@@ -82,7 +81,7 @@ router.get("/verifica", (req, res, next) => {
 router.post("/inicia", (req, res, next) => {
   let { iniciaError, dados } = inicia.verifica(req.usuario_id);
   if (iniciaError) {
-    next(iniciaError);
+    return next(iniciaError);
   }
 
   let information = {
@@ -90,7 +89,7 @@ router.post("/inicia", (req, res, next) => {
   };
 
   if (dados) {
-    sendJsonAndLog(
+    return sendJsonAndLog(
       true,
       "Atividade iniciada.",
       "distribuicao_route",
@@ -100,7 +99,7 @@ router.post("/inicia", (req, res, next) => {
       dados
     );
   } else {
-    sendJsonAndLog(
+    return sendJsonAndLog(
       true,
       "Sem atividades disponíveis para iniciar.",
       "distribuicao_route",

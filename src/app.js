@@ -43,6 +43,7 @@ app.use((req, res, next) => {
 //informa que o serviço de dados do SAP está operacional
 app.get("/", (req, res, next) => {
   res.status(200).json({
+    sucess: true,
     message: "Sistema de Apoio a produção operacional"
   });
 });
@@ -50,7 +51,6 @@ app.get("/", (req, res, next) => {
 //Serve APIDoc
 app.use("/docs", express.static(path.join(__dirname, "apidoc")));
 
-//Routes
 const loginRoute = require("./login/login_route");
 app.use("/login", loginRoute);
 

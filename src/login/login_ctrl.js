@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 const pgp = require("pg-promise")();
 
-const logger = require("../logger/logger");
 const config = require("../config.json");
 
 const jwtSecret = config.secret;
@@ -17,28 +16,24 @@ controller.login = async (usuario, senha) => {
   if (!(con in testdb)) {
     testdb[con] = pgp(con);
   }
-
   try {
     const usuarioId = await testdb[con].macro.one(
       "SELECT id FROM sdt.usuario" + " WHERE login = $1",
       [usuario]
     );
-  } catch (error) {
-    logger.error("Error during login query", {
-      context: "login_ctrl",
-      usuario: usuario,
-      trace: error
+    const token = jwt.sign(usuarioId, jwtSecret, {
+      expiresIn: "10h"
     });
-    let err = new Error("Falha durante autenticação.");
+    return { loginError: null, token: token };
+  } catch (error) {
+    const err = new Error("Falha durante autenticação.");
     err.status = 401;
+    err.context = "login_ctrl";
+    err.information = {};
+    err.information.usuario = usuario;
+    err.information.trace = error;
     return { loginError: err, token: null };
   }
-
-  const token = jwt.sign(usuarioId, jwtSecret, {
-    expiresIn: "10h"
-  });
-
-  return { loginError: null, token: token };
 };
 
 module.exports = controller;
