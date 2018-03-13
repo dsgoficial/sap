@@ -31,16 +31,23 @@ const calculaFila = async usuario => {
       `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
       INNER JOIN macrocontrole.subfase_etapa_operador as seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
       INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
-      WHERE seo.usuario_id = $1 and ee.situacao = 1 ORDER BY seo.prioridade, ut.prioridade`,
+      WHERE ut.disponivel = TRUE and seo.usuario_id = $1 and ee.situacao = 1 ORDER BY seo.prioridade, ut.prioridade`,
       [usuario]
     );
 
     if (prioridade_operador.length > 0) {
+      let { turno } = await db.macro.any(
+        `SELECT turno FROM sdt.usuario WHERE id = $1`,
+        [usuario]
+      );
+
       let restricao = await db.macro.any(
-        `SELECT re.tipo_restricao_id, ee1.subfase_etapa_id as se1, ee1.unidade_trabalho_id as ut1, ee1.operador_atual as op1,
-        ee2.subfase_etapa_id as se2, ee2.unidade_trabalho_id as ut2, ee2.operador_atual as op2 FROM macrocontrole.restricao_etapa as re
+        `SELECT re.tipo_restricao_id, ee1.subfase_etapa_id as se1, ee1.unidade_trabalho_id as ut1, ee1.operador_atual as op1, u1.turno as turno1
+        ee2.subfase_etapa_id as se2, ee2.unidade_trabalho_id as ut2, ee2.operador_atual as op2, u2.turno as turno2 FROM macrocontrole.restricao_etapa as re
         INNER JOIN macrocontrole.execucao_etapa as ee1 ON ee1.subfase_etapa_id = re.subfase_etapa_1_id
-        INNER JOIN macrocontrole.execucao_etapa as ee2 ON ee2.subfase_etapa_id = re.subfase_etapa_2_id`
+        INNER JOIN macrocontrole.execucao_etapa as ee2 ON ee2.subfase_etapa_id = re.subfase_etapa_2_id
+        LEFT JOIN sdt.usuario as u1 ON u1.id = ee1.operador_atual
+        LEFT JOIN sdt.usuario as u2 ON u2.id = ee2.operador_atual`
       );
 
       const fila_operador = [];
@@ -48,20 +55,38 @@ const calculaFila = async usuario => {
       prioridade_operador.forEach(e => {
         restricao.forEach(r => {
           if (r.se1 === e.subfase_etapa_id && r.ut1 === e.unidade_trabalho_id) {
-            if (r.tipo_restricao_id === 1 && r.op1 != usuario) {
-              fila_operador.push(e);
-            } else if (r.tipo_restricao_id === 2 && r.op1 === usuario) {
+            if (r.tipo_restricao_id === 1 && r.op1 === usuario) {
+              //falhou na restrição de operadores distintos
+            } else if (r.tipo_restricao_id === 2 && r.op1 != usuario) {
+              //falhou na restrição de operadores iguais
+            } else if (
+              r.tipo_restricao_id === 3 &&
+              turno != 3 &&
+              r.turno1 != turno
+            ) {
+              //falhou na restrição de turnos iguais (se não for do turno integral)
+            } else {
               fila_operador.push(e);
             }
           } else if (
             r.se2 === e.subfase_etapa_id &&
             r.ut2 === e.unidade_trabalho_id
           ) {
-            if (r.tipo_restricao_id === 1 && r.op1 != usuario) {
-              fila_operador.push(e);
-            } else if (r.tipo_restricao_id === 2 && r.op1 === usuario) {
+            if (r.tipo_restricao_id === 1 && r.op2 === usuario) {
+              //falhou na restrição de operadores distintos
+            } else if (r.tipo_restricao_id === 2 && r.op2 != usuario) {
+              //falhou na restrição de operadores iguais
+            } else if (
+              r.tipo_restricao_id === 3 &&
+              turno != 3 &&
+              r.turno2 != turno
+            ) {
+              //falhou na restrição de turnos iguais (se não for do turno integral)
+            } else {
               fila_operador.push(e);
             }
+          } else {
+            fila_operador.push(e);
           }
         });
       });
@@ -76,8 +101,7 @@ const calculaFila = async usuario => {
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.usuario_id= usuario_id,
-    err.information.trace = error;
+    (err.information.usuario_id = usuario_id), (err.information.trace = error);
     return { erro: err, prioridade: null };
   }
 };
@@ -85,13 +109,15 @@ const calculaFila = async usuario => {
 const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
   const info = {};
 
+  //FIXME TASK
   try {
     let dadosut = await db.macro.one(
-      `SELECT u.nome_guerra, ee.operador_atual, up.tipo_perfil_id, ut.id as unidade_trabalho_id,
+      `SELECT u.nome_guerra, ee.operador_atual, up.tipo_perfil_id, s.nome as subfase_nome
       ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, se.etapa_id, e.nome as etapa_nome
       FROM macrocontrole.execucao_etapa as ee
       INNER JOIN macrocontrole.subfase_etapa as se ON se.id = ee.subfase_etapa
       INNER JOIN macrocontrole.etapa as e ON e.id = se.etapa_id
+      INNER JOIN macrocontrole.subfase as s ON s.id = se.subfase_id
       INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho
       LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
       INNER JOIN sdt.usuario AS u ON u.id = ee.operador_atual
@@ -99,36 +125,36 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
       WHERE ee.subfase_etapa = $1 and ee.unidade_trabalho = $2`,
       [subfase_etapa, unidade_trabalho]
     );
-    info.usuario = dadosut[0].nome_guerra;
-    info.perfil = dadosut[0].tipo_perfil_id;
-    info.unidade_trabalho = {};
+    info.usuario = dadosut.nome_guerra;
+    info.perfil = dadosut.tipo_perfil_id;
+    info.atividade = {};
 
     let camadas = await db.macro.any(
       `SELECT c.nome, pc.filtro, pc.geometria_editavel, pc.restricao_atributos
       FROM macrocontrole.propriedades_camada AS pc
       INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
       WHERE pc.etapa_id = $1`,
-      [dadosut[0].etapa_id]
+      [dadosut.etapa_id]
     );
 
     let estilos = await db.macro.any(
       "SELECT nome FROM macrocontrole.perfil_estilo WHERE etapa_id = $1",
-      [dadosut[0].etapa_id]
+      [dadosut.etapa_id]
     );
 
     let regras = await db.macro.any(
       "SELECT nome FROM macrocontrole.perfil_regras WHERE etapa_id = $1",
-      [dadosut[0].etapa_id]
+      [dadosut.etapa_id]
     );
 
     let menus = await db.macro.any(
       "SELECT nome FROM macrocontrole.perfil_menu WHERE etapa_id = $1",
-      [dadosut[0].etapa_id]
+      [dadosut.etapa_id]
     );
 
     let fme = await db.macro.any(
       "SELECT servidor_fme, categoria_fme FROM macrocontrole.perfil_fme WHERE etapa_id = $1",
-      [dadosut[0].etapa_id]
+      [dadosut.etapa_id]
     );
 
     let insumos = await db.macro.any(
@@ -136,32 +162,32 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
       FROM macrocontrole.insumo AS i
       INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
       WHERE iut.unidade_trabalho_id = $1`,
-      [dadosut[0].unidade_trabalho_id]
+      [unidade_trabalho]
     );
 
-    info.unidade_trabalho.nome =
-      dadosut[0].etapa_nome + " - " + dadosut[0].unidade_trabalho_nome;
-    info.unidade_trabalho.banco_dados = {
-      nome: dadosut[0].nome_bd,
-      servidor: dadosut[0].servidor,
-      porta: dadosut[0].porta
+    info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome
+    info.atividade.nome = `${dadosut.subfase_nome}-${dadosut.etapa_nome} - ${dadosut.unidade_trabalho_nome}`;
+    info.atividade.banco_dados = {
+      nome: dadosut.nome_bd,
+      servidor: dadosut.servidor,
+      porta: dadosut.porta
     };
-    info.unidade_trabalho.fme = {
+    info.atividade.fme = {
       categoria: fme.categoria_fme,
       servidor: fme.servidor_fme
     };
 
-    info.unidade_trabalho.estilos = [];
-    info.unidade_trabalho.regras = [];
-    info.unidade_trabalho.menus = [];
+    info.atividade.estilos = [];
+    info.atividade.regras = [];
+    info.atividade.menus = [];
 
-    estilos.forEach(r => info.unidade_trabalho.estilos.push(r.nome));
-    regras.forEach(r => info.unidade_trabalho.regras.push(r.nome));
-    menus.forEach(r => info.unidade_trabalho.menus.push(r.nome));
+    estilos.forEach(r => info.atividade.estilos.push(r.nome));
+    regras.forEach(r => info.atividade.regras.push(r.nome));
+    menus.forEach(r => info.atividade.menus.push(r.nome));
 
-    info.unidade_trabalho.camadas = [];
+    info.atividade.camadas = [];
     camadas.forEach(c => {
-      info.unidade_trabalho.camadas.push({
+      info.atividade.camadas.push({
         nome: c.nome,
         filtro: c.editavel,
         geometria_editavel: c.geometria_editavel,
@@ -169,22 +195,37 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
       });
     });
 
-    info.unidade_trabalho.insumos = [];
+    info.atividade.insumos = [];
     insumos.forEach(i => {
-      info.unidade_trabalho.insumos.push({
+      info.atividade.insumos.push({
         nome: i.nome,
         path: i.path
       });
     });
+
+    info.atividade.linhagem = await db.macro.any(
+      `SELECT u.nome_guerra, ee.data_inicio, ee.data_fim, sit.nome as situacao,
+      sub.nome as subfase, et.nome as etapa
+      FROM macrocontrole.execucao_etapa AS ee
+      INNER JOIN macrocontrole.subfase_etapa AS se ON se.id = ee.subfase_etapa_id
+      INNER JOIN macrocontrole.subfase as sub ON sub.id = se.subfase_id
+      INNER JOIN macrocontrole.etapa as et ON et.id = se.etapa_id
+      INNER JOIN sdt.usuario AS u ON u.id = ee.operador_atual
+      INNER JOIN macrocontrole.situacao AS sit ON sit.code = ee.situacao
+      WHERE ee.unidade_trabalho_id = $1
+      ORDER BY se.ordem`,
+      [unidade_trabalho]
+    );
+
     return { erro: null, dados: info };
   } catch (error) {
     const err = new Error("Falha durante calculo dos dados de Producao.");
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.subfase_etapa_id= subfase_etapa_id,
-    err.information.unidade_trabalho_id- unidade_trabalho_id,
-    err.information.trace = error;
+    (err.information.subfase_etapa_id = subfase_etapa_id),
+      (err.information.unidade_trabalho_id = unidade_trabalho_id),
+      (err.information.trace = error);
     return { erro: err, dados: null };
   }
 };
@@ -218,8 +259,7 @@ controller.verifica = async usuario_id => {
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.usuario_id= usuario_id,
-    err.information.trace = error;
+    (err.information.usuario_id = usuario_id), (err.information.trace = error);
     return { verificaError: err, dados: null };
   }
 };
@@ -244,10 +284,10 @@ controller.finaliza = async (
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.usuario_id= usuario_id,
-    err.information.subfase_etapa_id= subfase_etapa_id,
-    err.information.unidade_trabalho_id= unidade_trabalho_id,
-    err.information.trace = error;
+    (err.information.usuario_id = usuario_id),
+      (err.information.subfase_etapa_id = subfase_etapa_id),
+      (err.information.unidade_trabalho_id = unidade_trabalho_id),
+      (err.information.trace = error);
     return { finalizaError: err };
   }
 };
@@ -298,7 +338,6 @@ controller.inicia = async usuario_id => {
         prioridade.unidade_trabalho_id
       );
       if (erro) {
-        throw error;
         return { iniciaError: erro, dados: null };
       }
       return { iniciaError: null, dados };
@@ -308,8 +347,8 @@ controller.inicia = async usuario_id => {
       err.status = 500;
       err.context = "distribuicao_ctrl";
       err.information = {};
-      err.information.usuario_id= usuario_id,
-      err.information.trace = error;
+      (err.information.usuario_id = usuario_id),
+        (err.information.trace = error);
       return { iniciaError, dados: null };
     });
 };

@@ -128,7 +128,11 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 (4, 'Edição'),
 (5, 'Área Contínua'),
 (6, 'Carregamento BDGEx Matricial'),
-(7, 'Carregamento BDGEx Vetorial');
+(7, 'Carregamento BDGEx Vetorial'),
+(8, 'Avaliação imagens brutas'),
+(9, 'Avaliação ortoimagens'),
+(10, 'Avaliação MDS'),
+(11, 'Avaliação MDT');
 
 --#############################################
 
@@ -192,7 +196,18 @@ INSERT INTO macrocontrole.etapa (nome) VALUES
 ('Revisão 3'),
 ('Correção 3'),
 ('Revisão por pares 1'),
-('Revisão por pares 2');
+('Revisão por pares 2'),
+('Revisão por amostragem');
+
+--##########################################
+
+CREATE TABLE macrocontrole.subfase_etapa(
+	id SERIAL NOT NULL PRIMARY KEY,
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	ordem INTEGER NOT NULL -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
+);
+-- O ideal é adicionar uma trigger nessa camada que gera as views de trabalho
 
 --##########################################
 
@@ -200,25 +215,25 @@ CREATE TABLE macrocontrole.perfil_fme(
 	id SERIAL NOT NULL PRIMARY KEY,
 	servidor_fme VARCHAR(255),
 	categoria_fme VARCHAR(255),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
 );
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
 );
 
 CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
 );
 
 CREATE TABLE macrocontrole.camada(
@@ -232,10 +247,10 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	geometria_editavel BOOLEAN NOT NULL,
 	restricao_atributos TEXT, --Atributos separados por ;
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
 );
 
-CREATE TABLE macrocontrole.tipo_microcontrole(
+CREATE TABLE macrocontrole.tipo_monitoramento(
 	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
@@ -246,19 +261,10 @@ INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
 
 CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_microcontrole INTEGER REFERENCES macrocontrole.tipo_microcontrole (code),
+	tipo_monitoramento INTEGER REFERENCES macrocontrole.tipo_monitoramento (code),
 	camada_id INTEGER REFERENCES macrocontrole.camada (id),
+	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
 );
---##########################################
-
-
-CREATE TABLE macrocontrole.subfase_etapa(
-	id SERIAL NOT NULL PRIMARY KEY,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	ordem INTEGER NOT NULL -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
-);
--- O ideal é adicionar uma trigger nessa camada que gera as views de trabalho
 
 --##########################################
 
@@ -271,7 +277,8 @@ CREATE TABLE macrocontrole.tipo_restricao(
 
 INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
 (1, 'Operadores distintos'),
-(2, 'Operadores iguais');
+(2, 'Operadores iguais'),
+(3, 'Operadores no mesmo turno');
 
 CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -297,6 +304,7 @@ CREATE TABLE macrocontrole.unidade_trabalho(
     geom geometry(POLYGON, 4674) NOT NULL, 
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	disponivel BOOLEAN NOT NULL DEFAULT FALSE, --indica se a unidade de trabalho pode ser executada ou não
 	prioridade INTEGER NOT NULL,
 	UNIQUE (nome, subfase_id)
 );
@@ -306,8 +314,9 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 
 CREATE TABLE macrocontrole.insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255),
-	path VARCHAR(255)
+	nome VARCHAR(255) NOT NULL,
+	caminho VARCHAR(255) NOT NULL,
+	geom geometry(POLYGON, 4674) --se for não espacial a geometria é nula
 );
 
 CREATE TABLE macrocontrole.insumo_unidade_trabalho(
@@ -327,7 +336,8 @@ INSERT INTO macrocontrole.situacao (code, nome) VALUES
 (1, 'Não iniciada'),
 (2, 'Em execução'),
 (3, 'Pausada'),
-(4, 'Finalizada');
+(4, 'Finalizada'),
+(5, 'Não será executada');
 
 CREATE TABLE macrocontrole.execucao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,

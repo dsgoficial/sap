@@ -1,8 +1,7 @@
 BEGIN;
 
 --Usuário que será utilizado pela API. Substituir senha conforme necessidade.
-DROP ROLE IF EXISTS controle_app;
-CREATE USER controle_app WITH PASSWORD 'controle_app';
+--CREATE USER controle_app WITH PASSWORD 'controle_app';
 
 CREATE SCHEMA sdt;
 

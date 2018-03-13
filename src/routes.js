@@ -6,6 +6,7 @@ const distribuicaoRoute = require("./distribuicao_atividades/distribuicao_route"
 const routes = app => {
   app.use("/login", loginRoute);
 
+  //Todas as requisições abaixo necessitam Token
   app.use(loginMiddleware);
 
   app.use("/distribuicao", distribuicaoRoute);
@@ -20,6 +21,7 @@ const routes = app => {
     next(err);
   });
 
+  //Error handling
   app.use((err, req, res, next) => {
     status = err.status || 500;
     sendJsonAndLog(
