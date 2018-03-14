@@ -86,8 +86,9 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
   return db.macro
     .task(async t => {
       let dadosut = await t.one(
-        `SELECT u.nome_guerra, ee.operador_atual, up.tipo_perfil_id, s.nome as subfase_nome, ST_ASEWKT(ut.geom) as unidade_trabalho_geom,
-        ut.epsg as unidade_trabalho_epsg, ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta,
+        `SELECT u.nome_guerra, ee.operador_atual, up.tipo_perfil_id, s.nome as subfase_nome, 
+        ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
+        ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta,
         se.etapa_id, e.nome as etapa_nome
         FROM macrocontrole.execucao_etapa as ee
         INNER JOIN macrocontrole.subfase_etapa as se ON se.id = ee.subfase_etapa_id
@@ -95,7 +96,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
         INNER JOIN macrocontrole.subfase as s ON s.id = se.subfase_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
-        INNER JOIN sdt.usuario AS u ON u.id = ee.operador_atual
+        LEFT JOIN sdt.usuario AS u ON u.id = ee.operador_atual
         LEFT JOIN macrocontrole.usuario_perfil AS up ON up.usuario_id = u.id
         WHERE ee.subfase_etapa_id = $1 and ee.unidade_trabalho_id = $2`,
         [subfase_etapa, unidade_trabalho]
@@ -282,13 +283,12 @@ controller.inicia = async usuario_id => {
   if (erro) {
     return { iniciaError: erro, dados: null };
   }
-
-  db.macro
+  return db.macro
     .tx(async t => {
       await t.none(
         `UPDATE macrocontrole.execucao_etapa SET
           situacao = 3 
-          WHERE situacao = 2 and operador = $1`,
+          WHERE situacao = 2 and operador_atual = $1`,
         [usuario_id]
       );
       await t.none(
@@ -308,7 +308,6 @@ controller.inicia = async usuario_id => {
           usuario_id
         ]
       );
-      console.log(result)
 
       if (!result.rowCount) {
         throw new Error("Não pode iniciar a tarefa selecionada para a fila.");
@@ -336,7 +335,5 @@ controller.inicia = async usuario_id => {
       return { iniciaError, dados: null };
     });
 };
-
-
 
 module.exports = controller;

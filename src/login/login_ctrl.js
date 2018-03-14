@@ -9,19 +9,27 @@ const controller = {};
 
 const testdb = {};
 controller.login = async (usuario, senha) => {
-  let con = `postgres://${usuario}:${senha}@${config.db_server}:${
-    config.db_port
-  }/${config.db_name}`;
+  let con =
+    "postgres://" +
+    usuario +
+    ":" +
+    senha +
+    "@" +
+    config.db_server +
+    ":" +
+    config.db_port +
+    "/" +
+    config.db_name;
 
   if (!(con in testdb)) {
     testdb[con] = pgp(con);
   }
   try {
-    const usuarioId = await testdb[con].macro.one(
-      "SELECT id FROM sdt.usuario" + " WHERE login = $1",
+    const { id } = await testdb[con].one(
+      "SELECT id FROM sdt.usuario WHERE login = $1",
       [usuario]
     );
-    const token = jwt.sign(usuarioId, jwtSecret, {
+    const token = jwt.sign({ id }, jwtSecret, {
       expiresIn: "10h"
     });
     return { loginError: null, token: token };

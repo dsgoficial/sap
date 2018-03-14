@@ -23,7 +23,7 @@ const verifyToken = function(req, res, next) {
         };
         return sendJsonAndLog(
           false,
-          "Failed to authenticate token.",
+          "Failed to authenticate token",
           "login_middleware",
           information,
           res,
@@ -42,7 +42,7 @@ const verifyToken = function(req, res, next) {
     };
     return sendJsonAndLog(
       false,
-      "No token provided.",
+      "No token provided",
       "login_middleware",
       information,
       res,

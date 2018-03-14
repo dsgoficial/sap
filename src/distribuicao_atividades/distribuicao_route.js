@@ -8,8 +8,47 @@ const producaoModel = require("./distribuicao_model");
 
 const router = express.Router();
 
-//FIXME APIDOC
-
+/**
+ * @api {post} /distribuicao/finaliza Finaliza atividade em execução
+ * @apiGroup Distribuição
+ *
+ * @apiParam (Request body) {Integer} subfase_etapa_id ID da Subfase-Etapa que deve ser finalizada
+ * @apiParam (Request body) {Integer} unidade_trabalho_id ID da Unidade Trabalho que deve ser finalizada
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "message": "Atividade finalizada com sucesso.",
+ *     }
+ *
+ * @apiError JsonValidationError O objeto json não segue o padrão estabelecido.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "success": false,
+ *       "message": "Finaliza Post validation error"
+ *     }
+ *
+ * @apiError InvalidTokenError Token fornecido não é valido.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 401 Unauthorized 
+ *     {
+ *       "success": false,
+ *       "message": "Failed to authenticate token"
+ *     }
+ * 
+ * @apiError MissingTokenError Token não fornecido.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 403 Forbidden 
+ *     {
+ *       "success": false,
+ *       "message": "No token provided"
+ *     }
+ */
 router.post("/finaliza", async (req, res, next) => {
   let validationResult = Joi.validate(req.body, producaoModel.finaliza);
   if (validationResult.error) {
