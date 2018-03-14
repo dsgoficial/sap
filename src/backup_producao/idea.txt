@@ -1,0 +1,3 @@
+https://github.com/kelektiv/node-cron
+
+Get database from macrocontrole.banco_dados, configure backups using cron
