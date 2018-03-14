@@ -11,7 +11,7 @@ const testdb = {};
 controller.login = async (usuario, senha) => {
   let con = `postgres://${usuario}:${senha}@${config.db_server}:${
     config.db_port
-  }/${config.db_macro}`;
+  }/${config.db_name}`;
 
   if (!(con in testdb)) {
     testdb[con] = pgp(con);

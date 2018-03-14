@@ -2,8 +2,12 @@ const winston = require("winston");
 require("winston-daily-rotate-file");
 const MESSAGE = Symbol.for("message");
 
+const getNamespace = require('continuation-local-storage').getNamespace;
+
 const jsonFormatter = logEntry => {
-  const base = { timestamp: new Date() };
+  const request = getNamespace('request');
+  const req_id = request.get('req_id');
+  const base = { timestamp: new Date(), request_id: req_id};
   const json = Object.assign(base, logEntry);
   logEntry[MESSAGE] = JSON.stringify(json);
   return logEntry;
