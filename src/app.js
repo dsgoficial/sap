@@ -5,10 +5,6 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const helmet = require("helmet");
 
-const uuidv4 = require('uuid/v4');
-const createNamespace = require("continuation-local-storage").createNamespace;
-const request = createNamespace("request");
-
 const routes = require("./routes");
 
 const app = express();
@@ -54,14 +50,6 @@ app.get("/", (req, res, next) => {
 
 //Serve APIDoc
 app.use("/docs", express.static(path.join(__dirname, "apidoc")));
-
-//Create UUID for each request
-app.use((req, res, next) => {
-  request.run(() => {
-    request.set("req_id", uuidv4());
-    next();
-  });
-});
 
 routes(app);
 

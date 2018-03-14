@@ -301,7 +301,8 @@ CREATE TABLE macrocontrole.banco_dados(
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255),
-    geom geometry(POLYGON, 4674) NOT NULL, 
+    geom geometry(POLYGON, 4674) NOT NULL,
+	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE, --indica se a unidade de trabalho pode ser executada ou não
