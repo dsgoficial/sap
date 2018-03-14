@@ -3,231 +3,247 @@ const db = require("./distribuicao_db");
 const controller = {};
 
 const calculaFila = async usuario => {
-  try {
-    let fila_prioritaria = await db.macro.oneOrNone(
-      `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria as f
-      WHERE f.usuario_id = $1 ORDER BY f.prioridade LIMIT 1
-      INNER JOIN macrocontrole.execucao_etapa as ee ON ee.id = f.execucao_etapa_id`,
-      [usuario]
-    );
 
-    if (fila_prioritaria != null) {
-      return { erro: null, prioridade: fila_prioritaria };
-    }
-
-    let cartas_pausadas = await db.macro.oneOrNone(
-      `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
-      INNER JOIN macrocontrole.subfase_etapa_operador as seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
-      INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
-      WHERE ee.operador_atual = $1 and ee.situacao = 3 ORDER BY seo.prioridade, ut.prioridade LIMIT 1`,
-      [usuario]
-    );
-
-    if (cartas_pausadas != null) {
-      return { erro: null, prioridade: cartas_pausadas };
-    }
-
-    let prioridade_operador = await db.macro.any(
-      `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
-      INNER JOIN macrocontrole.subfase_etapa_operador as seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
-      INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
-      WHERE ut.disponivel = TRUE and seo.usuario_id = $1 and ee.situacao = 1 ORDER BY seo.prioridade, ut.prioridade`,
-      [usuario]
-    );
-
-    if (prioridade_operador.length > 0) {
-      let { turno } = await db.macro.any(
-        `SELECT turno FROM sdt.usuario WHERE id = $1`,
+  return db.macro
+    .task(async t => {
+      let fila_prioritaria = await t.oneOrNone(
+        `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria as f
+        INNER JOIN macrocontrole.execucao_etapa as ee ON ee.id = f.execucao_etapa_id
+        WHERE f.usuario_id = $1 ORDER BY f.prioridade LIMIT 1`,
         [usuario]
       );
-
-      let restricao = await db.macro.any(
-        `SELECT re.tipo_restricao_id, ee1.subfase_etapa_id as se1, ee1.unidade_trabalho_id as ut1, ee1.operador_atual as op1, u1.turno as turno1
-        ee2.subfase_etapa_id as se2, ee2.unidade_trabalho_id as ut2, ee2.operador_atual as op2, u2.turno as turno2 FROM macrocontrole.restricao_etapa as re
-        INNER JOIN macrocontrole.execucao_etapa as ee1 ON ee1.subfase_etapa_id = re.subfase_etapa_1_id
-        INNER JOIN macrocontrole.execucao_etapa as ee2 ON ee2.subfase_etapa_id = re.subfase_etapa_2_id
-        LEFT JOIN sdt.usuario as u1 ON u1.id = ee1.operador_atual
-        LEFT JOIN sdt.usuario as u2 ON u2.id = ee2.operador_atual`
-      );
-
-      const fila_operador = [];
-
-      prioridade_operador.forEach(e => {
-        restricao.forEach(r => {
-          if (r.se1 === e.subfase_etapa_id && r.ut1 === e.unidade_trabalho_id) {
-            if (r.tipo_restricao_id === 1 && r.op1 === usuario) {
-              //falhou na restrição de operadores distintos
-            } else if (r.tipo_restricao_id === 2 && r.op1 != usuario) {
-              //falhou na restrição de operadores iguais
-            } else if (
-              r.tipo_restricao_id === 3 &&
-              turno != 3 &&
-              r.turno1 != turno
-            ) {
-              //falhou na restrição de turnos iguais (se não for do turno integral)
-            } else {
-              fila_operador.push(e);
-            }
-          } else if (
-            r.se2 === e.subfase_etapa_id &&
-            r.ut2 === e.unidade_trabalho_id
-          ) {
-            if (r.tipo_restricao_id === 1 && r.op2 === usuario) {
-              //falhou na restrição de operadores distintos
-            } else if (r.tipo_restricao_id === 2 && r.op2 != usuario) {
-              //falhou na restrição de operadores iguais
-            } else if (
-              r.tipo_restricao_id === 3 &&
-              turno != 3 &&
-              r.turno2 != turno
-            ) {
-              //falhou na restrição de turnos iguais (se não for do turno integral)
-            } else {
-              fila_operador.push(e);
-            }
-          } else {
-            fila_operador.push(e);
-          }
-        });
-      });
-
-      if (fila_operador.length > 0) {
-        return { erro: null, prioridade: fila_operador[1] };
+  
+      if (fila_prioritaria != null) {
+        return fila_prioritaria;
       }
-    }
-    return { erro: null, prioridade: null };
-  } catch (error) {
-    const err = new Error("Falha durante calculo da fila.");
-    err.status = 500;
-    err.context = "distribuicao_ctrl";
-    err.information = {};
-    (err.information.usuario_id = usuario_id), (err.information.trace = error);
-    return { erro: err, prioridade: null };
-  }
+  
+      let cartas_pausadas = await t.oneOrNone(
+        `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
+        INNER JOIN macrocontrole.subfase_etapa_operador as seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
+        INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
+        WHERE ee.operador_atual = $1 and ee.situacao = 3 ORDER BY seo.prioridade, ut.prioridade LIMIT 1`,
+        [usuario]
+      );
+  
+      if (cartas_pausadas != null) {
+        return cartas_pausadas;
+      }
+  
+      let prioridade_operador = await t.any(
+        `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
+        INNER JOIN macrocontrole.subfase_etapa_operador as seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
+        INNER JOIN macrocontrole.subfase_etapa as se ON se.id = ee.subfase_etapa_id
+        INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
+        LEFT JOIN
+        (SELECT ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontole.execucao_etapa AS ee
+         INNER JOIN macrocontrole.subfase_etapa AS se ON se.id = ee.subfase_etapa_id 
+        ) as ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
+        AND se.ordem = ee_ant.ordem - 1
+        WHERE ut.disponivel = TRUE and seo.usuario_id = $1 and ee.situacao = 1 ORDER BY seo.prioridade, ut.prioridade`,
+        [usuario]
+      );
+  
+      if (prioridade_operador.length > 0) {
+        let { turno } = await t.any(
+          `SELECT turno FROM sdt.usuario WHERE id = $1`,
+          [usuario]
+        );
+  
+        let restricao = await t.any(
+          `SELECT re.tipo_restricao_id, ee1.subfase_etapa_id as se1, ee1.unidade_trabalho_id as ut1, ee1.operador_atual as op1, u1.turno as turno1
+          ee2.subfase_etapa_id as se2, ee2.unidade_trabalho_id as ut2, ee2.operador_atual as op2, u2.turno as turno2 FROM macrocontrole.restricao_etapa as re
+          INNER JOIN macrocontrole.execucao_etapa as ee1 ON ee1.subfase_etapa_id = re.subfase_etapa_1_id
+          INNER JOIN macrocontrole.execucao_etapa as ee2 ON ee2.subfase_etapa_id = re.subfase_etapa_2_id
+          LEFT JOIN sdt.usuario as u1 ON u1.id = ee1.operador_atual
+          LEFT JOIN sdt.usuario as u2 ON u2.id = ee2.operador_atual`
+        );
+  
+        const fila_operador = [];
+  
+        prioridade_operador.forEach(e => {
+          restricao.forEach(r => {
+            if (r.se1 === e.subfase_etapa_id && r.ut1 === e.unidade_trabalho_id) {
+              if (r.tipo_restricao_id === 1 && r.op1 === usuario) {
+                //falhou na restrição de operadores distintos
+              } else if (r.tipo_restricao_id === 2 && r.op1 != usuario) {
+                //falhou na restrição de operadores iguais
+              } else if (
+                r.tipo_restricao_id === 3 &&
+                turno != 3 &&
+                r.turno1 != turno
+              ) {
+                //falhou na restrição de turnos iguais (se não for do turno integral)
+              } else {
+                fila_operador.push(e);
+              }
+            } else if (
+              r.se2 === e.subfase_etapa_id &&
+              r.ut2 === e.unidade_trabalho_id
+            ) {
+              if (r.tipo_restricao_id === 1 && r.op2 === usuario) {
+                //falhou na restrição de operadores distintos
+              } else if (r.tipo_restricao_id === 2 && r.op2 != usuario) {
+                //falhou na restrição de operadores iguais
+              } else if (
+                r.tipo_restricao_id === 3 &&
+                turno != 3 &&
+                r.turno2 != turno
+              ) {
+                //falhou na restrição de turnos iguais (se não for do turno integral)
+              } else {
+                fila_operador.push(e);
+              }
+            } else {
+              fila_operador.push(e);
+            }
+          });
+        });
+  
+        if (fila_operador.length > 0) {
+          return fila_operador[1];
+        }
+      }
+    })
+    .then(prioridade => {
+      return { erro: null, prioridade };
+    })
+    .catch(error => {
+      const err = new Error("Falha durante calculo da fila.");
+      err.status = 500;
+      err.context = "distribuicao_ctrl";
+      err.information = {};
+      (err.information.usuario_id = usuario_id), (err.information.trace = error);
+      return { erro: err, prioridade: null };
+    });
 };
 
 const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
   const info = {};
 
-  //FIXME TASK
-  try {
-    let dadosut = await db.macro.one(
-      `SELECT u.nome_guerra, ee.operador_atual, up.tipo_perfil_id, s.nome as subfase_nome
-      ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, se.etapa_id, e.nome as etapa_nome
-      FROM macrocontrole.execucao_etapa as ee
-      INNER JOIN macrocontrole.subfase_etapa as se ON se.id = ee.subfase_etapa
-      INNER JOIN macrocontrole.etapa as e ON e.id = se.etapa_id
-      INNER JOIN macrocontrole.subfase as s ON s.id = se.subfase_id
-      INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho
-      LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
-      INNER JOIN sdt.usuario AS u ON u.id = ee.operador_atual
-      LEFT JOIN macrocontrole.usuario_perfil AS up ON up.usuario_id = u.id
-      WHERE ee.subfase_etapa = $1 and ee.unidade_trabalho = $2`,
-      [subfase_etapa, unidade_trabalho]
-    );
-    info.usuario = dadosut.nome_guerra;
-    info.perfil = dadosut.tipo_perfil_id;
-    info.atividade = {};
+  return db.macro
+    .task(async t => {
+      let dadosut = await t.one(
+        `SELECT u.nome_guerra, ee.operador_atual, up.tipo_perfil_id, s.nome as subfase_nome
+        ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, se.etapa_id, e.nome as etapa_nome
+        FROM macrocontrole.execucao_etapa as ee
+        INNER JOIN macrocontrole.subfase_etapa as se ON se.id = ee.subfase_etapa
+        INNER JOIN macrocontrole.etapa as e ON e.id = se.etapa_id
+        INNER JOIN macrocontrole.subfase as s ON s.id = se.subfase_id
+        INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho
+        LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
+        INNER JOIN sdt.usuario AS u ON u.id = ee.operador_atual
+        LEFT JOIN macrocontrole.usuario_perfil AS up ON up.usuario_id = u.id
+        WHERE ee.subfase_etapa = $1 and ee.unidade_trabalho = $2`,
+        [subfase_etapa, unidade_trabalho]
+      );
+      info.usuario = dadosut.nome_guerra;
+      info.perfil = dadosut.tipo_perfil_id;
+      info.atividade = {};
 
-    let camadas = await db.macro.any(
-      `SELECT c.nome, pc.filtro, pc.geometria_editavel, pc.restricao_atributos
-      FROM macrocontrole.propriedades_camada AS pc
-      INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
-      WHERE pc.etapa_id = $1`,
-      [dadosut.etapa_id]
-    );
+      let camadas = await t.any(
+        `SELECT c.nome, pc.filtro, pc.geometria_editavel, pc.restricao_atributos
+        FROM macrocontrole.propriedades_camada AS pc
+        INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
+        WHERE pc.etapa_id = $1`,
+        [dadosut.etapa_id]
+      );
 
-    let estilos = await db.macro.any(
-      "SELECT nome FROM macrocontrole.perfil_estilo WHERE etapa_id = $1",
-      [dadosut.etapa_id]
-    );
+      let estilos = await t.any(
+        "SELECT nome FROM macrocontrole.perfil_estilo WHERE etapa_id = $1",
+        [dadosut.etapa_id]
+      );
 
-    let regras = await db.macro.any(
-      "SELECT nome FROM macrocontrole.perfil_regras WHERE etapa_id = $1",
-      [dadosut.etapa_id]
-    );
+      let regras = await t.any(
+        "SELECT nome FROM macrocontrole.perfil_regras WHERE etapa_id = $1",
+        [dadosut.etapa_id]
+      );
 
-    let menus = await db.macro.any(
-      "SELECT nome FROM macrocontrole.perfil_menu WHERE etapa_id = $1",
-      [dadosut.etapa_id]
-    );
+      let menus = await t.any(
+        "SELECT nome FROM macrocontrole.perfil_menu WHERE etapa_id = $1",
+        [dadosut.etapa_id]
+      );
 
-    let fme = await db.macro.any(
-      "SELECT servidor_fme, categoria_fme FROM macrocontrole.perfil_fme WHERE etapa_id = $1",
-      [dadosut.etapa_id]
-    );
+      let fme = await t.any(
+        "SELECT servidor_fme, categoria_fme FROM macrocontrole.perfil_fme WHERE etapa_id = $1",
+        [dadosut.etapa_id]
+      );
 
-    let insumos = await db.macro.any(
-      `SELECT i.nome, i.path
-      FROM macrocontrole.insumo AS i
-      INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
-      WHERE iut.unidade_trabalho_id = $1`,
-      [unidade_trabalho]
-    );
+      let insumos = await t.any(
+        `SELECT i.nome, i.path
+        FROM macrocontrole.insumo AS i
+        INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
+        WHERE iut.unidade_trabalho_id = $1`,
+        [unidade_trabalho]
+      );
 
-    info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome
-    info.atividade.nome = `${dadosut.subfase_nome}-${dadosut.etapa_nome} - ${dadosut.unidade_trabalho_nome}`;
-    info.atividade.banco_dados = {
-      nome: dadosut.nome_bd,
-      servidor: dadosut.servidor,
-      porta: dadosut.porta
-    };
-    info.atividade.fme = {
-      categoria: fme.categoria_fme,
-      servidor: fme.servidor_fme
-    };
+      info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
+      info.atividade.nome = `${dadosut.subfase_nome}-${dadosut.etapa_nome} - ${
+        dadosut.unidade_trabalho_nome
+      }`;
+      info.atividade.banco_dados = {
+        nome: dadosut.nome_bd,
+        servidor: dadosut.servidor,
+        porta: dadosut.porta
+      };
+      info.atividade.fme = {
+        categoria: fme.categoria_fme,
+        servidor: fme.servidor_fme
+      };
 
-    info.atividade.estilos = [];
-    info.atividade.regras = [];
-    info.atividade.menus = [];
+      info.atividade.estilos = [];
+      info.atividade.regras = [];
+      info.atividade.menus = [];
 
-    estilos.forEach(r => info.atividade.estilos.push(r.nome));
-    regras.forEach(r => info.atividade.regras.push(r.nome));
-    menus.forEach(r => info.atividade.menus.push(r.nome));
+      estilos.forEach(r => info.atividade.estilos.push(r.nome));
+      regras.forEach(r => info.atividade.regras.push(r.nome));
+      menus.forEach(r => info.atividade.menus.push(r.nome));
 
-    info.atividade.camadas = [];
-    camadas.forEach(c => {
-      info.atividade.camadas.push({
-        nome: c.nome,
-        filtro: c.editavel,
-        geometria_editavel: c.geometria_editavel,
-        restricao_atributos: c.restricao_atributos
+      info.atividade.camadas = [];
+      camadas.forEach(c => {
+        info.atividade.camadas.push({
+          nome: c.nome,
+          filtro: c.editavel,
+          geometria_editavel: c.geometria_editavel,
+          restricao_atributos: c.restricao_atributos
+        });
       });
-    });
 
-    info.atividade.insumos = [];
-    insumos.forEach(i => {
-      info.atividade.insumos.push({
-        nome: i.nome,
-        path: i.path
+      info.atividade.insumos = [];
+      insumos.forEach(i => {
+        info.atividade.insumos.push({
+          nome: i.nome,
+          path: i.path
+        });
       });
+
+      info.atividade.linhagem = await t.any(
+        `SELECT u.nome_guerra, ee.data_inicio, ee.data_fim, sit.nome as situacao,
+        sub.nome as subfase, et.nome as etapa
+        FROM macrocontrole.execucao_etapa AS ee
+        INNER JOIN macrocontrole.subfase_etapa AS se ON se.id = ee.subfase_etapa_id
+        INNER JOIN macrocontrole.subfase as sub ON sub.id = se.subfase_id
+        INNER JOIN macrocontrole.etapa as et ON et.id = se.etapa_id
+        INNER JOIN sdt.usuario AS u ON u.id = ee.operador_atual
+        INNER JOIN macrocontrole.situacao AS sit ON sit.code = ee.situacao
+        WHERE ee.unidade_trabalho_id = $1
+        ORDER BY se.ordem`,
+        [unidade_trabalho]
+      );
+      return info;
+    })
+    .then(info => {
+      return { erro: null, dados: info };
+    })
+    .catch(error => {
+      const err = new Error("Falha durante calculo dos dados de Producao.");
+      err.status = 500;
+      err.context = "distribuicao_ctrl";
+      err.information = {};
+      err.information.subfase_etapa_id = subfase_etapa_id;
+      err.information.unidade_trabalho_id = unidade_trabalho_id;
+      err.information.trace = error;
+      return { erro: err, dados: null };
     });
-
-    info.atividade.linhagem = await db.macro.any(
-      `SELECT u.nome_guerra, ee.data_inicio, ee.data_fim, sit.nome as situacao,
-      sub.nome as subfase, et.nome as etapa
-      FROM macrocontrole.execucao_etapa AS ee
-      INNER JOIN macrocontrole.subfase_etapa AS se ON se.id = ee.subfase_etapa_id
-      INNER JOIN macrocontrole.subfase as sub ON sub.id = se.subfase_id
-      INNER JOIN macrocontrole.etapa as et ON et.id = se.etapa_id
-      INNER JOIN sdt.usuario AS u ON u.id = ee.operador_atual
-      INNER JOIN macrocontrole.situacao AS sit ON sit.code = ee.situacao
-      WHERE ee.unidade_trabalho_id = $1
-      ORDER BY se.ordem`,
-      [unidade_trabalho]
-    );
-
-    return { erro: null, dados: info };
-  } catch (error) {
-    const err = new Error("Falha durante calculo dos dados de Producao.");
-    err.status = 500;
-    err.context = "distribuicao_ctrl";
-    err.information = {};
-    (err.information.subfase_etapa_id = subfase_etapa_id),
-      (err.information.unidade_trabalho_id = unidade_trabalho_id),
-      (err.information.trace = error);
-    return { erro: err, dados: null };
-  }
 };
 
 controller.verifica = async usuario_id => {
@@ -240,7 +256,7 @@ controller.verifica = async usuario_id => {
     );
 
     if (em_andamento) {
-      const { erro, dados } = dadosProducao(
+      const { erro, dados } = await dadosProducao(
         em_andamento.subfase_etapa_id,
         em_andamento.unidade_trabalho_id
       );
@@ -294,7 +310,7 @@ controller.finaliza = async (
 
 controller.inicia = async usuario_id => {
   const data_inicio = new Date();
-  const { erro, prioridade } = calculaFila(usuario_id);
+  const { erro, prioridade } = await calculaFila(usuario_id);
 
   if (erro) {
     return { iniciaError: erro, dados: null };
@@ -332,8 +348,8 @@ controller.inicia = async usuario_id => {
 
       return result;
     })
-    .then(data => {
-      const { erro, dados } = dadosProducao(
+    .then(async data => {
+      const { erro, dados } = await dadosProducao(
         prioridade.subfase_etapa_id,
         prioridade.unidade_trabalho_id
       );
