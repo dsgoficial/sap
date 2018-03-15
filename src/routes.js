@@ -3,19 +3,7 @@ const loginRoute = require("./login/login_route");
 const loginMiddleware = require("./login/login_middleware");
 const distribuicaoRoute = require("./distribuicao_atividades/distribuicao_route");
 
-const uuidv4 = require("uuid/v4");
-const createNamespace = require("continuation-local-storage").createNamespace;
-const request = createNamespace("request");
-
 const routes = app => {
-  //Create UUID for each request
-  app.use((req, res, next) => {
-    request.run(() => {
-      request.set("req_id", uuidv4());
-      next();
-    });
-  });
-
   app.use("/login", loginRoute);
 
   //Todas as requisições abaixo necessitam Token

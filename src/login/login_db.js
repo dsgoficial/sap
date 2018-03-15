@@ -25,11 +25,33 @@ db.macro
   })
   .catch(function(error) {
     logger.info("Failed database connection", {
-      context: "distribuicao_db",
+      context: "login_db",
       information: {
         connectionString: connectionStringMacro
       }
     });
   });
+
+db.testeddbs = {}
+db.testdb = async con => {
+  if(!(con in db.testeddbs)){
+    db.testeddbs[con] = pgp(con);
+  }
+
+  let result;
+
+  await db.testeddbs[con]
+    .connect()
+    .then(function(obj) {
+      obj.done(); // success, release connection;
+      result = true;
+    })
+    .catch(function(error) {
+      console.log(error)
+      result = false;
+    });
+
+  return result;
+};
 
 module.exports = db;

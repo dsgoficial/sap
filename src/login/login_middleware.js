@@ -31,7 +31,7 @@ const verifyToken = function(req, res, next) {
           null
         );
       } else {
-        // se tudo estiver ok segue para a próxima rota com o atributo usuarioId
+        // se tudo estiver ok segue para a próxima rota com o atributo id
         req.body.usuario_id = decoded.id;
         next();
       }

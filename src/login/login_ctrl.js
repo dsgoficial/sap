@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const pgp = require("pg-promise")();
+
+const db = require("../login/login_db");
 
 const config = require("../config.json");
 
@@ -7,8 +8,8 @@ const jwtSecret = config.secret;
 
 const controller = {};
 
-const testdb = {};
 controller.login = async (usuario, senha) => {
+  
   let con =
     "postgres://" +
     usuario +
@@ -21,11 +22,18 @@ controller.login = async (usuario, senha) => {
     "/" +
     config.db_name;
 
-  if (!(con in testdb)) {
-    testdb[con] = pgp(con);
+  let verifycon = await db.testdb(con)
+  if (!verifycon) {
+    const err = new Error("Falha durante autenticação");
+    err.status = 401;
+    err.context = "login_ctrl";
+    err.information = {};
+    err.information.usuario = usuario;
+    return { loginError: err, token: null };    
   }
+
   try {
-    const { id } = await testdb[con].one(
+    const { id } = await db.macro.one(
       "SELECT id FROM sdt.usuario WHERE login = $1",
       [usuario]
     );

@@ -34,16 +34,16 @@ const router = express.Router();
  * @apiError InvalidTokenError Token fornecido não é valido.
  *
  * @apiErrorExample Error-Response:
- *     HTTP/1.1 401 Unauthorized 
+ *     HTTP/1.1 401 Unauthorized
  *     {
  *       "success": false,
  *       "message": "Failed to authenticate token"
  *     }
- * 
+ *
  * @apiError MissingTokenError Token não fornecido.
  *
  * @apiErrorExample Error-Response:
- *     HTTP/1.1 403 Forbidden 
+ *     HTTP/1.1 403 Forbidden
  *     {
  *       "success": false,
  *       "message": "No token provided"
@@ -61,7 +61,7 @@ router.post("/finaliza", async (req, res, next) => {
   }
 
   let { finalizaError } = await producaoCtrl.finaliza(
-    req.usuario_id,
+    req.body.usuario_id,
     req.body.subfase_etapa_id,
     req.body.unidade_trabalho_id
   );
@@ -70,7 +70,7 @@ router.post("/finaliza", async (req, res, next) => {
   }
 
   let information = {
-    usuario_id: req.usuario_id,
+    usuario_id: req.body.usuario_id,
     subfase_etapa_id: req.body.subfase_etapa_id,
     unidade_trabalho_id: req.body.unidade_trabalho_id
   };
@@ -86,13 +86,15 @@ router.post("/finaliza", async (req, res, next) => {
 });
 
 router.get("/verifica", async (req, res, next) => {
-  let { verificaError, dados } = await producaoCtrl.verifica(req.usuario_id);
+  let { verificaError, dados } = await producaoCtrl.verifica(
+    req.body.usuario_id
+  );
   if (verificaError) {
     return next(verificaError);
   }
 
   let information = {
-    usuario_id: req.usuario_id
+    usuario_id: req.body.usuario_id
   };
   if (dados) {
     return sendJsonAndLog(
@@ -118,13 +120,13 @@ router.get("/verifica", async (req, res, next) => {
 });
 
 router.post("/inicia", async (req, res, next) => {
-  let { iniciaError, dados } = await inicia.verifica(req.usuario_id);
+  let { iniciaError, dados } = await producaoCtrl.inicia(req.body.usuario_id);
   if (iniciaError) {
     return next(iniciaError);
   }
 
   let information = {
-    usuario_id: req.usuario_id
+    usuario_id: req.body.usuario_id
   };
 
   if (dados) {

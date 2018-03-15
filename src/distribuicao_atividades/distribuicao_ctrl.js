@@ -1,4 +1,4 @@
-const db = require("./distribuicao_db");
+const db = require("../login/login_db");
 
 const controller = {};
 
@@ -69,15 +69,15 @@ const calculaFila = async usuario => {
       return null;
     })
     .then(prioridade => {
-      return { erro: null, prioridade };
+      return { erro: null, prioridade: prioridade };
     })
     .catch(error => {
       const err = new Error("Falha durante calculo da fila.");
       err.status = 500;
       err.context = "distribuicao_ctrl";
       err.information = {};
-      (err.information.usuario_id = usuario_id),
-        (err.information.trace = error);
+      err.information.usuario_id = usuario_id;
+      err.information.trace = error;
       return { erro: err, prioridade: null };
     });
 };
@@ -244,7 +244,8 @@ controller.verifica = async usuario_id => {
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    (err.information.usuario_id = usuario_id), (err.information.trace = error);
+    err.information.usuario_id = usuario_id;
+    err.information.trace = error;
     return { verificaError: err, dados: null };
   }
 };
@@ -269,10 +270,10 @@ controller.finaliza = async (
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    (err.information.usuario_id = usuario_id),
-      (err.information.subfase_etapa_id = subfase_etapa_id),
-      (err.information.unidade_trabalho_id = unidade_trabalho_id),
-      (err.information.trace = error);
+    err.information.usuario_id = usuario_id;
+    err.information.subfase_etapa_id = subfase_etapa_id;
+    err.information.unidade_trabalho_id = unidade_trabalho_id;
+    err.information.trace = error;
     return { finalizaError: err };
   }
 };
@@ -282,6 +283,9 @@ controller.inicia = async usuario_id => {
   const { erro, prioridade } = await calculaFila(usuario_id);
   if (erro) {
     return { iniciaError: erro, dados: null };
+  }
+  if (!prioridade) {
+    return { iniciaError: null, dados: null };
   }
   return db.macro
     .tx(async t => {
@@ -330,8 +334,8 @@ controller.inicia = async usuario_id => {
       err.status = 500;
       err.context = "distribuicao_ctrl";
       err.information = {};
-      (err.information.usuario_id = usuario_id),
-        (err.information.trace = error);
+      err.information.usuario_id = usuario_id;
+      err.information.trace = error;
       return { iniciaError, dados: null };
     });
 };
