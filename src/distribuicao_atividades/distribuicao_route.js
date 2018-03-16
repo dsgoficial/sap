@@ -57,6 +57,7 @@ router.post("/finaliza", async (req, res, next) => {
     err.context = "distribuicao_route";
     err.information = {};
     err.information.body = req.body;
+    err.information.trace = validationResult.error;
     return next(err);
   }
 

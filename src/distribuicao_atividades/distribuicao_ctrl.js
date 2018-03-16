@@ -87,7 +87,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
     .task(async t => {
       let dadosut = await t.one(
         `SELECT u.nome_guerra, ee.operador_atual, up.tipo_perfil_id, s.nome as subfase_nome, 
-        ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
+        ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom, ee.subfase_etapa_id, ee.unidade_trabalho_id,
         ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta,
         se.etapa_id, e.nome as etapa_nome
         FROM macrocontrole.execucao_etapa as ee
@@ -146,6 +146,8 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
       info.atividade.epsg = dadosut.unidade_trabalho_epsg;
+      info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
+      info.atividade.subfase_etapa_id = dadosut.subfase_etapa_id;
       info.atividade.nome =
         dadosut.subfase_nome +
         " - " +
@@ -257,12 +259,16 @@ controller.finaliza = async (
 ) => {
   const data_fim = new Date();
   try {
-    let finaliza = await db.macro.none(
+    let result = await db.macro.result(
       `UPDATE macrocontrole.execucao_etapa SET
       data_fim = $1, situacao = 4
       WHERE subfase_etapa_id = $2 and unidade_trabalho_id = $3 and operador_atual = $4`,
       [data_fim, subfase_etapa_id, unidade_trabalho_id, usuario_id]
     );
+
+    if (!result.rowCount || result.rowCount != 1) {
+      throw new Error("Erro ao finalizar atividade. Atividade não encontrada.");
+    }
 
     return { finalizaError: null };
   } catch (error) {

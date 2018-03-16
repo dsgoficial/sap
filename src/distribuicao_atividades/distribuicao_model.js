@@ -8,6 +8,10 @@ const finaliza = Joi.object().keys({
   unidade_trabalho_id: Joi.number()
     .integer()
     .strict()
+    .required(),
+  usuario_id: Joi.number()
+    .integer()
+    .strict()
     .required()
 });
 
