@@ -73,7 +73,7 @@ DB_PASSWORD=${answers.db_password}
 JWT_SECRET=${answers.jwt_secret}`;
 
       fs.writeFileSync(".env", env);
-      console.log(chalk.blue("Arquivo de configuração criado com sucesso"));
+      console.log(chalk.blue("Arquivo de configuração criado com sucesso!"));
     })
     .catch(err => console.log(err));
 };
