@@ -30,8 +30,6 @@ INSERT INTO sdt.posto_grad (code, nome,nome_abrev) VALUES
 (16, 'Coronel', 'Cel'),
 (17, 'General', 'Gen');
 
---##########################################
-
 -- Células 1CGEO
 CREATE TABLE sdt.celula(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -47,8 +45,6 @@ INSERT INTO sdt.celula (nome) VALUES
 ('Célula de Digitalização'),
 ('Célula Administrativa');
 
---##########################################
-
 --Valores padrão para turno de trabalho
 CREATE TABLE sdt.turno(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -59,8 +55,6 @@ INSERT INTO sdt.turno (code, nome) VALUES
 (1, 'Manhã'),
 (2, 'Tarde'),
 (3, 'Integral');
-
---#############################################
 
 --Usuários do sistema
 --Login deve ser o mesmo do banco de dados de produção
@@ -81,7 +75,5 @@ INSERT INTO sdt.usuario (id, nome, nome_guerra, login, turno, posto_grad) VALUES
 GRANT USAGE ON SCHEMA sdt TO controle_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA sdt TO controle_app;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA sdt TO controle_app;
-
---#############################################
 
 COMMIT;
