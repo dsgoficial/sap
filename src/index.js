@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
 const config = require("./config.json");
 const app = require("./app");
-const logger = require("./logger/logger");
+const { logger } = require("./logger");
 
 //Starts server
 app.listen(config.port, () => {

@@ -1,11 +1,11 @@
-'use strict';
+"use strict";
 
-const db = require("../login/login_db");
+const { db } = require("../database");
 
 const controller = {};
 
 const calculaFila = async usuario => {
-  return db.macro
+  return db
     .task(async t => {
       let fila_prioritaria = await t.oneOrNone(
         `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria as f
@@ -85,7 +85,7 @@ const calculaFila = async usuario => {
 };
 
 const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
-  return db.macro
+  return db
     .task(async t => {
       let dadosut = await t.one(
         `SELECT u.nome_guerra, ee.operador_atual, up.tipo_perfil_id, s.nome as subfase_nome, 
@@ -224,7 +224,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
 
 controller.verifica = async usuario_id => {
   try {
-    let em_andamento = await db.macro.oneOrNone(
+    let em_andamento = await db.oneOrNone(
       `SELECT subfase_etapa_id, unidade_trabalho_id
       FROM macrocontrole.execucao_etapa
       WHERE operador_atual = $1 and situacao = 2 LIMIT 1`,
@@ -261,7 +261,7 @@ controller.finaliza = async (
 ) => {
   const data_fim = new Date();
   try {
-    let result = await db.macro.result(
+    let result = await db.result(
       `UPDATE macrocontrole.execucao_etapa SET
       data_fim = $1, situacao = 4
       WHERE subfase_etapa_id = $2 and unidade_trabalho_id = $3 and operador_atual = $4`,
@@ -295,7 +295,7 @@ controller.inicia = async usuario_id => {
   if (!prioridade) {
     return { iniciaError: null, dados: null };
   }
-  return db.macro
+  return db
     .tx(async t => {
       await t.none(
         `UPDATE macrocontrole.execucao_etapa SET

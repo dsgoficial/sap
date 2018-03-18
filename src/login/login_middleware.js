@@ -1,10 +1,10 @@
-'use strict';
+"use strict";
 
 const jwt = require("jsonwebtoken");
 const config = require("../config.json");
 const jwtSecret = config.secret;
 
-const sendJsonAndLog = require("../logger/sendJsonAndLog");
+const { sendJsonAndLog } = require("../logger");
 
 //middleware para verificar o JWT
 const verifyToken = function(req, res, next) {

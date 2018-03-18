@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
 const jwt = require("jsonwebtoken");
 
-const db = require("../login/login_db");
+const { db, testdb } = require("../database");
 
 const config = require("../config.json");
 
@@ -11,7 +11,6 @@ const jwtSecret = config.secret;
 const controller = {};
 
 controller.login = async (usuario, senha) => {
-  
   let con =
     "postgres://" +
     usuario +
@@ -24,21 +23,20 @@ controller.login = async (usuario, senha) => {
     "/" +
     config.db_name;
 
-  let verifycon = await db.testdb(con)
+  let verifycon = await testdb(con);
   if (!verifycon) {
     const err = new Error("Falha durante autenticação");
     err.status = 401;
     err.context = "login_ctrl";
     err.information = {};
     err.information.usuario = usuario;
-    return { loginError: err, token: null };    
+    return { loginError: err, token: null };
   }
 
   try {
-    const { id } = await db.macro.one(
-      "SELECT id FROM sdt.usuario WHERE login = $1",
-      [usuario]
-    );
+    const { id } = await db.one("SELECT id FROM sdt.usuario WHERE login = $1", [
+      usuario
+    ]);
     const token = jwt.sign({ id }, jwtSecret, {
       expiresIn: "10h"
     });

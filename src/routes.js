@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
-const sendJsonAndLog = require("./logger/sendJsonAndLog");
-const loginRoute = require("./login/login_route");
-const loginMiddleware = require("./login/login_middleware");
-const distribuicaoRoute = require("./distribuicao_atividades/distribuicao_route");
+const { sendJsonAndLog } = require("./logger");
+const { loginRoute } = require("./login");
+const { loginMiddleware } = require("./login");
+const { distribuicaoRoute } = require("./distribuicao_atividades");
 
 const routes = app => {
   app.use("/login", loginRoute);

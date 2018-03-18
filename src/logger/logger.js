@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const winston = require("winston");
 require("winston-daily-rotate-file");
@@ -7,7 +7,7 @@ const MESSAGE = Symbol.for("message");
 const uuidv4 = require("uuid/v4");
 
 const jsonFormatter = logEntry => {
-  let base = { timestamp: new Date()};
+  let base = { timestamp: new Date() };
   const json = Object.assign(base, logEntry);
   logEntry[MESSAGE] = JSON.stringify(json);
   return logEntry;

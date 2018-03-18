@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const Joi = require("joi");
 
@@ -16,6 +16,5 @@ const finaliza = Joi.object().keys({
     .strict()
     .required()
 });
-
 
 module.exports.finaliza = finaliza;

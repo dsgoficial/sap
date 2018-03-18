@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
 const express = require("express");
 const Joi = require("joi");
 
-const sendJsonAndLog = require("../logger/sendJsonAndLog");
+const { sendJsonAndLog } = require("../logger");
 
 const producaoCtrl = require("./distribuicao_ctrl");
 const producaoModel = require("./distribuicao_model");
@@ -20,12 +20,12 @@ const router = express.Router();
  * @apiError InvalidTokenError Token fornecido não é valido.
  *
  * @apiErrorExample Error-Response:
-*     HTTP/1.1 401 Unauthorized
-*     {
-*       "success": false,
-*       "message": "Failed to authenticate token"
-*     }
-*/
+ *     HTTP/1.1 401 Unauthorized
+ *     {
+ *       "success": false,
+ *       "message": "Failed to authenticate token"
+ *     }
+ */
 
 /**
  * @apiDefine MissingTokenError
@@ -38,7 +38,7 @@ const router = express.Router();
  *       "success": false,
  *       "message": "No token provided"
  *     }
-*/
+ */
 
 /**
  * @api {post} /distribuicao/finaliza Finaliza atividade em execução
@@ -65,7 +65,7 @@ const router = express.Router();
  *
  * @apiUse InvalidTokenError
  * @apiUse MissingTokenError
- * 
+ *
  */
 router.post("/finaliza", async (req, res, next) => {
   let validationResult = Joi.validate(req.body, producaoModel.finaliza);
@@ -114,7 +114,7 @@ router.post("/finaliza", async (req, res, next) => {
  *       "success": true,
  *       "message": "Sem atividade em execução."
  *     }
- * 
+ *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
@@ -126,7 +126,7 @@ router.post("/finaliza", async (req, res, next) => {
  *
  * @apiUse InvalidTokenError
  * @apiUse MissingTokenError
- * 
+ *
  */
 router.get("/verifica", async (req, res, next) => {
   let { verificaError, dados } = await producaoCtrl.verifica(
@@ -180,11 +180,11 @@ router.get("/verifica", async (req, res, next) => {
  *       "message": "Atividade iniciada.",
  *       "dados": {...}
  *     }
- * 
+ *
  *
  * @apiUse InvalidTokenError
  * @apiUse MissingTokenError
- * 
+ *
  */
 router.post("/inicia", async (req, res, next) => {
   let { iniciaError, dados } = await producaoCtrl.inicia(req.body.usuario_id);

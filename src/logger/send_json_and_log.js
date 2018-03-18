@@ -1,8 +1,16 @@
-'use strict';
+"use strict";
 
-const logger = require("../logger/logger");
+const logger = require("./logger");
 
-const sendJsonAndLog = (sucess,  message,  context,  information,  res,  status = 200,  dados = null) => {
+const sendJsonAndLog = (
+  sucess,
+  message,
+  context,
+  information,
+  res,
+  status = 200,
+  dados = null
+) => {
   logger.info(message, {
     context: context,
     information: information,

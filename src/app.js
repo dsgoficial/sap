@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const express = require("express");
 const path = require("path");
@@ -51,7 +51,7 @@ app.get("/", (req, res, next) => {
 });
 
 //prevent browser from request favicon
-app.get('/favicon.ico', function(req, res) {
+app.get("/favicon.ico", function(req, res) {
   res.status(204);
 });
 

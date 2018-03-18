@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
 const express = require("express");
 const Joi = require("joi");
 
-const sendJsonAndLog = require("../logger/sendJsonAndLog");
+const { sendJsonAndLog } = require("../logger");
 
 const loginCtrl = require("./login_ctrl");
 const loginModel = require("./login_model");
@@ -72,7 +72,7 @@ router.post("/", async (req, res, next) => {
     null,
     res,
     200,
-    {token}
+    { token }
   );
 });
 
