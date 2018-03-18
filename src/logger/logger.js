@@ -1,3 +1,5 @@
+'use strict';
+
 const winston = require("winston");
 require("winston-daily-rotate-file");
 const MESSAGE = Symbol.for("message");

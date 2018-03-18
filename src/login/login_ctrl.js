@@ -1,3 +1,5 @@
+'use strict';
+
 const jwt = require("jsonwebtoken");
 
 const db = require("../login/login_db");

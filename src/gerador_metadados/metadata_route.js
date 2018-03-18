@@ -1,3 +1,5 @@
+'use strict';
+
 /*
   const nunjucks = require('nunjucks');
   app.set('templates', path.join(__dirname, 'src', 'templates'));  

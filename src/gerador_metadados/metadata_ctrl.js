@@ -1,3 +1,4 @@
+'use strict';
 
 /*
 function generateMetadata(req,res,next,projeto,mi,tipo){

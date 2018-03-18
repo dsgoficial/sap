@@ -1,3 +1,5 @@
+'use strict';
+
 const db = require("../login/login_db");
 
 const controller = {};

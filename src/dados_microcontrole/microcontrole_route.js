@@ -1,3 +1,5 @@
+'use strict';
+
 /*
 router.get('/sumario/transportes', function(req, res, next) {
     operations.getProdClasses(req,res,next, ['infra_via_deslocamento_l']);

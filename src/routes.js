@@ -1,3 +1,5 @@
+'use strict';
+
 const sendJsonAndLog = require("./logger/sendJsonAndLog");
 const loginRoute = require("./login/login_route");
 const loginMiddleware = require("./login/login_middleware");

@@ -1,3 +1,5 @@
+'use strict';
+
 const logger = require("../logger/logger");
 
 const sendJsonAndLog = (sucess,  message,  context,  information,  res,  status = 200,  dados = null) => {
