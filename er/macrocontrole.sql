@@ -2,8 +2,6 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 
---#############################################s
-
 CREATE SCHEMA macrocontrole;
 
 -- Tipo do perfil de acesso ao controle macro
@@ -19,8 +17,6 @@ INSERT INTO macrocontrole.tipo_perfil (code,nome) VALUES
 (4, 'Supervisor de Célula'),
 (5, 'Administrador'); 
 
---#############################################
-
 -- Tabela que associa os usuarios ao perfil
 CREATE TABLE macrocontrole.usuario_perfil(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -31,8 +27,6 @@ CREATE TABLE macrocontrole.usuario_perfil(
 INSERT INTO macrocontrole.usuario_perfil (tipo_perfil_id, usuario_id) VALUES
 (5, 1);
 
---##########################################
-
 -- Projeto armazena os metadados necessários para geração dos XML do BDGEx e informações gerais sobre as cartas produzidas
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -40,8 +34,6 @@ CREATE TABLE macrocontrole.projeto(
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone
 );
-
---##########################################
 
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -84,8 +76,6 @@ CREATE TABLE macrocontrole.carregamento_bdgex(
 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
 
---##########################################
-
 -- Tipos de palavra chave previstos na ISO19115 / PCDG
 CREATE TABLE macrocontrole.tipo_palavra_chave(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -99,8 +89,6 @@ INSERT INTO macrocontrole.tipo_palavra_chave (code, nome) VALUES
 (4, 'temporal'),
 (5, 'toponimica');
 
---##########################################
-
 -- Associa palavra chave a um produto. O produto pode ter multiplas palavras chaves de diferentes tipos.
 CREATE TABLE macrocontrole.palavra_chave(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -108,8 +96,6 @@ CREATE TABLE macrocontrole.palavra_chave(
  	tipo_palavra_chave INTEGER NOT NULL REFERENCES macrocontrole.tipo_palavra_chave (code),
  	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
-
---#############################################
 
 -- Fase é somente para agrupar as Subfases
 -- Deve ser correspondente as fases do RTM e a fases previstas no metadado do BDGEx
@@ -132,8 +118,6 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 (10, 'Avaliação MDS'),
 (11, 'Avaliação MDT');
 
---#############################################
-
 -- Associa uma fase prevista no BDGEx ao projeto
 -- as combinações (tipo_fase, projeto_id) são unicos
 CREATE TABLE macrocontrole.fase(
@@ -144,8 +128,6 @@ CREATE TABLE macrocontrole.fase(
 	UNIQUE (projeto_id, tipo_fase)
 );
 
---#############################################
-
 --Meta anual estabelecida no PIT de uma fase
 CREATE TABLE macrocontrole.meta_anual(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -153,8 +135,6 @@ CREATE TABLE macrocontrole.meta_anual(
   ano INTEGER NOT NULL,
   fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
 );
-
---##########################################
 
 -- Unidade de produção do controle de produção
 -- as combinações (nome,fase_id) são unicos
@@ -167,8 +147,6 @@ CREATE TABLE macrocontrole.subfase(
 	UNIQUE (nome, fase_id)
 );
 
---##########################################
-
 -- Tabela que associa um gerente as subfases que ele pode gerenciar
 -- Na versão atual não está em uso
 CREATE TABLE macrocontrole.subfase_gerente(
@@ -177,8 +155,6 @@ CREATE TABLE macrocontrole.subfase_gerente(
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE (usuario_id, subfase_id)
 );
-
---##########################################
 
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -197,16 +173,12 @@ INSERT INTO macrocontrole.etapa (nome) VALUES
 ('Revisão por pares 2'),
 ('Revisão por amostragem');
 
---##########################################
-
 CREATE TABLE macrocontrole.subfase_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	ordem INTEGER NOT NULL -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
 );
-
---##########################################
 
 CREATE TABLE macrocontrole.perfil_fme(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -247,6 +219,13 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
 );
 
+CREATE TABLE macrocontrole.banco_dados(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255),
+	servidor VARCHAR(255),
+	porta VARCHAR(255)
+);
+
 CREATE TABLE macrocontrole.tipo_monitoramento(
 	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
@@ -260,17 +239,14 @@ CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_monitoramento INTEGER REFERENCES macrocontrole.tipo_monitoramento (code),
 	camada_id INTEGER REFERENCES macrocontrole.camada (id),
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id),
+	bd_monitoramento_id INTEGER REFERENCES macrocontrole.banco_dados (id),
 );
-
---##########################################
-
 
 CREATE TABLE macrocontrole.tipo_restricao(
 	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
-
 
 INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
 (1, 'Operadores distintos'),
@@ -284,17 +260,6 @@ CREATE TABLE macrocontrole.restricao_etapa(
 	subfase_etapa_2_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)	
 );
 
---##########################################
-
-CREATE TABLE macrocontrole.banco_dados(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255),
-	servidor VARCHAR(255),
-	porta VARCHAR(255)
-);
-
---##########################################
-
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255),
@@ -306,8 +271,6 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	prioridade INTEGER NOT NULL,
 	UNIQUE (nome, subfase_id)
 );
-
---##########################################
 
 CREATE TABLE macrocontrole.insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -321,8 +284,6 @@ CREATE TABLE macrocontrole.insumo_unidade_trabalho(
 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id)
 );
-
---##########################################
 
 CREATE TABLE macrocontrole.situacao(
 	code SERIAL NOT NULL PRIMARY KEY,
@@ -358,8 +319,6 @@ CREATE TABLE macrocontrole.subfase_etapa_operador(
 	UNIQUE (usuario_id, prioridade)
 );
 
---##########################################
-
 CREATE TABLE macrocontrole.fila_prioritaria(
 	id SERIAL NOT NULL PRIMARY KEY,
  	execucao_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.execucao_etapa (id),
@@ -368,8 +327,6 @@ CREATE TABLE macrocontrole.fila_prioritaria(
 	UNIQUE (execucao_etapa_id, usuario_id),
 	UNIQUE (usuario_id, prioridade)
 );
-
---##########################################
 
 -- Regime de trabalho de um determinado registro
 CREATE TABLE macrocontrole.regime(
@@ -383,8 +340,6 @@ INSERT INTO macrocontrole.regime (code,nome) VALUES
 (3,'Serviço'),
 (4,'Saindo de serviço');
 
---##########################################
-
 CREATE TABLE macrocontrole.registro_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	data_inicio timestamp with time zone NOT NULL,
@@ -393,8 +348,6 @@ CREATE TABLE macrocontrole.registro_producao(
 	execucao_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.execucao_etapa (id),
   usuario_id INTEGER NOT NULL UNIQUE REFERENCES sdt.usuario (id)
 );
-
---##########################################
 
 -- No caso de atividades especiais (atividades que não são da produção diretamente) é necessário especificar o tipo de atividade
 CREATE TABLE macrocontrole.tipo_atividade(
@@ -409,8 +362,6 @@ INSERT INTO macrocontrole.tipo_atividade (nome) VALUES
 ('Desenvolvimento'),
 ('Outras atividades administrativas');
 
---##########################################
-
 -- Atividade (especial) é utilizado para outras atividades que não são diretas da produção.
 CREATE TABLE macrocontrole.atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -420,8 +371,6 @@ CREATE TABLE macrocontrole.atividade(
 	usuario_id INTEGER NOT NULL UNIQUE REFERENCES sdt.usuario (id)
 );
 
---##########################################
-
 CREATE TABLE macrocontrole.registro_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
 	data_inicio timestamp with time zone NOT NULL,
@@ -429,9 +378,6 @@ CREATE TABLE macrocontrole.registro_atividade(
 	regime_id INTEGER NOT NULL REFERENCES macrocontrole.regime (code),
 	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
 );
-
---##########################################
-
 
 GRANT USAGE ON SCHEMA macrocontrole TO controle_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO controle_app;
