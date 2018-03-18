@@ -42,7 +42,7 @@ controller.login = async (usuario, senha) => {
     });
     return { loginError: null, token: token };
   } catch (error) {
-    const err = new Error("Falha durante autenticação");
+    const err = new Error("Usuário não cadastrado no SAP");
     err.status = 401;
     err.context = "login_ctrl";
     err.information = {};

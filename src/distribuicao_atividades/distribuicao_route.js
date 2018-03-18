@@ -9,8 +9,38 @@ const producaoModel = require("./distribuicao_model");
 const router = express.Router();
 
 /**
+ * @apiDefine Distribuicao Distribuição
+ */
+
+/**
+ * @apiDefine InvalidTokenError
+ *
+ * @apiError InvalidTokenError Token fornecido não é valido.
+ *
+ * @apiErrorExample Error-Response:
+*     HTTP/1.1 401 Unauthorized
+*     {
+*       "success": false,
+*       "message": "Failed to authenticate token"
+*     }
+*/
+
+/**
+ * @apiDefine MissingTokenError
+ *
+ * @apiError MissingTokenError Token não fornecido.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 403 Forbidden
+ *     {
+ *       "success": false,
+ *       "message": "No token provided"
+ *     }
+*/
+
+/**
  * @api {post} /distribuicao/finaliza Finaliza atividade em execução
- * @apiGroup Distribuição
+ * @apiGroup Distribuicao
  *
  * @apiParam (Request body) {Integer} subfase_etapa_id ID da Subfase-Etapa que deve ser finalizada
  * @apiParam (Request body) {Integer} unidade_trabalho_id ID da Unidade Trabalho que deve ser finalizada
@@ -31,23 +61,9 @@ const router = express.Router();
  *       "message": "Finaliza Post validation error"
  *     }
  *
- * @apiError InvalidTokenError Token fornecido não é valido.
- *
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 401 Unauthorized
- *     {
- *       "success": false,
- *       "message": "Failed to authenticate token"
- *     }
- *
- * @apiError MissingTokenError Token não fornecido.
- *
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 403 Forbidden
- *     {
- *       "success": false,
- *       "message": "No token provided"
- *     }
+ * @apiUse InvalidTokenError
+ * @apiUse MissingTokenError
+ * 
  */
 router.post("/finaliza", async (req, res, next) => {
   let validationResult = Joi.validate(req.body, producaoModel.finaliza);
@@ -86,6 +102,30 @@ router.post("/finaliza", async (req, res, next) => {
   );
 });
 
+/**
+ * @api {get} /distribuicao/verifica Retorna atividade em execução
+ * @apiGroup Distribuicao
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "message": "Sem atividade em execução."
+ *     }
+ * 
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "message": "Atividade em execução retornada.",
+ *       "dados": {...}
+ *     }
+ *
+ *
+ * @apiUse InvalidTokenError
+ * @apiUse MissingTokenError
+ * 
+ */
 router.get("/verifica", async (req, res, next) => {
   let { verificaError, dados } = await producaoCtrl.verifica(
     req.body.usuario_id
@@ -120,6 +160,30 @@ router.get("/verifica", async (req, res, next) => {
   }
 });
 
+/**
+ * @api {post} /distribuicao/incia Inicia uma nova atividade
+ * @apiGroup Distribuicao
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "message": "Sem atividades disponíveis para iniciar."
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "message": "Atividade iniciada.",
+ *       "dados": {...}
+ *     }
+ * 
+ *
+ * @apiUse InvalidTokenError
+ * @apiUse MissingTokenError
+ * 
+ */
 router.post("/inicia", async (req, res, next) => {
   let { iniciaError, dados } = await producaoCtrl.inicia(req.body.usuario_id);
   if (iniciaError) {
