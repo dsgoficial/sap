@@ -50,6 +50,11 @@ app.get("/", (req, res, next) => {
   });
 });
 
+//prevent browser from request favicon
+app.get('/favicon.ico', function(req, res) {
+  res.status(204);
+});
+
 //Serve APIDoc
 app.use("/docs", express.static(path.join(__dirname, "apidoc")));
 
