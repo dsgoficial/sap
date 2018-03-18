@@ -294,8 +294,7 @@ INSERT INTO macrocontrole.situacao (code, nome) VALUES
 (1, 'Não iniciada'),
 (2, 'Em execução'),
 (3, 'Pausada'),
-(4, 'Finalizada'),
-(5, 'Não será executada');
+(4, 'Finalizada');
 
 CREATE TABLE macrocontrole.execucao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
