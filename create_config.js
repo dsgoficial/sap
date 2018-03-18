@@ -60,20 +60,20 @@ const createConfig = async () => {
   await inquirer
     .prompt(questions)
     .then(answers => {
-      let env = `
-PORT=${answers.port}
+      if (answers.databaseCreation) {
+        //TODO criação do banco de dados
+      }
+
+      let env = `PORT=${answers.port}
 DB_SERVER=${answers.db_server}
 DB_PORT=${answers.db_port}
 DB_NAME=${answers.db_name}
 DB_USER=${answers.db_user}
 DB_PASSWORD=${answers.db_password}
-JWT_SECRET=${answers.jwt_secret}
-    `;
+JWT_SECRET=${answers.jwt_secret}`;
 
-      fs.writeFileSync("./src/.env", env, "utf-8");
+      fs.writeFileSync(".env", env);
       console.log(chalk.blue("Arquivo de configuração criado com sucesso"));
-
-      //TODO criação do banco de dados
     })
     .catch(err => console.log(err));
 };

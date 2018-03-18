@@ -32,7 +32,7 @@ db
   })
   .catch(function(error) {
     logger.info("Failed database connection", {
-      context: "login_db",
+      context: "main_db",
       information: {
         connectionString: connectionStringMacro
       }
