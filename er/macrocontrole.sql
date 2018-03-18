@@ -43,8 +43,6 @@ CREATE TABLE macrocontrole.projeto(
 
 --##########################################
 
---tipo de produto? o que fazer em projetos que tem que ser gerado MDS, MDT, Ortoimagem.
---Separar carta matricial de vetorial?
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE,
@@ -207,7 +205,6 @@ CREATE TABLE macrocontrole.subfase_etapa(
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	ordem INTEGER NOT NULL -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
 );
--- O ideal é adicionar uma trigger nessa camada que gera as views de trabalho
 
 --##########################################
 
@@ -309,7 +306,6 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	prioridade INTEGER NOT NULL,
 	UNIQUE (nome, subfase_id)
 );
--- O ideal é adicionar uma trigger nessa camada que gera as entradas na tabela de execucao_etapa
 
 --##########################################
 
