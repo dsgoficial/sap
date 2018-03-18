@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /*
 const uuid = require('uuid/v1');
@@ -350,3 +350,4 @@ function getGridVeg(req,res,next,categoria){
   })
 }
 */
+
