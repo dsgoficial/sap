@@ -1,9 +1,0 @@
-{
-  "port": 3013,
-  "db_server": "10.25.163.12",
-  "db_port": "5432",
-  "db_name": "sap",
-  "db_user": "controle_app",
-  "db_password": "controle_app",
-  "secret": "tassofragoso"
-}

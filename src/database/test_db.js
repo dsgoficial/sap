@@ -11,7 +11,19 @@ const pgp = require("pg-promise")(initOptions);
 
 const testeddbs = {};
 
-const testdb = async con => {
+const testdb = async (usuario, senha) => {
+  const con =
+    "postgres://" +
+    usuario +
+    ":" +
+    senha +
+    "@" +
+    process.env.DB_SERVER +
+    ":" +
+    process.env.DB_PORT +
+    "/" +
+    process.env.DB_NAME;
+
   if (!(con in testeddbs)) {
     testeddbs[con] = pgp(con);
   }

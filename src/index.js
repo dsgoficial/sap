@@ -1,15 +1,15 @@
 "use strict";
 
-const config = require("./config.json");
+require('dotenv').config()
 const app = require("./app");
 const { logger } = require("./logger");
 
 //Starts server
-app.listen(config.port, () => {
+app.listen(process.env.PORT, () => {
   logger.info("Server start", {
     context: "index",
     information: {
-      port: config.port
+      port: process.env.PORT
     }
   });
 });

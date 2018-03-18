@@ -1,8 +1,6 @@
 "use strict";
 
 const jwt = require("jsonwebtoken");
-const config = require("../config.json");
-const jwtSecret = config.secret;
 
 const { sendJsonAndLog } = require("../logger");
 
@@ -17,7 +15,7 @@ const verifyToken = function(req, res, next) {
   //decode token
   if (token) {
     //verifica se o token é valido
-    jwt.verify(token, jwtSecret, function(err, decoded) {
+    jwt.verify(token, process.env.JWT_SECRET, function(err, decoded) {
       if (err) {
         let information = {
           url: req.protocol + "://" + req.get("host") + req.originalUrl,

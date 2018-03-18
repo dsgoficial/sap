@@ -1,6 +1,5 @@
 "use strict";
 
-const config = require("../config.json");
 const { logger } = require("../logger");
 
 const promise = require("bluebird");
@@ -14,15 +13,15 @@ const pgp = require("pg-promise")(initOptions);
 
 const connectionStringMacro =
   "postgres://" +
-  config.db_user +
+  process.env.DB_USER +
   ":" +
-  config.db_password +
+  process.env.DB_PASSWORD +
   "@" +
-  config.db_server +
+  process.env.DB_SERVER +
   ":" +
-  config.db_port +
+  process.env.DB_PORT +
   "/" +
-  config.db_name;
+  process.env.DB_NAME;
 
 const db = pgp(connectionStringMacro);
 

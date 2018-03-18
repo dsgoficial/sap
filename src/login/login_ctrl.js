@@ -4,26 +4,10 @@ const jwt = require("jsonwebtoken");
 
 const { db, testdb } = require("../database");
 
-const config = require("../config.json");
-
-const jwtSecret = config.secret;
-
 const controller = {};
 
 controller.login = async (usuario, senha) => {
-  let con =
-    "postgres://" +
-    usuario +
-    ":" +
-    senha +
-    "@" +
-    config.db_server +
-    ":" +
-    config.db_port +
-    "/" +
-    config.db_name;
-
-  let verifycon = await testdb(con);
+  let verifycon = await testdb(usuario, senha);
   if (!verifycon) {
     const err = new Error("Falha durante autenticação");
     err.status = 401;
@@ -37,7 +21,7 @@ controller.login = async (usuario, senha) => {
     const { id } = await db.one("SELECT id FROM sdt.usuario WHERE login = $1", [
       usuario
     ]);
-    const token = jwt.sign({ id }, jwtSecret, {
+    const token = jwt.sign({ id }, process.env.JWT_SECRET, {
       expiresIn: "10h"
     });
     return { loginError: null, token: token };
