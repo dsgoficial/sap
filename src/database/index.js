@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
 module.exports = {
-    db: require('./main_db'),
-    testdb: require('./test_db')
+  db: require("./main_db"),
+  testdb: require("./test_db")
 };

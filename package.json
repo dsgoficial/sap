@@ -17,11 +17,7 @@
     "production": "pm2 start src/index.js --name sap",
     "config": "node create_config.js"
   },
-  "keywords": [
-    "Controle de Produção",
-    "Node",
-    "Express"
-  ],
+  "keywords": ["Controle de Produção", "Node", "Express"],
   "author": "DSG/1CGEO <diniz.felipe@eb.mil.br>",
   "license": "MIT",
   "bugs": {
@@ -49,7 +45,8 @@
     "apidoc": "^0.17.6",
     "gulp": "^3.9.1",
     "gulp-apidoc": "^0.2.7",
-    "nodemon": "^1.17.1"
+    "nodemon": "^1.17.1",
+    "prettier": "1.11.1"
   },
   "apidoc": {
     "name": "API SAP",
