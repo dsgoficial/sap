@@ -89,6 +89,7 @@ $RECYCLE.BIN/
 
 #Log files
 *.log
+*.log.gz
 .audit.json
 
 # APIDOC
