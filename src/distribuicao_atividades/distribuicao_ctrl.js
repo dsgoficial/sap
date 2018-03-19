@@ -88,10 +88,9 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
   return db
     .task(async t => {
       let dadosut = await t.one(
-        `SELECT u.nome_guerra, ee.operador_atual, up.tipo_perfil_id, s.nome as subfase_nome, 
-        ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom, ee.subfase_etapa_id, ee.unidade_trabalho_id,
-        ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta,
-        se.etapa_id, e.nome as etapa_nome
+        `SELECT u.nome_guerra, up.tipo_perfil_id, s.nome as subfase_nome, 
+        ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
+        ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.nome as etapa_nome
         FROM macrocontrole.execucao_etapa as ee
         INNER JOIN macrocontrole.subfase_etapa as se ON se.id = ee.subfase_etapa_id
         INNER JOIN macrocontrole.etapa as e ON e.id = se.etapa_id
@@ -101,7 +100,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
         LEFT JOIN sdt.usuario AS u ON u.id = ee.operador_atual
         LEFT JOIN macrocontrole.usuario_perfil AS up ON up.usuario_id = u.id
         WHERE ee.subfase_etapa_id = $1 and ee.unidade_trabalho_id = $2`,
-        [subfase_etapa, unidade_trabalho]
+        [subfase_etapa]
       );
 
       const info = {};
@@ -114,27 +113,27 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
         FROM macrocontrole.perfil_propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_etapa_id = $1`,
-        [dadosut.etapa_id]
+        [subfase_etapa]
       );
 
       let estilos = await t.any(
         "SELECT nome FROM macrocontrole.perfil_estilo WHERE subfase_etapa_id = $1",
-        [dadosut.etapa_id]
+        [subfase_etapa]
       );
 
       let regras = await t.any(
         "SELECT nome FROM macrocontrole.perfil_regras WHERE subfase_etapa_id = $1",
-        [dadosut.etapa_id]
+        [subfase_etapa]
       );
 
       let menus = await t.any(
         "SELECT nome FROM macrocontrole.perfil_menu WHERE subfase_etapa_id = $1",
-        [dadosut.etapa_id]
+        [subfase_etapa]
       );
 
       let fme = await t.any(
         "SELECT servidor_fme, categoria_fme FROM macrocontrole.perfil_fme WHERE subfase_etapa_id = $1",
-        [dadosut.etapa_id]
+        [subfase_etapa]
       );
 
       let insumos = await t.any(
@@ -147,8 +146,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
 
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
-      info.atividade.epsg = dadosut.unidade_trabalho_epsg;
-      info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
+      info.atividade.unidade_trabalho_id = unidade_trabalho;
       info.atividade.subfase_etapa_id = dadosut.subfase_etapa_id;
       info.atividade.nome =
         dadosut.subfase_nome +
