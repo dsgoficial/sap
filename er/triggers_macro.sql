@@ -52,11 +52,13 @@ $BODY$
       view_txt := view_txt || ' ORDER BY ut.prioridade;';
 
       EXECUTE view_txt;
-      IF TG_OP = 'DELETE' THEN
-        RETURN OLD;
-      ELSE
-        RETURN NEW;
-      END IF;
+
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
     END IF;
 
     END;
@@ -70,3 +72,32 @@ ALTER FUNCTION macrocontrole.cria_view_acompanhamento()
 CREATE TRIGGER cria_view_acompanhamento
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.subfase_etapa
 FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento()
+
+
+CREATE OR REPLACE FUNCTION macrocontrole.cria_execucao_etapa()
+  RETURNS trigger AS
+$BODY$
+    DECLARE r record;
+    BEGIN
+
+      FOR r IN SELECT se.id FROM macrocontrole.subfase AS s 
+        INNER JOIN macrocontrole.subfase_etapa AS se ON s.id = se.subfase_id
+        WHERE se.subfase_id = NEW.subfase_id
+      LOOP
+        INSERT INTO macrocontrole.execucao_etapa(subfase_etapa_id, unidade_trabalho_id, situacao)
+        VALUES (r.id, NEW.id,1);
+      END LOOP;
+
+    RETURN NEW;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.cria_execucao_etapa()
+  OWNER TO postgres;
+
+
+CREATE TRIGGER cria_execucao_etapa
+AFTER INSERT ON macrocontrole.unidade_trabalho
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_execucao_etapa()
