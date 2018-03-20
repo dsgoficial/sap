@@ -147,7 +147,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
       info.atividade.unidade_trabalho_id = unidade_trabalho;
-      info.atividade.subfase_etapa_id = dadosut.subfase_etapa_id;
+      info.atividade.subfase_etapa_id = subfase_etapa;
       info.atividade.nome =
         dadosut.subfase_nome +
         " - " +
