@@ -100,7 +100,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
         LEFT JOIN sdt.usuario AS u ON u.id = ee.operador_atual
         LEFT JOIN macrocontrole.usuario_perfil AS up ON up.usuario_id = u.id
         WHERE ee.subfase_etapa_id = $1 and ee.unidade_trabalho_id = $2`,
-        [subfase_etapa]
+        [subfase_etapa, unidade_trabalho]
       );
 
       const info = {};

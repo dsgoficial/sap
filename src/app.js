@@ -73,7 +73,7 @@ app.use((req, res, next) => {
 
 //Error handling
 app.use((err, req, res, next) => {
-  status = err.status || 500;
+  const status = err.status || 500;
   sendJsonAndLog(
     false,
     err.message,
