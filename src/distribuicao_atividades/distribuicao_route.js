@@ -19,7 +19,7 @@ const router = express.Router();
  *
  * @apiError InvalidTokenError Token fornecido não é valido.
  *
- * @apiErrorExample Error-Response:
+ * @apiErrorExample InvalidTokenError:
  *     HTTP/1.1 401 Unauthorized
  *     {
  *       "success": false,
@@ -32,7 +32,7 @@ const router = express.Router();
  *
  * @apiError MissingTokenError Token não fornecido.
  *
- * @apiErrorExample Error-Response:
+ * @apiErrorExample MissingTokenError:
  *     HTTP/1.1 403 Forbidden
  *     {
  *       "success": false,
@@ -42,12 +42,25 @@ const router = express.Router();
 
 /**
  * @api {post} /distribuicao/finaliza Finaliza atividade em execução
+ * @apiVersion 1.0.0
+ * @apiName FinalizaAtividade
  * @apiGroup Distribuicao
+ * @apiPermission operador
+ *
+ * @apiDescription Finaliza uma atividade indicada por uma subfase_etapa e uma unidade_trabalho
  *
  * @apiParam (Request body) {Integer} subfase_etapa_id ID da Subfase-Etapa que deve ser finalizada
  * @apiParam (Request body) {Integer} unidade_trabalho_id ID da Unidade Trabalho que deve ser finalizada
  *
- * @apiSuccessExample Success-Response:
+ * @apiParamExample {json} Input
+ *     {
+ *       "subfase_etapa_id": 5,
+ *       "unidade_trabalho_id": 132
+ *     }
+ *
+ * @apiSuccess {String} message  Mensagem de sucesso.
+ *
+ * @apiSuccessExample {json} Resposta em caso de Sucesso:
  *     HTTP/1.1 200 OK
  *     {
  *       "success": true,
@@ -56,7 +69,7 @@ const router = express.Router();
  *
  * @apiError JsonValidationError O objeto json não segue o padrão estabelecido.
  *
- * @apiErrorExample Error-Response:
+ * @apiErrorExample JsonValidationError:
  *     HTTP/1.1 400 Bad Request
  *     {
  *       "success": false,
@@ -108,14 +121,14 @@ router.post("/finaliza", async (req, res, next) => {
  * @api {get} /distribuicao/verifica Retorna atividade em execução
  * @apiGroup Distribuicao
  *
- * @apiSuccessExample Success-Response:
+ * @apiSuccessExample Sem atividade em execução:
  *     HTTP/1.1 200 OK
  *     {
  *       "success": true,
  *       "message": "Sem atividade em execução."
  *     }
  *
- * @apiSuccessExample Success-Response:
+ * @apiSuccessExample Com atividade em execução:
  *     HTTP/1.1 200 OK
  *     {
  *       "success": true,
