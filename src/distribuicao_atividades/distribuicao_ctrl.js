@@ -259,6 +259,17 @@ controller.finaliza = async (
 ) => {
   const data_fim = new Date();
   try {
+    let { data_inicio } = await db.one(
+      `SELECT data_inicio FROM macrocontrole.execucao_etapa
+      WHERE subfase_etapa_id = $1 and unidade_trabalho_id = $2 and operador_atual = $3`,
+      [subfase_etapa_id, unidade_trabalho_id, usuario_id]
+    );
+    if (data_fim - data_inicio < 180000) {
+      throw new Error(
+        "Tempo menor que a tolerância para finalizar uma atividade."
+      );
+    }
+
     let result = await db.result(
       `UPDATE macrocontrole.execucao_etapa SET
       data_fim = $1, situacao = 4
