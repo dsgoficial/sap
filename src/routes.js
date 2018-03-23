@@ -1,7 +1,6 @@
 "use strict";
 
-const { loginRoute } = require("./login");
-const { loginMiddleware } = require("./login");
+const { loginRoute, loginMiddleware } = require("./login");
 const { distribuicaoRoute } = require("./distribuicao_atividades");
 
 const routes = app => {
