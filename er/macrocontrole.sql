@@ -276,6 +276,7 @@ CREATE TABLE macrocontrole.insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	caminho VARCHAR(255) NOT NULL,
+	epsg VARCHAR(5),
 	geom geometry(POLYGON, 4674) --se for não espacial a geometria é nula
 );
 
