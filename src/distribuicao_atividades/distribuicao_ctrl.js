@@ -34,7 +34,6 @@ const calculaFila = async usuario => {
         `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id
         FROM macrocontrole.execucao_etapa AS ee
         INNER JOIN macrocontrole.subfase_etapa_operador AS seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
-        INNER JOIN sdt.usuario AS u ON u.id = seo.usuario_id
         INNER JOIN macrocontrole.subfase_etapa AS se ON se.id = ee.subfase_etapa_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
         LEFT JOIN
@@ -45,20 +44,20 @@ const calculaFila = async usuario => {
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem = ee_ant.ordem + 1
         WHERE ut.disponivel = TRUE AND seo.usuario_id = $1 AND ee.situacao = 1 AND
-        (ee_ant.situacao IS NULL OR ee_ant.situacao = 4 OR ee_ant.situacao = 5)
+        (ee_ant.situacao IS NULL OR ee_ant.situacao = 4)
         AND ee.id NOT IN        
         (
           SELECT ee.id FROM macrocontrole.execucao_etapa AS ee
           INNER JOIN macrocontrole.subfase_etapa_operador AS seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
           INNER JOIN sdt.usuario AS u ON u.id = seo.usuario_id
-          LEFT JOIN macrocontrole.restricao_etapa AS re ON re.subfase_etapa_2_id = ee.subfase_etapa_id
-          LEFT JOIN macrocontrole.execucao_etapa AS ee_re ON ee_re.subfase_etapa_id = re.subfase_etapa_1_id
-            AND ee_re.unidade_trabalho_id = ee.unidade_trabalho_id
-          LEFT JOIN sdt.usuario AS u_re ON u_re.id = ee_re.operador_atual
+          INNER JOIN macrocontrole.restricao_etapa AS re ON re.subfase_etapa_2_id = ee.subfase_etapa_id
+          INNER JOIN macrocontrole.execucao_etapa AS ee_re ON ee_re.subfase_etapa_id = re.subfase_etapa_1_id
+          INNER JOIN sdt.usuario AS u_re ON u_re.id = ee_re.operador_atual
           WHERE seo.usuario_id = $1 AND (
             (re.tipo_restricao_id = 1 AND ee_re.operador_atual = $1) OR
             (re.tipo_restricao_id = 2 AND ee_re.operador_atual != $1) OR 
-            (re.tipo_restricao_id = 3 AND u_re.turno != u.turno))
+            (re.tipo_restricao_id = 3 AND u_re.turno != u.turno)
+          )
         )
         ORDER BY seo.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
@@ -264,6 +263,7 @@ controller.finaliza = async (
       WHERE subfase_etapa_id = $1 and unidade_trabalho_id = $2 and operador_atual = $3`,
       [subfase_etapa_id, unidade_trabalho_id, usuario_id]
     );
+    console.log('Tempo de execução', (data_fim - data_inicio)/60000)
     if (data_fim - data_inicio < 180000) {
       throw new Error(
         "Tempo menor que a tolerância para finalizar uma atividade."
