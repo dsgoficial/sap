@@ -52,6 +52,7 @@ const calculaFila = async usuario => {
           INNER JOIN sdt.usuario AS u ON u.id = seo.usuario_id
           INNER JOIN macrocontrole.restricao_etapa AS re ON re.subfase_etapa_2_id = ee.subfase_etapa_id
           INNER JOIN macrocontrole.execucao_etapa AS ee_re ON ee_re.subfase_etapa_id = re.subfase_etapa_1_id
+          AND ee_re.unidade_trabalho_id = ee.unidade_trabalho_id
           INNER JOIN sdt.usuario AS u_re ON u_re.id = ee_re.operador_atual
           WHERE seo.usuario_id = $1 AND (
             (re.tipo_restricao_id = 1 AND ee_re.operador_atual = $1) OR
