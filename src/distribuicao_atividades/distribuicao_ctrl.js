@@ -57,7 +57,7 @@ const calculaFila = async usuario => {
           WHERE seo.usuario_id = $1 AND (
             (re.tipo_restricao_id = 1 AND ee_re.operador_atual = $1) OR
             (re.tipo_restricao_id = 2 AND ee_re.operador_atual != $1) OR 
-            (re.tipo_restricao_id = 3 AND u_re.turno != u.turno)
+            (re.tipo_restricao_id = 3 AND u_re.turno != u.turno AND u_re.turno != 3 AND u.turno != 3)
           )
         )
         ORDER BY seo.prioridade, ut.prioridade LIMIT 1`,
