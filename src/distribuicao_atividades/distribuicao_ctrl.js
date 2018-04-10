@@ -60,6 +60,10 @@ const calculaFila = async usuario => {
             (re.tipo_restricao_id = 3 AND u_re.turno != u.turno AND u_re.turno != 3 AND u.turno != 3)
           )
         )
+        AND ee.id NOT IN
+        (
+          SELECT execucao_etapa_id FROM macrocontrole.fila_prioritaria
+        )
         ORDER BY seo.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
       );
