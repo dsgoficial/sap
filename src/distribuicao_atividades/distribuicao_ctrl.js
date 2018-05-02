@@ -269,7 +269,7 @@ controller.finaliza = async (
       [subfase_etapa_id, unidade_trabalho_id, usuario_id]
     );
     console.log('Tempo de execução', (data_fim - data_inicio)/60000)
-    if (data_fim - data_inicio < 180000) {
+    if (data_fim - data_inicio < 120000) {
       throw new Error(
         "Tempo menor que a tolerância para finalizar uma atividade."
       );
