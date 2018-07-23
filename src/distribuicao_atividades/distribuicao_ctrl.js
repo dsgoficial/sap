@@ -20,9 +20,9 @@ const calculaFila = async usuario => {
 
       let cartas_pausadas = await t.oneOrNone(
         `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
-        INNER JOIN macrocontrole.subfase_etapa_operador as seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
+        INNER JOIN macrocontrole.perfil_subfase_etapa as pse ON pse.subfase_etapa_id = ee.subfase_etapa_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
-        WHERE ee.operador_atual = $1 and ee.situacao = 3 ORDER BY seo.prioridade, ut.prioridade LIMIT 1`,
+        WHERE ee.operador_atual = $1 and ee.situacao = 3 ORDER BY pse.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
       );
 
@@ -33,8 +33,9 @@ const calculaFila = async usuario => {
       let prioridade_operador = await t.oneOrNone(
         `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id
         FROM macrocontrole.execucao_etapa AS ee
-        INNER JOIN macrocontrole.subfase_etapa_operador AS seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
-        INNER JOIN sdt.usuario AS u ON u.id = seo.usuario_id
+        INNER JOIN macrocontrole.perfil_subfase_etapa AS pse ON pse.subfase_etapa_id = ee.subfase_etapa_id
+        INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
+        INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
         INNER JOIN macrocontrole.subfase_etapa AS se ON se.id = ee.subfase_etapa_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
         LEFT JOIN
@@ -44,23 +45,24 @@ const calculaFila = async usuario => {
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem = ee_ant.ordem + 1
-        WHERE ut.disponivel = TRUE AND seo.usuario_id = $1 AND ee.situacao = 1 AND
+        WHERE ut.disponivel = TRUE AND ppo.usuario_id = $1 AND ee.situacao = 1 AND
         (ee_ant.situacao IS NULL OR ee_ant.situacao = 4 OR ee_ant.situacao = 5)
         AND ee.id NOT IN        
         (
           SELECT ee.id FROM macrocontrole.execucao_etapa AS ee
-          INNER JOIN macrocontrole.subfase_etapa_operador AS seo ON seo.subfase_etapa_id = ee.subfase_etapa_id
-          INNER JOIN sdt.usuario AS u ON u.id = seo.usuario_id
+          INNER JOIN macrocontrole.perfil_subfase_etapa AS pse ON pse.subfase_etapa_id = ee.subfase_etapa_id
+          INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
+          INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
           LEFT JOIN macrocontrole.restricao_etapa AS re ON re.subfase_etapa_2_id = ee.subfase_etapa_id
           LEFT JOIN macrocontrole.execucao_etapa AS ee_re ON ee_re.subfase_etapa_id = re.subfase_etapa_1_id
             AND ee_re.unidade_trabalho_id = ee.unidade_trabalho_id
-          LEFT JOIN sdt.usuario AS u_re ON u_re.id = ee_re.operador_atual
-          WHERE seo.usuario_id = $1 AND (
+          LEFT JOIN dgeo.usuario AS u_re ON u_re.id = ee_re.operador_atual
+          WHERE ppo.usuario_id = $1 AND (
             (re.tipo_restricao_id = 1 AND ee_re.operador_atual = $1) OR
             (re.tipo_restricao_id = 2 AND ee_re.operador_atual != $1) OR 
             (re.tipo_restricao_id = 3 AND u_re.turno != u.turno))
         )
-        ORDER BY seo.prioridade, ut.prioridade LIMIT 1`,
+        ORDER BY pse.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
       );
 
@@ -97,7 +99,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
         INNER JOIN macrocontrole.subfase as s ON s.id = se.subfase_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
-        LEFT JOIN sdt.usuario AS u ON u.id = ee.operador_atual
+        LEFT JOIN dgeo.usuario AS u ON u.id = ee.operador_atual
         LEFT JOIN macrocontrole.usuario_perfil AS up ON up.usuario_id = u.id
         WHERE ee.subfase_etapa_id = $1 and ee.unidade_trabalho_id = $2`,
         [subfase_etapa, unidade_trabalho]
@@ -197,7 +199,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
         INNER JOIN macrocontrole.subfase_etapa AS se ON se.id = ee.subfase_etapa_id
         INNER JOIN macrocontrole.subfase as sub ON sub.id = se.subfase_id
         INNER JOIN macrocontrole.etapa as et ON et.id = se.etapa_id
-        INNER JOIN sdt.usuario AS u ON u.id = ee.operador_atual
+        INNER JOIN dgeo.usuario AS u ON u.id = ee.operador_atual
         INNER JOIN macrocontrole.situacao AS sit ON sit.code = ee.situacao
         WHERE ee.unidade_trabalho_id = $1 and ee.subfase_etapa_id != $2
         ORDER BY se.ordem`,

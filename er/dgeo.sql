@@ -3,15 +3,15 @@ BEGIN;
 --Usuário que será utilizado pela API. Substituir senha conforme necessidade.
 --CREATE USER controle_app WITH PASSWORD 'controle_app';
 
-CREATE SCHEMA sdt;
+CREATE SCHEMA dgeo;
 
-CREATE TABLE sdt.posto_grad(
+CREATE TABLE dgeo.posto_grad(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	nome_abrev VARCHAR(255) NOT NULL
 );
 
-INSERT INTO sdt.posto_grad (code, nome,nome_abrev) VALUES
+INSERT INTO dgeo.posto_grad (code, nome,nome_abrev) VALUES
 (1, 'Civil', 'Civ'),
 (2, 'Mão de Obra Temporária', 'MOT'),
 (3, 'Soldado EV', 'Sd EV'),
@@ -28,30 +28,33 @@ INSERT INTO sdt.posto_grad (code, nome,nome_abrev) VALUES
 (14, 'Major', 'Maj'),
 (15, 'Tenente Coronel', 'TC'),
 (16, 'Coronel', 'Cel'),
-(17, 'General', 'Gen');
+(17, 'General de Brigada', 'Gen'),
+(18, 'General de Divisão', 'Gen'),
+(19, 'General de Exército', 'Gen');
 
 -- Células 1CGEO
-CREATE TABLE sdt.celula(
+CREATE TABLE dgeo.celula(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	UNIQUE (nome)
 );
 
-INSERT INTO sdt.celula (nome) VALUES
+INSERT INTO dgeo.celula (nome) VALUES
 ('Célula de Desenvolvimento'),
 ('Célula de Validação e Edição'),
 ('Célula de Avaliação'),
 ('Célula de Fotogrametria'),
 ('Célula de Digitalização'),
-('Célula Administrativa');
+('Célula Administrativa'),
+('Célula de Controle de Qualidade');
 
 --Valores padrão para turno de trabalho
-CREATE TABLE sdt.turno(
+CREATE TABLE dgeo.turno(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO sdt.turno (code, nome) VALUES
+INSERT INTO dgeo.turno (code, nome) VALUES
 (1, 'Manhã'),
 (2, 'Tarde'),
 (3, 'Integral');
@@ -59,21 +62,21 @@ INSERT INTO sdt.turno (code, nome) VALUES
 --Usuários do sistema
 --Login deve ser o mesmo do banco de dados de produção
 --Senha do usuário vem do banco de dados
-CREATE TABLE sdt.usuario(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
+CREATE TABLE dgeo.usuario(
+  id SERIAL NOT NULL PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
   nome_guerra VARCHAR(255) NOT NULL,
   login VARCHAR(255) UNIQUE NOT NULL,
-  celula INTEGER REFERENCES sdt.celula (id),
-  turno INTEGER NOT NULL REFERENCES sdt.turno (code),
-  posto_grad INTEGER NOT NULL REFERENCES sdt.posto_grad (code)
+  celula INTEGER REFERENCES dgeo.celula (id),
+  turno INTEGER NOT NULL REFERENCES dgeo.turno (code),
+  posto_grad INTEGER NOT NULL REFERENCES dgeo.posto_grad (code)
 );
 
-INSERT INTO sdt.usuario (id, nome, nome_guerra, login, turno, posto_grad) VALUES
+INSERT INTO dgeo.usuario (id, nome, nome_guerra, login, turno, posto_grad) VALUES
 (1, 'Administrador', 'Administrador', 'controle_app', 3, 13);
 
-GRANT USAGE ON SCHEMA sdt TO controle_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA sdt TO controle_app;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA sdt TO controle_app;
+GRANT USAGE ON SCHEMA dgeo TO controle_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO controle_app;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA dgeo TO controle_app;
 
 COMMIT;

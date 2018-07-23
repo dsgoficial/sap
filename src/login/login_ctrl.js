@@ -18,7 +18,7 @@ controller.login = async (usuario, senha) => {
   }
 
   try {
-    const { id } = await db.one("SELECT id FROM sdt.usuario WHERE login = $1", [
+    const { id } = await db.one("SELECT id FROM dgeo.usuario WHERE login = $1", [
       usuario
     ]);
     const token = jwt.sign({ id }, process.env.JWT_SECRET, {

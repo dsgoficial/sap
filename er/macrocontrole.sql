@@ -19,9 +19,9 @@ INSERT INTO macrocontrole.tipo_perfil (code,nome) VALUES
 
 -- Tabela que associa os usuarios ao perfil
 CREATE TABLE macrocontrole.usuario_perfil(
-	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_perfil_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perfil (code),
-  usuario_id INTEGER NOT NULL UNIQUE REFERENCES sdt.usuario (id)
+  id SERIAL NOT NULL PRIMARY KEY,
+  tipo_perfil_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perfil (code),
+  usuario_id INTEGER NOT NULL UNIQUE REFERENCES dgeo.usuario (id)
 );
 
 INSERT INTO macrocontrole.usuario_perfil (tipo_perfil_id, usuario_id) VALUES
@@ -143,7 +143,7 @@ CREATE TABLE macrocontrole.subfase(
 	nome VARCHAR(255) NOT NULL,
 	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	ordem INTEGER NOT NULL, -- as subfases são ordenadas dentre de uma fase. Isso não impede o paralelismo de subfases. É uma ordenação para apresentação
-	celula_id INTEGER NOT NULL REFERENCES sdt.celula (id), -- uma subfase é executada por uma célula
+	celula_id INTEGER NOT NULL REFERENCES dgeo.celula (id), -- uma subfase é executada por uma célula
 	UNIQUE (nome, fase_id)
 );
 
@@ -151,7 +151,7 @@ CREATE TABLE macrocontrole.subfase(
 -- Na versão atual não está em uso
 CREATE TABLE macrocontrole.subfase_gerente(
 	id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES sdt.usuario (id),
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE (usuario_id, subfase_id)
 );
@@ -301,7 +301,7 @@ CREATE TABLE macrocontrole.execucao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	subfase_etapa_id INTEGER REFERENCES macrocontrole.subfase_etapa (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
-	operador_atual INTEGER REFERENCES sdt.usuario (id),
+	operador_atual INTEGER REFERENCES dgeo.usuario (id),
 	situacao INTEGER REFERENCES macrocontrole.situacao (code),
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone
@@ -310,19 +310,31 @@ CREATE TABLE macrocontrole.execucao_etapa(
 -- Tabela que associa um operador as operações que pode desempenhar
 -- O numero da prioridade é unico por operador
 -- Não pode associar um operador a mesma subfase_etapa duas vezes
-CREATE TABLE macrocontrole.subfase_etapa_operador(
+
+CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
-  	usuario_id INTEGER NOT NULL REFERENCES sdt.usuario (id),
+  	nome VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE macrocontrole.perfil_subfase_etapa(
+	id SERIAL NOT NULL PRIMARY KEY,
+  	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
 	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id),
 	prioridade INTEGER NOT NULL,
-	UNIQUE (usuario_id, subfase_etapa_id),
-	UNIQUE (usuario_id, prioridade)
+	UNIQUE (perfil_producao_id, subfase_etapa_id)
+);
+
+CREATE TABLE macrocontrole.perfil_producao_operador(
+	id SERIAL NOT NULL PRIMARY KEY,
+  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
+	UNIQUE (usuario_id, perfil_producao_id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria(
 	id SERIAL NOT NULL PRIMARY KEY,
  	execucao_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.execucao_etapa (id),
- 	usuario_id INTEGER NOT NULL REFERENCES sdt.usuario (id),
+ 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	prioridade INTEGER NOT NULL,
 	UNIQUE (execucao_etapa_id, usuario_id),
 	UNIQUE (usuario_id, prioridade)
@@ -346,7 +358,7 @@ CREATE TABLE macrocontrole.registro_producao(
 	data_fim timestamp with time zone,
 	regime INTEGER NOT NULL REFERENCES macrocontrole.regime (code),
 	execucao_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.execucao_etapa (id),
-  usuario_id INTEGER NOT NULL UNIQUE REFERENCES sdt.usuario (id)
+  usuario_id INTEGER NOT NULL UNIQUE REFERENCES dgeo.usuario (id)
 );
 
 -- No caso de atividades especiais (atividades que não são da produção diretamente) é necessário especificar o tipo de atividade
@@ -368,7 +380,7 @@ CREATE TABLE macrocontrole.atividade(
 	tipo_atividade_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_atividade (id),
 	atividade_tecnica BOOLEAN NOT NULL,
 	observacao TEXT,
-	usuario_id INTEGER NOT NULL UNIQUE REFERENCES sdt.usuario (id)
+	usuario_id INTEGER NOT NULL UNIQUE REFERENCES dgeo.usuario (id)
 );
 
 CREATE TABLE macrocontrole.registro_atividade(
