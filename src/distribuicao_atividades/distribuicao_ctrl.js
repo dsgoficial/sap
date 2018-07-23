@@ -60,7 +60,12 @@ const calculaFila = async usuario => {
           WHERE ppo.usuario_id = $1 AND (
             (re.tipo_restricao_id = 1 AND ee_re.operador_atual = $1) OR
             (re.tipo_restricao_id = 2 AND ee_re.operador_atual != $1) OR 
-            (re.tipo_restricao_id = 3 AND u_re.turno != u.turno))
+            (re.tipo_restricao_id = 3 AND u_re.turno != u.turno AND u_re.turno != 3 AND u.turno != 3)
+          )
+        )
+        AND ee.id NOT IN
+        (
+          SELECT execucao_etapa_id FROM macrocontrole.fila_prioritaria
         )
         ORDER BY pse.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
@@ -266,7 +271,8 @@ controller.finaliza = async (
       WHERE subfase_etapa_id = $1 and unidade_trabalho_id = $2 and operador_atual = $3`,
       [subfase_etapa_id, unidade_trabalho_id, usuario_id]
     );
-    if (data_fim - data_inicio < 180000) {
+    console.log('Tempo de execução', (data_fim - data_inicio)/60000)
+    if (data_fim - data_inicio < 120000) {
       throw new Error(
         "Tempo menor que a tolerância para finalizar uma atividade."
       );
