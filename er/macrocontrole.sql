@@ -180,6 +180,12 @@ CREATE TABLE macrocontrole.subfase_etapa(
 	ordem INTEGER NOT NULL -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
 );
 
+CREATE TABLE macrocontrole.requisito(
+	id SERIAL NOT NULL PRIMARY KEY,
+	descricao VARCHAR(255) NOT NULL,
+	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+);
+
 CREATE TABLE macrocontrole.perfil_fme(
 	id SERIAL NOT NULL PRIMARY KEY,
 	servidor_fme VARCHAR(255),

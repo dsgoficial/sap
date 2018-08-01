@@ -210,6 +210,18 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
         ORDER BY se.ordem`,
         [unidade_trabalho, subfase_etapa]
       );
+
+      let requisitos = await t.any(
+        `SELECT r.descricao
+        FROM macrocontrole.requisito AS r
+        INNER JOIN macrocontrole.subfase_etapa AS se ON se.id = r.subfase_etapa_id
+        WHERE r.subfase_etapa_id = $1`,
+        [subfase_etapa]
+      );
+      info.atividade.requisitos = []
+      requisitos.forEach(r => info.atividade.requisitos.push(r.descricao));
+      info.atividade.requisitos.sort()
+      
       return info;
     })
     .then(info => {
