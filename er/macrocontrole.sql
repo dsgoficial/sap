@@ -193,6 +193,20 @@ CREATE TABLE macrocontrole.perfil_fme(
 	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
 );
 
+CREATE TABLE macrocontrole.rotina(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE macrocontrole.perfil_rotina(
+	id SERIAL NOT NULL PRIMARY KEY,
+	rotina_id INTEGER NOT NULL REFERENCES macrocontrole.rotina (id),
+	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
+	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
+	parametros VARCHAR(255),
+	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+);
+
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,

@@ -143,6 +143,16 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
         [subfase_etapa]
       );
 
+      let rotinas = await t.any(
+        `SELECT r.nome, c1.nome as camada, c2.nome as camada_apontamento, pr.parametros
+        FROM macrocontrole.perfil_rotina AS pr
+        INNER JOIN macrocontrole.rotina AS r ON r.id = pr.rotina_id
+        INNER JOIN macrocontrole.camada AS c1 ON c1.id = pr.camada_id
+        INNER JOIN macrocontrole.camada AS c2 ON c2.id = pr.camada_apontamento_id
+        WHERE pr.subfase_etapa_id = $1`,
+        [subfase_etapa]
+      );
+
       let insumos = await t.any(
         `SELECT i.nome, i.caminho
         FROM macrocontrole.insumo AS i
@@ -188,6 +198,25 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
           restricao_atributos: c.restricao_atributos
         });
       });
+
+      info.atividade.rotinas = {};
+      rotinas.forEach(r => {
+        if(!(r.nome in info.atividade.rotinas)){
+          info.atividade.rotinas[r.nome] = []
+        }
+        let aux = {
+          camada: r.camada,
+          camada_apontamento: r.camada_apontamento
+        }
+
+        if(r.parametros){
+          let param = JSON.parse(r.parametros)
+          aux = {...aux, ...param}
+        }
+
+        info.atividade.rotinas[r.nome].push(aux);
+      });
+
 
       info.atividade.insumos = [];
       insumos.forEach(i => {
