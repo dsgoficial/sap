@@ -47,6 +47,11 @@ CREATE TABLE macrocontrole.produto(
   projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
 );
 
+CREATE INDEX produto_geom
+    ON macrocontrole.produto USING gist
+    (geom)
+    TABLESPACE pg_default;
+
 CREATE TABLE macrocontrole.tipo_bdgex(
 	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE
@@ -252,15 +257,16 @@ CREATE TABLE macrocontrole.tipo_monitoramento(
 );
 
 INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
-(1, 'Monitoramento do canvas'),
-(2, 'Monitoramento da feição');
+(1, 'Monitoramento de tela'),
+(2, 'Monitoramento de feição');
+(3, 'Monitoramento de apontamento');
 
 CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_monitoramento INTEGER REFERENCES macrocontrole.tipo_monitoramento (code),
+	tipo_monitoramento INTEGER NOT NULL REFERENCES macrocontrole.tipo_monitoramento (code),
 	camada_id INTEGER REFERENCES macrocontrole.camada (id),
 	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id),
-	bd_monitoramento_id INTEGER REFERENCES macrocontrole.banco_dados (id),
+	banco_dados_id INTEGER NOT NULL REFERENCES macrocontrole.banco_dados (id)
 );
 
 CREATE TABLE macrocontrole.tipo_restricao(
@@ -292,6 +298,11 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	UNIQUE (nome, subfase_id)
 );
 
+CREATE INDEX unidade_trabalho_geom
+    ON macrocontrole.unidade_trabalho USING gist
+    (geom)
+    TABLESPACE pg_default;
+
 CREATE TABLE macrocontrole.insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
@@ -299,6 +310,11 @@ CREATE TABLE macrocontrole.insumo(
 	epsg VARCHAR(5),
 	geom geometry(POLYGON, 4674) --se for não espacial a geometria é nula
 );
+
+CREATE INDEX insumo_geom
+    ON macrocontrole.insumo USING gist
+    (geom)
+    TABLESPACE pg_default;
 
 CREATE TABLE macrocontrole.insumo_unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,

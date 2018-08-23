@@ -95,7 +95,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
   return db
     .task(async t => {
       let dadosut = await t.one(
-        `SELECT u.nome_guerra, up.tipo_perfil_id, s.nome as subfase_nome, 
+        `SELECT u.id as usuario_id, u.nome_guerra, up.tipo_perfil_id, s.nome as subfase_nome, 
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
         ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.nome as etapa_nome
         FROM macrocontrole.execucao_etapa as ee
@@ -111,6 +111,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
       );
 
       const info = {};
+      info.usuario_id = dadosut.usuario_id
       info.usuario = dadosut.nome_guerra;
       info.perfil = dadosut.tipo_perfil_id;
       info.atividade = {};
@@ -140,6 +141,16 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
 
       let fme = await t.any(
         "SELECT servidor_fme, categoria_fme FROM macrocontrole.perfil_fme WHERE subfase_etapa_id = $1",
+        [subfase_etapa]
+      );
+
+      let monitoramento = await t.any(
+        `SELECT tm.nome as tipo_monitoramento, c.nome as camada, bd.nome AS nome_bd, bd.servidor, bd.porta
+        FROM macrocontrole.perfil_monitoramento AS pm
+        INNER JOIN macrocontrole.banco_dados AS bd ON bd.id = pm.banco_dados_id
+        INNER JOIN macrocontrole.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento 
+        LEFT JOIN macrocontrole.camada AS c ON c.id = pm.camada_id
+        WHERE subfase_etapa_id = $1`,
         [subfase_etapa]
       );
 
@@ -197,6 +208,22 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
           geometria_editavel: c.geometria_editavel,
           restricao_atributos: c.restricao_atributos
         });
+      });
+
+      info.atividade.monitoramento = {};
+      monitoramento.forEach(m => {
+        if(!(m.tipo_monitoramento in info.atividade.monitoramento)){
+          info.atividade.monitoramento[m.tipo_monitoramento] = []
+        }
+        let aux = {
+          nome_bd: m.nome_bd,
+          servidor: m.servidor,
+          porta: m.porta
+        }
+        if(m.camada){
+          aux.camada = m.camada
+        }
+        info.atividade.monitoramento[m.tipo_monitoramento].push(aux);
       });
 
       info.atividade.rotinas = {};
