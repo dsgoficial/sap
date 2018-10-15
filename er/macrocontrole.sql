@@ -203,6 +203,11 @@ CREATE TABLE macrocontrole.rotina(
 	nome VARCHAR(255) NOT NULL
 );
 
+CREATE TABLE macrocontrole.camada(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE macrocontrole.perfil_rotina(
 	id SERIAL NOT NULL PRIMARY KEY,
 	rotina_id INTEGER NOT NULL REFERENCES macrocontrole.rotina (id),
@@ -230,11 +235,6 @@ CREATE TABLE macrocontrole.perfil_menu(
 	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
 );
 
-CREATE TABLE macrocontrole.camada(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
 CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	filtro TEXT,
@@ -258,7 +258,7 @@ CREATE TABLE macrocontrole.tipo_monitoramento(
 
 INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
 (1, 'Monitoramento de tela'),
-(2, 'Monitoramento de feição');
+(2, 'Monitoramento de feição'),
 (3, 'Monitoramento de apontamento');
 
 CREATE TABLE macrocontrole.perfil_monitoramento(

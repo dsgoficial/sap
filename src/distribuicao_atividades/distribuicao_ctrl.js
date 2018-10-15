@@ -31,7 +31,9 @@ const calculaFila = async usuario => {
       }
 
       let prioridade_operador = await t.oneOrNone(
-        `SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id
+        `SELECT subfase_etapa_id, unidade_trabalho_id, MIN(situacao_ant) AS situacao_ant_min
+        FROM (
+        SELECT ee.subfase_etapa_id, ee.unidade_trabalho_id, ee_ant.situacao AS situacao_ant, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
         FROM macrocontrole.execucao_etapa AS ee
         INNER JOIN macrocontrole.perfil_subfase_etapa AS pse ON pse.subfase_etapa_id = ee.subfase_etapa_id
         INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
@@ -44,9 +46,8 @@ const calculaFila = async usuario => {
           INNER JOIN macrocontrole.subfase_etapa AS se ON se.id = ee.subfase_etapa_id 
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
-        AND se.ordem = ee_ant.ordem + 1
-        WHERE ut.disponivel = TRUE AND ppo.usuario_id = $1 AND ee.situacao = 1 AND
-        (ee_ant.situacao IS NULL OR ee_ant.situacao = 4 OR ee_ant.situacao = 5)
+        AND se.ordem > ee_ant.ordem
+        WHERE ut.disponivel = TRUE AND ppo.usuario_id = $1 AND ee.situacao = 1
         AND ee.id NOT IN        
         (
           SELECT ee.id FROM macrocontrole.execucao_etapa AS ee
@@ -67,7 +68,11 @@ const calculaFila = async usuario => {
         (
           SELECT execucao_etapa_id FROM macrocontrole.fila_prioritaria
         )
-        ORDER BY pse.prioridade, ut.prioridade LIMIT 1`,
+        ) AS sit
+        GROUP BY subfase_etapa_id, unidade_trabalho_id
+        HAVING situacao_ant_min IS NULL or situacao_ant_min = 4
+        ORDER BY pse_prioridade, ut_prioridade
+        LIMIT 1`,
         [usuario]
       );
 
@@ -111,7 +116,7 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
       );
 
       const info = {};
-      info.usuario_id = dadosut.usuario_id
+      info.usuario_id = dadosut.usuario_id;
       info.usuario = dadosut.nome_guerra;
       info.perfil = dadosut.tipo_perfil_id;
       info.atividade = {};
@@ -212,38 +217,37 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
 
       info.atividade.monitoramento = {};
       monitoramento.forEach(m => {
-        if(!(m.tipo_monitoramento in info.atividade.monitoramento)){
-          info.atividade.monitoramento[m.tipo_monitoramento] = []
+        if (!(m.tipo_monitoramento in info.atividade.monitoramento)) {
+          info.atividade.monitoramento[m.tipo_monitoramento] = [];
         }
         let aux = {
           nome_bd: m.nome_bd,
           servidor: m.servidor,
           porta: m.porta
-        }
-        if(m.camada){
-          aux.camada = m.camada
+        };
+        if (m.camada) {
+          aux.camada = m.camada;
         }
         info.atividade.monitoramento[m.tipo_monitoramento].push(aux);
       });
 
       info.atividade.rotinas = {};
       rotinas.forEach(r => {
-        if(!(r.nome in info.atividade.rotinas)){
-          info.atividade.rotinas[r.nome] = []
+        if (!(r.nome in info.atividade.rotinas)) {
+          info.atividade.rotinas[r.nome] = [];
         }
         let aux = {
           camada: r.camada,
           camada_apontamento: r.camada_apontamento
-        }
+        };
 
-        if(r.parametros){
-          let param = JSON.parse(r.parametros)
-          aux = {...aux, ...param}
+        if (r.parametros) {
+          let param = JSON.parse(r.parametros);
+          aux = { ...aux, ...param };
         }
 
         info.atividade.rotinas[r.nome].push(aux);
       });
-
 
       info.atividade.insumos = [];
       insumos.forEach(i => {
@@ -274,10 +278,10 @@ const dadosProducao = async (subfase_etapa, unidade_trabalho) => {
         WHERE r.subfase_etapa_id = $1`,
         [subfase_etapa]
       );
-      info.atividade.requisitos = []
+      info.atividade.requisitos = [];
       requisitos.forEach(r => info.atividade.requisitos.push(r.descricao));
-      info.atividade.requisitos.sort()
-      
+      info.atividade.requisitos.sort();
+
       return info;
     })
     .then(info => {
@@ -339,7 +343,7 @@ controller.finaliza = async (
       WHERE subfase_etapa_id = $1 and unidade_trabalho_id = $2 and operador_atual = $3`,
       [subfase_etapa_id, unidade_trabalho_id, usuario_id]
     );
-    console.log('Tempo de execução', (data_fim - data_inicio)/60000)
+    console.log("Tempo de execução", (data_fim - data_inicio) / 60000);
     if (data_fim - data_inicio < 120000) {
       throw new Error(
         "Tempo menor que a tolerância para finalizar uma atividade."
