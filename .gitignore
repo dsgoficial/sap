@@ -94,5 +94,5 @@ $RECYCLE.BIN/
 
 # APIDOC
 src/apidoc
-
+src/logger/log
 .vscode

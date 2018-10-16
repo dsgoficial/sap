@@ -1,8 +1,5 @@
 BEGIN;
 
---Usuário que será utilizado pela API. Substituir senha conforme necessidade.
---CREATE USER controle_app WITH PASSWORD 'controle_app';
-
 CREATE SCHEMA dgeo;
 
 CREATE TABLE dgeo.posto_grad(
@@ -71,12 +68,5 @@ CREATE TABLE dgeo.usuario(
   turno INTEGER NOT NULL REFERENCES dgeo.turno (code),
   posto_grad INTEGER NOT NULL REFERENCES dgeo.posto_grad (code)
 );
-
-INSERT INTO dgeo.usuario (id, nome, nome_guerra, login, turno, posto_grad) VALUES
-(1, 'Administrador', 'Administrador', 'controle_app', 3, 13);
-
-GRANT USAGE ON SCHEMA dgeo TO controle_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO controle_app;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA dgeo TO controle_app;
 
 COMMIT;

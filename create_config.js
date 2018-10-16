@@ -3,8 +3,25 @@
 const fs = require("fs");
 const inquirer = require("inquirer");
 const chalk = require("chalk");
+const pgtools = require("pgtools");
+const path = require("path");
+const promise = require("bluebird");
 
-const createConfig = async () => {
+const initOptions = {
+  promiseLib: promise
+};
+
+const pgp = require("pg-promise")(initOptions);
+
+const sql1 = fs.readFileSync(path.resolve("./er/dgeo.sql"), "utf-8").trim();
+const sql2 = fs
+  .readFileSync(path.resolve("./er/macrocontrole.sql"), "utf-8")
+  .trim();
+const sql3 = fs
+  .readFileSync(path.resolve("./er/monitoramento.sql"), "utf-8")
+  .trim();
+
+const createConfig = () => {
   console.log(chalk.blue("Sistema de Apoio a Produção"));
   console.log(chalk.blue("Criação do arquivo de configuração"));
 
@@ -24,7 +41,7 @@ const createConfig = async () => {
       type: "input",
       name: "db_user",
       message:
-        "Qual o nome do usuário administrador do SAP (já existente no banco de dados)?",
+        "Qual o nome do usuário administrador do SAP (já existente no banco de dados e ser superusuario)?",
       default: "controle_app"
     },
     {
@@ -39,12 +56,6 @@ const createConfig = async () => {
       default: "sap"
     },
     {
-      type: "confirm",
-      name: "databaseCreation",
-      message: "Deseja criar o banco de dados do SAP?",
-      default: false
-    },
-    {
       type: "input",
       name: "port",
       message: "Qual a porta do serviço do SAP?",
@@ -54,14 +65,70 @@ const createConfig = async () => {
       type: "password",
       name: "jwt_secret",
       message: "Defina um Seed para geração do token de autenticação."
+    },
+    {
+      type: "confirm",
+      name: "db_create",
+      message: "Deseja criar o banco de dados do SAP?",
+      default: true
     }
   ];
 
-  await inquirer
-    .prompt(questions)
-    .then(answers => {
-      if (answers.databaseCreation) {
-        //TODO criação do banco de dados
+  inquirer.prompt(questions).then(async answers => {
+    const config = {
+      user: answers.db_user,
+      password: answers.db_password,
+      port: answers.db_port,
+      host: answers.db_server
+    };
+
+    try {
+      if (answers.db_create) {
+        await pgtools.createdb(config, answers.db_name);
+
+        const connectionString =
+          "postgres://" +
+          answers.db_user +
+          ":" +
+          answers.db_password +
+          "@" +
+          answers.db_server +
+          ":" +
+          answers.db_port +
+          "/" +
+          answers.db_name;
+
+        const db = pgp(connectionString);
+
+        await db.none(sql1);
+
+        await db.none(
+          `
+        INSERT INTO dgeo.usuario (id, nome, nome_guerra, login, turno, posto_grad) VALUES
+        (1, 'Administrador', 'Administrador', $1:name, 3, 13);
+        `,
+          [answers.db_user]
+        );
+
+        await db.none(sql2);
+        await db.none(sql3);
+
+        await db.none(
+          `
+        GRANT USAGE ON SCHEMA dgeo TO $1:name;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;
+        GRANT ALL ON ALL SEQUENCES IN SCHEMA dgeo TO $1:name;
+        GRANT USAGE ON SCHEMA macrocontrole TO $1:name;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO $1:name;
+        GRANT ALL ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
+        GRANT USAGE ON SCHEMA monitoramento TO public;
+        GRANT SELECT ON ALL TABLES IN SCHEMA monitoramento TO public;
+        GRANT ALL ON schema monitoramento TO $1:name;
+        `,
+          [answers.db_user]
+        );
+
+        console.log(chalk.blue("Banco de dados do SAP criado com sucesso!"));
       }
 
       let env = `PORT=${answers.port}
@@ -74,8 +141,41 @@ JWT_SECRET=${answers.jwt_secret}`;
 
       fs.writeFileSync(".env", env);
       console.log(chalk.blue("Arquivo de configuração criado com sucesso!"));
-    })
-    .catch(err => console.log(err));
+    } catch (error) {
+      if (
+        error.message ===
+        "Postgres error. Cause: permission denied to create database"
+      ) {
+        console.log(
+          chalk.red(
+            "The user passed does not have permission to create databases."
+          )
+        );
+      } else if (
+        error.message ===
+        'Attempted to create a duplicate database. Cause: database "' +
+          answers.db_name +
+          '" already exists'
+      ) {
+        console.log(
+          chalk.red("The database " + answers.db_name + " already exists.")
+        );
+      } else if (
+        error.message ===
+        'password authentication failed for user "' + answers.db_user + '"'
+      ) {
+        console.log(
+          chalk.red(
+            "Password authentication failed for the user " + answers.db_user
+          )
+        );
+      } else {
+        console.log(error.message);
+        console.log("-------------------------------------------------");
+        console.log(error);
+      }
+    }
+  });
 };
 
 createConfig();

@@ -69,8 +69,8 @@ const calculaFila = async usuario => {
           SELECT execucao_etapa_id FROM macrocontrole.fila_prioritaria
         )
         ) AS sit
-        GROUP BY subfase_etapa_id, unidade_trabalho_id
-        HAVING situacao_ant_min IS NULL or situacao_ant_min = 4
+        GROUP BY subfase_etapa_id, unidade_trabalho_id, pse_prioridade, ut_prioridade
+        HAVING MIN(situacao_ant) IS NULL or MIN(situacao_ant) = 4
         ORDER BY pse_prioridade, ut_prioridade
         LIMIT 1`,
         [usuario]

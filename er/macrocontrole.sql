@@ -427,8 +427,4 @@ CREATE TABLE macrocontrole.registro_atividade(
 	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
 );
 
-GRANT USAGE ON SCHEMA macrocontrole TO controle_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO controle_app;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA macrocontrole TO controle_app;
-
 COMMIT;
