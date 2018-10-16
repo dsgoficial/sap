@@ -29,22 +29,6 @@ INSERT INTO dgeo.posto_grad (code, nome,nome_abrev) VALUES
 (18, 'General de Divisão', 'Gen'),
 (19, 'General de Exército', 'Gen');
 
--- Células 1CGEO
-CREATE TABLE dgeo.celula(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	UNIQUE (nome)
-);
-
-INSERT INTO dgeo.celula (nome) VALUES
-('Célula de Desenvolvimento'),
-('Célula de Validação e Edição'),
-('Célula de Avaliação'),
-('Célula de Fotogrametria'),
-('Célula de Digitalização'),
-('Célula Administrativa'),
-('Célula de Controle de Qualidade');
-
 --Valores padrão para turno de trabalho
 CREATE TABLE dgeo.turno(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -64,7 +48,6 @@ CREATE TABLE dgeo.usuario(
   nome VARCHAR(255) NOT NULL,
   nome_guerra VARCHAR(255) NOT NULL,
   login VARCHAR(255) UNIQUE NOT NULL,
-  celula INTEGER REFERENCES dgeo.celula (id),
   turno INTEGER NOT NULL REFERENCES dgeo.turno (code),
   posto_grad INTEGER NOT NULL REFERENCES dgeo.posto_grad (code)
 );

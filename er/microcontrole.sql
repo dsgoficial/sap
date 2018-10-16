@@ -10,7 +10,7 @@ CREATE TABLE microcontrole.monitoramento_feicao(
   comprimento real,
   vertices integer,
   data timestamp with time zone NOT NULL,
-  subfase_etapa INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id),
+  etapa INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
   unidade_trabalho INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id)
 );
 
@@ -25,7 +25,7 @@ CREATE TABLE microcontrole.monitoramento_apontamento(
   usuario VARCHAR(255) NOT NULL,
   quantidade integer NOT NULL,
   data timestamp with time zone NOT NULL,
-  subfase_etapa INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id),
+  etapa INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
   unidade_trabalho INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id)
 );
 
@@ -38,7 +38,7 @@ CREATE TABLE microcontrole.monitoramento_tela(
   id SERIAL NOT NULL PRIMARY KEY,
   usuario VARCHAR(255) NOT NULL,
   data timestamp with time zone NOT NULL,
-  subfase_etapa INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id),
+  etapa INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
   unidade_trabalho INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
   geom geometry(POLYGON, 4674) NOT NULL, 
 );

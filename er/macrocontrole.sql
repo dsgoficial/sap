@@ -5,12 +5,12 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE SCHEMA macrocontrole;
 
 -- Tipo do perfil de acesso ao controle macro
-CREATE TABLE macrocontrole.tipo_perfil(
+CREATE TABLE macrocontrole.tipo_perfil_sistema(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO macrocontrole.tipo_perfil (code,nome) VALUES
+INSERT INTO macrocontrole.tipo_perfil_sistema (code,nome) VALUES
 (1, 'Visualizador'),
 (2, 'Operador'),
 (3, 'Gerente de Fluxo'),
@@ -18,21 +18,16 @@ INSERT INTO macrocontrole.tipo_perfil (code,nome) VALUES
 (5, 'Administrador'); 
 
 -- Tabela que associa os usuarios ao perfil
-CREATE TABLE macrocontrole.usuario_perfil(
+CREATE TABLE macrocontrole.usuario_perfil_sistema(
   id SERIAL NOT NULL PRIMARY KEY,
-  tipo_perfil_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perfil (code),
+  tipo_perfil_sistema_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perfil_sistema (code),
   usuario_id INTEGER NOT NULL UNIQUE REFERENCES dgeo.usuario (id)
 );
-
-INSERT INTO macrocontrole.usuario_perfil (tipo_perfil_id, usuario_id) VALUES
-(5, 1);
 
 -- Projeto armazena os metadados necessários para geração dos XML do BDGEx e informações gerais sobre as cartas produzidas
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL UNIQUE,
-	data_inicio timestamp with time zone,
-	data_fim timestamp with time zone
+	nome VARCHAR(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE macrocontrole.produto(
@@ -43,43 +38,14 @@ CREATE TABLE macrocontrole.produto(
 	escala VARCHAR(255) NOT NULL,
 	area_suprimento VARCHAR(255) NOT NULL,
 	observacao VARCHAR(255) NOT NULL,
-  geom geometry(POLYGON, 4674) NOT NULL, 
-  projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
+  	geom geometry(POLYGON, 4674) NOT NULL, 
+  	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
 );
 
 CREATE INDEX produto_geom
     ON macrocontrole.produto USING gist
     (geom)
     TABLESPACE pg_default;
-
-CREATE TABLE macrocontrole.tipo_bdgex(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL UNIQUE
-);
-INSERT INTO macrocontrole.tipo_bdgex (code, nome) VALUES
-(1, 'BDGEx ostensivo'),
-(2, 'BDGEx Operações');
-
-CREATE TABLE macrocontrole.tipo_produto(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL UNIQUE
-);
-
-INSERT INTO macrocontrole.tipo_produto (code, nome) VALUES
-(1, 'Carta topográfica matricial'),
-(2, 'Carta topográfica vetorial'),
-(3, 'Carta ortoimagem'),
-(4, 'MDS'),
-(5, 'MDT'),
-(6, 'Ortoimagem');
-
-CREATE TABLE macrocontrole.carregamento_bdgex(
-	id SERIAL NOT NULL PRIMARY KEY,	
-	data timestamp with time zone, 
-	tipo_produto INTEGER NOT NULL REFERENCES macrocontrole.tipo_produto (code),
-	tipo_bdgex INTEGER REFERENCES macrocontrole.tipo_bdgex (code),
-	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
-);
 
 -- Tipos de palavra chave previstos na ISO19115 / PCDG
 CREATE TABLE macrocontrole.tipo_palavra_chave(
@@ -148,25 +114,15 @@ CREATE TABLE macrocontrole.subfase(
 	nome VARCHAR(255) NOT NULL,
 	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	ordem INTEGER NOT NULL, -- as subfases são ordenadas dentre de uma fase. Isso não impede o paralelismo de subfases. É uma ordenação para apresentação
-	celula_id INTEGER NOT NULL REFERENCES dgeo.celula (id), -- uma subfase é executada por uma célula
 	UNIQUE (nome, fase_id)
 );
 
--- Tabela que associa um gerente as subfases que ele pode gerenciar
--- Na versão atual não está em uso
-CREATE TABLE macrocontrole.subfase_gerente(
-	id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE (usuario_id, subfase_id)
-);
-
-CREATE TABLE macrocontrole.etapa(
+CREATE TABLE macrocontrole.tipo_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO macrocontrole.etapa (nome) VALUES
+INSERT INTO macrocontrole.tipo_etapa (nome) VALUES
 ('Execução'),
 ('Revisão 1'),
 ('Correção 1'),
@@ -178,27 +134,27 @@ INSERT INTO macrocontrole.etapa (nome) VALUES
 ('Revisão por pares 2'),
 ('Revisão por amostragem');
 
-CREATE TABLE macrocontrole.subfase_etapa(
+CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+	tipo_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_etapa (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	ordem INTEGER NOT NULL -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
 );
 
-CREATE TABLE macrocontrole.requisito(
+CREATE TABLE macrocontrole.requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
 CREATE TABLE macrocontrole.perfil_fme(
 	id SERIAL NOT NULL PRIMARY KEY,
 	servidor_fme VARCHAR(255),
 	categoria_fme VARCHAR(255),
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
-CREATE TABLE macrocontrole.rotina(
+CREATE TABLE macrocontrole.tipo_rotina(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
@@ -210,38 +166,35 @@ CREATE TABLE macrocontrole.camada(
 
 CREATE TABLE macrocontrole.perfil_rotina(
 	id SERIAL NOT NULL PRIMARY KEY,
-	rotina_id INTEGER NOT NULL REFERENCES macrocontrole.rotina (id),
+	tipo_rotina_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (id),
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
 	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
 	parametros VARCHAR(255),
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
 CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
 CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
-	filtro TEXT,
-	geometria_editavel BOOLEAN NOT NULL,
-	restricao_atributos TEXT, --Atributos separados por ;
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
 CREATE TABLE macrocontrole.banco_dados(
@@ -265,7 +218,7 @@ CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_monitoramento INTEGER NOT NULL REFERENCES macrocontrole.tipo_monitoramento (code),
 	camada_id INTEGER REFERENCES macrocontrole.camada (id),
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id),
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
 	banco_dados_id INTEGER NOT NULL REFERENCES macrocontrole.banco_dados (id)
 );
 
@@ -282,8 +235,14 @@ INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
 CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),
-	subfase_etapa_1_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id),
-	subfase_etapa_2_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id)	
+	etapa_1_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+	etapa_2_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)	
+);
+
+CREATE TABLE macrocontrole.lote(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL,
+	prioridade INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.unidade_trabalho(
@@ -293,6 +252,7 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE, --indica se a unidade de trabalho pode ser executada ou não
 	prioridade INTEGER NOT NULL,
 	UNIQUE (nome, subfase_id)
@@ -331,11 +291,12 @@ INSERT INTO macrocontrole.situacao (code, nome) VALUES
 (1, 'Não iniciada'),
 (2, 'Em execução'),
 (3, 'Pausada'),
-(4, 'Finalizada');
+(4, 'Finalizada'),
+(5, 'Não será executada');
 
 CREATE TABLE macrocontrole.execucao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	subfase_etapa_id INTEGER REFERENCES macrocontrole.subfase_etapa (id),
+	etapa_id INTEGER REFERENCES macrocontrole.etapa (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	operador_atual INTEGER REFERENCES dgeo.usuario (id),
 	situacao INTEGER REFERENCES macrocontrole.situacao (code),
@@ -345,19 +306,19 @@ CREATE TABLE macrocontrole.execucao_etapa(
 
 -- Tabela que associa um operador as operações que pode desempenhar
 -- O numero da prioridade é unico por operador
--- Não pode associar um operador a mesma subfase_etapa duas vezes
+-- Não pode associar um operador a mesma etapa duas vezes
 
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
   	nome VARCHAR(255) NOT NULL UNIQUE
 );
 
-CREATE TABLE macrocontrole.perfil_subfase_etapa(
+CREATE TABLE macrocontrole.perfil_producao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
   	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
-	subfase_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.subfase_etapa (id),
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
 	prioridade INTEGER NOT NULL,
-	UNIQUE (perfil_producao_id, subfase_etapa_id)
+	UNIQUE (perfil_producao_id, etapa_id)
 );
 
 CREATE TABLE macrocontrole.perfil_producao_operador(
@@ -374,57 +335,6 @@ CREATE TABLE macrocontrole.fila_prioritaria(
 	prioridade INTEGER NOT NULL,
 	UNIQUE (execucao_etapa_id, usuario_id),
 	UNIQUE (usuario_id, prioridade)
-);
-
--- Regime de trabalho de um determinado registro
-CREATE TABLE macrocontrole.regime(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.regime (code,nome) VALUES
-(1,'Turno'),
-(2,'Integral'),
-(3,'Serviço'),
-(4,'Saindo de serviço');
-
-CREATE TABLE macrocontrole.registro_producao(
-	id SERIAL NOT NULL PRIMARY KEY,
-	data_inicio timestamp with time zone NOT NULL,
-	data_fim timestamp with time zone,
-	regime INTEGER NOT NULL REFERENCES macrocontrole.regime (code),
-	execucao_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.execucao_etapa (id),
-  usuario_id INTEGER NOT NULL UNIQUE REFERENCES dgeo.usuario (id)
-);
-
--- No caso de atividades especiais (atividades que não são da produção diretamente) é necessário especificar o tipo de atividade
-CREATE TABLE macrocontrole.tipo_atividade(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_atividade (nome) VALUES
-('Exame pagamento'),
-('Sindicância'),
-('Recarregamento BDGEx'),
-('Desenvolvimento'),
-('Outras atividades administrativas');
-
--- Atividade (especial) é utilizado para outras atividades que não são diretas da produção.
-CREATE TABLE macrocontrole.atividade(
-	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_atividade_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_atividade (id),
-	atividade_tecnica BOOLEAN NOT NULL,
-	observacao TEXT,
-	usuario_id INTEGER NOT NULL UNIQUE REFERENCES dgeo.usuario (id)
-);
-
-CREATE TABLE macrocontrole.registro_atividade(
-	id SERIAL NOT NULL PRIMARY KEY,
-	data_inicio timestamp with time zone NOT NULL,
-	data_fim timestamp with time zone,
-	regime_id INTEGER NOT NULL REFERENCES macrocontrole.regime (code),
-	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
 );
 
 COMMIT;

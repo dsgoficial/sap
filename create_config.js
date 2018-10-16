@@ -62,11 +62,6 @@ const createConfig = () => {
       default: 3013
     },
     {
-      type: "password",
-      name: "jwt_secret",
-      message: "Defina um Seed para geração do token de autenticação."
-    },
-    {
       type: "confirm",
       name: "db_create",
       message: "Deseja criar o banco de dados do SAP?",
@@ -101,29 +96,19 @@ const createConfig = () => {
         const db = pgp(connectionString);
 
         await db.none(sql1);
-
-        await db.none(
-          `
-        INSERT INTO dgeo.usuario (id, nome, nome_guerra, login, turno, posto_grad) VALUES
-        (1, 'Administrador', 'Administrador', $1:name, 3, 13);
-        `,
-          [answers.db_user]
-        );
-
         await db.none(sql2);
         await db.none(sql3);
 
         await db.none(
           `
-        GRANT USAGE ON SCHEMA dgeo TO $1:name;
+        GRANT ALL ON SCHEMA dgeo TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;
         GRANT ALL ON ALL SEQUENCES IN SCHEMA dgeo TO $1:name;
-        GRANT USAGE ON SCHEMA macrocontrole TO $1:name;
+        GRANT ALL ON SCHEMA macrocontrole TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO $1:name;
         GRANT ALL ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
-        GRANT USAGE ON SCHEMA monitoramento TO public;
-        GRANT SELECT ON ALL TABLES IN SCHEMA monitoramento TO public;
         GRANT ALL ON schema monitoramento TO $1:name;
+        GRANT SELECT ON ALL TABLES IN SCHEMA monitoramento TO $1:name;
         `,
           [answers.db_user]
         );
@@ -137,7 +122,7 @@ DB_PORT=${answers.db_port}
 DB_NAME=${answers.db_name}
 DB_USER=${answers.db_user}
 DB_PASSWORD=${answers.db_password}
-JWT_SECRET=${answers.jwt_secret}`;
+JWT_SECRET=tassofragoso`;
 
       fs.writeFileSync(".env", env);
       console.log(chalk.blue("Arquivo de configuração criado com sucesso!"));
@@ -150,6 +135,13 @@ JWT_SECRET=${answers.jwt_secret}`;
           chalk.red(
             "The user passed does not have permission to create databases."
           )
+        );
+      } else if (
+        error.message ===
+        'permission denied to create extension "postgis"'
+      ) {
+        console.log(
+          chalk.red("The user passed is not a superuser.")
         );
       } else if (
         error.message ===

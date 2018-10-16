@@ -47,14 +47,14 @@ const router = express.Router();
  * @apiGroup Distribuicao
  * @apiPermission operador
  *
- * @apiDescription Finaliza uma atividade indicada por uma subfase_etapa e uma unidade_trabalho
+ * @apiDescription Finaliza uma atividade indicada por uma etapa e uma unidade_trabalho
  *
- * @apiParam (Request body) {Integer} subfase_etapa_id ID da Subfase-Etapa que deve ser finalizada
+ * @apiParam (Request body) {Integer} etapa_id ID da Subfase-Etapa que deve ser finalizada
  * @apiParam (Request body) {Integer} unidade_trabalho_id ID da Unidade Trabalho que deve ser finalizada
  *
  * @apiParamExample {json} Input
  *     {
- *       "subfase_etapa_id": 5,
+ *       "etapa_id": 5,
  *       "unidade_trabalho_id": 132
  *     }
  *
@@ -94,7 +94,7 @@ router.post("/finaliza", async (req, res, next) => {
 
   let { finalizaError } = await producaoCtrl.finaliza(
     req.body.usuario_id,
-    req.body.subfase_etapa_id,
+    req.body.etapa_id,
     req.body.unidade_trabalho_id
   );
   if (finalizaError) {
@@ -103,7 +103,7 @@ router.post("/finaliza", async (req, res, next) => {
 
   let information = {
     usuario_id: req.body.usuario_id,
-    subfase_etapa_id: req.body.subfase_etapa_id,
+    etapa_id: req.body.etapa_id,
     unidade_trabalho_id: req.body.unidade_trabalho_id
   };
   return sendJsonAndLog(
