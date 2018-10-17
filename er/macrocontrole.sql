@@ -269,7 +269,7 @@ CREATE INDEX unidade_trabalho_geom
     TABLESPACE pg_default;
 
 CREATE TABLE macrocontrole.tipo_insumo(
-	id SMALLINT NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
@@ -336,7 +336,7 @@ CREATE TABLE macrocontrole.perfil_producao_operador(
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
-	UNIQUE (usuario_id, perfil_producao_id)
+	UNIQUE (usuario_id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria(

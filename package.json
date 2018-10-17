@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/dinizime/sap"
+    "url": "git://github.com/1cgeo/sap"
   },
   "engines": {
     "node": "~8.7.0",
@@ -25,7 +25,7 @@
   "author": "DSG/1CGEO <diniz.felipe@eb.mil.br>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dinizime/sap/issues"
+    "url": "https://github.com/1cgeo/sap/issues"
   },
   "dependencies": {
     "apidoc": "^0.17.6",

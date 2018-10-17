@@ -49,7 +49,7 @@ const router = express.Router();
  *
  * @apiDescription Finaliza uma atividade indicada por uma etapa e uma unidade_trabalho
  *
- * @apiParam (Request body) {Integer} etapa_id ID da Subfase-Etapa que deve ser finalizada
+ * @apiParam (Request body) {Integer} etapa_id ID da Etapa que deve ser finalizada
  * @apiParam (Request body) {Integer} unidade_trabalho_id ID da Unidade Trabalho que deve ser finalizada
  *
  * @apiParamExample {json} Input
@@ -58,7 +58,7 @@ const router = express.Router();
  *       "unidade_trabalho_id": 132
  *     }
  *
- * @apiSuccess {String} message  Mensagem de sucesso.
+ * @apiSuccess {String} message  Atividade finalizada com sucesso.
  *
  * @apiSuccessExample {json} Resposta em caso de Sucesso:
  *     HTTP/1.1 200 OK
@@ -120,15 +120,25 @@ router.post("/finaliza", async (req, res, next) => {
 /**
  * @api {get} /distribuicao/verifica Retorna atividade em execução
  * @apiGroup Distribuicao
+ * @apiVersion 1.0.0
+ * @apiName VerificaAtividade
+ * @apiPermission operador
  *
- * @apiSuccessExample Sem atividade em execução:
+ *
+ * @apiDescription Verifica a atividade em execução para um determinado usuário
+ *
+ *
+ * @apiSuccess {String} message  Retorna atividade em execução ou avisa que não existe atividade em execução.
+ * @apiSuccess {String} dados Em caso de existir uma nova atividade retorna os dados desta atividade. 
+ * 
+ * @apiSuccessExample {json} Sem atividade em execução:
  *     HTTP/1.1 200 OK
  *     {
  *       "success": true,
  *       "message": "Sem atividade em execução."
  *     }
  *
- * @apiSuccessExample Com atividade em execução:
+ * @apiSuccessExample {json} Com atividade em execução:
  *     HTTP/1.1 200 OK
  *     {
  *       "success": true,
@@ -176,17 +186,26 @@ router.get("/verifica", async (req, res, next) => {
 });
 
 /**
- * @api {post} /distribuicao/incia Inicia uma nova atividade
+ * @api {post} /distribuicao/inicia Inicia uma nova atividade
  * @apiGroup Distribuicao
+ * @apiVersion 1.0.0
+ * @apiName IniciaAtividade
+ * @apiPermission operador
+ * 
+ * @apiDescription Inicia uma nova atividade para um determinado usuário
  *
- * @apiSuccessExample Success-Response:
+ *
+ * @apiSuccess {String} message  Retorna uma nova atividade ou avisa que não existe atividade para iniciar.
+ * @apiSuccess {String} dados Em caso de existir uma nova atividade retorna os dados desta atividade. 
+ * 
+ * @apiSuccessExample Sem atividades disponíveis:
  *     HTTP/1.1 200 OK
  *     {
  *       "success": true,
  *       "message": "Sem atividades disponíveis para iniciar."
  *     }
  *
- * @apiSuccessExample Success-Response:
+ * @apiSuccessExample Atividade iniciada:
  *     HTTP/1.1 200 OK
  *     {
  *       "success": true,

@@ -20,11 +20,11 @@ const calculaFila = async usuario => {
 
       let cartas_pausadas = await t.oneOrNone(
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
-        INNER JOIN macrocontrole.perfil_etapa as pse ON pse.etapa_id = ee.etapa_id
+        INNER JOIN macrocontrole.perfil_producao_etapa as pse ON pse.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
         WHERE ee.operador_atual = $1 and ee.situacao = 3
-        ORDER BY lo_prioridade, pse.prioridade, ut.prioridade LIMIT 1`,
+        ORDER BY lo.prioridade, pse.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
       );
 
@@ -37,7 +37,7 @@ const calculaFila = async usuario => {
         FROM (
         SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.situacao AS situacao_ant, lo.prioridade AS lo_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
         FROM macrocontrole.execucao_etapa AS ee
-        INNER JOIN macrocontrole.perfil_etapa AS pse ON pse.etapa_id = ee.etapa_id
+        INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
         INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
         INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
         INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
@@ -54,7 +54,7 @@ const calculaFila = async usuario => {
         AND ee.id NOT IN        
         (
           SELECT ee.id FROM macrocontrole.execucao_etapa AS ee
-          INNER JOIN macrocontrole.perfil_etapa AS pse ON pse.etapa_id = ee.etapa_id
+          INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
           INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
           INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
           LEFT JOIN macrocontrole.restricao_etapa AS re ON re.etapa_2_id = ee.etapa_id
@@ -93,7 +93,7 @@ const calculaFila = async usuario => {
       err.status = 500;
       err.context = "distribuicao_ctrl";
       err.information = {};
-      err.information.usuario_id = usuario_id;
+      err.information.usuario_id = usuario;
       err.information.trace = error;
       return { erro: err, prioridade: null };
     });
@@ -208,8 +208,10 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       estilos.forEach(r => info.atividade.estilos.push(r.nome));
       regras.forEach(r => info.atividade.regras.push(r.nome));
       menus.forEach(r => info.atividade.menus.push(r.nome));
-      camadas.forEach(r => info.atividade.camadas.push(r.nome));
+      camadas.forEach(r => info.atividade.camadas.push({nome: r.nome}));
 
+
+      
       info.atividade.monitoramento = {};
       monitoramento.forEach(m => {
         if (!(m.tipo_monitoramento in info.atividade.monitoramento)) {

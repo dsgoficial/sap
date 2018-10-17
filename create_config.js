@@ -124,8 +124,13 @@ DB_USER=${answers.db_user}
 DB_PASSWORD=${answers.db_password}
 JWT_SECRET=tassofragoso`;
 
+      let exists = fs.existsSync(".env");
+      if(exists){
+        throw Error('Arquivo .env já existe, apague antes de iniciar a configuração.')
+      }
       fs.writeFileSync(".env", env);
       console.log(chalk.blue("Arquivo de configuração criado com sucesso!"));
+    
     } catch (error) {
       if (
         error.message ===
@@ -161,10 +166,19 @@ JWT_SECRET=tassofragoso`;
             "Password authentication failed for the user " + answers.db_user
           )
         );
+      } else if (
+        error.message ===
+        'Arquivo .env já existe, apague antes de iniciar a configuração.'
+      ) {
+        console.log(
+          chalk.red(
+            "Arquivo .env já existe, apague antes de iniciar a configuração."
+          )
+        );
       } else {
-        console.log(error.message);
+        console.log(chalk.red(error.message));
         console.log("-------------------------------------------------");
-        console.log(error);
+        console.log(chalk.red(error));
       }
     }
   });
