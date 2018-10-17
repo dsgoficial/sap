@@ -155,9 +155,15 @@ CREATE TABLE macrocontrole.perfil_fme(
 );
 
 CREATE TABLE macrocontrole.tipo_rotina(
-	id SERIAL NOT NULL PRIMARY KEY,
+	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
+
+INSERT INTO macrocontrole.tipo_rotina (code, nome) VALUES
+(1, 'outOfBoundsAngles'),
+(2, 'invalidGeometry'),
+(3, 'notSimpleGeometry');
+
 
 CREATE TABLE macrocontrole.camada(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -166,7 +172,7 @@ CREATE TABLE macrocontrole.camada(
 
 CREATE TABLE macrocontrole.perfil_rotina(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_rotina_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (id),
+	tipo_rotina INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (code),
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
 	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
 	parametros VARCHAR(255),
@@ -263,11 +269,17 @@ CREATE INDEX unidade_trabalho_geom
     (geom)
     TABLESPACE pg_default;
 
+CREATE TABLE macrocontrole.tipo_insumo(
+	id SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE macrocontrole.insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	caminho VARCHAR(255) NOT NULL,
 	epsg VARCHAR(5),
+	tipo_insumo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_insumo (id),
 	geom geometry(POLYGON, 4674) --se for não espacial a geometria é nula
 );
 

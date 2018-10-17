@@ -22,7 +22,9 @@ const calculaFila = async usuario => {
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
         INNER JOIN macrocontrole.perfil_etapa as pse ON pse.etapa_id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
-        WHERE ee.operador_atual = $1 and ee.situacao = 3 ORDER BY pse.prioridade, ut.prioridade LIMIT 1`,
+        INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+        WHERE ee.operador_atual = $1 and ee.situacao = 3
+        ORDER BY lo_prioridade, pse.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
       );
 
@@ -70,7 +72,7 @@ const calculaFila = async usuario => {
           SELECT execucao_etapa_id FROM macrocontrole.fila_prioritaria
         )
         ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, pse_prioridade, ut_prioridade
+        GROUP BY etapa_id, unidade_trabalho_id, lo_prioridade, pse_prioridade, ut_prioridade
         HAVING MIN(situacao_ant) IS NULL or MIN(situacao_ant) = 4
         ORDER BY lo_prioridade, pse_prioridade, ut_prioridade
         LIMIT 1`,
@@ -123,7 +125,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       info.atividade = {};
 
       let camadas = await t.any(
-        `SELECT c.nome, pc.filtro, pc.geometria_editavel, pc.restricao_atributos
+        `SELECT c.nome
         FROM macrocontrole.perfil_propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.etapa_id = $1`,
@@ -163,7 +165,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       let rotinas = await t.any(
         `SELECT r.nome, c1.nome as camada, c2.nome as camada_apontamento, pr.parametros
         FROM macrocontrole.perfil_rotina AS pr
-        INNER JOIN macrocontrole.tipo_rotina AS r ON r.id = pr.tipo_rotina_id
+        INNER JOIN macrocontrole.tipo_rotina AS r ON r.code = pr.tipo_rotina
         INNER JOIN macrocontrole.camada AS c1 ON c1.id = pr.camada_id
         INNER JOIN macrocontrole.camada AS c2 ON c2.id = pr.camada_apontamento_id
         WHERE pr.etapa_id = $1`,
@@ -181,7 +183,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
       info.atividade.unidade_trabalho_id = unidade_trabalho;
-      info.atividade.etapa_id = etapa;
+      info.atividade.subfase_etapa_id = etapa;
       info.atividade.nome =
         dadosut.subfase_nome +
         " - " +
@@ -201,20 +203,12 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       info.atividade.estilos = [];
       info.atividade.regras = [];
       info.atividade.menus = [];
+      info.atividade.camadas = [];
 
       estilos.forEach(r => info.atividade.estilos.push(r.nome));
       regras.forEach(r => info.atividade.regras.push(r.nome));
       menus.forEach(r => info.atividade.menus.push(r.nome));
-
-      info.atividade.camadas = [];
-      camadas.forEach(c => {
-        info.atividade.camadas.push({
-          nome: c.nome,
-          filtro: c.editavel,
-          geometria_editavel: c.geometria_editavel,
-          restricao_atributos: c.restricao_atributos
-        });
-      });
+      camadas.forEach(r => info.atividade.camadas.push(r.nome));
 
       info.atividade.monitoramento = {};
       monitoramento.forEach(m => {
@@ -332,25 +326,9 @@ controller.verifica = async usuario_id => {
   }
 };
 
-controller.finaliza = async (
-  usuario_id,
-  etapa_id,
-  unidade_trabalho_id
-) => {
+controller.finaliza = async (usuario_id, etapa_id, unidade_trabalho_id) => {
   const data_fim = new Date();
   try {
-    let { data_inicio } = await db.one(
-      `SELECT data_inicio FROM macrocontrole.execucao_etapa
-      WHERE etapa_id = $1 and unidade_trabalho_id = $2 and operador_atual = $3`,
-      [etapa_id, unidade_trabalho_id, usuario_id]
-    );
-    console.log("Tempo de execução", (data_fim - data_inicio) / 60000);
-    if (data_fim - data_inicio < 120000) {
-      throw new Error(
-        "Tempo menor que a tolerância para finalizar uma atividade."
-      );
-    }
-
     let result = await db.result(
       `UPDATE macrocontrole.execucao_etapa SET
       data_fim = $1, situacao = 4
