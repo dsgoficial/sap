@@ -48,9 +48,4 @@ CREATE INDEX monitoramento_apontamento_idx
     (data DESC)
     TABLESPACE pg_default;
 
-
-GRANT USAGE ON SCHEMA microcontrole TO controle_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA microcontrole TO controle_app;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA microcontrole TO controle_app;
-
 COMMIT;

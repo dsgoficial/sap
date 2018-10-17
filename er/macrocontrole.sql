@@ -32,14 +32,13 @@ CREATE TABLE macrocontrole.projeto(
 
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL UNIQUE,
+	nome VARCHAR(255) NOT NULL,
 	mi VARCHAR(255),
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
 	area_suprimento VARCHAR(255) NOT NULL,
-	observacao VARCHAR(255) NOT NULL,
-  	geom geometry(POLYGON, 4674) NOT NULL, 
-  	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
+	geom geometry(POLYGON, 4674) NOT NULL, 
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
 );
 
 CREATE INDEX produto_geom
