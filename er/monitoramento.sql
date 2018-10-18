@@ -31,7 +31,7 @@ $BODY$
     SELECT count(*) INTO num FROM macrocontrole.etapa WHERE subfase_id = subfase_ident;
     IF num > 0 THEN
       view_txt := 'CREATE VIEW monitoramento.acompanhamento_' || subfase_ident || '_'  || subfase_nome || ' AS 
-      SELECT ut.id, ut.disponivel, ut.lote, ut.nome, ut.banco_dados_id, ut.prioridade, ut.geom';
+      SELECT ut.id, ut.disponivel, ut.lote_id, ut.nome, ut.banco_dados_id, ut.prioridade, ut.geom';
 
       FOR r IN SELECT se.id, e.nome FROM macrocontrole.tipo_etapa AS e 
       INNER JOIN macrocontrole.etapa AS se ON e.id = se.tipo_etapa_id
@@ -44,8 +44,8 @@ $BODY$
           INTO nome_fixed;
 
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.operador_atual::text END AS ' || nome_fixed || '_operador_atual';
-        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  u' || iterator || '.turno::text END AS ' || nome_fixed || '_turno';
-        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.situacao::text END AS ' || nome_fixed || '_situacao';
+        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  u' || iterator || '.tipo_turno_id::text END AS ' || nome_fixed || '_turno';
+        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.tipo_situacao_id::text END AS ' || nome_fixed || '_situacao';
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.data_inicio::text END AS ' || nome_fixed || '_data_inicio';
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.data_fim::text END AS ' || nome_fixed || '_data_fim';
         jointxt := jointxt || ' LEFT JOIN macrocontrole.execucao_etapa as ee' || iterator || ' ON ee' || iterator || '.unidade_trabalho_id = ut.id and ee' || iterator || '.etapa_id = ' || r.id;

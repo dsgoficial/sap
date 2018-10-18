@@ -23,7 +23,7 @@ const calculaFila = async usuario => {
         INNER JOIN macrocontrole.perfil_producao_etapa as pse ON pse.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
-        WHERE ee.operador_atual = $1 and ee.situacao = 3
+        WHERE ee.operador_atual = $1 and ee.tipo_situacao_id = 3
         ORDER BY lo.prioridade, pse.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
       );
@@ -35,7 +35,7 @@ const calculaFila = async usuario => {
       let prioridade_operador = await t.oneOrNone(
         `SELECT etapa_id, unidade_trabalho_id
         FROM (
-        SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.situacao AS situacao_ant, lo.prioridade AS lo_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
+        SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, lo.prioridade AS lo_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
         FROM macrocontrole.execucao_etapa AS ee
         INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
         INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
@@ -45,12 +45,12 @@ const calculaFila = async usuario => {
         INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
         LEFT JOIN
         (
-          SELECT ee.situacao, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.execucao_etapa AS ee
+          SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.execucao_etapa AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id 
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
-        WHERE ut.disponivel = TRUE AND ppo.usuario_id = $1 AND ee.situacao = 1
+        WHERE ut.disponivel = TRUE AND ppo.usuario_id = $1 AND ee.tipo_situacao_id = 1
         AND ee.id NOT IN        
         (
           SELECT ee.id FROM macrocontrole.execucao_etapa AS ee
@@ -64,7 +64,7 @@ const calculaFila = async usuario => {
           WHERE ppo.usuario_id = $1 AND (
             (re.tipo_restricao_id = 1 AND ee_re.operador_atual = $1) OR
             (re.tipo_restricao_id = 2 AND ee_re.operador_atual != $1) OR 
-            (re.tipo_restricao_id = 3 AND u_re.turno != u.turno AND u_re.turno != 3 AND u.turno != 3)
+            (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
           )
         )
         AND ee.id NOT IN
@@ -262,7 +262,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         INNER JOIN macrocontrole.subfase as sub ON sub.id = se.subfase_id
         INNER JOIN macrocontrole.tipo_etapa as et ON et.id = se.tipo_etapa_id
         INNER JOIN dgeo.usuario AS u ON u.id = ee.operador_atual
-        INNER JOIN macrocontrole.situacao AS sit ON sit.code = ee.situacao
+        INNER JOIN macrocontrole.tipo_situacao AS sit ON sit.code = ee.tipo_situacao_id
         WHERE ee.unidade_trabalho_id = $1 and ee.etapa_id != $2
         ORDER BY se.ordem`,
         [unidade_trabalho, etapa]
@@ -301,7 +301,7 @@ controller.verifica = async usuario_id => {
     let em_andamento = await db.oneOrNone(
       `SELECT etapa_id, unidade_trabalho_id
       FROM macrocontrole.execucao_etapa
-      WHERE operador_atual = $1 and situacao = 2 LIMIT 1`,
+      WHERE operador_atual = $1 and tipo_situacao_id = 2 LIMIT 1`,
       [usuario_id]
     );
 
@@ -333,7 +333,7 @@ controller.finaliza = async (usuario_id, etapa_id, unidade_trabalho_id) => {
   try {
     let result = await db.result(
       `UPDATE macrocontrole.execucao_etapa SET
-      data_fim = $1, situacao = 4
+      data_fim = $1, tipo_situacao_id = 4
       WHERE etapa_id = $2 and unidade_trabalho_id = $3 and operador_atual = $4`,
       [data_fim, etapa_id, unidade_trabalho_id, usuario_id]
     );
@@ -369,8 +369,8 @@ controller.inicia = async usuario_id => {
     .tx(async t => {
       await t.none(
         `UPDATE macrocontrole.execucao_etapa SET
-          situacao = 3 
-          WHERE situacao = 2 and operador_atual = $1`,
+          tipo_situacao_id = 3 
+          WHERE tipo_situacao_id = 2 and operador_atual = $1`,
         [usuario_id]
       );
       await t.none(
@@ -381,8 +381,8 @@ controller.inicia = async usuario_id => {
       );
       let result = await t.result(
         `UPDATE macrocontrole.execucao_etapa SET
-          data_inicio = $1, situacao = 2, operador_atual = $4
-          WHERE etapa_id = $2 and unidade_trabalho_id = $3 and (situacao = 1 or situacao = 3)`,
+          data_inicio = $1, tipo_situacao_id = 2, operador_atual = $4
+          WHERE etapa_id = $2 and unidade_trabalho_id = $3 and (tipo_situacao_id = 1 or tipo_situacao_id = 3)`,
         [
           data_inicio,
           prioridade.etapa_id,

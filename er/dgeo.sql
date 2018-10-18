@@ -2,13 +2,13 @@ BEGIN;
 
 CREATE SCHEMA dgeo;
 
-CREATE TABLE dgeo.posto_grad(
+CREATE TABLE dgeo.tipo_posto_grad(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	nome_abrev VARCHAR(255) NOT NULL
 );
 
-INSERT INTO dgeo.posto_grad (code, nome,nome_abrev) VALUES
+INSERT INTO dgeo.tipo_posto_grad (code, nome,nome_abrev) VALUES
 (1, 'Civil', 'Civ'),
 (2, 'Mão de Obra Temporária', 'MOT'),
 (3, 'Soldado EV', 'Sd EV'),
@@ -30,12 +30,12 @@ INSERT INTO dgeo.posto_grad (code, nome,nome_abrev) VALUES
 (19, 'General de Exército', 'Gen');
 
 --Valores padrão para turno de trabalho
-CREATE TABLE dgeo.turno(
+CREATE TABLE dgeo.tipo_turno(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO dgeo.turno (code, nome) VALUES
+INSERT INTO dgeo.tipo_turno (code, nome) VALUES
 (1, 'Manhã'),
 (2, 'Tarde'),
 (3, 'Integral');
@@ -48,8 +48,8 @@ CREATE TABLE dgeo.usuario(
   nome VARCHAR(255) NOT NULL,
   nome_guerra VARCHAR(255) NOT NULL,
   login VARCHAR(255) UNIQUE NOT NULL,
-  turno INTEGER NOT NULL REFERENCES dgeo.turno (code),
-  posto_grad INTEGER NOT NULL REFERENCES dgeo.posto_grad (code)
+  tipo_turno_id INTEGER NOT NULL REFERENCES dgeo.tipo_turno (code),
+  tipo_posto_grad_id INTEGER NOT NULL REFERENCES dgeo.tipo_posto_grad (code)
 );
 
 COMMIT;

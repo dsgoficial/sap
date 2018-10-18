@@ -63,7 +63,7 @@ INSERT INTO macrocontrole.tipo_palavra_chave (code, nome) VALUES
 CREATE TABLE macrocontrole.palavra_chave(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
- 	tipo_palavra_chave INTEGER NOT NULL REFERENCES macrocontrole.tipo_palavra_chave (code),
+ 	tipo_palavra_chave_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_palavra_chave (code),
  	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
 
@@ -92,10 +92,10 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 -- as combinações (tipo_fase, projeto_id) são unicos
 CREATE TABLE macrocontrole.fase(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_fase INTEGER NOT NULL REFERENCES macrocontrole.tipo_fase (code),
+	tipo_fase_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_fase (code),
   projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
   ordem INTEGER NOT NULL, -- as fases são ordenadas em um projeto
-	UNIQUE (projeto_id, tipo_fase)
+	UNIQUE (projeto_id, tipo_fase_id)
 );
 
 --Meta anual estabelecida no PIT de uma fase
@@ -116,22 +116,35 @@ CREATE TABLE macrocontrole.subfase(
 	UNIQUE (nome, fase_id)
 );
 
-CREATE TABLE macrocontrole.tipo_etapa(
-	id SERIAL NOT NULL PRIMARY KEY,
+CREATE TABLE macrocontrole.tipo_processo(
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO macrocontrole.tipo_etapa (nome) VALUES
-('Execução'),
-('Revisão 1'),
-('Correção 1'),
-('Revisão 2'),
-('Correção 2'),
-('Revisão 3'),
-('Correção 3'),
-('Revisão por pares 1'),
-('Revisão por pares 2'),
-('Revisão por amostragem');
+INSERT INTO macrocontrole.tipo_processo (code, nome) VALUES
+(1, 'Execução'),
+(2, 'Revisão'),
+(3, 'Correção');
+
+CREATE TABLE macrocontrole.tipo_etapa(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL,
+	tipo_processo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_processo (code)
+);
+
+INSERT INTO macrocontrole.tipo_etapa (nome, tipo_processo_id) VALUES
+('Execução', 1),
+('Revisão 1', 2),
+('Correção 1', 3),
+('Revisão 2', 2),
+('Correção 2', 3),
+('Revisão 3', 2),
+('Correção 3'. 3),
+('Revisão por pares 1', 2),
+('Revisão por pares 2', 2),
+('Revisão por amostragem', 2),
+('Revisão por pares 3', 2),
+('Validação', 2);
 
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -162,7 +175,6 @@ INSERT INTO macrocontrole.tipo_rotina (code, nome) VALUES
 (1, 'outOfBoundsAngles'),
 (2, 'invalidGeometry'),
 (3, 'notSimpleGeometry');
-
 
 CREATE TABLE macrocontrole.camada(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -293,12 +305,12 @@ CREATE TABLE macrocontrole.insumo_unidade_trabalho(
 	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id)
 );
 
-CREATE TABLE macrocontrole.situacao(
+CREATE TABLE macrocontrole.tipo_situacao(
 	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255)
 );
 
-INSERT INTO macrocontrole.situacao (code, nome) VALUES
+INSERT INTO macrocontrole.tipo_situacao (code, nome) VALUES
 (1, 'Não iniciada'),
 (2, 'Em execução'),
 (3, 'Pausada'),
@@ -310,7 +322,7 @@ CREATE TABLE macrocontrole.execucao_etapa(
 	etapa_id INTEGER REFERENCES macrocontrole.etapa (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	operador_atual INTEGER REFERENCES dgeo.usuario (id),
-	situacao INTEGER REFERENCES macrocontrole.situacao (code),
+	tipo_situacao_id INTEGER REFERENCES macrocontrole.tipo_situacao (code),
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone
 );
@@ -343,9 +355,7 @@ CREATE TABLE macrocontrole.fila_prioritaria(
 	id SERIAL NOT NULL PRIMARY KEY,
  	execucao_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.execucao_etapa (id),
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-	prioridade INTEGER NOT NULL,
-	UNIQUE (execucao_etapa_id, usuario_id),
-	UNIQUE (usuario_id, prioridade)
+	prioridade INTEGER NOT NULL
 );
 
 COMMIT;
