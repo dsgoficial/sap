@@ -1,6 +1,6 @@
 BEGIN;
 
-CREATE SCHEMA monitoramento;
+CREATE SCHEMA acompanhamento;
 
 CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento()
   RETURNS trigger AS
@@ -26,11 +26,11 @@ $BODY$
           'aaaaaaaaaeeeeeeeeeiiiiiiiioooooooouuuuuuuucny')
           INTO subfase_nome FROM macrocontrole.subfase WHERE id = subfase_ident;
 
-    EXECUTE 'DROP VIEW IF EXISTS monitoramento.acompanhamento_'|| subfase_ident || '_' || subfase_nome;
+    EXECUTE 'DROP VIEW IF EXISTS acompanhamento.acompanhamento_'|| subfase_ident || '_' || subfase_nome;
 
     SELECT count(*) INTO num FROM macrocontrole.etapa WHERE subfase_id = subfase_ident;
     IF num > 0 THEN
-      view_txt := 'CREATE VIEW monitoramento.acompanhamento_' || subfase_ident || '_'  || subfase_nome || ' AS 
+      view_txt := 'CREATE VIEW acompanhamento.acompanhamento_' || subfase_ident || '_'  || subfase_nome || ' AS 
       SELECT ut.id, ut.disponivel, ut.lote_id, ut.nome, ut.banco_dados_id, ut.prioridade, ut.geom';
 
       FOR r IN SELECT se.id, e.nome FROM macrocontrole.tipo_etapa AS e 

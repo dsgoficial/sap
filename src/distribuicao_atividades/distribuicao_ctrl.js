@@ -153,9 +153,8 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       );
 
       let monitoramento = await t.any(
-        `SELECT tm.nome as tipo_monitoramento, c.nome as camada, bd.nome AS nome_bd, bd.servidor, bd.porta
+        `SELECT tm.nome as tipo_monitoramento, c.nome as camada
         FROM macrocontrole.perfil_monitoramento AS pm
-        INNER JOIN macrocontrole.banco_dados AS bd ON bd.id = pm.banco_dados_id
         INNER JOIN macrocontrole.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento 
         LEFT JOIN macrocontrole.camada AS c ON c.id = pm.camada_id
         WHERE etapa_id = $1`,
@@ -208,24 +207,14 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       estilos.forEach(r => info.atividade.estilos.push(r.nome));
       regras.forEach(r => info.atividade.regras.push(r.nome));
       menus.forEach(r => info.atividade.menus.push(r.nome));
-      camadas.forEach(r => info.atividade.camadas.push({nome: r.nome}));
+      camadas.forEach(r => info.atividade.camadas.push({ nome: r.nome }));
 
-
-      
-      info.atividade.monitoramento = {};
+      info.atividade.monitoramento = [];
       monitoramento.forEach(m => {
-        if (!(m.tipo_monitoramento in info.atividade.monitoramento)) {
-          info.atividade.monitoramento[m.tipo_monitoramento] = [];
-        }
-        let aux = {
-          nome_bd: m.nome_bd,
-          servidor: m.servidor,
-          porta: m.porta
-        };
-        if (m.camada) {
-          aux.camada = m.camada;
-        }
-        info.atividade.monitoramento[m.tipo_monitoramento].push(aux);
+        info.atividade.monitoramento.push({
+          tipo: m.tipo_monitoramento,
+          camada: m.camada
+        });
       });
 
       info.atividade.rotinas = {};

@@ -139,7 +139,7 @@ INSERT INTO macrocontrole.tipo_etapa (nome, tipo_processo_id) VALUES
 ('Revisão 2', 2),
 ('Correção 2', 3),
 ('Revisão 3', 2),
-('Correção 3'. 3),
+('Correção 3', 3),
 ('Revisão por pares 1', 2),
 ('Revisão por pares 2', 2),
 ('Revisão por amostragem', 2),
@@ -235,8 +235,7 @@ CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_monitoramento INTEGER NOT NULL REFERENCES macrocontrole.tipo_monitoramento (code),
 	camada_id INTEGER REFERENCES macrocontrole.camada (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-	banco_dados_id INTEGER NOT NULL REFERENCES macrocontrole.banco_dados (id)
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
 CREATE TABLE macrocontrole.tipo_restricao(

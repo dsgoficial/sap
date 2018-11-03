@@ -49,16 +49,15 @@ const router = express.Router();
  *
  * @apiDescription Finaliza uma atividade indicada por uma etapa e uma unidade_trabalho
  *
- * @apiParam (Request body) {Integer} etapa_id ID da Etapa que deve ser finalizada
+ * @apiParam (Request body) {Integer} subfase_etapa_id ID da Etapa que deve ser finalizada
  * @apiParam (Request body) {Integer} unidade_trabalho_id ID da Unidade Trabalho que deve ser finalizada
  *
  * @apiParamExample {json} Input
  *     {
- *       "etapa_id": 5,
+ *       "subfase_etapa_id": 5,
  *       "unidade_trabalho_id": 132
  *     }
  *
- * @apiSuccess {String} message  Atividade finalizada com sucesso.
  *
  * @apiSuccessExample {json} Resposta em caso de Sucesso:
  *     HTTP/1.1 200 OK
@@ -128,9 +127,8 @@ router.post("/finaliza", async (req, res, next) => {
  * @apiDescription Verifica a atividade em execução para um determinado usuário
  *
  *
- * @apiSuccess {String} message  Retorna atividade em execução ou avisa que não existe atividade em execução.
- * @apiSuccess {String} dados Em caso de existir uma nova atividade retorna os dados desta atividade. 
- * 
+ * @apiSuccess {String} dados Em caso de existir uma nova atividade retorna os dados desta atividade.
+ *
  * @apiSuccessExample {json} Sem atividade em execução:
  *     HTTP/1.1 200 OK
  *     {
@@ -191,13 +189,12 @@ router.get("/verifica", async (req, res, next) => {
  * @apiVersion 1.0.0
  * @apiName IniciaAtividade
  * @apiPermission operador
- * 
+ *
  * @apiDescription Inicia uma nova atividade para um determinado usuário
  *
  *
- * @apiSuccess {String} message  Retorna uma nova atividade ou avisa que não existe atividade para iniciar.
- * @apiSuccess {String} dados Em caso de existir uma nova atividade retorna os dados desta atividade. 
- * 
+ * @apiSuccess {String} dados Em caso de existir uma nova atividade retorna os dados desta atividade.
+ *
  * @apiSuccessExample Sem atividades disponíveis:
  *     HTTP/1.1 200 OK
  *     {

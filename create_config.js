@@ -18,7 +18,10 @@ const sql2 = fs
   .readFileSync(path.resolve("./er/macrocontrole.sql"), "utf-8")
   .trim();
 const sql3 = fs
-  .readFileSync(path.resolve("./er/monitoramento.sql"), "utf-8")
+  .readFileSync(path.resolve("./er/acompanhamento.sql"), "utf-8")
+  .trim();
+const sql4 = fs
+  .readFileSync(path.resolve("./er/microcontrole.sql"), "utf-8")
   .trim();
 
 const createConfig = () => {
@@ -98,6 +101,7 @@ const createConfig = () => {
         await db.none(sql1);
         await db.none(sql2);
         await db.none(sql3);
+        await db.none(sql4);
 
         await db.none(
           `
@@ -106,9 +110,11 @@ const createConfig = () => {
         GRANT ALL ON ALL SEQUENCES IN SCHEMA dgeo TO $1:name;
         GRANT ALL ON SCHEMA macrocontrole TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO $1:name;
+        GRANT ALL ON SCHEMA microcontrole TO $1:name;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA microcontrole TO $1:name;
         GRANT ALL ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
-        GRANT ALL ON schema monitoramento TO $1:name;
-        GRANT SELECT ON ALL TABLES IN SCHEMA monitoramento TO $1:name;
+        GRANT ALL ON schema acompanhamento TO $1:name;
+        GRANT SELECT ON ALL TABLES IN SCHEMA acompanhamento TO $1:name;
         `,
           [answers.db_user]
         );
@@ -125,12 +131,13 @@ DB_PASSWORD=${answers.db_password}
 JWT_SECRET=tassofragoso`;
 
       let exists = fs.existsSync(".env");
-      if(exists){
-        throw Error('Arquivo .env já existe, apague antes de iniciar a configuração.')
+      if (exists) {
+        throw Error(
+          "Arquivo .env já existe, apague antes de iniciar a configuração."
+        );
       }
       fs.writeFileSync(".env", env);
       console.log(chalk.blue("Arquivo de configuração criado com sucesso!"));
-    
     } catch (error) {
       if (
         error.message ===
@@ -142,12 +149,9 @@ JWT_SECRET=tassofragoso`;
           )
         );
       } else if (
-        error.message ===
-        'permission denied to create extension "postgis"'
+        error.message === 'permission denied to create extension "postgis"'
       ) {
-        console.log(
-          chalk.red("The user passed is not a superuser.")
-        );
+        console.log(chalk.red("The user passed is not a superuser."));
       } else if (
         error.message ===
         'Attempted to create a duplicate database. Cause: database "' +
@@ -168,7 +172,7 @@ JWT_SECRET=tassofragoso`;
         );
       } else if (
         error.message ===
-        'Arquivo .env já existe, apague antes de iniciar a configuração.'
+        "Arquivo .env já existe, apague antes de iniciar a configuração."
       ) {
         console.log(
           chalk.red(
