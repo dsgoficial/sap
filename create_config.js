@@ -113,8 +113,8 @@ const createConfig = () => {
         GRANT ALL ON SCHEMA microcontrole TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA microcontrole TO $1:name;
         GRANT ALL ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
-        GRANT ALL ON schema acompanhamento TO $1:name;
-        GRANT SELECT ON ALL TABLES IN SCHEMA acompanhamento TO $1:name;
+        GRANT ALL ON schema acompanhamento TO public;
+        GRANT SELECT ON ALL TABLES IN SCHEMA acompanhamento TO public;
         `,
           [answers.db_user]
         );

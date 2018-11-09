@@ -18,6 +18,17 @@ const calculaFila = async usuario => {
         return fila_prioritaria;
       }
 
+      let fila_prioritaria_grupo = await t.oneOrNone(
+        `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria_grupo as f
+        INNER JOIN macrocontrole.execucao_etapa as ee ON ee.id = f.execucao_etapa_id
+        WHERE f.perfil_producao_id = $1 ORDER BY f.prioridade LIMIT 1`,
+        [usuario]
+      );
+
+      if (fila_prioritaria_grupo != null) {
+        return fila_prioritaria_grupo;
+      }
+
       let cartas_pausadas = await t.oneOrNone(
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
         INNER JOIN macrocontrole.perfil_producao_etapa as pse ON pse.id = ee.etapa_id
