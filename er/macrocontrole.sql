@@ -360,7 +360,7 @@ CREATE TABLE macrocontrole.fila_prioritaria(
 CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	id SERIAL NOT NULL PRIMARY KEY,
  	execucao_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.execucao_etapa (id),
- 	perfil_producao_id INTEGER NOT NULL REFERENCES dgeo.perfil_producao (id),
+ 	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
 	prioridade INTEGER NOT NULL
 );
 
