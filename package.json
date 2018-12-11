@@ -15,7 +15,7 @@
     "apidoc": "gulp apidoc",
     "dev": "nodemon src/index.js",
     "production": "pm2 start src/index.js --name sap",
-    "config": "node create_config.js & gulp apidoc"
+    "config": "node create_config.js"
   },
   "keywords": [
     "Controle de Produção",
