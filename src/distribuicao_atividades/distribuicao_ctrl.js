@@ -205,9 +205,19 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         servidor: dadosut.servidor,
         porta: dadosut.porta
       };
+
+      let categoria_fme = []
+      let servidor_fme
+      fme.forEach(f => {
+        servidor_fme = f.servidor_fme
+        categoria_fme.push(f.categoria_fme)
+      })
+
+      categoria_fme = categoria_fme.join()
+
       info.atividade.fme = {
-        categoria: fme.categoria_fme,
-        servidor: fme.servidor_fme
+        categoria: categoria_fme,
+        servidor: servidor_fme
       };
 
       info.atividade.estilos = [];

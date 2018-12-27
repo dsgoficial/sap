@@ -137,7 +137,7 @@ JWT_SECRET=tassofragoso`;
         );
       }
       fs.writeFileSync(".env", env);
-      console.log(chalk.blue("Arquivo de configuração criado com sucesso!"));
+      console.log(chalk.blue("Arquivo de configuração (.env) criado com sucesso!"));
     } catch (error) {
       if (
         error.message ===
@@ -145,13 +145,14 @@ JWT_SECRET=tassofragoso`;
       ) {
         console.log(
           chalk.red(
-            "The user passed does not have permission to create databases."
+            "O usuário informado não é superusuário. Sem permissão para criar bancos de dados."
           )
         );
       } else if (
         error.message === 'permission denied to create extension "postgis"'
       ) {
-        console.log(chalk.red("The user passed is not a superuser."));
+        console.log(chalk.red("O usuário informado não é superusuário. Sem permissão para criar a extensão 'postgis'."));
+        console.log(chalk.red("Delete o banco de dados criado antes de executar a configuração novamente."));
       } else if (
         error.message ===
         'Attempted to create a duplicate database. Cause: database "' +
@@ -159,7 +160,7 @@ JWT_SECRET=tassofragoso`;
           '" already exists'
       ) {
         console.log(
-          chalk.red("The database " + answers.db_name + " already exists.")
+          chalk.red("O banco " + answers.db_name + " já existe.")
         );
       } else if (
         error.message ===
@@ -167,7 +168,7 @@ JWT_SECRET=tassofragoso`;
       ) {
         console.log(
           chalk.red(
-            "Password authentication failed for the user " + answers.db_user
+            "Senha inválida para o usuário " + answers.db_user
           )
         );
       } else if (
@@ -179,6 +180,7 @@ JWT_SECRET=tassofragoso`;
             "Arquivo .env já existe, apague antes de iniciar a configuração."
           )
         );
+        console.log(chalk.red("Delete o banco de dados criado antes de executar a configuração novamente."));
       } else {
         console.log(chalk.red(error.message));
         console.log("-------------------------------------------------");

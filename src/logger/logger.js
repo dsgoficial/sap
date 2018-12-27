@@ -4,8 +4,6 @@ const winston = require("winston");
 require("winston-daily-rotate-file");
 const MESSAGE = Symbol.for("message");
 
-const uuidv4 = require("uuid/v4");
-
 const jsonFormatter = logEntry => {
   let base = { timestamp: new Date() };
   const json = Object.assign(base, logEntry);
@@ -20,10 +18,7 @@ const logger = winston.createLogger({
     new winston.transports.Console(),
     new winston.transports.DailyRotateFile({
       filename: "./src/logger/log/%DATE%-application.log",
-      datePattern: "YYYY-MM-DD",
-      zippedArchive: true,
-      maxSize: "20m",
-      maxFiles: "14d"
+      datePattern: "YYYY-MM-DD"
     })
   ]
 });

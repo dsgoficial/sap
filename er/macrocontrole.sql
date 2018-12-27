@@ -86,7 +86,10 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 (8, 'Avaliação imagens brutas'),
 (9, 'Avaliação ortoimagens'),
 (10, 'Avaliação MDS'),
-(11, 'Avaliação MDT');
+(11, 'Avaliação MDT'),
+(12, 'Avaliação de dados vetoriais'),
+(13, 'Avaliação de aerotriangulação'),
+(14, 'Generalização');
 
 -- Associa uma fase prevista no BDGEx ao projeto
 -- as combinações (tipo_fase, projeto_id) são unicos
@@ -167,7 +170,7 @@ CREATE TABLE macrocontrole.perfil_fme(
 );
 
 CREATE TABLE macrocontrole.tipo_rotina(
-	code SERIAL NOT NULL PRIMARY KEY,
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
@@ -222,7 +225,7 @@ CREATE TABLE macrocontrole.banco_dados(
 );
 
 CREATE TABLE macrocontrole.tipo_monitoramento(
-	code SERIAL NOT NULL PRIMARY KEY,
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
@@ -239,7 +242,7 @@ CREATE TABLE macrocontrole.perfil_monitoramento(
 );
 
 CREATE TABLE macrocontrole.tipo_restricao(
-	code SERIAL NOT NULL PRIMARY KEY,
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
@@ -305,7 +308,7 @@ CREATE TABLE macrocontrole.insumo_unidade_trabalho(
 );
 
 CREATE TABLE macrocontrole.tipo_situacao(
-	code SERIAL NOT NULL PRIMARY KEY,
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255)
 );
 
