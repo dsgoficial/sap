@@ -207,7 +207,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       };
 
       let categoria_fme = []
-      let servidor_fme
+      let servidor_fme = ''
       fme.forEach(f => {
         servidor_fme = f.servidor_fme
         categoria_fme.push(f.categoria_fme)
