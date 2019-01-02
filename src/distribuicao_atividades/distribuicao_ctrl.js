@@ -73,8 +73,8 @@ const calculaFila = async usuario => {
             AND ee_re.unidade_trabalho_id = ee.unidade_trabalho_id
           LEFT JOIN dgeo.usuario AS u_re ON u_re.id = ee_re.operador_atual
           WHERE ppo.usuario_id = $1 AND (
-            (re.tipo_restricao_id = 1 AND ee_re.operador_atual = ee.operador_atual) OR
-            (re.tipo_restricao_id = 2 AND ee_re.operador_atual != ee.operador_atual) OR 
+            (re.tipo_restricao_id = 1 AND ee_re.operador_atual = $1) OR
+            (re.tipo_restricao_id = 2 AND ee_re.operador_atual != $1) OR 
             (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
           )
         )
