@@ -2,6 +2,45 @@ BEGIN;
 
 CREATE SCHEMA acompanhamento;
 
+CREATE VIEW acompanhamento.usuarios_sem_atividades AS
+SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno
+FROM dgeo.usuario AS u
+LEFT JOIN 
+(SELECT id, operador_atual FROM macrocontrole.execucao_etapa AS ee WHERE ee.situacao = 2) AS ee
+ON ee.operador_atual = u.id
+WHERE ee.id IS NULL AND u.ativo IS TRUE
+ORDER BY u.nome_guerra;
+
+CREATE VIEW acompanhamento.ultimo_login AS
+SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, l.data_login
+FROM dgeo.usuario AS u
+INNER JOIN
+(SELECT usuario_id, max(data_login) as data_login FROM dgeo.login GROUP BY usuario_id) AS l
+ON l.usuario_id = u.id
+WHERE u.ativo IS TRUE
+ORDER BY l.data_login DESC;
+
+CREATE VIEW acompanhamento.usuarios_logados AS
+SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, l.data_login
+FROM dgeo.usuario AS u
+INNER JOIN
+(SELECT usuario_id, max(data_login) as data_login FROM dgeo.login GROUP BY usuario_id) AS l
+ON l.usuario_id = u.id
+WHERE l.data_login::date = now()::date
+
+CREATE VIEW acompanhamento.atividades_em_execucao AS
+SELECT ee.unidade_trabalho_id, ee.etapa_id, ee.operador_atual, ee.data_inicio 
+FROM macrocontrole.execucao_etapa AS ee 
+WHERE ee.situacao = 2
+ORDER BY ee.data_inicio ASC
+
+CREATE VIEW acompanhamento.atividades_finalizadas AS
+SELECT ee.unidade_trabalho_id, ee.etapa_id, ee.operador_atual, ee.data_inicio, ee.data_fim
+FROM macrocontrole.execucao_etapa AS ee 
+WHERE ee.situacao = 4
+ORDER BY ee.data_fim DESC
+LIMIT 100
+
 CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento()
   RETURNS trigger AS
 $BODY$
