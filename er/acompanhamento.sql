@@ -6,8 +6,8 @@ CREATE VIEW acompanhamento.usuarios_sem_atividades AS
 SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno
 FROM dgeo.usuario AS u
 LEFT JOIN 
-(SELECT id, operador_atual FROM macrocontrole.execucao_etapa AS ee WHERE ee.situacao = 2) AS ee
-ON ee.operador_atual = u.id
+(SELECT id, usuario_id FROM macrocontrole.atividade AS ee WHERE ee.situacao = 2) AS ee
+ON ee.usuario_id = u.id
 WHERE ee.id IS NULL AND u.ativo IS TRUE
 ORDER BY u.nome_guerra;
 
@@ -29,14 +29,14 @@ ON l.usuario_id = u.id
 WHERE l.data_login::date = now()::date
 
 CREATE VIEW acompanhamento.atividades_em_execucao AS
-SELECT ee.unidade_trabalho_id, ee.etapa_id, ee.operador_atual, ee.data_inicio 
-FROM macrocontrole.execucao_etapa AS ee 
+SELECT ee.unidade_trabalho_id, ee.etapa_id, ee.usuario_id, ee.data_inicio 
+FROM macrocontrole.atividade AS ee 
 WHERE ee.situacao = 2
 ORDER BY ee.data_inicio ASC
 
 CREATE VIEW acompanhamento.atividades_finalizadas AS
-SELECT ee.unidade_trabalho_id, ee.etapa_id, ee.operador_atual, ee.data_inicio, ee.data_fim
-FROM macrocontrole.execucao_etapa AS ee 
+SELECT ee.unidade_trabalho_id, ee.etapa_id, ee.usuario_id, ee.data_inicio, ee.data_fim
+FROM macrocontrole.atividade AS ee 
 WHERE ee.situacao = 4
 ORDER BY ee.data_fim DESC
 LIMIT 100
@@ -82,13 +82,13 @@ $BODY$
           'aaaaaaaaaeeeeeeeeeiiiiiiiioooooooouuuuuuuucny')
           INTO nome_fixed;
 
-        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.operador_atual::text END AS ' || nome_fixed || '_operador_atual';
+        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.usuario_id::text END AS ' || nome_fixed || '_usuario_id';
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  u' || iterator || '.tipo_turno_id::text END AS ' || nome_fixed || '_turno';
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.tipo_situacao_id::text END AS ' || nome_fixed || '_situacao';
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.data_inicio::text END AS ' || nome_fixed || '_data_inicio';
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.data_fim::text END AS ' || nome_fixed || '_data_fim';
-        jointxt := jointxt || ' LEFT JOIN macrocontrole.execucao_etapa as ee' || iterator || ' ON ee' || iterator || '.unidade_trabalho_id = ut.id and ee' || iterator || '.etapa_id = ' || r.id;
-        jointxt := jointxt || ' LEFT JOIN dgeo.usuario as u' || iterator || ' ON u' || iterator || '.id = ee' || iterator || '.operador_atual';
+        jointxt := jointxt || ' LEFT JOIN macrocontrole.atividade as ee' || iterator || ' ON ee' || iterator || '.unidade_trabalho_id = ut.id and ee' || iterator || '.etapa_id = ' || r.id;
+        jointxt := jointxt || ' LEFT JOIN dgeo.usuario as u' || iterator || ' ON u' || iterator || '.id = ee' || iterator || '.usuario_id';
         iterator := iterator + 1;
       END LOOP;
 

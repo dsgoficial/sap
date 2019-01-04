@@ -90,23 +90,24 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 (12, 'Avaliação de dados vetoriais'),
 (13, 'Avaliação de aerotriangulação'),
 (14, 'Generalização');
+(15, 'Vetorização');
 
 -- Associa uma fase prevista no BDGEx ao projeto
 -- as combinações (tipo_fase, projeto_id) são unicos
 CREATE TABLE macrocontrole.fase(
-	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_fase_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_fase (code),
-  projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
-  ordem INTEGER NOT NULL, -- as fases são ordenadas em um projeto
-	UNIQUE (projeto_id, tipo_fase_id)
+    id SERIAL NOT NULL PRIMARY KEY,
+    tipo_fase_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_fase (code),
+    projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
+    ordem INTEGER NOT NULL, -- as fases são ordenadas em um projeto
+    UNIQUE (projeto_id, tipo_fase_id)
 );
 
 --Meta anual estabelecida no PIT de uma fase
 CREATE TABLE macrocontrole.meta_anual(
 	id SERIAL NOT NULL PRIMARY KEY,
 	meta INTEGER NOT NULL,
-  ano INTEGER NOT NULL,
-  fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
+    ano INTEGER NOT NULL,
+    fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
 );
 
 -- Unidade de produção do controle de produção
@@ -143,11 +144,11 @@ INSERT INTO macrocontrole.tipo_etapa (nome, tipo_processo_id) VALUES
 ('Correção 2', 3),
 ('Revisão 3', 2),
 ('Correção 3', 3),
-('Revisão por pares 1', 2),
-('Revisão por pares 2', 2),
+('Revisão por pares 1', 3),
+('Revisão por pares 2', 3),
 ('Revisão por amostragem', 2),
-('Revisão por pares 3', 2),
-('Validação', 2);
+('Revisão por pares 3', 3),
+('Validação', 3);
 
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -186,7 +187,7 @@ CREATE TABLE macrocontrole.camada(
 
 CREATE TABLE macrocontrole.perfil_rotina(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_rotina INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (code),
+	tipo_rotina_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (code),
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
 	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
 	parametros VARCHAR(255),
@@ -236,7 +237,7 @@ INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
 
 CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_monitoramento INTEGER NOT NULL REFERENCES macrocontrole.tipo_monitoramento (code),
+	tipo_monitoramento_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_monitoramento (code),
 	camada_id INTEGER REFERENCES macrocontrole.camada (id),
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
@@ -254,8 +255,8 @@ INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
 CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),
-	etapa_1_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-	etapa_2_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)	
+	etapa_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+	etapa_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)	
 );
 
 CREATE TABLE macrocontrole.lote(
@@ -319,11 +320,11 @@ INSERT INTO macrocontrole.tipo_situacao (code, nome) VALUES
 (4, 'Finalizada'),
 (5, 'Não será executada');
 
-CREATE TABLE macrocontrole.execucao_etapa(
+CREATE TABLE macrocontrole.atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
 	etapa_id INTEGER REFERENCES macrocontrole.etapa (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
-	operador_atual INTEGER REFERENCES dgeo.usuario (id),
+	usuario_id INTEGER REFERENCES dgeo.usuario (id),
 	tipo_situacao_id INTEGER REFERENCES macrocontrole.tipo_situacao (code),
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone
@@ -355,14 +356,14 @@ CREATE TABLE macrocontrole.perfil_producao_operador(
 
 CREATE TABLE macrocontrole.fila_prioritaria(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	execucao_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.execucao_etapa (id),
+ 	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	prioridade INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	execucao_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.execucao_etapa (id),
+ 	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
  	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
 	prioridade INTEGER NOT NULL
 );

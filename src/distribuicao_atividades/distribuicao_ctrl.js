@@ -9,7 +9,7 @@ const calculaFila = async usuario => {
     .task(async t => {
       let fila_prioritaria = await t.oneOrNone(
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria as f
-        INNER JOIN macrocontrole.execucao_etapa as ee ON ee.id = f.execucao_etapa_id
+        INNER JOIN macrocontrole.atividade as ee ON ee.id = f.atividade_id
         WHERE f.usuario_id = $1 ORDER BY f.prioridade LIMIT 1`,
         [usuario]
       );
@@ -20,7 +20,7 @@ const calculaFila = async usuario => {
 
       let fila_prioritaria_grupo = await t.oneOrNone(
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria_grupo as f
-        INNER JOIN macrocontrole.execucao_etapa as ee ON ee.id = f.execucao_etapa_id
+        INNER JOIN macrocontrole.atividade as ee ON ee.id = f.atividade_id
         WHERE f.perfil_producao_id = $1 ORDER BY f.prioridade LIMIT 1`,
         [usuario]
       );
@@ -30,11 +30,11 @@ const calculaFila = async usuario => {
       }
 
       let cartas_pausadas = await t.oneOrNone(
-        `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.execucao_etapa as ee
+        `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.atividade as ee
         INNER JOIN macrocontrole.perfil_producao_etapa as pse ON pse.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
-        WHERE ee.operador_atual = $1 and ee.tipo_situacao_id = 3
+        WHERE ee.usuario_id = $1 and ee.tipo_situacao_id = 3
         ORDER BY lo.prioridade, pse.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
       );
@@ -47,7 +47,7 @@ const calculaFila = async usuario => {
         `SELECT etapa_id, unidade_trabalho_id
         FROM (
         SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, lo.prioridade AS lo_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
-        FROM macrocontrole.execucao_etapa AS ee
+        FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
         INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
         INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
@@ -56,7 +56,7 @@ const calculaFila = async usuario => {
         INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
         LEFT JOIN
         (
-          SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.execucao_etapa AS ee
+          SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id 
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
@@ -64,27 +64,27 @@ const calculaFila = async usuario => {
         WHERE ut.disponivel = TRUE AND ppo.usuario_id = $1 AND ee.tipo_situacao_id = 1
         AND ee.id NOT IN        
         (
-          SELECT ee.id FROM macrocontrole.execucao_etapa AS ee
+          SELECT ee.id FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
           INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
           INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
-          LEFT JOIN macrocontrole.restricao_etapa AS re ON re.etapa_2_id = ee.etapa_id
-          LEFT JOIN macrocontrole.execucao_etapa AS ee_re ON ee_re.etapa_id = re.etapa_1_id
+          LEFT JOIN macrocontrole.restricao_etapa AS re ON re.etapa_posterior_id = ee.etapa_id
+          LEFT JOIN macrocontrole.atividade AS ee_re ON ee_re.etapa_id = re.etapa_anterior_id
             AND ee_re.unidade_trabalho_id = ee.unidade_trabalho_id
-          LEFT JOIN dgeo.usuario AS u_re ON u_re.id = ee_re.operador_atual
+          LEFT JOIN dgeo.usuario AS u_re ON u_re.id = ee_re.usuario_id
           WHERE ppo.usuario_id = $1 AND (
-            (re.tipo_restricao_id = 1 AND ee_re.operador_atual = $1) OR
-            (re.tipo_restricao_id = 2 AND ee_re.operador_atual != $1) OR 
+            (re.tipo_restricao_id = 1 AND ee_re.usuario_id = $1) OR
+            (re.tipo_restricao_id = 2 AND ee_re.usuario_id != $1) OR 
             (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
           )
         )
         AND ee.id NOT IN
         (
-          SELECT execucao_etapa_id FROM macrocontrole.fila_prioritaria
+          SELECT atividade_id FROM macrocontrole.fila_prioritaria
         )
         AND ee.id NOT IN
         (
-          SELECT execucao_etapa_id FROM macrocontrole.fila_prioritaria_grupo
+          SELECT atividade_id FROM macrocontrole.fila_prioritaria_grupo
         )
         ) AS sit
         GROUP BY etapa_id, unidade_trabalho_id, lo_prioridade, pse_prioridade, ut_prioridade
@@ -121,13 +121,13 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         `SELECT u.id as usuario_id, u.nome_guerra, up.tipo_perfil_sistema_id, s.nome as subfase_nome, 
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
         ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.nome as etapa_nome
-        FROM macrocontrole.execucao_etapa as ee
+        FROM macrocontrole.atividade as ee
         INNER JOIN macrocontrole.etapa as se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.tipo_etapa as e ON e.id = se.tipo_etapa_id
         INNER JOIN macrocontrole.subfase as s ON s.id = se.subfase_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
-        LEFT JOIN dgeo.usuario AS u ON u.id = ee.operador_atual
+        LEFT JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
         LEFT JOIN macrocontrole.usuario_perfil_sistema AS up ON up.usuario_id = u.id
         WHERE ee.etapa_id = $1 and ee.unidade_trabalho_id = $2`,
         [etapa, unidade_trabalho]
@@ -170,7 +170,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       let monitoramento = await t.any(
         `SELECT tm.nome as tipo_monitoramento, c.nome as camada
         FROM macrocontrole.perfil_monitoramento AS pm
-        INNER JOIN macrocontrole.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento 
+        INNER JOIN macrocontrole.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
         LEFT JOIN macrocontrole.camada AS c ON c.id = pm.camada_id
         WHERE etapa_id = $1`,
         [etapa]
@@ -179,7 +179,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       let rotinas = await t.any(
         `SELECT r.nome, c1.nome as camada, c2.nome as camada_apontamento, pr.parametros
         FROM macrocontrole.perfil_rotina AS pr
-        INNER JOIN macrocontrole.tipo_rotina AS r ON r.code = pr.tipo_rotina
+        INNER JOIN macrocontrole.tipo_rotina AS r ON r.code = pr.tipo_rotina_id
         INNER JOIN macrocontrole.camada AS c1 ON c1.id = pr.camada_id
         INNER JOIN macrocontrole.camada AS c2 ON c2.id = pr.camada_apontamento_id
         WHERE pr.etapa_id = $1`,
@@ -271,11 +271,11 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       info.atividade.linhagem = await t.any(
         `SELECT u.nome_guerra, ee.data_inicio, ee.data_fim, sit.nome as situacao,
         sub.nome as subfase, et.nome as etapa
-        FROM macrocontrole.execucao_etapa AS ee
+        FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.subfase as sub ON sub.id = se.subfase_id
         INNER JOIN macrocontrole.tipo_etapa as et ON et.id = se.tipo_etapa_id
-        INNER JOIN dgeo.usuario AS u ON u.id = ee.operador_atual
+        INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
         INNER JOIN macrocontrole.tipo_situacao AS sit ON sit.code = ee.tipo_situacao_id
         WHERE ee.unidade_trabalho_id = $1 and ee.etapa_id != $2
         ORDER BY se.ordem`,
@@ -314,8 +314,8 @@ controller.verifica = async usuario_id => {
   try {
     let em_andamento = await db.oneOrNone(
       `SELECT etapa_id, unidade_trabalho_id
-      FROM macrocontrole.execucao_etapa
-      WHERE operador_atual = $1 and tipo_situacao_id = 2 LIMIT 1`,
+      FROM macrocontrole.atividade
+      WHERE usuario_id = $1 and tipo_situacao_id = 2 LIMIT 1`,
       [usuario_id]
     );
 
@@ -346,9 +346,9 @@ controller.finaliza = async (usuario_id, etapa_id, unidade_trabalho_id) => {
   const data_fim = new Date();
   try {
     let result = await db.result(
-      `UPDATE macrocontrole.execucao_etapa SET
+      `UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 4
-      WHERE etapa_id = $2 and unidade_trabalho_id = $3 and operador_atual = $4`,
+      WHERE etapa_id = $2 and unidade_trabalho_id = $3 and usuario_id = $4`,
       [data_fim, etapa_id, unidade_trabalho_id, usuario_id]
     );
 
@@ -382,20 +382,20 @@ controller.inicia = async usuario_id => {
   return db
     .tx(async t => {
       await t.none(
-        `UPDATE macrocontrole.execucao_etapa SET
+        `UPDATE macrocontrole.atividade SET
           tipo_situacao_id = 3 
-          WHERE tipo_situacao_id = 2 and operador_atual = $1`,
+          WHERE tipo_situacao_id = 2 and usuario_id = $1`,
         [usuario_id]
       );
       await t.none(
         `DELETE FROM macrocontrole.fila_prioritaria
-          WHERE execucao_etapa_id IN (
-          SELECT id from macrocontrole.execucao_etapa WHERE etapa_id = $1 and unidade_trabalho_id = $2)`,
+          WHERE atividade_id IN (
+          SELECT id from macrocontrole.atividade WHERE etapa_id = $1 and unidade_trabalho_id = $2)`,
         [prioridade.etapa_id, prioridade.unidade_trabalho_id]
       );
       let result = await t.result(
-        `UPDATE macrocontrole.execucao_etapa SET
-          data_inicio = $1, tipo_situacao_id = 2, operador_atual = $4
+        `UPDATE macrocontrole.atividade SET
+          data_inicio = $1, tipo_situacao_id = 2, usuario_id = $4
           WHERE etapa_id = $2 and unidade_trabalho_id = $3 and (tipo_situacao_id = 1 or tipo_situacao_id = 3)`,
         [
           data_inicio,

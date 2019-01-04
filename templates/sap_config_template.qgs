@@ -42,7 +42,7 @@
       <layer-tree-layer expanded="1" checked="Qt::Checked" id="insumo_unidade_trabalho_0d7a838f_4b8d_4933_821f_44bebd663088" name="insumo_unidade_trabalho" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' table=&quot;macrocontrole&quot;.&quot;insumo_unidade_trabalho&quot; sql=" providerKey="postgres">
         <customproperties/>
       </layer-tree-layer>
-      <layer-tree-layer expanded="1" checked="Qt::Checked" id="execucao_etapa_e4c46f08_8531_41ec_a5e2_97ee66033986" name="execucao_etapa" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' table=&quot;macrocontrole&quot;.&quot;execucao_etapa&quot; sql=" providerKey="postgres">
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="atividade_e4c46f08_8531_41ec_a5e2_97ee66033986" name="atividade" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' table=&quot;macrocontrole&quot;.&quot;atividade&quot; sql=" providerKey="postgres">
         <customproperties/>
       </layer-tree-layer>
       <layer-tree-layer expanded="1" checked="Qt::Checked" id="tipo_situacao_fcd46a53_b738_4f32_bd14_72772890cf97" name="tipo_situacao" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='code' table=&quot;macrocontrole&quot;.&quot;tipo_situacao&quot; sql=" providerKey="postgres">
@@ -214,9 +214,9 @@
           <legendlayerfile isInOverview="0" layerid="insumo_unidade_trabalho_0d7a838f_4b8d_4933_821f_44bebd663088" visible="1"/>
         </filegroup>
       </legendlayer>
-      <legendlayer checked="Qt::Checked" name="execucao_etapa" showFeatureCount="0" drawingOrder="-1" open="true">
+      <legendlayer checked="Qt::Checked" name="atividade" showFeatureCount="0" drawingOrder="-1" open="true">
         <filegroup open="true" hidden="false">
-          <legendlayerfile isInOverview="0" layerid="execucao_etapa_e4c46f08_8531_41ec_a5e2_97ee66033986" visible="1"/>
+          <legendlayerfile isInOverview="0" layerid="atividade_e4c46f08_8531_41ec_a5e2_97ee66033986" visible="1"/>
         </filegroup>
       </legendlayer>
       <legendlayer checked="Qt::Checked" name="tipo_situacao" showFeatureCount="0" drawingOrder="-1" open="true">
@@ -969,12 +969,12 @@ def my_form_open(diálogo, camada, feição):
       <mapTip></mapTip>
     </maplayer>
     <maplayer hasScaleBasedVisibilityFlag="0" refreshOnNotifyEnabled="0" geometry="No geometry" autoRefreshTime="0" refreshOnNotifyMessage="" readOnly="0" type="vector" minScale="1e+08" maxScale="0" styleCategories="AllStyleCategories" autoRefreshEnabled="0">
-      <id>execucao_etapa_e4c46f08_8531_41ec_a5e2_97ee66033986</id>
-      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' password='{{PASSWORD}}' sslmode=disable key='id' table="macrocontrole"."execucao_etapa" sql=</datasource>
+      <id>atividade_e4c46f08_8531_41ec_a5e2_97ee66033986</id>
+      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' password='{{PASSWORD}}' sslmode=disable key='id' table="macrocontrole"."atividade" sql=</datasource>
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>execucao_etapa</layername>
+      <layername>atividade</layername>
       <srs>
         <spatialrefsys>
           <proj4></proj4>
@@ -1098,7 +1098,7 @@ def my_form_open(diálogo, camada, feição):
             </config>
           </editWidget>
         </field>
-        <field name="operador_atual">
+        <field name="usuario_id">
           <editWidget type="ValueRelation">
             <config>
               <Option type="Map">
@@ -1157,7 +1157,7 @@ def my_form_open(diálogo, camada, feição):
         <alias field="id" index="0" name=""/>
         <alias field="etapa_id" index="1" name=""/>
         <alias field="unidade_trabalho_id" index="2" name=""/>
-        <alias field="operador_atual" index="3" name=""/>
+        <alias field="usuario_id" index="3" name=""/>
         <alias field="tipo_situacao_id" index="4" name=""/>
         <alias field="data_inicio" index="5" name=""/>
         <alias field="data_fim" index="6" name=""/>
@@ -1168,7 +1168,7 @@ def my_form_open(diálogo, camada, feição):
         <default expression="" field="id" applyOnUpdate="0"/>
         <default expression="" field="etapa_id" applyOnUpdate="0"/>
         <default expression="" field="unidade_trabalho_id" applyOnUpdate="0"/>
-        <default expression="" field="operador_atual" applyOnUpdate="0"/>
+        <default expression="" field="usuario_id" applyOnUpdate="0"/>
         <default expression="" field="tipo_situacao_id" applyOnUpdate="0"/>
         <default expression="" field="data_inicio" applyOnUpdate="0"/>
         <default expression="" field="data_fim" applyOnUpdate="0"/>
@@ -1177,7 +1177,7 @@ def my_form_open(diálogo, camada, feição):
         <constraint unique_strength="1" exp_strength="0" field="id" notnull_strength="1" constraints="3"/>
         <constraint unique_strength="0" exp_strength="0" field="etapa_id" notnull_strength="0" constraints="0"/>
         <constraint unique_strength="0" exp_strength="0" field="unidade_trabalho_id" notnull_strength="1" constraints="1"/>
-        <constraint unique_strength="0" exp_strength="0" field="operador_atual" notnull_strength="0" constraints="0"/>
+        <constraint unique_strength="0" exp_strength="0" field="usuario_id" notnull_strength="0" constraints="0"/>
         <constraint unique_strength="0" exp_strength="0" field="tipo_situacao_id" notnull_strength="0" constraints="0"/>
         <constraint unique_strength="0" exp_strength="0" field="data_inicio" notnull_strength="0" constraints="0"/>
         <constraint unique_strength="0" exp_strength="0" field="data_fim" notnull_strength="0" constraints="0"/>
@@ -1186,7 +1186,7 @@ def my_form_open(diálogo, camada, feição):
         <constraint field="id" desc="" exp=""/>
         <constraint field="etapa_id" desc="" exp=""/>
         <constraint field="unidade_trabalho_id" desc="" exp=""/>
-        <constraint field="operador_atual" desc="" exp=""/>
+        <constraint field="usuario_id" desc="" exp=""/>
         <constraint field="tipo_situacao_id" desc="" exp=""/>
         <constraint field="data_inicio" desc="" exp=""/>
         <constraint field="data_fim" desc="" exp=""/>
@@ -1200,7 +1200,7 @@ def my_form_open(diálogo, camada, feição):
           <column name="id" type="field" width="-1" hidden="0"/>
           <column name="etapa_id" type="field" width="-1" hidden="0"/>
           <column name="unidade_trabalho_id" type="field" width="-1" hidden="0"/>
-          <column name="operador_atual" type="field" width="-1" hidden="0"/>
+          <column name="usuario_id" type="field" width="-1" hidden="0"/>
           <column name="tipo_situacao_id" type="field" width="-1" hidden="0"/>
           <column name="data_inicio" type="field" width="-1" hidden="0"/>
           <column name="data_fim" type="field" width="-1" hidden="0"/>
@@ -1239,7 +1239,7 @@ def my_form_open(diálogo, camada, feição):
         <field name="data_inicio" editable="1"/>
         <field name="etapa_id" editable="1"/>
         <field name="id" editable="0"/>
-        <field name="operador_atual" editable="1"/>
+        <field name="usuario_id" editable="1"/>
         <field name="tipo_situacao_id" editable="1"/>
         <field name="unidade_trabalho_id" editable="1"/>
       </editable>
@@ -1248,7 +1248,7 @@ def my_form_open(diálogo, camada, feição):
         <field name="data_inicio" labelOnTop="0"/>
         <field name="etapa_id" labelOnTop="0"/>
         <field name="id" labelOnTop="0"/>
-        <field name="operador_atual" labelOnTop="0"/>
+        <field name="usuario_id" labelOnTop="0"/>
         <field name="tipo_situacao_id" labelOnTop="0"/>
         <field name="unidade_trabalho_id" labelOnTop="0"/>
       </labelOnTop>
@@ -1594,7 +1594,7 @@ def my_form_open(diálogo, camada, feição):
             </config>
           </editWidget>
         </field>
-        <field name="execucao_etapa_id">
+        <field name="atividade_id">
           <editWidget type="Range">
             <config>
               <Option type="Map">
@@ -1642,7 +1642,7 @@ def my_form_open(diálogo, camada, feição):
       </fieldConfiguration>
       <aliases>
         <alias field="id" index="0" name=""/>
-        <alias field="execucao_etapa_id" index="1" name=""/>
+        <alias field="atividade_id" index="1" name=""/>
         <alias field="usuario_id" index="2" name=""/>
         <alias field="prioridade" index="3" name=""/>
       </aliases>
@@ -1650,19 +1650,19 @@ def my_form_open(diálogo, camada, feição):
       <excludeAttributesWFS/>
       <defaults>
         <default expression="" field="id" applyOnUpdate="0"/>
-        <default expression="" field="execucao_etapa_id" applyOnUpdate="0"/>
+        <default expression="" field="atividade_id" applyOnUpdate="0"/>
         <default expression="" field="usuario_id" applyOnUpdate="0"/>
         <default expression="" field="prioridade" applyOnUpdate="0"/>
       </defaults>
       <constraints>
         <constraint unique_strength="1" exp_strength="0" field="id" notnull_strength="1" constraints="3"/>
-        <constraint unique_strength="0" exp_strength="0" field="execucao_etapa_id" notnull_strength="1" constraints="1"/>
+        <constraint unique_strength="0" exp_strength="0" field="atividade_id" notnull_strength="1" constraints="1"/>
         <constraint unique_strength="0" exp_strength="0" field="usuario_id" notnull_strength="1" constraints="1"/>
         <constraint unique_strength="0" exp_strength="0" field="prioridade" notnull_strength="1" constraints="1"/>
       </constraints>
       <constraintExpressions>
         <constraint field="id" desc="" exp=""/>
-        <constraint field="execucao_etapa_id" desc="" exp=""/>
+        <constraint field="atividade_id" desc="" exp=""/>
         <constraint field="usuario_id" desc="" exp=""/>
         <constraint field="prioridade" desc="" exp=""/>
       </constraintExpressions>
@@ -1673,7 +1673,7 @@ def my_form_open(diálogo, camada, feição):
       <attributetableconfig sortExpression="" actionWidgetStyle="dropDown" sortOrder="0">
         <columns>
           <column name="id" type="field" width="-1" hidden="0"/>
-          <column name="execucao_etapa_id" type="field" width="-1" hidden="0"/>
+          <column name="atividade_id" type="field" width="-1" hidden="0"/>
           <column name="usuario_id" type="field" width="-1" hidden="0"/>
           <column name="prioridade" type="field" width="-1" hidden="0"/>
           <column type="actions" width="-1" hidden="1"/>
@@ -1707,13 +1707,13 @@ def my_form_open(diálogo, camada, feição):
       <featformsuppress>0</featformsuppress>
       <editorlayout>generatedlayout</editorlayout>
       <editable>
-        <field name="execucao_etapa_id" editable="1"/>
+        <field name="atividade_id" editable="1"/>
         <field name="id" editable="0"/>
         <field name="prioridade" editable="1"/>
         <field name="usuario_id" editable="1"/>
       </editable>
       <labelOnTop>
-        <field name="execucao_etapa_id" labelOnTop="0"/>
+        <field name="atividade_id" labelOnTop="0"/>
         <field name="id" labelOnTop="0"/>
         <field name="prioridade" labelOnTop="0"/>
         <field name="usuario_id" labelOnTop="0"/>
@@ -1817,7 +1817,7 @@ def my_form_open(diálogo, camada, feição):
             </config>
           </editWidget>
         </field>
-        <field name="execucao_etapa_id">
+        <field name="atividade_id">
           <editWidget type="Range">
             <config>
               <Option type="Map">
@@ -1865,7 +1865,7 @@ def my_form_open(diálogo, camada, feição):
       </fieldConfiguration>
       <aliases>
         <alias field="id" index="0" name=""/>
-        <alias field="execucao_etapa_id" index="1" name=""/>
+        <alias field="atividade_id" index="1" name=""/>
         <alias field="perfil_producao_id" index="2" name=""/>
         <alias field="prioridade" index="3" name=""/>
       </aliases>
@@ -1873,19 +1873,19 @@ def my_form_open(diálogo, camada, feição):
       <excludeAttributesWFS/>
       <defaults>
         <default expression="" field="id" applyOnUpdate="0"/>
-        <default expression="" field="execucao_etapa_id" applyOnUpdate="0"/>
+        <default expression="" field="atividade_id" applyOnUpdate="0"/>
         <default expression="" field="perfil_producao_id" applyOnUpdate="0"/>
         <default expression="" field="prioridade" applyOnUpdate="0"/>
       </defaults>
       <constraints>
         <constraint unique_strength="1" exp_strength="0" field="id" notnull_strength="1" constraints="3"/>
-        <constraint unique_strength="0" exp_strength="0" field="execucao_etapa_id" notnull_strength="1" constraints="1"/>
+        <constraint unique_strength="0" exp_strength="0" field="atividade_id" notnull_strength="1" constraints="1"/>
         <constraint unique_strength="0" exp_strength="0" field="perfil_producao_id" notnull_strength="1" constraints="1"/>
         <constraint unique_strength="0" exp_strength="0" field="prioridade" notnull_strength="1" constraints="1"/>
       </constraints>
       <constraintExpressions>
         <constraint field="id" desc="" exp=""/>
-        <constraint field="execucao_etapa_id" desc="" exp=""/>
+        <constraint field="atividade_id" desc="" exp=""/>
         <constraint field="perfil_producao_id" desc="" exp=""/>
         <constraint field="prioridade" desc="" exp=""/>
       </constraintExpressions>
@@ -1896,7 +1896,7 @@ def my_form_open(diálogo, camada, feição):
       <attributetableconfig sortExpression="" actionWidgetStyle="dropDown" sortOrder="0">
         <columns>
           <column name="id" type="field" width="-1" hidden="0"/>
-          <column name="execucao_etapa_id" type="field" width="-1" hidden="0"/>
+          <column name="atividade_id" type="field" width="-1" hidden="0"/>
           <column name="perfil_producao_id" type="field" width="-1" hidden="0"/>
           <column name="prioridade" type="field" width="-1" hidden="0"/>
           <column type="actions" width="-1" hidden="1"/>
@@ -1930,13 +1930,13 @@ def my_form_open(diálogo, camada, feição):
       <featformsuppress>0</featformsuppress>
       <editorlayout>generatedlayout</editorlayout>
       <editable>
-        <field name="execucao_etapa_id" editable="1"/>
+        <field name="atividade_id" editable="1"/>
         <field name="id" editable="0"/>
         <field name="perfil_producao_id" editable="1"/>
         <field name="prioridade" editable="1"/>
       </editable>
       <labelOnTop>
-        <field name="execucao_etapa_id" labelOnTop="0"/>
+        <field name="atividade_id" labelOnTop="0"/>
         <field name="id" labelOnTop="0"/>
         <field name="perfil_producao_id" labelOnTop="0"/>
         <field name="prioridade" labelOnTop="0"/>
@@ -4266,7 +4266,7 @@ def my_form_open(diálogo, camada, feição):
             </config>
           </editWidget>
         </field>
-        <field name="tipo_rotina">
+        <field name="tipo_rotina_id">
           <editWidget type="ValueRelation">
             <config>
               <Option type="Map">
@@ -4347,7 +4347,7 @@ def my_form_open(diálogo, camada, feição):
       </fieldConfiguration>
       <aliases>
         <alias field="id" index="0" name=""/>
-        <alias field="tipo_rotina" index="1" name=""/>
+        <alias field="tipo_rotina_id" index="1" name=""/>
         <alias field="camada_id" index="2" name=""/>
         <alias field="camada_apontamento_id" index="3" name=""/>
         <alias field="parametros" index="4" name=""/>
@@ -4357,7 +4357,7 @@ def my_form_open(diálogo, camada, feição):
       <excludeAttributesWFS/>
       <defaults>
         <default expression="" field="id" applyOnUpdate="0"/>
-        <default expression="" field="tipo_rotina" applyOnUpdate="0"/>
+        <default expression="" field="tipo_rotina_id" applyOnUpdate="0"/>
         <default expression="" field="camada_id" applyOnUpdate="0"/>
         <default expression="" field="camada_apontamento_id" applyOnUpdate="0"/>
         <default expression="" field="parametros" applyOnUpdate="0"/>
@@ -4365,7 +4365,7 @@ def my_form_open(diálogo, camada, feição):
       </defaults>
       <constraints>
         <constraint unique_strength="1" exp_strength="0" field="id" notnull_strength="1" constraints="3"/>
-        <constraint unique_strength="0" exp_strength="0" field="tipo_rotina" notnull_strength="1" constraints="1"/>
+        <constraint unique_strength="0" exp_strength="0" field="tipo_rotina_id" notnull_strength="1" constraints="1"/>
         <constraint unique_strength="0" exp_strength="0" field="camada_id" notnull_strength="1" constraints="1"/>
         <constraint unique_strength="0" exp_strength="0" field="camada_apontamento_id" notnull_strength="1" constraints="1"/>
         <constraint unique_strength="0" exp_strength="0" field="parametros" notnull_strength="0" constraints="0"/>
@@ -4373,7 +4373,7 @@ def my_form_open(diálogo, camada, feição):
       </constraints>
       <constraintExpressions>
         <constraint field="id" desc="" exp=""/>
-        <constraint field="tipo_rotina" desc="" exp=""/>
+        <constraint field="tipo_rotina_id" desc="" exp=""/>
         <constraint field="camada_id" desc="" exp=""/>
         <constraint field="camada_apontamento_id" desc="" exp=""/>
         <constraint field="parametros" desc="" exp=""/>
@@ -4386,7 +4386,7 @@ def my_form_open(diálogo, camada, feição):
       <attributetableconfig sortExpression="" actionWidgetStyle="dropDown" sortOrder="0">
         <columns>
           <column name="id" type="field" width="-1" hidden="0"/>
-          <column name="tipo_rotina" type="field" width="-1" hidden="0"/>
+          <column name="tipo_rotina_id" type="field" width="-1" hidden="0"/>
           <column name="camada_id" type="field" width="-1" hidden="0"/>
           <column name="camada_apontamento_id" type="field" width="-1" hidden="0"/>
           <column name="parametros" type="field" width="-1" hidden="0"/>
@@ -4427,7 +4427,7 @@ def my_form_open(diálogo, camada, feição):
         <field name="etapa_id" editable="1"/>
         <field name="id" editable="0"/>
         <field name="parametros" editable="1"/>
-        <field name="tipo_rotina" editable="1"/>
+        <field name="tipo_rotina_id" editable="1"/>
       </editable>
       <labelOnTop>
         <field name="camada_apontamento_id" labelOnTop="0"/>
@@ -4435,7 +4435,7 @@ def my_form_open(diálogo, camada, feição):
         <field name="etapa_id" labelOnTop="0"/>
         <field name="id" labelOnTop="0"/>
         <field name="parametros" labelOnTop="0"/>
-        <field name="tipo_rotina" labelOnTop="0"/>
+        <field name="tipo_rotina_id" labelOnTop="0"/>
       </labelOnTop>
       <widgets/>
       <previewExpression>id</previewExpression>
@@ -4930,7 +4930,7 @@ def my_form_open(diálogo, camada, feição):
             </config>
           </editWidget>
         </field>
-        <field name="etapa_1_id">
+        <field name="etapa_anterior_id">
           <editWidget type="ValueRelation">
             <config>
               <Option type="Map">
@@ -4947,7 +4947,7 @@ def my_form_open(diálogo, camada, feição):
             </config>
           </editWidget>
         </field>
-        <field name="etapa_2_id">
+        <field name="etapa_posterior_id">
           <editWidget type="ValueRelation">
             <config>
               <Option type="Map">
@@ -4968,28 +4968,28 @@ def my_form_open(diálogo, camada, feição):
       <aliases>
         <alias field="id" index="0" name=""/>
         <alias field="tipo_restricao_id" index="1" name=""/>
-        <alias field="etapa_1_id" index="2" name="etapa_id anterior"/>
-        <alias field="etapa_2_id" index="3" name="etapa_id posterior"/>
+        <alias field="etapa_anterior_id" index="2" name="etapa_id anterior"/>
+        <alias field="etapa_posterior_id" index="3" name="etapa_id posterior"/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
       <defaults>
         <default expression="" field="id" applyOnUpdate="0"/>
         <default expression="" field="tipo_restricao_id" applyOnUpdate="0"/>
-        <default expression="" field="etapa_1_id" applyOnUpdate="0"/>
-        <default expression="" field="etapa_2_id" applyOnUpdate="0"/>
+        <default expression="" field="etapa_anterior_id" applyOnUpdate="0"/>
+        <default expression="" field="etapa_posterior_id" applyOnUpdate="0"/>
       </defaults>
       <constraints>
         <constraint unique_strength="1" exp_strength="0" field="id" notnull_strength="1" constraints="3"/>
         <constraint unique_strength="0" exp_strength="0" field="tipo_restricao_id" notnull_strength="1" constraints="1"/>
-        <constraint unique_strength="0" exp_strength="0" field="etapa_1_id" notnull_strength="1" constraints="1"/>
-        <constraint unique_strength="0" exp_strength="0" field="etapa_2_id" notnull_strength="1" constraints="1"/>
+        <constraint unique_strength="0" exp_strength="0" field="etapa_anterior_id" notnull_strength="1" constraints="1"/>
+        <constraint unique_strength="0" exp_strength="0" field="etapa_posterior_id" notnull_strength="1" constraints="1"/>
       </constraints>
       <constraintExpressions>
         <constraint field="id" desc="" exp=""/>
         <constraint field="tipo_restricao_id" desc="" exp=""/>
-        <constraint field="etapa_1_id" desc="" exp=""/>
-        <constraint field="etapa_2_id" desc="" exp=""/>
+        <constraint field="etapa_anterior_id" desc="" exp=""/>
+        <constraint field="etapa_posterior_id" desc="" exp=""/>
       </constraintExpressions>
       <expressionfields/>
       <attributeactions>
@@ -4999,8 +4999,8 @@ def my_form_open(diálogo, camada, feição):
         <columns>
           <column name="id" type="field" width="-1" hidden="0"/>
           <column name="tipo_restricao_id" type="field" width="-1" hidden="0"/>
-          <column name="etapa_1_id" type="field" width="-1" hidden="0"/>
-          <column name="etapa_2_id" type="field" width="-1" hidden="0"/>
+          <column name="etapa_anterior_id" type="field" width="-1" hidden="0"/>
+          <column name="etapa_posterior_id" type="field" width="-1" hidden="0"/>
           <column type="actions" width="-1" hidden="1"/>
         </columns>
       </attributetableconfig>
@@ -5032,14 +5032,14 @@ def my_form_open(diálogo, camada, feição):
       <featformsuppress>0</featformsuppress>
       <editorlayout>generatedlayout</editorlayout>
       <editable>
-        <field name="etapa_1_id" editable="1"/>
-        <field name="etapa_2_id" editable="1"/>
+        <field name="etapa_anterior_id" editable="1"/>
+        <field name="etapa_posterior_id" editable="1"/>
         <field name="id" editable="0"/>
         <field name="tipo_restricao_id" editable="1"/>
       </editable>
       <labelOnTop>
-        <field name="etapa_1_id" labelOnTop="0"/>
-        <field name="etapa_2_id" labelOnTop="0"/>
+        <field name="etapa_anterior_id" labelOnTop="0"/>
+        <field name="etapa_posterior_id" labelOnTop="0"/>
         <field name="id" labelOnTop="0"/>
         <field name="tipo_restricao_id" labelOnTop="0"/>
       </labelOnTop>
