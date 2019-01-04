@@ -30,6 +30,28 @@ CREATE TABLE macrocontrole.projeto(
 	nome VARCHAR(255) NOT NULL UNIQUE
 );
 
+-- Tipos de produtos previstos na PCDG
+CREATE TABLE macrocontrole.tipo_produto(
+	code SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.tipo_produto (code, nome) VALUES
+(1, 'Conjunto de dados geoespaciais vetoriais'),
+(2, 'Carta Topográfica'),
+(3, 'Carta Ortoimagem'),
+(4, 'Ortoimagem'),
+(5, 'Modelo Digital de Superfície'),
+(6, 'Modelo Digital de Terreno'),
+(8, 'Carta Temática');
+
+CREATE TABLE macrocontrole.linha_producao(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL,
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
+	tipo_produto_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_produto (code)
+);
+
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
@@ -37,8 +59,8 @@ CREATE TABLE macrocontrole.produto(
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
 	area_suprimento VARCHAR(255) NOT NULL,
+	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id)
 	geom geometry(POLYGON, 4674) NOT NULL, 
-	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
 );
 
 CREATE INDEX produto_geom
@@ -81,8 +103,8 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 (3, 'Validação'),
 (4, 'Edição'),
 (5, 'Área Contínua'),
-(6, 'Carregamento BDGEx Matricial'),
-(7, 'Carregamento BDGEx Vetorial'),
+(6, 'Carregamento BDGEx'),
+(7, 'Vetorização'),
 (8, 'Avaliação imagens brutas'),
 (9, 'Avaliação ortoimagens'),
 (10, 'Avaliação MDS'),
@@ -90,16 +112,15 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 (12, 'Avaliação de dados vetoriais'),
 (13, 'Avaliação de aerotriangulação'),
 (14, 'Generalização');
-(15, 'Vetorização');
 
 -- Associa uma fase prevista no BDGEx ao projeto
--- as combinações (tipo_fase, projeto_id) são unicos
+-- as combinações (tipo_fase, linha_producao_id) são unicos
 CREATE TABLE macrocontrole.fase(
     id SERIAL NOT NULL PRIMARY KEY,
     tipo_fase_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_fase (code),
-    projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
-    ordem INTEGER NOT NULL, -- as fases são ordenadas em um projeto
-    UNIQUE (projeto_id, tipo_fase_id)
+    linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
+    ordem INTEGER NOT NULL, -- as fases são ordenadas dentro de uma linha de produção de um projeto
+    UNIQUE (linha_producao_id, tipo_fase_id)
 );
 
 --Meta anual estabelecida no PIT de uma fase
@@ -148,7 +169,8 @@ INSERT INTO macrocontrole.tipo_etapa (nome, tipo_processo_id) VALUES
 ('Revisão por pares 2', 3),
 ('Revisão por amostragem', 2),
 ('Revisão por pares 3', 3),
-('Validação', 3);
+('Validação', 1),
+('Ligação', 1);
 
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,

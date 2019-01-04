@@ -27,16 +27,37 @@ INNER JOIN
 (SELECT usuario_id, max(data_login) as data_login FROM dgeo.login GROUP BY usuario_id) AS l
 ON l.usuario_id = u.id
 WHERE l.data_login::date = now()::date
+ORDER BY l.data_login DESC;
 
 CREATE VIEW acompanhamento.atividades_em_execucao AS
-SELECT ee.unidade_trabalho_id, ee.etapa_id, ee.usuario_id, ee.data_inicio 
-FROM macrocontrole.atividade AS ee 
+SELECT p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome,
+u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, ee.data_inicio 
+FROM macrocontrole.atividade AS ee
+INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
+INNER JOIN macrocontrole.tipo_etapa AS te ON te.id = e.tipo_etapa_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON e.id = ut.unidade_trabalho_id
+INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
+INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+INNER JOIN macrocontrole.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
+INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
 WHERE ee.situacao = 2
 ORDER BY ee.data_inicio ASC
 
-CREATE VIEW acompanhamento.atividades_finalizadas AS
-SELECT ee.unidade_trabalho_id, ee.etapa_id, ee.usuario_id, ee.data_inicio, ee.data_fim
-FROM macrocontrole.atividade AS ee 
+CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
+SELECT p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome,
+u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, ee.data_inicio, ee.data_fim
+FROM macrocontrole.atividade AS ee
+INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
+INNER JOIN macrocontrole.tipo_etapa AS te ON te.id = e.tipo_etapa_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON e.id = ut.unidade_trabalho_id
+INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
+INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+INNER JOIN macrocontrole.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
+INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
 WHERE ee.situacao = 4
 ORDER BY ee.data_fim DESC
 LIMIT 100
