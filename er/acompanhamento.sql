@@ -62,7 +62,7 @@ WHERE ee.situacao = 4
 ORDER BY ee.data_fim DESC
 LIMIT 100
 
-CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento()
+CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento_subfase()
   RETURNS trigger AS
 $BODY$
     DECLARE view_txt text;
@@ -82,15 +82,15 @@ $BODY$
     END IF;
 
     SELECT translate(replace(lower(nome),' ', '_'),  
-          'áàâãäåaaaéèêëeeeeeìíîïìiiióôõöoooòùúûüuuuuçñý',  
-          'aaaaaaaaaeeeeeeeeeiiiiiiiioooooooouuuuuuuucny')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
+          'aaaaaeeeeiiiiooooouuuucc')
           INTO subfase_nome FROM macrocontrole.subfase WHERE id = subfase_ident;
 
-    EXECUTE 'DROP VIEW IF EXISTS acompanhamento.acompanhamento_'|| subfase_ident || '_' || subfase_nome;
+    EXECUTE 'DROP VIEW IF EXISTS acompanhamento.subfase_'|| subfase_ident || '_' || subfase_nome;
 
     SELECT count(*) INTO num FROM macrocontrole.etapa WHERE subfase_id = subfase_ident;
     IF num > 0 THEN
-      view_txt := 'CREATE VIEW acompanhamento.acompanhamento_' || subfase_ident || '_'  || subfase_nome || ' AS 
+      view_txt := 'CREATE VIEW acompanhamento.subfase_' || subfase_ident || '_'  || subfase_nome || ' AS 
       SELECT ut.id, ut.disponivel, ut.lote_id, ut.nome, ut.banco_dados_id, ut.prioridade, ut.geom';
 
       FOR r IN SELECT se.id, e.nome FROM macrocontrole.tipo_etapa AS e 
@@ -99,8 +99,8 @@ $BODY$
       ORDER BY se.ordem
       LOOP
         SELECT translate(replace(lower(r.nome),' ', '_'),  
-          'áàâãäåaaaéèêëeeeeeìíîïìiiióôõöoooòùúûüuuuuçñý',  
-          'aaaaaaaaaeeeeeeeeeiiiiiiiioooooooouuuuuuuucny')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
+          'aaaaaeeeeiiiiooooouuuucc')
           INTO nome_fixed;
 
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.usuario_id::text END AS ' || nome_fixed || '_usuario_id';
@@ -132,12 +132,185 @@ $BODY$
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION macrocontrole.cria_view_acompanhamento()
+ALTER FUNCTION macrocontrole.cria_view_acompanhamento_subfase()
   OWNER TO postgres;
 
-
-CREATE TRIGGER cria_view_acompanhamento
+CREATE TRIGGER cria_view_acompanhamento_subfase
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento();
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento_subfase();
+
+CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento_fase()
+  RETURNS trigger AS
+$BODY$
+    DECLARE view_txt text;
+    DECLARE jointxt text := '';
+    DECLARE linhaproducao_ident integer;
+    DECLARE subfase_ident integer;
+    DECLARE fase_ident integer;
+    DECLARE num integer;
+    DECLARE fase_nome text;
+    DECLARE nome_fixed text;
+    DECLARE r record;
+    DECLARE iterator integer := 1;
+    BEGIN
+
+    IF TG_OP = 'DELETE' THEN
+      subfase_ident := OLD.subfase_id;
+    ELSE
+      subfase_ident := NEW.subfase_id;
+    END IF;
+
+    SELECT translate(replace(lower(tp.nome),' ', '_'),  
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
+          'aaaaaeeeeiiiiooooouuuucc')
+          INTO fase_nome, f.id INTO fase_ident, f.linha_producao_id INTO linhaproducao_ident
+          FROM macrocontrole.subfase AS sf
+          INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
+          INNER JOIN macrocontrole.tipo_fase AS tp ON tp.id = f.tipo_fase_id
+          WHERE sf.id = subfase_ident;
+
+    EXECUTE 'DROP VIEW IF EXISTS acompanhamento.fase_'|| fase_ident || '_' || fase_nome;
+
+    SELECT count(*) INTO num FROM macrocontrole.subfase WHERE fase_id = fase_ident;
+    IF num > 0 THEN
+      view_txt := 'CREATE VIEW acompanhamento.fase_' || fase_ident || '_'  || fase_nome || ' AS 
+      SELECT p.id, p.nome, p.mi, p.inom, p.escala, p.area_suprimento, p.geom';
+
+      FOR r in SELECT s.id, s.nome FROM macrocontrole.subfase AS s
+      WHERE s.fase_id = fase_ident
+      ORDER BY s.ordem
+      LOOP
+        SELECT translate(replace(lower(r.nome),' ', '_'),  
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
+          'aaaaaeeeeiiiiooooouuuucc')
+          INTO nome_fixed;
+        view_txt := view_txt || '(CASE WHEN min(ut' || iterator || '.unidade_trabalho_id) IS NOT NULL min(ut' || iterator || '.data_inicio) ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
+        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.unidade_trabalho_id) IS NOT NULL (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim) ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
+
+        jointxt := jointxt || 'LEFT JOIN 
+          (SELECT ut.geom, min(a.data_inicio) as data_inicio,
+          (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
+          FROM macrocontrole.unidade_trabalho AS ut
+          INNER JOIN
+          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id !=5) AS a
+          ON a.unidade_trabalho_id = ut.id
+          WHERE ut.subfase_id = ' || r.id || '
+          GROUP BY ut.id) AS ut' || iterator || '
+          ON st_relate(ut' || iterator || '.geom, p.geom, ''T********'')';
+
+        iterator := iterator + 1;
+      END LOOP;
+
+      view_txt := view_txt || ' FROM macrocontrole.produto AS p';
+      view_txt := view_txt || jointxt;
+      view_txt := view_txt || ' WHERE p.linha_producao_id = ' || linhaproducao_ident || ' GROUP BY p.id;';
+
+      EXECUTE view_txt;
+
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.cria_view_acompanhamento_fase()
+  OWNER TO postgres;
+
+CREATE TRIGGER cria_view_acompanhamento_fase
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento_fase();
+
+CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento_linha_producao()
+  RETURNS trigger AS
+$BODY$
+    DECLARE view_txt text;
+    DECLARE jointxt text := '';
+    DECLARE linhaproducao_ident integer;
+    DECLARE subfase_ident integer;
+    DECLARE fase_ident integer;
+    DECLARE num integer;
+    DECLARE linhaproducao_nome text;
+    DECLARE nome_fixed text;
+    DECLARE r record;
+    DECLARE iterator integer := 1;
+    BEGIN
+
+    IF TG_OP = 'DELETE' THEN
+      subfase_ident := OLD.subfase_id;
+    ELSE
+      subfase_ident := NEW.subfase_id;
+    END IF;
+
+    SELECT translate(replace(lower(lp.nome),' ', '_'),  
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
+          'aaaaaeeeeiiiiooooouuuucc')
+          INTO linhaproducao_nome, lp.id INTO linhaproducao_ident FROM macrocontrole.subfase AS sf
+          INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
+          INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
+          WHERE sf.id = subfase_ident;
+
+    EXECUTE 'DROP VIEW IF EXISTS acompanhamento.linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome;
+
+    SELECT count(*) INTO num FROM macrocontrole.fase WHERE linha_producao_id = linhaproducao_ident;
+    IF num > 0 THEN
+      view_txt := 'CREATE VIEW acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' AS 
+      SELECT p.id, p.nome, p.mi, p.inom, p.escala, p.area_suprimento, p.geom';
+
+      FOR r in SELECT f.id, tf.nome FROM macrocontrole.fase AS f
+      INNER JOIN macrocontrole.tipo_fase AS tf ON tf.id = f.tipo_fase_id
+      WHERE f.linha_producao_id = linhaproducao_ident
+      ORDER BY f.ordem
+      LOOP
+        SELECT translate(replace(lower(r.nome),' ', '_'),  
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
+          'aaaaaeeeeiiiiooooouuuucc')
+          INTO nome_fixed;
+        view_txt := view_txt || '(CASE WHEN min(ut' || iterator || '.unidade_trabalho_id) IS NOT NULL min(ut' || iterator || '.data_inicio) ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
+        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.unidade_trabalho_id) IS NOT NULL (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim) ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
+
+        jointxt := jointxt || 'LEFT JOIN 
+          (SELECT ut.geom, min(a.data_inicio) as data_inicio,
+          (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
+          FROM macrocontrole.unidade_trabalho AS ut
+          INNER JOIN
+          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id !=5) AS a
+          ON a.unidade_trabalho_id = ut.id
+          WHERE ut.subfase_id = ' || r.id || '
+          GROUP BY ut.id) AS ut' || iterator || '
+          ON st_relate(ut' || iterator || '.geom, p.geom, ''T********'')';
+
+        iterator := iterator + 1;
+      END LOOP;
+
+      view_txt := view_txt || ' FROM macrocontrole.produto AS p';
+      view_txt := view_txt || jointxt;
+      view_txt := view_txt || ' WHERE p.linha_producao_id = ' || linhaproducao_ident || ' GROUP BY p.id;';
+
+      EXECUTE view_txt;
+
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.cria_view_acompanhamento_linha_producao()
+  OWNER TO postgres;
+
+CREATE TRIGGER cria_view_acompanhamento_linha_producao
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento_linha_producao();
 
 COMMIT;

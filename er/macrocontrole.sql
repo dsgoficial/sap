@@ -59,8 +59,8 @@ CREATE TABLE macrocontrole.produto(
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
 	area_suprimento VARCHAR(255) NOT NULL,
-	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id)
-	geom geometry(POLYGON, 4674) NOT NULL, 
+	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
+	geom geometry(POLYGON, 4674) NOT NULL
 );
 
 CREATE INDEX produto_geom
