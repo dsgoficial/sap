@@ -286,12 +286,45 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         `SELECT r.descricao
         FROM macrocontrole.requisito_finalizacao AS r
         INNER JOIN macrocontrole.etapa AS se ON se.id = r.etapa_id
-        WHERE r.etapa_id = $1`,
+        WHERE r.etapa_id = $1 ORDER BY r.ordem`,
         [etapa]
       );
       info.atividade.requisitos = [];
       requisitos.forEach(r => info.atividade.requisitos.push(r.descricao));
-      info.atividade.requisitos.sort();
+
+      let questionario = await t.any(
+        `SELECT q.nome nome_questionario, p.id AS pergunta_id, p.texto AS pergunta,
+        o.id AS opcao_id, o.texto AS opcao
+        FROM avaliacao.questionario AS q
+        INNER JOIN avaliacao.pergunta AS p ON p.questionario_id = q.id
+        INNER JOIN avaliacao.opcao AS o ON o.pergunta_id = p.id
+        WHERE q.etapa_id = $1 
+        ORDER BY p.ordem, o.ordem`,
+        [etapa]
+      );      
+      info.atividade.questionario = {};
+      info.atividade.questionario.perguntas = [];
+      let perguntas = {}
+      questionario.forEach(i => {
+        info.atividade.questionario.nome = i.nome_questionario;
+
+        if (!(i.pergunta_id in perguntas)) {
+          perguntas[i.pergunta_id] = {
+            pergunta_id: i.pergunta_id,
+            pergunta: i.pergunta  
+          };
+          perguntas[i.pergunta_id].opcoes = []
+        }
+
+        perguntas[i.pergunta_id].opcoes.push({
+          opcao_id: i.opcao_id,
+          opcao: i.opcao          
+        })
+      });
+
+      for (var key in perguntas) {
+        info.atividade.questionario.pergunta.push(perguntas[key])
+      }
 
       return info;
     })
