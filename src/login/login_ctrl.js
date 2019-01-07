@@ -10,7 +10,7 @@ const gravaLogin = async usuario_id => {
   try {
     await db.any(
       `
-      INSERT INTO dgeo.login(usuario_id, data_login) VALUES($1, now())
+      INSERT INTO acompanhamento.login(usuario_id, data_login) VALUES($1, now())
       `,
       [usuario_id]
     );

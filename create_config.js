@@ -24,6 +24,14 @@ const sql4 = fs
   .readFileSync(path.resolve("./er/microcontrole.sql"), "utf-8")
   .trim();
 
+const sql5 = fs
+  .readFileSync(path.resolve("./er/avaliacao.sql"), "utf-8")
+  .trim();
+
+const sql6 = fs
+  .readFileSync(path.resolve("./er/metadado.sql"), "utf-8")
+  .trim();
+
 const createConfig = () => {
   console.log(chalk.blue("Sistema de Apoio a Produção"));
   console.log(chalk.blue("Criação do arquivo de configuração"));
@@ -102,6 +110,8 @@ const createConfig = () => {
         await db.none(sql2);
         await db.none(sql3);
         await db.none(sql4);
+        await db.none(sql5);
+        await db.none(sql6);
 
         await db.none(
           `

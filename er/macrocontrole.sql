@@ -2,6 +2,8 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE SCHEMA macrocontrole;
 
 -- Tipo do perfil de acesso ao controle macro
@@ -14,7 +16,7 @@ INSERT INTO macrocontrole.tipo_perfil_sistema (code,nome) VALUES
 (1, 'Visualizador'),
 (2, 'Operador'),
 (3, 'Gerente de Fluxo'),
-(4, 'Supervisor de Célula'),
+(4, 'Chefe Seção'),
 (5, 'Administrador'); 
 
 -- Tabela que associa os usuarios ao perfil
@@ -24,7 +26,6 @@ CREATE TABLE macrocontrole.usuario_perfil_sistema(
   usuario_id INTEGER NOT NULL UNIQUE REFERENCES dgeo.usuario (id)
 );
 
--- Projeto armazena os metadados necessários para geração dos XML do BDGEx e informações gerais sobre as cartas produzidas
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE
@@ -54,11 +55,11 @@ CREATE TABLE macrocontrole.linha_producao(
 
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
+	uuid uuid NOT NULL DEFAULT uuid_generate_v4(),
 	nome VARCHAR(255) NOT NULL,
 	mi VARCHAR(255),
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
-	area_suprimento VARCHAR(255) NOT NULL,
 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
 	geom geometry(POLYGON, 4674) NOT NULL
 );
@@ -67,27 +68,6 @@ CREATE INDEX produto_geom
     ON macrocontrole.produto USING gist
     (geom)
     TABLESPACE pg_default;
-
--- Tipos de palavra chave previstos na ISO19115 / PCDG
-CREATE TABLE macrocontrole.tipo_palavra_chave(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_palavra_chave (code, nome) VALUES
-(1, 'disciplinar'),
-(2, 'geologica'),
-(3, 'tematica'),
-(4, 'temporal'),
-(5, 'toponimica');
-
--- Associa palavra chave a um produto. O produto pode ter multiplas palavras chaves de diferentes tipos.
-CREATE TABLE macrocontrole.palavra_chave(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
- 	tipo_palavra_chave_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_palavra_chave (code),
- 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
-);
 
 -- Fase é somente para agrupar as Subfases
 -- Deve ser correspondente as fases do RTM e a fases previstas no metadado do BDGEx
@@ -182,6 +162,7 @@ CREATE TABLE macrocontrole.etapa(
 CREATE TABLE macrocontrole.requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
+    ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma etapa
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 

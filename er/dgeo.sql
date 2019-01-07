@@ -53,11 +53,4 @@ CREATE TABLE dgeo.usuario(
   tipo_posto_grad_id INTEGER NOT NULL REFERENCES dgeo.tipo_posto_grad (code)
 );
 
-CREATE TABLE dgeo.login(
-  id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-  data_login  timestamp with time zone NOT NULL
-);
-
-
 COMMIT;

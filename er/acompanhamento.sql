@@ -2,6 +2,12 @@ BEGIN;
 
 CREATE SCHEMA acompanhamento;
 
+CREATE TABLE acompanhamento.login(
+  id SERIAL NOT NULL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+  data_login  timestamp with time zone NOT NULL
+);
+
 CREATE VIEW acompanhamento.usuarios_sem_atividades AS
 SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno
 FROM dgeo.usuario AS u
@@ -15,7 +21,7 @@ CREATE VIEW acompanhamento.ultimo_login AS
 SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, l.data_login
 FROM dgeo.usuario AS u
 INNER JOIN
-(SELECT usuario_id, max(data_login) as data_login FROM dgeo.login GROUP BY usuario_id) AS l
+(SELECT usuario_id, max(data_login) as data_login FROM acompanhamento.login GROUP BY usuario_id) AS l
 ON l.usuario_id = u.id
 WHERE u.ativo IS TRUE
 ORDER BY l.data_login DESC;
@@ -24,7 +30,7 @@ CREATE VIEW acompanhamento.usuarios_logados AS
 SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, l.data_login
 FROM dgeo.usuario AS u
 INNER JOIN
-(SELECT usuario_id, max(data_login) as data_login FROM dgeo.login GROUP BY usuario_id) AS l
+(SELECT usuario_id, max(data_login) as data_login FROM acompanhamento.login GROUP BY usuario_id) AS l
 ON l.usuario_id = u.id
 WHERE l.data_login::date = now()::date
 ORDER BY l.data_login DESC;
