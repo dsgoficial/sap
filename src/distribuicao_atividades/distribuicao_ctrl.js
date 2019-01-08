@@ -210,14 +210,14 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         porta: dadosut.porta
       };
 
-      let categoria_fme = []
-      let servidor_fme = ''
+      let categoria_fme = [];
+      let servidor_fme = "";
       fme.forEach(f => {
-        servidor_fme = f.servidor_fme
-        categoria_fme.push(f.categoria_fme)
-      })
+        servidor_fme = f.servidor_fme;
+        categoria_fme.push(f.categoria_fme);
+      });
 
-      categoria_fme = categoria_fme.join()
+      categoria_fme = categoria_fme.join();
 
       info.atividade.fme = {
         categoria: categoria_fme,
@@ -301,29 +301,29 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         WHERE q.etapa_id = $1 
         ORDER BY p.ordem, o.ordem`,
         [etapa]
-      );      
+      );
       info.atividade.questionario = {};
       info.atividade.questionario.perguntas = [];
-      let perguntas = {}
+      let perguntas = {};
       questionario.forEach(i => {
         info.atividade.questionario.nome = i.nome_questionario;
 
         if (!(i.pergunta_id in perguntas)) {
           perguntas[i.pergunta_id] = {
             pergunta_id: i.pergunta_id,
-            pergunta: i.pergunta  
+            pergunta: i.pergunta
           };
-          perguntas[i.pergunta_id].opcoes = []
+          perguntas[i.pergunta_id].opcoes = [];
         }
 
         perguntas[i.pergunta_id].opcoes.push({
           opcao_id: i.opcao_id,
-          opcao: i.opcao          
-        })
+          opcao: i.opcao
+        });
       });
 
       for (var key in perguntas) {
-        info.atividade.questionario.pergunta.push(perguntas[key])
+        info.atividade.questionario.pergunta.push(perguntas[key]);
       }
 
       return info;

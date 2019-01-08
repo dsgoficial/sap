@@ -2,7 +2,7 @@ BEGIN;
 
 CREATE SCHEMA metadado;
 
-CREATE TABLE metadado.chefe_dgeo(
+CREATE TABLE metadado.responsavel_metadado(
   id SERIAL NOT NULL PRIMARY KEY,
 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	data_inicio timestamp with time zone NOT NULL,
@@ -10,9 +10,9 @@ CREATE TABLE metadado.chefe_dgeo(
 );
 
 CREATE TABLE metadado.responsavel_fase(
-    id SERIAL NOT NULL PRIMARY KEY,
+  id SERIAL NOT NULL PRIMARY KEY,
 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-    fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
+  fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	data_inicio timestamp with time zone NOT NULL,
 	data_fim timestamp with time zone
 );
@@ -60,21 +60,21 @@ CREATE TABLE metadado.documento_linhagem_produto(
 
 CREATE TABLE metadado.informacoes_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+ 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
 	resumo TEXT,
 	proposito TEXT,
 	creditos TEXT,
 	informacoes_complementares TEXT,
-	limitacao_acesso VARCHAR(255),
-	limitacao_uso VARCHAR(255),
-	restricao_uso VARCHAR(255),
-	grau_sigilo VARCHAR(255),
-	organizacao_responsavel VARCHAR(255),
-	organizacao_distribuicao VARCHAR(255),
-	sistema_coordenadas VARCHAR(255),
-	datum_vertical VARCHAR(255),
-	formato_distribuicao VARCHAR(255),
-	especificacao VARCHAR(255),
+	limitacao_acesso VARCHAR(255), --fix (Ver codelist, criar tabela)
+	limitacao_uso VARCHAR(255), --fix
+	restricao_uso VARCHAR(255), --fix
+	grau_sigilo VARCHAR(255), --fix 
+	organizacao_responsavel VARCHAR(255), --fix  (ligar com tabela de instituicao, cgeo, sensipam)
+	organizacao_distribuicao VARCHAR(255), --fix 
+	sistema_coordenadas VARCHAR(255), --fix (4674)
+	datum_vertical VARCHAR(255), --fix (imbituba, mais algum?)
+	formato_distribuicao VARCHAR(255), --fix (shp, geotiff)
+	especificacao VARCHAR(255), --fix (edgv, t34-700, rdg)
 	declaracao_linhagem TEXT
 );
 

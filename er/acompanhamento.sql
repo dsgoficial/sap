@@ -284,10 +284,11 @@ $BODY$
           (SELECT ut.geom, min(a.data_inicio) as data_inicio,
           (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
           FROM macrocontrole.unidade_trabalho AS ut
+          INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
           INNER JOIN
           (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id !=5) AS a
           ON a.unidade_trabalho_id = ut.id
-          WHERE ut.subfase_id = ' || r.id || '
+          WHERE s.fase_id = ' || r.id || '
           GROUP BY ut.id) AS ut' || iterator || '
           ON st_relate(ut' || iterator || '.geom, p.geom, ''T********'')';
 
