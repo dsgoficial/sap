@@ -1,5 +1,18 @@
 "use strict";
 
+const { db } = require("../database");
+
+const controller = {};
+
+controller.geraMetadado = async (
+  uuid
+) => {
+  //descobrir qual é o template (só precisa do nome do arquivo)
+  //resgatar todos os dados em json no formato do nunjucks
+};
+
+module.exports = controller;
+
 /*
 function generateMetadata(req,res,next,projeto,mi,tipo){
     
