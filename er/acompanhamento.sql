@@ -161,9 +161,9 @@ $BODY$
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
-      subfase_ident := OLD.subfase_id;
+      subfase_ident := OLD.id;
     ELSE
-      subfase_ident := NEW.subfase_id;
+      subfase_ident := NEW.id;
     END IF;
 
     SELECT translate(replace(lower(tp.nome),' ', '_'),  
@@ -229,7 +229,7 @@ ALTER FUNCTION macrocontrole.cria_view_acompanhamento_fase()
   OWNER TO postgres;
 
 CREATE TRIGGER cria_view_acompanhamento_fase
-AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.subfase
 FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento_fase();
 
 CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento_linha_producao()
@@ -238,7 +238,7 @@ $BODY$
     DECLARE view_txt text;
     DECLARE jointxt text := '';
     DECLARE linhaproducao_ident integer;
-    DECLARE subfase_ident integer;
+    DECLARE fase_ident integer;
     DECLARE fase_ident integer;
     DECLARE num integer;
     DECLARE linhaproducao_nome text;
@@ -248,18 +248,18 @@ $BODY$
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
-      subfase_ident := OLD.subfase_id;
+      fase_ident := OLD.id;
     ELSE
-      subfase_ident := NEW.subfase_id;
+      fase_ident := NEW.id;
     END IF;
 
     SELECT translate(replace(lower(lp.nome),' ', '_'),  
           'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
           'aaaaaeeeeiiiiooooouuuucc')
-          INTO linhaproducao_nome, lp.id INTO linhaproducao_ident FROM macrocontrole.subfase AS sf
-          INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
+          INTO linhaproducao_nome, lp.id INTO linhaproducao_ident 
+          FROM macrocontrole.fase AS f
           INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-          WHERE sf.id = subfase_ident;
+          WHERE f.id = fase_ident;
 
     EXECUTE 'DROP VIEW IF EXISTS acompanhamento.linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome;
 
@@ -317,7 +317,7 @@ ALTER FUNCTION macrocontrole.cria_view_acompanhamento_linha_producao()
   OWNER TO postgres;
 
 CREATE TRIGGER cria_view_acompanhamento_linha_producao
-AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.fase
 FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento_linha_producao();
 
 COMMIT;

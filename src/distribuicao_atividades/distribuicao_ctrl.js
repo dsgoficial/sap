@@ -323,7 +323,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       });
 
       for (var key in perguntas) {
-        info.atividade.questionario.pergunta.push(perguntas[key]);
+        info.atividade.questionario.perguntas.push(perguntas[key]);
       }
 
       return info;
