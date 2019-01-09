@@ -39,8 +39,36 @@ ON l.usuario_id = u.id
 WHERE l.data_login::date = now()::date
 ORDER BY l.data_login DESC;
 
+CREATE VIEW acompanhamento.quantitativo_fila_distribuicao AS
+SELECT ROW_NUMBER () OVER (ORDER BY perfil_producao_id, subfase_id, lote_id) AS id, perfil_producao_id, subfase_id, lote_id, count(*) quantidade
+FROM (
+SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
+        FROM (
+        SELECT ut.lote_id, se.subfase_id, ppo.perfil_producao_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
+        FROM macrocontrole.atividade AS ee
+        INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
+        INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
+        INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
+        INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
+        INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+        LEFT JOIN
+        (
+          SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
+          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id 
+        ) 
+        AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
+        AND se.ordem > ee_ant.ordem
+        WHERE ut.disponivel = TRUE AND ee.tipo_situacao_id = 1
+        ) AS sit
+        GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
+        HAVING MIN(situacao_ant) IS NULL or MIN(situacao_ant) = 4
+) AS ativ
+GROUP BY perfil_producao_id, subfase_id, lote_id
+ORDER BY perfil_producao_id, subfase_id, lote_id
+
 CREATE VIEW acompanhamento.atividades_em_execucao AS
-SELECT p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+SELECT ee.id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome,
 u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, ee.data_inicio 
 FROM macrocontrole.atividade AS ee
@@ -56,7 +84,7 @@ WHERE ee.situacao = 2 --em execucao
 ORDER BY ee.data_inicio ASC
 
 CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
-SELECT p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+SELECT ee.id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome,
 u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, ee.data_inicio, ee.data_fim
 FROM macrocontrole.atividade AS ee
