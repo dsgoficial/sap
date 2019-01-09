@@ -163,7 +163,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       );
 
       let fme = await t.any(
-        "SELECT servidor_fme, categoria_fme FROM macrocontrole.perfil_fme WHERE etapa_id = $1",
+        "SELECT servidor, porta, categoria FROM macrocontrole.perfil_fme WHERE etapa_id = $1",
         [etapa]
       );
 
@@ -176,18 +176,15 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         [etapa]
       );
 
-      let rotinas = await t.any(
-        `SELECT r.nome, c1.nome as camada, c2.nome as camada_apontamento, pr.parametros
-        FROM macrocontrole.perfil_rotina AS pr
-        INNER JOIN macrocontrole.tipo_rotina AS r ON r.code = pr.tipo_rotina_id
-        INNER JOIN macrocontrole.camada AS c1 ON c1.id = pr.camada_id
-        INNER JOIN macrocontrole.camada AS c2 ON c2.id = pr.camada_apontamento_id
-        WHERE pr.etapa_id = $1`,
+      let workspace_dsgtools = await t.any(
+        `SELECT w.nome
+        FROM macrocontrole.perfil_workspace_dsgtools AS w
+        WHERE w.etapa_id = $1`,
         [etapa]
       );
 
       let insumos = await t.any(
-        `SELECT i.nome, i.caminho
+        `SELECT i.nome, i.caminho, i.epsg, i.tipo_insumo_id
         FROM macrocontrole.insumo AS i
         INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
         WHERE iut.unidade_trabalho_id = $1`,
@@ -213,8 +210,8 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       let categoria_fme = [];
       let servidor_fme = "";
       fme.forEach(f => {
-        servidor_fme = f.servidor_fme;
-        categoria_fme.push(f.categoria_fme);
+        servidor_fme = f.servidor + ":" + f.porta;
+        categoria_fme.push(f.categoria);
       });
 
       categoria_fme = categoria_fme.join();
@@ -242,29 +239,18 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         });
       });
 
-      info.atividade.rotinas = {};
-      rotinas.forEach(r => {
-        if (!(r.nome in info.atividade.rotinas)) {
-          info.atividade.rotinas[r.nome] = [];
-        }
-        let aux = {
-          camada: r.camada,
-          camada_apontamento: r.camada_apontamento
-        };
-
-        if (r.parametros) {
-          let param = JSON.parse(r.parametros);
-          aux = { ...aux, ...param };
-        }
-
-        info.atividade.rotinas[r.nome].push(aux);
-      });
+      info.atividade.workspace_dsgtools = [];
+      workspace_dsgtools.forEach(r =>
+        info.atividade.workspace_dsgtools.push(r.nome)
+      );
 
       info.atividade.insumos = [];
       insumos.forEach(i => {
         info.atividade.insumos.push({
           nome: i.nome,
-          caminho: i.caminho
+          caminho: i.caminho,
+          epsg: i.epsg,
+          tipo_insumo_id: i.tipo_insumo_id
         });
       });
 

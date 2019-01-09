@@ -4,11 +4,56 @@ const { db } = require("../database");
 
 const controller = {};
 
-controller.geraMetadado = async (
-  uuid
-) => {
-  //descobrir qual é o template (só precisa do nome do arquivo)
-  //resgatar todos os dados em json no formato do nunjucks
+const xmlTemplate = {};
+
+xmlTemplate["1"] = "template_carta_topo_vetorial.xml";
+xmlTemplate["2"] = "template_carta_topo_matricial.xml";
+xmlTemplate["3"] = "template_carta_ortoimagem.xml";
+xmlTemplate["4"] = "template_ortoimagem.xml";
+xmlTemplate["5"] = "template_mds.xml";
+xmlTemplate["6"] = "template_mdt.xml";
+xmlTemplate["7"] = "template_carta_tematica.xml";
+
+controller.geraMetadado = async uuid => {
+  //descobrir se o produto está finalizado
+
+  const produto = await db.one(
+    `SELECT p.nome, p.mi, p.inom, p.escala, p.geometry, lp.tipo_produto_id,
+    proj.nome AS projeto, ip.resumo, ip.proposito, ip.creditos, ip.informacoes_complementares,
+    ip.limitacao_acesso_id, ip.restricao_uso_id, ip.grau_sigilo_id, ip.organizacao_responsavel_id,
+    ip.organizacao_distribuicao_id, ip.datum_vertical_id, ip.especificacao_id, ip.declaracao_linhagem
+    FROM macrocontrole.produto AS p
+    INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = p.linha_producao_id
+    INNER JOIN macrocontrole.projeto AS proj ON lp.projeto_id = proj.id
+    INNER JOIN metadado.informacoes_produto AS ip ON ip.linha_producao_id = lp.id
+    WHERE p.uuid = $1`,
+    [uuid]
+  );
+
+  const palavras_chave = await db.any(
+    `SELECT pc.nome AS palavra_chave, tpc.nome AS tipo_palavra_chave
+    FROM metadado.palavra_chave AS pc
+    INNER JOIN metadado.tipo_palavra_chave_id AS tpc ON tpc.code = pc.tipo_palavra_chave_id
+    INNER JOIN macrocontrole.produto AS p ON p.id = pc.produto_id
+    WHERE p.uuid = $1`,
+    [uuid]
+  );
+
+  let template = xmlTemplate[produto.tipo_produto_id];
+
+  let dados = produto;
+  const d = new Date();
+  dados.data_metadado = d.toISOString().split("T")[0];
+  dados.palavras_chave = palavras_chave;
+
+  //responsavel metadado
+  //documento linhagem
+  //insumo interno
+  //informacoes de producao nivel fase
+  //responsavel cada fase
+  //metodologias
+
+  return { erro: null, template: template, dados: dados };
 };
 
 module.exports = controller;
@@ -113,8 +158,6 @@ function generateMetadata(req,res,next,projeto,mi,tipo){
         }
       }
 
-      res.set('Content-Type', 'application/xml');
-      return res.render(xmlTemplate[tipo][projeto], dados);      
     }).catch(function(err){
       console.log(err)
       res.status(404).json({
@@ -126,4 +169,3 @@ function generateMetadata(req,res,next,projeto,mi,tipo){
   module.exports.generateMetadata = generateMetadata;
 
   */
-

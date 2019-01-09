@@ -28,7 +28,7 @@ CREATE TABLE macrocontrole.usuario_perfil_sistema(
 
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL UNIQUE
+	nome VARCHAR(255) NOT NULL UNIQUE --conforme bdgex
 );
 
 -- Tipos de produtos previstos na PCDG
@@ -44,7 +44,7 @@ INSERT INTO macrocontrole.tipo_produto (code, nome) VALUES
 (4, 'Ortoimagem'),
 (5, 'Modelo Digital de Superfície'),
 (6, 'Modelo Digital de Terreno'),
-(8, 'Carta Temática');
+(7, 'Carta Temática');
 
 CREATE TABLE macrocontrole.linha_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -90,8 +90,9 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 (10, 'Avaliação MDS'),
 (11, 'Avaliação MDT'),
 (12, 'Avaliação de dados vetoriais'),
-(13, 'Avaliação de aerotriangulação'),
-(14, 'Generalização');
+(13, 'Avaliação de cartas topográficas'),
+(14, 'Avaliação de aerotriangulação'),
+(15, 'Generalização');
 
 -- Associa uma fase prevista no BDGEx ao projeto
 -- as combinações (tipo_fase, linha_producao_id) são unicos
@@ -168,34 +169,18 @@ CREATE TABLE macrocontrole.requisito_finalizacao(
 
 CREATE TABLE macrocontrole.perfil_fme(
 	id SERIAL NOT NULL PRIMARY KEY,
-	servidor_fme VARCHAR(255),
-	categoria_fme VARCHAR(255),
+	servidor VARCHAR(255) NOT NULL,
+	porta VARCHAR(255) NOT NULL,
+	categoria VARCHAR(255) NOT NULL,
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
-CREATE TABLE macrocontrole.tipo_rotina(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_rotina (code, nome) VALUES
-(1, 'outOfBoundsAngles'),
-(2, 'invalidGeometry'),
-(3, 'notSimpleGeometry');
-
-CREATE TABLE macrocontrole.camada(
+CREATE TABLE macrocontrole.perfil_workspace_dsgtools(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE macrocontrole.perfil_rotina(
-	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_rotina_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (code),
-	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
-	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
-	parametros VARCHAR(255),
+	nome VARCHAR(255) NOT NULL,
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
+--TODO: configurar outras opções do DSGTools
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -215,6 +200,13 @@ CREATE TABLE macrocontrole.perfil_menu(
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
+CREATE TABLE macrocontrole.camada(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+--TODO: outras configurações de camadas, como bloquear certos atributos, 
+--filtros adicionais, ou bloquear a camada como um todo
 CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
@@ -223,9 +215,9 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 
 CREATE TABLE macrocontrole.banco_dados(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255),
-	servidor VARCHAR(255),
-	porta VARCHAR(255)
+	nome VARCHAR(255) NOT NULL,
+	servidor VARCHAR(255) NOT NULL,
+	porta VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE macrocontrole.tipo_monitoramento(
@@ -271,7 +263,7 @@ CREATE TABLE macrocontrole.lote(
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255),
-    geom geometry(POLYGON, 4674) NOT NULL,
+  geom geometry(POLYGON, 4674) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
@@ -286,17 +278,32 @@ CREATE INDEX unidade_trabalho_geom
     (geom)
     TABLESPACE pg_default;
 
-CREATE TABLE macrocontrole.tipo_insumo(
+CREATE TABLE macrocontrole.grupo_insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE macrocontrole.tipo_insumo(
+	code SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.tipo_insumo (code, nome) VALUES
+(1, 'Arquivo (download)'),
+(2, 'Arquivo (via rede)'),
+(3, 'Banco de dados PostGIS'),
+(4, 'Insumo físico'),
+(5, 'URL'),
+(6, 'Serviço WMS'),
+(7, 'Serviço WFS');
 
 CREATE TABLE macrocontrole.insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	caminho VARCHAR(255) NOT NULL,
 	epsg VARCHAR(5),
-	tipo_insumo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_insumo (id),
+	tipo_insumo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_insumo (code),
+	grupo_insumo_id INTEGER NOT NULL REFERENCES macrocontrole.grupo_insumo (id),
 	geom geometry(POLYGON, 4674) --se for não espacial a geometria é nula
 );
 
@@ -321,7 +328,8 @@ INSERT INTO macrocontrole.tipo_situacao (code, nome) VALUES
 (2, 'Em execução'),
 (3, 'Pausada'),
 (4, 'Finalizada'),
-(5, 'Não será executada');
+(5, 'Não será executada'),
+(6, 'Atividade não finalizada');
 
 CREATE TABLE macrocontrole.atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -332,6 +340,12 @@ CREATE TABLE macrocontrole.atividade(
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone
 );
+
+-- (etapa_id, unidade_trabalho_id) deve ser unico para tipo_situacao !=6
+CREATE UNIQUE INDEX atividade_unique_index
+ON macrocontrole.atividade (etapa_id, unidade_trabalho_id) 
+WHERE tipo_situacao_id != 6;
+
 
 -- Tabela que associa um operador as operações que pode desempenhar
 -- O numero da prioridade é unico por operador

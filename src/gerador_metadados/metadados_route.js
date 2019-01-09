@@ -8,12 +8,18 @@ const metadadosCtrl = require("./metadados_ctrl");
 
 const router = express.Router();
 
-const nunjucks = require('nunjucks');
-app.set('templates', path.join(__dirname, 'src', 'gerador_metadados', 'templates'));  
-nunjucks.configure(path.join(__dirname, 'src', 'gerador_metadados', 'templates'), {
-  autoescape: true,
-  express: app
-});
+const nunjucks = require("nunjucks");
+app.set(
+  "templates",
+  path.join(__dirname, "src", "gerador_metadados", "templates")
+);
+nunjucks.configure(
+  path.join(__dirname, "src", "gerador_metadados", "templates"),
+  {
+    autoescape: true,
+    express: app
+  }
+);
 
 /**
  * @api {get} /metadados/:uuid Retorna metadado de um produto identificado pelo UUID
@@ -32,11 +38,11 @@ nunjucks.configure(path.join(__dirname, 'src', 'gerador_metadados', 'templates')
  */
 
 router.get("/:uuid", async (req, res, next) => {
-  let { error, template, dados } = await metadadosCtrl.geraMetadado(
+  let { erro, template, dados } = await metadadosCtrl.geraMetadado(
     req.params.uuid
   );
-  if (error) {
-    return next(error);
+  if (erro) {
+    return next(erro);
   }
 
   let information = {
@@ -52,11 +58,6 @@ router.get("/:uuid", async (req, res, next) => {
     template,
     dados
   );
-
 });
 
 module.exports = router;
-
-
-
-

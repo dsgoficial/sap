@@ -12,7 +12,11 @@ CREATE VIEW acompanhamento.usuarios_sem_atividades AS
 SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno
 FROM dgeo.usuario AS u
 LEFT JOIN 
-(SELECT id, usuario_id FROM macrocontrole.atividade AS ee WHERE ee.situacao = 2) AS ee
+(
+  SELECT id, usuario_id 
+  FROM macrocontrole.atividade AS ee 
+  WHERE ee.situacao = 2 -- em execucao
+  ) AS ee
 ON ee.usuario_id = u.id
 WHERE ee.id IS NULL AND u.ativo IS TRUE
 ORDER BY u.nome_guerra;
@@ -48,7 +52,7 @@ INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN macrocontrole.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
 INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-WHERE ee.situacao = 2
+WHERE ee.situacao = 2 --em execucao
 ORDER BY ee.data_inicio ASC
 
 CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
@@ -64,7 +68,7 @@ INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN macrocontrole.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
 INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-WHERE ee.situacao = 4
+WHERE ee.situacao = 4 --finalizada
 ORDER BY ee.data_fim DESC
 LIMIT 100
 
@@ -73,6 +77,7 @@ CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento_subfase()
 $BODY$
     DECLARE view_txt text;
     DECLARE jointxt text := '';
+    DECLARE wheretxt text := '';
     DECLARE subfase_ident integer;
     DECLARE num integer;
     DECLARE subfase_nome text;
@@ -116,12 +121,14 @@ $BODY$
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.data_fim::text END AS ' || nome_fixed || '_data_fim';
         jointxt := jointxt || ' LEFT JOIN macrocontrole.atividade as ee' || iterator || ' ON ee' || iterator || '.unidade_trabalho_id = ut.id and ee' || iterator || '.etapa_id = ' || r.id;
         jointxt := jointxt || ' LEFT JOIN dgeo.usuario as u' || iterator || ' ON u' || iterator || '.id = ee' || iterator || '.usuario_id';
+        wheretxt := wheretxt || ' AND ee' || iterator || '.tipo_situacao_id != 6';
         iterator := iterator + 1;
       END LOOP;
 
       view_txt := view_txt || ' FROM macrocontrole.unidade_trabalho AS ut';
       view_txt := view_txt || jointxt;
       view_txt := view_txt || ' WHERE ut.subfase_id = ' || subfase_ident;
+      view_txt := view_txt || wheretxt;
       view_txt := view_txt || ' ORDER BY ut.prioridade;';
 
       EXECUTE view_txt;
@@ -198,7 +205,7 @@ $BODY$
           (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
           FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN
-          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id !=5) AS a
+          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id NOT IN (5,6)) AS a
           ON a.unidade_trabalho_id = ut.id
           WHERE ut.subfase_id = ' || r.id || '
           GROUP BY ut.id) AS ut' || iterator || '
@@ -286,7 +293,7 @@ $BODY$
           FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
           INNER JOIN
-          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id !=5) AS a
+          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id NOT IN (5,6)) AS a
           ON a.unidade_trabalho_id = ut.id
           WHERE s.fase_id = ' || r.id || '
           GROUP BY ut.id) AS ut' || iterator || '
