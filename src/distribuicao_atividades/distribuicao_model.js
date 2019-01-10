@@ -17,4 +17,27 @@ const finaliza = Joi.object().keys({
     .required()
 });
 
+const resposta_questionario = Joi.object().keys({
+  atividade_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  respostas: Joi.array()
+    .items(
+      Joi.object().keys({
+        pergunta_id: Joi.number()
+          .integer()
+          .strict()
+          .required(),
+        opcao_id: Joi.number()
+          .integer()
+          .strict()
+          .required()
+      })
+    )
+    .required()
+    .min(1)
+});
+
 module.exports.finaliza = finaliza;
+module.exports.resposta_questionario = resposta_questionario;

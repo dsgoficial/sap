@@ -248,8 +248,90 @@ router.post("/inicia", async (req, res, next) => {
   }
 });
 
-router.post("/pausa", (req, res, next) => {
-  //pass
+/**
+ * @api {post} /distribuicao/questionario Envia a resposta de um questionario
+ * @apiVersion 1.0.0
+ * @apiName EnviaQuestionario
+ * @apiGroup Distribuicao
+ * @apiPermission operador
+ *
+ * @apiDescription Envia as respostas de um questionário referente a uma atividade
+ *
+ * @apiParam (Request body) {Integer} atividade_id ID da Atividade referente ao questionário
+ * @apiParamExample {json} Input
+ *     {
+ *       "atividade_id": 5,
+ *       "respostas": [
+ *          {
+ *            "pergunta_id": 1,
+ *            "opcao_id": 3
+ *          },
+ *          {
+ *            "pergunta_id": 2,
+ *            "opcao_id": 2
+ *          },
+ *       ]
+ *     }
+ *
+ *
+ * @apiSuccessExample {json} Resposta em caso de Sucesso:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "message": "Questionário enviado com sucesso.",
+ *     }
+ *
+ * @apiError JsonValidationError O objeto json não segue o padrão estabelecido.
+ *
+ * @apiErrorExample JsonValidationError:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "success": false,
+ *       "message": "Envia questionario validation error"
+ *     }
+ *
+ * @apiUse InvalidTokenError
+ * @apiUse MissingTokenError
+ *
+ */
+router.post("/resposta_questionario", async (req, res, next) => {
+  let validationResult = Joi.validate(
+    req.body,
+    producaoModel.resposta_questionario
+  );
+  if (validationResult.error) {
+    const err = new Error("Envia questionario validation error");
+    err.status = 400;
+    err.context = "distribuicao_route";
+    err.information = {};
+    err.information.body = req.body;
+    err.information.trace = validationResult.error;
+    return next(err);
+  }
+
+  let { error } = await producaoCtrl.respondeQuestionario(
+    req.body.usuario_id,
+    req.body.atividade_id,
+    req.body.respostas
+  );
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id,
+    atividade_id: req.body.atividade_id,
+    respostas: req.body.respostas
+  };
+  return sendJsonAndLog(
+    true,
+    "Questionário enviado com sucesso.",
+    "distribuicao_route",
+    information,
+    res,
+    200,
+    null
+  );
 });
 
 module.exports = router;

@@ -451,4 +451,45 @@ controller.inicia = async usuario_id => {
     });
 };
 
+controller.respondeQuestionario = async (
+  usuario_id,
+  atividade_id,
+  respostas
+) => {
+  const data_questionario = new Date();
+  try {
+    await db.tx(async t => {
+      let resposta_questionario = await t.one(
+        `
+      INSERT INTO avaliacao.resposta_questionario(data, atividade_id, usuario_id) VALUES($1,$2,$3) RETURNING id
+      `,
+        [data_questionario, atividade_id, usuario_id]
+      );
+      let queries = [];
+      respostas.forEach(r => {
+        queries.push(
+          t.none(
+            `
+          INSERT INTO avaliacao.resposta(pergunta_id, opcao_id, resposta_questionario_id) VALUES($1,$2,$3)
+          `,
+            [r.pergunta_id, r.opcao_id, resposta_questionario.id]
+          )
+        );
+      });
+      return await t.batch(queries);
+    });
+    return { error: null };
+  } catch (error) {
+    const err = new Error("Falha durante envio do questionário.");
+    err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.usuario_id = usuario_id;
+    err.information.atividade_id = atividade_id;
+    err.information.respostas = respostas;
+    err.information.trace = error;
+    return { error: err };
+  }
+};
+
 module.exports = controller;
