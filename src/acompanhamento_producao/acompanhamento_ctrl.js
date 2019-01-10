@@ -19,5 +19,33 @@
     })
   }
 
+
+  
+select ee.subfase_etapa_id, se.subfase_id,
+170*AVG(
+CASE 
+WHEN extract(epoch from ee.data_fim-ee.data_inicio)/3600 <= 6
+THEN
+(date_part('hours',(ee.data_fim-ee.data_inicio))/6 + date_part('minutes',(ee.data_fim-ee.data_inicio))/360)/(ST_Area(ut.geom::GEOGRAPHY)/1000000)
+WHEN extract(epoch from ee.data_fim-ee.data_inicio)/3600 > 6 and extract(epoch from ee.data_fim-ee.data_inicio)/3600 <= 18
+THEN
+1/(ST_Area(ut.geom::GEOGRAPHY)/1000000)
+WHEN extract(epoch from ee.data_fim-ee.data_inicio)/3600 >18 and extract(epoch from ee.data_fim-ee.data_inicio)/3600 <= 24
+THEN
+((date_part('hours',(ee.data_fim-ee.data_inicio))-18)/6 + date_part('minutes',(ee.data_fim-ee.data_inicio))/360)/(ST_Area(ut.geom::GEOGRAPHY)/1000000)
+ELSE
+(date_part('days',(ee.data_fim-ee.data_inicio)) + date_part('hours',(ee.data_fim-ee.data_inicio))/6 + date_part('minutes',(ee.data_fim-ee.data_inicio))/360)/(ST_Area(ut.geom::GEOGRAPHY)/1000000)
+END
+) as tempo
+from macrocontrole.execucao_etapa as ee
+inner join macrocontrole.subfase_etapa as se ON se.id = ee.subfase_etapa_id
+inner join macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
+where ee.data_fim is not null and ee.data_inicio is not null and data_fim > data_inicio
+and 170*(date_part('days',(ee.data_fim-ee.data_inicio)) + date_part('hours',(ee.data_fim-ee.data_inicio))/6 + date_part('minutes',(ee.data_fim-ee.data_inicio))/360)/(ST_Area(ut.geom::GEOGRAPHY)/1000000) < 20
+GROUP BY ee.subfase_etapa_id, se.subfase_id
+order by tempo
+
+
+
 */
 
