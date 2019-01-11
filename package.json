@@ -32,7 +32,7 @@
     "apidoc": "^0.17.7",
     "bluebird": "^3.5.3",
     "body-parser": "^1.18.3",
-    "chalk": "^2.4.1",
+    "chalk": "^2.4.2",
     "cors": "^2.8.5",
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
@@ -46,10 +46,10 @@
     "nunjucks": "^3.1.6",
     "pg-promise": "^8.5.4",
     "pgtools": "^0.3.0",
-    "pm2": "^3.2.4",
+    "pm2": "^3.2.8",
     "uuid": "^3.3.2",
     "winston": "^3.1.0",
-    "winston-daily-rotate-file": "^3.5.1"
+    "winston-daily-rotate-file": "^3.5.2"
   },
   "apidoc": {
     "name": "API SAP",

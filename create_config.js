@@ -28,9 +28,7 @@ const sql5 = fs
   .readFileSync(path.resolve("./er/avaliacao.sql"), "utf-8")
   .trim();
 
-const sql6 = fs
-  .readFileSync(path.resolve("./er/metadado.sql"), "utf-8")
-  .trim();
+const sql6 = fs.readFileSync(path.resolve("./er/metadado.sql"), "utf-8").trim();
 
 const createConfig = () => {
   console.log(chalk.blue("Sistema de Apoio a Produção"));
@@ -118,13 +116,26 @@ const createConfig = () => {
         GRANT ALL ON SCHEMA dgeo TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;
         GRANT ALL ON ALL SEQUENCES IN SCHEMA dgeo TO $1:name;
+
         GRANT ALL ON SCHEMA macrocontrole TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO $1:name;
+        GRANT ALL ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
+
         GRANT ALL ON SCHEMA microcontrole TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA microcontrole TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
+        GRANT ALL ON ALL SEQUENCES IN SCHEMA microcontrole TO $1:name;
+
         GRANT ALL ON schema acompanhamento TO public;
-        GRANT SELECT ON ALL TABLES IN SCHEMA acompanhamento TO public;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA acompanhamento TO $1:name;
+        GRANT ALL ON ALL SEQUENCES IN SCHEMA acompanhamento TO $1:name;
+
+        GRANT ALL ON schema avaliacao TO public;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA avaliacao TO $1:name;
+        GRANT ALL ON ALL SEQUENCES IN SCHEMA avaliacao TO $1:name;
+
+        GRANT ALL ON schema metadado TO public;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA metadado TO $1:name;
+        GRANT ALL ON ALL SEQUENCES IN SCHEMA metadado TO $1:name;
         `,
           [answers.db_user]
         );
@@ -147,7 +158,9 @@ JWT_SECRET=tassofragoso`;
         );
       }
       fs.writeFileSync(".env", env);
-      console.log(chalk.blue("Arquivo de configuração (.env) criado com sucesso!"));
+      console.log(
+        chalk.blue("Arquivo de configuração (.env) criado com sucesso!")
+      );
     } catch (error) {
       if (
         error.message ===
@@ -161,25 +174,29 @@ JWT_SECRET=tassofragoso`;
       } else if (
         error.message === 'permission denied to create extension "postgis"'
       ) {
-        console.log(chalk.red("O usuário informado não é superusuário. Sem permissão para criar a extensão 'postgis'."));
-        console.log(chalk.red("Delete o banco de dados criado antes de executar a configuração novamente."));
+        console.log(
+          chalk.red(
+            "O usuário informado não é superusuário. Sem permissão para criar a extensão 'postgis'."
+          )
+        );
+        console.log(
+          chalk.red(
+            "Delete o banco de dados criado antes de executar a configuração novamente."
+          )
+        );
       } else if (
         error.message ===
         'Attempted to create a duplicate database. Cause: database "' +
           answers.db_name +
           '" already exists'
       ) {
-        console.log(
-          chalk.red("O banco " + answers.db_name + " já existe.")
-        );
+        console.log(chalk.red("O banco " + answers.db_name + " já existe."));
       } else if (
         error.message ===
         'password authentication failed for user "' + answers.db_user + '"'
       ) {
         console.log(
-          chalk.red(
-            "Senha inválida para o usuário " + answers.db_user
-          )
+          chalk.red("Senha inválida para o usuário " + answers.db_user)
         );
       } else if (
         error.message ===
@@ -190,7 +207,11 @@ JWT_SECRET=tassofragoso`;
             "Arquivo .env já existe, apague antes de iniciar a configuração."
           )
         );
-        console.log(chalk.red("Delete o banco de dados criado antes de executar a configuração novamente."));
+        console.log(
+          chalk.red(
+            "Delete o banco de dados criado antes de executar a configuração novamente."
+          )
+        );
       } else {
         console.log(chalk.red(error.message));
         console.log("-------------------------------------------------");
