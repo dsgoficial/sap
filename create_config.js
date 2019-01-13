@@ -50,13 +50,13 @@ const createConfig = () => {
       type: "input",
       name: "db_user",
       message:
-        "Qual o nome do usuário administrador do SAP (já existente no banco de dados e ser superusuario)?",
+        "Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?",
       default: "controle_app"
     },
     {
       type: "password",
       name: "db_password",
-      message: "Qual a senha do usuário administrador do SAP?"
+      message: "Qual a senha do usuário do PostgreSQL para interação com o SAP?"
     },
     {
       type: "input",
@@ -207,11 +207,13 @@ JWT_SECRET=tassofragoso`;
             "Arquivo .env já existe, apague antes de iniciar a configuração."
           )
         );
-        console.log(
-          chalk.red(
-            "Delete o banco de dados criado antes de executar a configuração novamente."
-          )
-        );
+        if (answers.db_create) {
+          console.log(
+            chalk.red(
+              "Delete o banco de dados criado antes de executar a configuração novamente."
+            )
+          );
+        }
       } else {
         console.log(chalk.red(error.message));
         console.log("-------------------------------------------------");
