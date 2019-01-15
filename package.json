@@ -16,7 +16,8 @@
     "dev": "nodemon src/index.js",
     "production": "pm2 start src/index.js --name sap",
     "config": "node create_config.js",
-    "project": "node create_project.js"
+    "project": "node create_project.js",
+    "import-docs": "node import_docs.js"
   },
   "keywords": [
     "Controle de Produção",
