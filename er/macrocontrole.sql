@@ -385,4 +385,31 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	prioridade INTEGER NOT NULL
 );
 
+CREATE TABLE macrocontrole.tipo_perda_recurso_humano(
+	code SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.tipo_perda_recurso_humano (code, nome) VALUES
+(1, 'Atividades extra PIT'),
+(2, 'Atividades militares'),
+(3, 'Atividades administrativas'),
+(4, 'Problemas técnicos'),
+(5, 'Feriado'),
+(6, 'Férias'),
+(7, 'Dispensa por motivo de saúde'),
+(8, 'Dispensa como recompensa'),
+(9, 'Dispensa por regresso de atividade de campo'),
+(10, 'Designação para realizar curso / capacitação'),
+(11, 'Designação para ministrar curso / capacitação'),
+(12, 'Designação para participação em eventos');
+
+CREATE TABLE macrocontrole.perda_recurso_humano(
+	id SERIAL NOT NULL PRIMARY KEY,
+ 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+ 	tipo_perda_recurso_humano_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perda_recurso_humano (code),
+	horas REAL NOT NULL,
+	data DATE NOT NULL
+);
+
 COMMIT;

@@ -30,6 +30,9 @@ const sql5 = fs
 
 const sql6 = fs.readFileSync(path.resolve("./er/metadado.sql"), "utf-8").trim();
 
+const sql7 = fs.readFileSync(path.resolve("./er/simulacao.sql"), "utf-8").trim();
+
+
 const createConfig = () => {
   console.log(chalk.blue("Sistema de Apoio a Produção"));
   console.log(chalk.blue("Criação do arquivo de configuração"));
@@ -110,6 +113,7 @@ const createConfig = () => {
         await db.none(sql4);
         await db.none(sql5);
         await db.none(sql6);
+        await db.none(sql7);
 
         await db.none(
           `
@@ -136,6 +140,10 @@ const createConfig = () => {
         GRANT ALL ON schema metadado TO public;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA metadado TO $1:name;
         GRANT ALL ON ALL SEQUENCES IN SCHEMA metadado TO $1:name;
+
+        GRANT ALL ON schema simulacao TO public;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA simulacao TO $1:name;
+        GRANT ALL ON ALL SEQUENCES IN SCHEMA simulacao TO $1:name;
         `,
           [answers.db_user]
         );
