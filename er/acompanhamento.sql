@@ -160,6 +160,7 @@ $BODY$
       view_txt := view_txt || ' ORDER BY ut.prioridade;';
 
       EXECUTE view_txt;
+      EXECUTE 'GRANT ALL ON TABLE acompanhamento.subfase_' || subfase_ident || '_'  || subfase_nome || ' TO PUBLIC';
 
     END IF;
 
@@ -247,6 +248,7 @@ $BODY$
       view_txt := view_txt || ' WHERE p.linha_producao_id = ' || linhaproducao_ident || ' GROUP BY p.id;';
 
       EXECUTE view_txt;
+      EXECUTE 'GRANT ALL ON TABLE acompanhamento.fase_' || fase_ident || '_'  || fase_nome || ' TO PUBLIC';
 
     END IF;
 
@@ -335,6 +337,7 @@ $BODY$
       view_txt := view_txt || ' WHERE p.linha_producao_id = ' || linhaproducao_ident || ' GROUP BY p.id;';
 
       EXECUTE view_txt;
+      EXECUTE 'GRANT ALL ON TABLE acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' TO PUBLIC';
 
     END IF;
 
