@@ -10,7 +10,8 @@ const calculaFila = async usuario => {
       let fila_prioritaria = await t.oneOrNone(
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria as f
         INNER JOIN macrocontrole.atividade as ee ON ee.id = f.atividade_id
-        WHERE f.usuario_id = $1 ORDER BY f.prioridade LIMIT 1`,
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
+        WHERE f.usuario_id = $1 AND ut.disponivel IS TRUE ORDER BY f.prioridade LIMIT 1`,
         [usuario]
       );
 
@@ -21,7 +22,8 @@ const calculaFila = async usuario => {
       let fila_prioritaria_grupo = await t.oneOrNone(
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria_grupo as f
         INNER JOIN macrocontrole.atividade as ee ON ee.id = f.atividade_id
-        WHERE f.perfil_producao_id = $1 ORDER BY f.prioridade LIMIT 1`,
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
+        WHERE f.perfil_producao_id = $1 AND ut.disponivel IS TRUE ORDER BY f.prioridade LIMIT 1`,
         [usuario]
       );
 
@@ -34,7 +36,7 @@ const calculaFila = async usuario => {
         INNER JOIN macrocontrole.perfil_producao_etapa as pse ON pse.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
-        WHERE ee.usuario_id = $1 and ee.tipo_situacao_id = 3
+        WHERE ee.usuario_id = $1 and ee.tipo_situacao_id = 3 AND ut.disponivel IS TRUE
         ORDER BY lo.prioridade, pse.prioridade, ut.prioridade LIMIT 1`,
         [usuario]
       );
@@ -61,7 +63,7 @@ const calculaFila = async usuario => {
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
-        WHERE ut.disponivel = TRUE AND ppo.usuario_id = $1 AND ee.tipo_situacao_id = 1
+        WHERE ut.disponivel IS TRUE AND ppo.usuario_id = $1 AND ee.tipo_situacao_id = 1
         AND ee.id NOT IN        
         (
           SELECT ee.id FROM macrocontrole.atividade AS ee
@@ -332,9 +334,10 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
 controller.verifica = async usuario_id => {
   try {
     let em_andamento = await db.oneOrNone(
-      `SELECT etapa_id, unidade_trabalho_id
-      FROM macrocontrole.atividade
-      WHERE usuario_id = $1 and tipo_situacao_id = 2 LIMIT 1`,
+      `SELECT a.etapa_id, a.unidade_trabalho_id
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      WHERE a.usuario_id = $1 and ut.disponivel IS TRUE and a.tipo_situacao_id = 2 LIMIT 1`,
       [usuario_id]
     );
 
@@ -408,6 +411,12 @@ controller.inicia = async usuario_id => {
       );
       await t.none(
         `DELETE FROM macrocontrole.fila_prioritaria
+          WHERE atividade_id IN (
+          SELECT id from macrocontrole.atividade WHERE etapa_id = $1 and unidade_trabalho_id = $2)`,
+        [prioridade.etapa_id, prioridade.unidade_trabalho_id]
+      );
+      await t.none(
+        `DELETE FROM macrocontrole.fila_prioritaria_grupo
           WHERE atividade_id IN (
           SELECT id from macrocontrole.atividade WHERE etapa_id = $1 and unidade_trabalho_id = $2)`,
         [prioridade.etapa_id, prioridade.unidade_trabalho_id]

@@ -412,4 +412,23 @@ CREATE TABLE macrocontrole.perda_recurso_humano(
 	data DATE NOT NULL
 );
 
+CREATE TABLE macrocontrole.motivo_xxxxxx(
+	code SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.motivo_xxxxxx (code, nome) VALUES
+(1, 'yyyyy'),
+(2, 'yyyy'),
+(3, 'yyyy');
+
+CREATE TABLE macrocontrole.xxxx(
+	id SERIAL NOT NULL PRIMARY KEY,
+ 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+	motivo_id INTEGER NOT NULL REFERENCES macrocontrole.motivo_xxxxxx (code),
+	descricao TEXT NOT NULL
+);
+
 COMMIT;
