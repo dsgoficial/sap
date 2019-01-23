@@ -88,7 +88,7 @@ const calculaFila = async usuario => {
         )
         ) AS sit
         GROUP BY etapa_id, unidade_trabalho_id, lo_prioridade, pse_prioridade, ut_prioridade
-        HAVING MIN(situacao_ant) IS NULL or MIN(situacao_ant) = 4
+        HAVING MIN(situacao_ant) IS NULL or every(situacao_ant IN (4,5)) 
         ORDER BY lo_prioridade, pse_prioridade, ut_prioridade
         LIMIT 1`,
         [usuario]

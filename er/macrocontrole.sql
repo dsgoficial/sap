@@ -329,7 +329,7 @@ INSERT INTO macrocontrole.tipo_situacao (code, nome) VALUES
 (3, 'Pausada'),
 (4, 'Finalizada'),
 (5, 'Não será executada'),
-(6, 'Atividade não finalizada');
+(6, 'Não finalizada');
 
 CREATE TABLE macrocontrole.atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
