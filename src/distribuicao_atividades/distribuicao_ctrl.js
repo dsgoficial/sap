@@ -11,7 +11,7 @@ const calculaFila = async usuario => {
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria as f
         INNER JOIN macrocontrole.atividade as ee ON ee.id = f.atividade_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        WHERE f.usuario_id = $1 AND ut.disponivel IS TRUE ORDER BY f.prioridade LIMIT 1`,
+        WHERE f.usuario_id = $1 AND ut.disponivel IS TRUE AND ee.tipo_situacao_id IN (1,3) ORDER BY f.prioridade LIMIT 1`,
         [usuario]
       );
 
@@ -23,7 +23,7 @@ const calculaFila = async usuario => {
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria_grupo as f
         INNER JOIN macrocontrole.atividade as ee ON ee.id = f.atividade_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        WHERE f.perfil_producao_id = $1 AND ut.disponivel IS TRUE ORDER BY f.prioridade LIMIT 1`,
+        WHERE f.perfil_producao_id = $1 AND ut.disponivel IS TRUE AND ee.tipo_situacao_id IN (1,3) ORDER BY f.prioridade LIMIT 1`,
         [usuario]
       );
 
@@ -59,7 +59,8 @@ const calculaFila = async usuario => {
         LEFT JOIN
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
-          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id 
+          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+          WHERE ee.tipo_situacao_id != 6
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
@@ -90,7 +91,7 @@ const calculaFila = async usuario => {
         )
         ) AS sit
         GROUP BY etapa_id, unidade_trabalho_id, lo_prioridade, pse_prioridade, ut_prioridade
-        HAVING MIN(situacao_ant) IS NULL or every(situacao_ant IN (4,5)) 
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
         ORDER BY lo_prioridade, pse_prioridade, ut_prioridade
         LIMIT 1`,
         [usuario]
@@ -424,7 +425,7 @@ controller.inicia = async usuario_id => {
       let result = await t.result(
         `UPDATE macrocontrole.atividade SET
           data_inicio = $1, tipo_situacao_id = 2, usuario_id = $4
-          WHERE etapa_id = $2 and unidade_trabalho_id = $3 and (tipo_situacao_id = 1 or tipo_situacao_id = 3)`,
+          WHERE etapa_id = $2 and unidade_trabalho_id = $3 and tipo_situacao_id IN (1,3)`,
         [
           data_inicio,
           prioridade.etapa_id,

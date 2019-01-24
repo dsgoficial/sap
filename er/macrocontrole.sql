@@ -263,7 +263,7 @@ CREATE TABLE macrocontrole.lote(
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255),
-  geom geometry(POLYGON, 4674) NOT NULL,
+  	geom geometry(MULTIPOLYGON, 4674) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
@@ -412,23 +412,25 @@ CREATE TABLE macrocontrole.perda_recurso_humano(
 	data DATE NOT NULL
 );
 
-CREATE TABLE macrocontrole.motivo_xxxxxx(
+CREATE TABLE macrocontrole.tipo_problema(
 	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO macrocontrole.motivo_xxxxxx (code, nome) VALUES
-(1, 'yyyyy'),
-(2, 'yyyy'),
-(3, 'yyyy');
+INSERT INTO macrocontrole.tipo_problema (code, nome) VALUES
+(1, 'Insumo não é suficiente para execução da atividade'),
+(2, 'Problema em etapa anterior, necessita ser refeita'),
+(3, 'Erro durante execução da atividade atual'),
+(99, 'Outros');
 
-CREATE TABLE macrocontrole.xxxx(
+CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-	motivo_id INTEGER NOT NULL REFERENCES macrocontrole.motivo_xxxxxx (code),
-	descricao TEXT NOT NULL
+	tipo_problema_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_problema (code),
+	descricao TEXT NOT NULL,
+	resolvido BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 COMMIT;

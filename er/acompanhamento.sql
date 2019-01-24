@@ -55,14 +55,15 @@ SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
         LEFT JOIN
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
-          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id 
+          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+          WHERE ee.tipo_situacao_id != 6
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
-        WHERE ut.disponivel = TRUE AND ee.tipo_situacao_id = 1
+        WHERE ut.disponivel IS TRUE AND ee.tipo_situacao_id = 1
         ) AS sit
         GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
-        HAVING MIN(situacao_ant) IS NULL or MIN(situacao_ant) = 4
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
 ) AS ativ
 GROUP BY perfil_producao_id, subfase_id, lote_id
 ORDER BY perfil_producao_id, subfase_id, lote_id
