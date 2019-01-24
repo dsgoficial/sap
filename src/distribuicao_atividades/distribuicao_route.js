@@ -249,7 +249,7 @@ router.post("/inicia", async (req, res, next) => {
 });
 
 /**
- * @api {post} /distribuicao/questionario Envia a resposta de um questionario
+ * @api {post} /distribuicao/resposta_questionario Envia a resposta de um questionario
  * @apiVersion 1.0.0
  * @apiName EnviaQuestionario
  * @apiGroup Distribuicao
@@ -258,6 +258,7 @@ router.post("/inicia", async (req, res, next) => {
  * @apiDescription Envia as respostas de um questionário referente a uma atividade
  *
  * @apiParam (Request body) {Integer} atividade_id ID da Atividade referente ao questionário
+ * @apiParam (Request body) {Array} respostas Array de respostas contendo os Ids das perguntas e da opção escolhida
  * @apiParamExample {json} Input
  *     {
  *       "atividade_id": 5,
@@ -326,6 +327,95 @@ router.post("/resposta_questionario", async (req, res, next) => {
   return sendJsonAndLog(
     true,
     "Questionário enviado com sucesso.",
+    "distribuicao_route",
+    information,
+    res,
+    200,
+    null
+  );
+});
+
+/**
+ * @api {post} /distribuicao/problema_atividade Envia um problema na atividade
+ * @apiVersion 1.0.0
+ * @apiName EnviaProblemaAtividade
+ * @apiGroup Distribuicao
+ * @apiPermission operador
+ *
+ * @apiDescription Envia um problema na atividade, bloqueando a atividade e enviando uma nova ao operador
+ *
+ * @apiParam (Request body) {Integer} usuario_id ID do Usuário que está enviando o problema
+ * @apiParam (Request body) {Integer} unidade_trabalho_id ID da Unidade de Trabalho referente ao problema
+ * @apiParam (Request body) {Integer} etapa_id ID da Etapa referente ao problema
+ * @apiParam (Request body) {Integer} tipo_problema_id ID do tipo do problema da atividade
+ * @apiParam (Request body) {String} descricao Descrição textual do problema ocorrido na atividade
+
+ * @apiParamExample {json} Input
+ *     {
+ *       "usuario_id": 5,
+ *       "unidade_trabalho_id": 342,
+ *       "etapa_id": 12,
+ *       "tipo_problema_id": 2,
+ *       "descricao": "Foi deletado incorretamente todos os vetores de vegetação"
+ *     }
+ *
+ *
+ * @apiSuccessExample {json} Resposta em caso de Sucesso:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "message": "Problema atividade com sucesso.",
+ *     }
+ *
+ * @apiError JsonValidationError O objeto json não segue o padrão estabelecido.
+ *
+ * @apiErrorExample JsonValidationError:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "success": false,
+ *       "message": "Problema atividade validation error"
+ *     }
+ *
+ * @apiUse InvalidTokenError
+ * @apiUse MissingTokenError
+ *
+ */
+router.post("/problema_atividade", async (req, res, next) => {
+  let validationResult = Joi.validate(
+    req.body,
+    producaoModel.problema_atividade
+  );
+  if (validationResult.error) {
+    const err = new Error("Problema atividade validation error");
+    err.status = 400;
+    err.context = "distribuicao_route";
+    err.information = {};
+    err.information.body = req.body;
+    err.information.trace = validationResult.error;
+    return next(err);
+  }
+
+  let { error } = await producaoCtrl.problemaAtividade(
+    req.body.usuario_id,
+    req.body.unidade_trabalho_id,
+    req.body.etapa_id,
+    req.body.tipo_problema_id,
+    req.body.descricao
+  );
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id,
+    unidade_trabalho_id: req.body.unidade_trabalho_id,
+    etapa_id: req.body.etapa_id,
+    tipo_problema_id: req.body.tipo_problema_id,
+    descricao: req.body.descricao
+  };
+  return sendJsonAndLog(
+    true,
+    "Problema atividade com sucesso.",
     "distribuicao_route",
     information,
     res,

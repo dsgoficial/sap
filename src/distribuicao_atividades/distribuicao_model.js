@@ -39,5 +39,26 @@ const resposta_questionario = Joi.object().keys({
     .min(1)
 });
 
+const problema_atividade = Joi.object().keys({
+  usuario_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  unidade_trabalho_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  etapa_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  tipo_problema_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  descricao: Joi.string().required()
+});
+
 module.exports.finaliza = finaliza;
 module.exports.resposta_questionario = resposta_questionario;
+module.exports.problema_atividade = problema_atividade;

@@ -502,4 +502,63 @@ controller.respondeQuestionario = async (
   }
 };
 
+controller.problemaAtividade = async (
+  usuario_id,
+  unidade_trabalho_id,
+  etapa_id,
+  tipo_problema_id,
+  descricao
+) => {
+  try {
+    const data_fim = new Date();
+    await db.tx(async t => {
+      await t.Any(
+        `
+      INSERT INTO macrocontrole.problema_atividade(usuario_id, unidade_trabalho_id, etapa_id, tipo_problema_id, descricao, resolvido)
+      VALUES($1,$2,$3,$4,$5,FALSE)
+      `,
+        [usuario_id, unidade_trabalho_id, etapa_id, tipo_problema_id, descricao]
+      );
+      await t.Any(
+      `
+      UPDATE macrocontrole.atividade SET
+      data_fim = $1, tipo_situacao_id = 6
+      WHERE etapa_id = $2 and unidade_trabalho_id = $3 and usuario_id = $4
+      `,
+        [data_fim, etapa_id, unidade_trabalho_id, usuario_id]
+      );
+
+      await t.Any(
+        `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, etapa_id, usuario_id, tipo_situacao_id)
+      VALUES($1,$2,$3,3)
+      `,
+        [etapa_id, unidade_trabalho_id, usuario_id]
+      );
+
+      await t.Any(
+        `
+        UPDATE macrocontrole.unidade_trabalho SET
+        disponivel = FALSE
+        WHERE unidade_trabalho_id = $1
+        `,
+          [unidade_trabalho_id]
+        );
+    });    
+    return { error: null };
+  } catch (error) {
+    const err = new Error("Falha durante envio do problema da atividade.");
+    err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.usuario_id = usuario_id;
+    err.information.unidade_trabalho_id = unidade_trabalho_id;
+    err.information.etapa_id = etapa_id;
+    err.information.tipo_problema_id = tipo_problema_id;
+    err.information.descricao = descricao;
+    err.information.trace = error;
+    return { error: err };
+  }
+};
+
 module.exports = controller;
