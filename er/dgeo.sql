@@ -25,9 +25,9 @@ INSERT INTO dgeo.tipo_posto_grad (code, nome,nome_abrev) VALUES
 (14, 'Major', 'Maj'),
 (15, 'Tenente Coronel', 'TC'),
 (16, 'Coronel', 'Cel'),
-(17, 'General de Brigada', 'Gen'),
-(18, 'General de Divisão', 'Gen'),
-(19, 'General de Exército', 'Gen');
+(17, 'General de Brigada', 'Gen Bda'),
+(18, 'General de Divisão', 'Gen Div'),
+(19, 'General de Exército', 'Gen Ex');
 
 --Valores padrão para turno de trabalho
 CREATE TABLE dgeo.tipo_turno(

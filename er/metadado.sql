@@ -47,14 +47,14 @@ CREATE TABLE metadado.palavra_chave(
 CREATE TABLE metadado.documento_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-  uuid uuid NOT NULL,
-  data TIMESTAMP WITH TIME ZONE NOT NULL,
-  link VARCHAR(255) NOT NULL
+	uuid uuid NOT NULL,
+	data TIMESTAMP WITH TIME ZONE NOT NULL,
+	link VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE metadado.documento_linhagem_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	documento_linhagem_id INTEGER NOT NULL REFERENCES macrocontrole.documento_linhagem (id),
+ 	documento_linhagem_id INTEGER NOT NULL REFERENCES metadado.documento_linhagem (id),
  	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
 
@@ -121,7 +121,7 @@ INSERT INTO metadado.organizacao (id, nome, endereco, telefone, site) VALUES
 (2, '2º Centro de Geoinformação', 'EPTC Km 4,5 DF 001 - Setor Habitacional Taquari - Lago Norte - Brasília - DF Setor Habitacional Taquari - CEP:71.559-901 - Brasília - DF', '(61)3415-3855', 'http://www.2cgeo.eb.mil.br'),
 (3, '3º Centro de Geoinformação', 'Avenida Joaquim Nabuco, nº 1687 Guadalupe - CEP:53.240-650 - Olinda - PE', '(81)3439-3033', 'http://www.3cgeo.eb.mil.br/'),
 (4, '4º Centro de Geoinformação', 'Avenida Marechal Bittencourt, nº 97 Compensa - CEP:69.027-140 - Manaus - AM', '(92)3625-1585', 'http://www.4cgeo.eb.mil.br/'),
-(5, '5º Centro de Geoinformação', 'Rua Major Daemon, nº 81 Morro da Conceição - CEP:20.081-190 - Rio de Janeiro - RJ', '(21)2263-9664', 'http://www.5cgeo.eb.mil.br/'),
+(5, '5º Centro de Geoinformação', 'Rua Major Daemon, nº 81 Morro da Conceição - CEP:20.081-190 - Rio de Janeiro - RJ', '(21)2263-9664', 'http://www.5cgeo.eb.mil.br/');
 
 CREATE TABLE metadado.informacoes_produto(
 	id SERIAL NOT NULL PRIMARY KEY,

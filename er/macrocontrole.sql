@@ -85,7 +85,7 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 (5, 'Área Contínua'),
 (6, 'Carregamento BDGEx'),
 (7, 'Vetorização'),
-(8, 'Avaliação imagens brutas'),
+(8, 'Avaliação imagens'),
 (9, 'Avaliação ortoimagens'),
 (10, 'Avaliação MDS'),
 (11, 'Avaliação MDT'),
@@ -151,7 +151,9 @@ INSERT INTO macrocontrole.tipo_etapa (nome, tipo_processo_id) VALUES
 ('Revisão por amostragem', 2),
 ('Revisão por pares 3', 3),
 ('Validação', 1),
-('Ligação', 1);
+('Ligação', 1),
+('Execução Delimitador', 1),
+('Execução Centroide', 1);
 
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -295,7 +297,8 @@ INSERT INTO macrocontrole.tipo_insumo (code, nome) VALUES
 (4, 'Insumo físico'),
 (5, 'URL'),
 (6, 'Serviço WMS'),
-(7, 'Serviço WFS');
+(7, 'Serviço WFS'),
+(8, 'Projeto QGIS');
 
 CREATE TABLE macrocontrole.insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -338,7 +341,8 @@ CREATE TABLE macrocontrole.atividade(
 	usuario_id INTEGER REFERENCES dgeo.usuario (id),
 	tipo_situacao_id INTEGER REFERENCES macrocontrole.tipo_situacao (code),
 	data_inicio timestamp with time zone,
-	data_fim timestamp with time zone
+	data_fim timestamp with time zone,
+	observacao text
 );
 
 -- (etapa_id, unidade_trabalho_id) deve ser unico para tipo_situacao !=6

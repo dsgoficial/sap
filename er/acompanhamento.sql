@@ -9,20 +9,20 @@ CREATE TABLE acompanhamento.login(
 );
 
 CREATE VIEW acompanhamento.usuarios_sem_atividades AS
-SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno
+SELECT u.id AS usuario_id, u.nome_guerra, u.tipo_posto_grad_id, u.tipo_turno_id
 FROM dgeo.usuario AS u
 LEFT JOIN 
 (
   SELECT id, usuario_id 
   FROM macrocontrole.atividade AS ee 
-  WHERE ee.situacao = 2 -- em execucao
+  WHERE ee.tipo_situacao_id = 2 -- em execucao
   ) AS ee
 ON ee.usuario_id = u.id
 WHERE ee.id IS NULL AND u.ativo IS TRUE
 ORDER BY u.nome_guerra;
 
 CREATE VIEW acompanhamento.ultimo_login AS
-SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, l.data_login
+SELECT u.id AS usuario_id, u.nome_guerra, u.tipo_posto_grad_id, u.tipo_turno_id, l.data_login
 FROM dgeo.usuario AS u
 INNER JOIN
 (SELECT usuario_id, max(data_login) as data_login FROM acompanhamento.login GROUP BY usuario_id) AS l
@@ -31,7 +31,7 @@ WHERE u.ativo IS TRUE
 ORDER BY l.data_login DESC;
 
 CREATE VIEW acompanhamento.usuarios_logados AS
-SELECT u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, l.data_login
+SELECT u.id AS usuario_id, u.nome_guerra, u.tipo_posto_grad_id, u.tipo_turno_id, l.data_login
 FROM dgeo.usuario AS u
 INNER JOIN
 (SELECT usuario_id, max(data_login) as data_login FROM acompanhamento.login GROUP BY usuario_id) AS l
@@ -66,40 +66,42 @@ SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
 ) AS ativ
 GROUP BY perfil_producao_id, subfase_id, lote_id
-ORDER BY perfil_producao_id, subfase_id, lote_id
+ORDER BY perfil_producao_id, subfase_id, lote_id;
 
 CREATE VIEW acompanhamento.atividades_em_execucao AS
 SELECT ee.id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome,
-u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, ee.data_inicio 
+u.id AS usuario_id, u.nome_guerra, u.tipo_posto_grad_id, u.tipo_turno_id, ee.data_inicio 
 FROM macrocontrole.atividade AS ee
+INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
 INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
 INNER JOIN macrocontrole.tipo_etapa AS te ON te.id = e.tipo_etapa_id
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON e.id = ut.unidade_trabalho_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON ee.unidade_trabalho_id = ut.id
 INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN macrocontrole.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
 INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-WHERE ee.situacao = 2 --em execucao
-ORDER BY ee.data_inicio ASC
+WHERE ee.tipo_situacao_id = 2 --em execucao
+ORDER BY ee.data_inicio ASC;
 
 CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
 SELECT ee.id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome,
-u.id AS usuario_id, u.nome_guerra, u.posto_grad, u.turno, ee.data_inicio, ee.data_fim
+u.id AS usuario_id, u.nome_guerra, u.tipo_posto_grad_id, u.tipo_turno_id, ee.data_inicio, ee.data_fim
 FROM macrocontrole.atividade AS ee
+INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
 INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
 INNER JOIN macrocontrole.tipo_etapa AS te ON te.id = e.tipo_etapa_id
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON e.id = ut.unidade_trabalho_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON ee.unidade_trabalho_id = ut.id
 INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN macrocontrole.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
 INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-WHERE ee.situacao = 4 --finalizada
+WHERE ee.tipo_situacao_id = 4 --finalizada
 ORDER BY ee.data_fim DESC
-LIMIT 100
+LIMIT 100;
 
 CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento_subfase()
   RETURNS trigger AS
@@ -122,8 +124,8 @@ $BODY$
     END IF;
 
     SELECT translate(replace(lower(nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
-          'aaaaaeeeeiiiiooooouuuucc')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
+          'aaaaaeeeeiiiiooooouuuucc_')
           INTO subfase_nome FROM macrocontrole.subfase WHERE id = subfase_ident;
 
     EXECUTE 'DROP VIEW IF EXISTS acompanhamento.subfase_'|| subfase_ident || '_' || subfase_nome;
@@ -139,8 +141,8 @@ $BODY$
       ORDER BY se.ordem
       LOOP
         SELECT translate(replace(lower(r.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
-          'aaaaaeeeeiiiiooooouuuucc')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
+          'aaaaaeeeeiiiiooooouuuucc_')
           INTO nome_fixed;
 
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.usuario_id::text END AS ' || nome_fixed || '_usuario_id';
@@ -204,12 +206,12 @@ $BODY$
     END IF;
 
     SELECT translate(replace(lower(tp.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
-          'aaaaaeeeeiiiiooooouuuucc')
-          INTO fase_nome, f.id INTO fase_ident, f.linha_producao_id INTO linhaproducao_ident
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
+          'aaaaaeeeeiiiiooooouuuucc_'), f.id, f.linha_producao_id
+          INTO fase_nome, fase_ident, linhaproducao_ident
           FROM macrocontrole.subfase AS sf
           INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
-          INNER JOIN macrocontrole.tipo_fase AS tp ON tp.id = f.tipo_fase_id
+          INNER JOIN macrocontrole.tipo_fase AS tp ON tp.code = f.tipo_fase_id
           WHERE sf.id = subfase_ident;
 
     EXECUTE 'DROP VIEW IF EXISTS acompanhamento.fase_'|| fase_ident || '_' || fase_nome;
@@ -217,21 +219,21 @@ $BODY$
     SELECT count(*) INTO num FROM macrocontrole.subfase WHERE fase_id = fase_ident;
     IF num > 0 THEN
       view_txt := 'CREATE VIEW acompanhamento.fase_' || fase_ident || '_'  || fase_nome || ' AS 
-      SELECT p.id, p.nome, p.mi, p.inom, p.escala, p.area_suprimento, p.geom';
+      SELECT p.id, p.nome, p.mi, p.inom, p.escala, p.geom';
 
       FOR r in SELECT s.id, s.nome FROM macrocontrole.subfase AS s
       WHERE s.fase_id = fase_ident
       ORDER BY s.ordem
       LOOP
         SELECT translate(replace(lower(r.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
-          'aaaaaeeeeiiiiooooouuuucc')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
+          'aaaaaeeeeiiiiooooouuuucc_')
           INTO nome_fixed;
-        view_txt := view_txt || '(CASE WHEN min(ut' || iterator || '.unidade_trabalho_id) IS NOT NULL min(ut' || iterator || '.data_inicio) ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
-        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.unidade_trabalho_id) IS NOT NULL (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim) ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
+        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN min(ut' || iterator || '.data_inicio)::text ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
+        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim)::text ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
 
-        jointxt := jointxt || 'LEFT JOIN 
-          (SELECT ut.geom, min(a.data_inicio) as data_inicio,
+        jointxt := jointxt || ' LEFT JOIN 
+          (SELECT ut.id, ut.geom, min(a.data_inicio) as data_inicio,
           (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
           FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN
@@ -244,7 +246,7 @@ $BODY$
         iterator := iterator + 1;
       END LOOP;
 
-      view_txt := view_txt || ' FROM macrocontrole.produto AS p';
+      view_txt := view_txt || ' FROM macrocontrole.produto AS p ';
       view_txt := view_txt || jointxt;
       view_txt := view_txt || ' WHERE p.linha_producao_id = ' || linhaproducao_ident || ' GROUP BY p.id;';
 
@@ -277,7 +279,6 @@ $BODY$
     DECLARE jointxt text := '';
     DECLARE linhaproducao_ident integer;
     DECLARE fase_ident integer;
-    DECLARE fase_ident integer;
     DECLARE num integer;
     DECLARE linhaproducao_nome text;
     DECLARE nome_fixed text;
@@ -292,9 +293,9 @@ $BODY$
     END IF;
 
     SELECT translate(replace(lower(lp.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
-          'aaaaaeeeeiiiiooooouuuucc')
-          INTO linhaproducao_nome, lp.id INTO linhaproducao_ident 
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
+          'aaaaaeeeeiiiiooooouuuucc_'), lp.id
+          INTO linhaproducao_nome, linhaproducao_ident 
           FROM macrocontrole.fase AS f
           INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
           WHERE f.id = fase_ident;
@@ -304,22 +305,22 @@ $BODY$
     SELECT count(*) INTO num FROM macrocontrole.fase WHERE linha_producao_id = linhaproducao_ident;
     IF num > 0 THEN
       view_txt := 'CREATE VIEW acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' AS 
-      SELECT p.id, p.nome, p.mi, p.inom, p.escala, p.area_suprimento, p.geom';
+      SELECT p.id, p.nome, p.mi, p.inom, p.escala, p.geom';
 
       FOR r in SELECT f.id, tf.nome FROM macrocontrole.fase AS f
-      INNER JOIN macrocontrole.tipo_fase AS tf ON tf.id = f.tipo_fase_id
+      INNER JOIN macrocontrole.tipo_fase AS tf ON tf.code = f.tipo_fase_id
       WHERE f.linha_producao_id = linhaproducao_ident
       ORDER BY f.ordem
       LOOP
         SELECT translate(replace(lower(r.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ',  
-          'aaaaaeeeeiiiiooooouuuucc')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
+          'aaaaaeeeeiiiiooooouuuucc_')
           INTO nome_fixed;
-        view_txt := view_txt || '(CASE WHEN min(ut' || iterator || '.unidade_trabalho_id) IS NOT NULL min(ut' || iterator || '.data_inicio) ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
-        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.unidade_trabalho_id) IS NOT NULL (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim) ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
+        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN min(ut' || iterator || '.data_inicio)::text ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
+        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim)::text ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
 
-        jointxt := jointxt || 'LEFT JOIN 
-          (SELECT ut.geom, min(a.data_inicio) as data_inicio,
+        jointxt := jointxt || ' LEFT JOIN 
+          (SELECT ut.id, ut.geom, min(a.data_inicio) as data_inicio,
           (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
           FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
@@ -333,7 +334,7 @@ $BODY$
         iterator := iterator + 1;
       END LOOP;
 
-      view_txt := view_txt || ' FROM macrocontrole.produto AS p';
+      view_txt := view_txt || ' FROM macrocontrole.produto AS p ';
       view_txt := view_txt || jointxt;
       view_txt := view_txt || ' WHERE p.linha_producao_id = ' || linhaproducao_ident || ' GROUP BY p.id;';
 
