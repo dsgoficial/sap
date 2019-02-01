@@ -184,6 +184,43 @@ CREATE TABLE macrocontrole.perfil_workspace_dsgtools(
 );
 --TODO: configurar outras opções do DSGTools
 
+CREATE TABLE macrocontrole.menu_profile(
+	id SERIAL NOT NULL PRIMARY KEY,
+    nome_do_perfil text NOT NULL,
+    descricao text,
+    perfil json NOT NULL,
+    ordem_menu json NOT NULL
+);
+
+CREATE TABLE macrocontrole.layer_styles(
+	id SERIAL NOT NULL PRIMARY KEY,
+	f_table_catalog character varying,
+	f_table_schema character varying,
+	f_table_name character varying,
+	f_geometry_column character varying,
+	stylename character varying(255),
+	styleqml text,
+	stylesld xml,
+	useasdefault boolean,
+	description text,
+	owner character varying(30),
+	ui xml,
+	update_time timestamp without time zone DEFAULT now()
+);
+
+CREATE TABLE macrocontrole.layer_rules(
+	id SERIAL NOT NULL PRIMARY KEY,
+    camada TEXT NOT NULL,
+    tipo_regra TEXT NOT NULL,
+    nome TEXT NOT NULL,
+    cor_rgb TEXT NOT NULL,
+    regra TEXT NOT NULL,
+    tipo_estilo TEXT NOT NULL,
+    atributo TEXT NOT NULL,
+    descricao TEXT NOT NULL,
+    ordem INTEGER NOT NULL
+);
+
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
