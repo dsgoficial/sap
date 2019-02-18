@@ -163,7 +163,7 @@ CREATE TABLE macrocontrole.etapa(
 CREATE TABLE macrocontrole.requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
-    ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma etapa
+  ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma etapa
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
@@ -175,11 +175,11 @@ CREATE TABLE macrocontrole.perfil_fme(
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
-CREATE TABLE macrocontrole.perfil_workspace_dsgtools(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
-);
+--CREATE TABLE macrocontrole.perfil_workspace_dsgtools(
+--	id SERIAL NOT NULL PRIMARY KEY,
+--	nome VARCHAR(255) NOT NULL,
+--	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+--);
 --TODO: configurar outras opções do DSGTools
 
 CREATE TABLE macrocontrole.perfil_estilo(
@@ -202,7 +202,15 @@ CREATE TABLE macrocontrole.perfil_menu(
 
 CREATE TABLE macrocontrole.camada(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
+	nome VARCHAR(255) NOT NULL,
+	alias VARCHAR(255)
+);
+
+CREATE TABLE macrocontrole.atributos(
+	id SERIAL NOT NULL PRIMARY KEY,
+	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
+	nome VARCHAR(255) NOT NULL,
+	alias VARCHAR(255)
 );
 
 --TODO: outras configurações de camadas, como bloquear certos atributos, 
