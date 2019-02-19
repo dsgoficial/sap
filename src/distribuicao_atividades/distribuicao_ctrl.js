@@ -143,8 +143,17 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       info.atividade = {};
 
       let camadas = await t.any(
-        `SELECT c.nome
+        `SELECT c.nome, c.alias
         FROM macrocontrole.perfil_propriedades_camada AS pc
+        INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
+        WHERE pc.etapa_id = $1`,
+        [etapa]
+      );
+
+      let atributos = await t.any(
+        `SELECT a.nome, a.alias, c.nome as camada
+        FROM macrocontrole.atributos AS a
+        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = a.camada_id
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.etapa_id = $1`,
         [etapa]
@@ -232,7 +241,23 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       estilos.forEach(r => info.atividade.estilos.push(r.nome));
       regras.forEach(r => info.atividade.regras.push(r.nome));
       menus.forEach(r => info.atividade.menus.push(r.nome));
-      camadas.forEach(r => info.atividade.camadas.push({ nome: r.nome }));
+
+      camadas.forEach(r => {
+        let aux = { nome: r.nome };
+        if (r.alias) {
+          aux.alias = r.alias;
+        }
+        let aux_att = [];
+        atributos.forEach(a => {
+          if (a.camada == r.nome) {
+            aux_att.push({ nome: a.nome, alias: a.alias });
+          }
+        });
+        if (aux_att.length > 0) {
+          aux.atributos = aux_att;
+        }
+        info.atividade.camadas.push(aux);
+      });
 
       info.atividade.monitoramento = [];
       monitoramento.forEach(m => {
@@ -520,7 +545,7 @@ controller.problemaAtividade = async (
         [usuario_id, unidade_trabalho_id, etapa_id, tipo_problema_id, descricao]
       );
       await t.Any(
-      `
+        `
       UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 6
       WHERE etapa_id = $2 and unidade_trabalho_id = $3 and usuario_id = $4
@@ -542,9 +567,9 @@ controller.problemaAtividade = async (
         disponivel = FALSE
         WHERE unidade_trabalho_id = $1
         `,
-          [unidade_trabalho_id]
-        );
-    });    
+        [unidade_trabalho_id]
+      );
+    });
     return { error: null };
   } catch (error) {
     const err = new Error("Falha durante envio do problema da atividade.");
