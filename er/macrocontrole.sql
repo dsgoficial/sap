@@ -44,7 +44,11 @@ INSERT INTO macrocontrole.tipo_produto (code, nome) VALUES
 (4, 'Ortoimagem'),
 (5, 'Modelo Digital de Superfície'),
 (6, 'Modelo Digital de Terreno'),
-(7, 'Carta Temática');
+(7, 'Carta Temática'),
+(8, 'Conjunto de dados geoespaciais vetoriais - MGCP'),
+(9, 'Fototriangulação'),
+(10, 'Imagem aérea/satélite'),
+(11, 'Ponto de controle');
 
 CREATE TABLE macrocontrole.linha_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -245,7 +249,7 @@ CREATE TABLE macrocontrole.camada(
 	alias VARCHAR(255)
 );
 
-CREATE TABLE macrocontrole.atributos(
+CREATE TABLE macrocontrole.atributo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
 	nome VARCHAR(255) NOT NULL,
@@ -310,12 +314,12 @@ CREATE TABLE macrocontrole.lote(
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255),
-  	geom geometry(MULTIPOLYGON, 4674) NOT NULL,
+  	geom geometry(POLYGON, 4674) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
-	disponivel BOOLEAN NOT NULL DEFAULT FALSE, --indica se a unidade de trabalho pode ser executada ou não
+	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	prioridade INTEGER NOT NULL,
 	UNIQUE (nome, subfase_id)
 );
@@ -399,6 +403,24 @@ WHERE tipo_situacao_id != 6;
 -- Tabela que associa um operador as operações que pode desempenhar
 -- O numero da prioridade é unico por operador
 -- Não pode associar um operador a mesma etapa duas vezes
+CREATE TABLE macrocontrole.tipo_rotina(
+	code SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.tipo_rotina (code, nome) VALUES
+(1, 'outOfBoundsAngles'),
+(2, 'invalidGeometry'),
+(3, 'notSimpleGeometry');
+
+CREATE TABLE macrocontrole.perfil_rotina(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tipo_rotina_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (code),
+	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
+	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
+	parametros VARCHAR(255),
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+);
 
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,

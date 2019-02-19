@@ -96,3 +96,6 @@ $RECYCLE.BIN/
 src/apidoc
 src/logger/log
 .vscode
+
+sap_config.qgs
+sap_config.qgs~
