@@ -2,6 +2,8 @@
 
 const express = require("express");
 
+const path = require("path");
+
 const { renderAndLog } = require("../logger");
 
 const metadadosCtrl = require("./metadados_ctrl");
@@ -9,7 +11,7 @@ const metadadosCtrl = require("./metadados_ctrl");
 const router = express.Router();
 
 const nunjucks = require("nunjucks");
-app.set(
+/**app.set(
   "templates",
   path.join(__dirname, "src", "gerador_metadados", "templates")
 );
@@ -19,7 +21,7 @@ nunjucks.configure(
     autoescape: true,
     express: app
   }
-);
+);**/
 
 /**
  * @api {get} /metadados/:uuid Retorna metadado de um produto identificado pelo UUID
