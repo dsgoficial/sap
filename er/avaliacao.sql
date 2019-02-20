@@ -26,8 +26,7 @@ CREATE TABLE avaliacao.opcao(
 CREATE TABLE avaliacao.resposta_questionario(
   id SERIAL NOT NULL PRIMARY KEY,
   data timestamp with time zone NOT NULL,
-  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id)
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
 );
 
 CREATE TABLE avaliacao.resposta(

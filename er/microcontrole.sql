@@ -2,17 +2,25 @@ BEGIN;
 
 CREATE SCHEMA microcontrole;
 
+CREATE TABLE microcontrole.tipo_operacao(
+	code SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO microcontrole.tipo_operacao (code, nome) VALUES
+(1, 'INSERT'),
+(2, 'DELETE'),
+(3, 'UPDATE');
+
 CREATE TABLE microcontrole.monitoramento_feicao(
   id SERIAL NOT NULL PRIMARY KEY,
-  operacao VARCHAR(255) NOT NULL,
-  camada VARCHAR(255) NOT NULL,
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+  tipo_operacao_id INTEGER NOT NULL REFERENCES microcontrole.tipo_operacao (id),
+  camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
   quantidade integer NOT NULL,
   comprimento real,
   vertices integer,
   data timestamp with time zone NOT NULL,
-  etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-  unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id)
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
 );
 
 CREATE INDEX monitoramento_feicao_idx
@@ -22,12 +30,10 @@ CREATE INDEX monitoramento_feicao_idx
 
 CREATE TABLE microcontrole.monitoramento_apontamento(
   id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
   quantidade integer NOT NULL,
   categoria VARCHAR(255) NOT NULL,
   data timestamp with time zone NOT NULL,
-  etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-  unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id)
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
 );
 
 CREATE INDEX monitoramento_apontamento_idx
@@ -37,10 +43,8 @@ CREATE INDEX monitoramento_apontamento_idx
 
 CREATE TABLE microcontrole.monitoramento_tela(
   id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
   data timestamp with time zone NOT NULL,
-  etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-  unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
   geom geometry(POLYGON, 4674) NOT NULL
 );
 

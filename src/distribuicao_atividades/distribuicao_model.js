@@ -40,15 +40,7 @@ const resposta_questionario = Joi.object().keys({
 });
 
 const problema_atividade = Joi.object().keys({
-  usuario_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  unidade_trabalho_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  etapa_id: Joi.number()
+  atividade_id: Joi.number()
     .integer()
     .strict()
     .required(),

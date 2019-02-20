@@ -311,7 +311,6 @@ router.post("/resposta_questionario", async (req, res, next) => {
   }
 
   let { error } = await producaoCtrl.respondeQuestionario(
-    req.body.usuario_id,
     req.body.atividade_id,
     req.body.respostas
   );
@@ -320,7 +319,6 @@ router.post("/resposta_questionario", async (req, res, next) => {
   }
 
   let information = {
-    usuario_id: req.body.usuario_id,
     atividade_id: req.body.atividade_id,
     respostas: req.body.respostas
   };
@@ -396,9 +394,7 @@ router.post("/problema_atividade", async (req, res, next) => {
   }
 
   let { error } = await producaoCtrl.problemaAtividade(
-    req.body.usuario_id,
-    req.body.unidade_trabalho_id,
-    req.body.etapa_id,
+    req.body.atividade_id,
     req.body.tipo_problema_id,
     req.body.descricao
   );
@@ -407,9 +403,7 @@ router.post("/problema_atividade", async (req, res, next) => {
   }
 
   let information = {
-    usuario_id: req.body.usuario_id,
-    unidade_trabalho_id: req.body.unidade_trabalho_id,
-    etapa_id: req.body.etapa_id,
+    atividade_id: req.body.atividade_id,
     tipo_problema_id: req.body.tipo_problema_id,
     descricao: req.body.descricao
   };
@@ -421,6 +415,27 @@ router.post("/problema_atividade", async (req, res, next) => {
     res,
     200,
     null
+  );
+});
+
+
+router.get("/tipo_problema", async (req, res, next) => {
+  let { error, dados } = await producaoCtrl.get_tipo_problema();
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id
+  };
+  return sendJsonAndLog(
+    true,
+    "Tipo problema retornado.",
+    "distribuicao_route",
+    information,
+    res,
+    200,
+    dados
   );
 });
 

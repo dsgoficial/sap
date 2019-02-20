@@ -496,9 +496,7 @@ INSERT INTO macrocontrole.tipo_problema (code, nome) VALUES
 
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+ 	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
 	tipo_problema_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_problema (code),
 	descricao TEXT NOT NULL,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE

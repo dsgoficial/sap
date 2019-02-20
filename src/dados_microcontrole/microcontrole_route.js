@@ -118,9 +118,7 @@ router.post("/feicao", async (req, res, next) => {
   }
 
   let { error } = await microcontroleCtrl.armazenaFeicao(
-    req.body.usuario_id,
-    req.body.etapa_id,
-    req.body.unidade_trabalho_id,
+    req.body.atividade_id,
     req.body.data,
     req.body.dados
   );
@@ -129,9 +127,7 @@ router.post("/feicao", async (req, res, next) => {
   }
 
   let information = {
-    usuario_id: req.body.usuario_id,
-    etapa_id: req.body.etapa_id,
-    unidade_trabalho_id: req.body.unidade_trabalho_id
+    atividade_id: req.body.atividade_id,
   };
   return sendJsonAndLog(
     true,
@@ -214,9 +210,7 @@ router.post("/apontamento", async (req, res, next) => {
   }
 
   let { error } = await microcontroleCtrl.armazenaApontamento(
-    req.body.usuario_id,
-    req.body.etapa_id,
-    req.body.unidade_trabalho_id,
+    req.body.atividade_id,
     req.body.data,
     req.body.dados
   );
@@ -225,9 +219,7 @@ router.post("/apontamento", async (req, res, next) => {
   }
 
   let information = {
-    usuario_id: req.body.usuario_id,
-    etapa_id: req.body.etapa_id,
-    unidade_trabalho_id: req.body.unidade_trabalho_id
+    atividade_id: req.body.atividade_id,
   };
   return sendJsonAndLog(
     true,
@@ -310,9 +302,7 @@ router.post("/apontamento", async (req, res, next) => {
   }
 
   let { error } = await microcontroleCtrl.armazenaTela(
-    req.body.usuario_id,
-    req.body.etapa_id,
-    req.body.unidade_trabalho_id,
+    req.body.atividade_id,
     req.body.dados
   );
   if (error) {
@@ -320,9 +310,7 @@ router.post("/apontamento", async (req, res, next) => {
   }
 
   let information = {
-    usuario_id: req.body.usuario_id,
-    etapa_id: req.body.etapa_id,
-    unidade_trabalho_id: req.body.unidade_trabalho_id
+    atividade_id: req.body.atividade_id
   };
   return sendJsonAndLog(
     true,

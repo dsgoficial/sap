@@ -121,7 +121,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
   return db
     .task(async t => {
       let dadosut = await t.one(
-        `SELECT u.id as usuario_id, u.nome_guerra, up.tipo_perfil_sistema_id, s.nome as subfase_nome, 
+        `SELECT ee.id as atividade_id, u.id as usuario_id, u.nome_guerra, up.tipo_perfil_sistema_id, s.nome as subfase_nome, 
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
         ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.nome as etapa_nome, ee.observacao
         FROM macrocontrole.atividade as ee
@@ -223,6 +223,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         info.atividade.rotinas[r.nome].push(aux);
       });
 
+      info.atividade.id = dadosut.atividade_id;
       info.atividade.observacao = dadosut.observacao;
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
@@ -257,11 +258,12 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       info.atividade.estilos = [];
       info.atividade.regras = [];
       info.atividade.menus = [];
-      info.atividade.camadas = [];
 
       estilos.forEach(r => info.atividade.estilos.push(r.nome));
       regras.forEach(r => info.atividade.regras.push(r.nome));
       menus.forEach(r => info.atividade.menus.push(r.nome));
+
+      info.atividade.camadas = [];
 
       camadas.forEach(r => {
         let aux = { nome: r.nome };
@@ -281,6 +283,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       });
 
       info.atividade.monitoramento = [];
+
       monitoramento.forEach(m => {
         info.atividade.monitoramento.push({
           tipo: m.tipo_monitoramento,
@@ -289,6 +292,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       });
 
       info.atividade.insumos = [];
+
       insumos.forEach(i => {
         info.atividade.insumos.push({
           nome: i.nome,
@@ -503,7 +507,6 @@ controller.inicia = async usuario_id => {
 };
 
 controller.respondeQuestionario = async (
-  usuario_id,
   atividade_id,
   respostas
 ) => {
@@ -512,9 +515,9 @@ controller.respondeQuestionario = async (
     await db.tx(async t => {
       let resposta_questionario = await t.one(
         `
-      INSERT INTO avaliacao.resposta_questionario(data, atividade_id, usuario_id) VALUES($1,$2,$3) RETURNING id
+      INSERT INTO avaliacao.resposta_questionario(data, atividade_id) VALUES($1,$2) RETURNING id
       `,
-        [data_questionario, atividade_id, usuario_id]
+        [data_questionario, atividade_id]
       );
       let queries = [];
       respostas.forEach(r => {
@@ -544,9 +547,7 @@ controller.respondeQuestionario = async (
 };
 
 controller.problemaAtividade = async (
-  usuario_id,
-  unidade_trabalho_id,
-  etapa_id,
+  atividade_id,
   tipo_problema_id,
   descricao
 ) => {
@@ -555,26 +556,30 @@ controller.problemaAtividade = async (
     await db.tx(async t => {
       await t.Any(
         `
-      INSERT INTO macrocontrole.problema_atividade(usuario_id, unidade_trabalho_id, etapa_id, tipo_problema_id, descricao, resolvido)
-      VALUES($1,$2,$3,$4,$5,FALSE)
+      INSERT INTO macrocontrole.problema_atividade(atividade_id, tipo_problema_id, descricao, resolvido)
+      VALUES($1,$2,$3,FALSE)
       `,
-        [usuario_id, unidade_trabalho_id, etapa_id, tipo_problema_id, descricao]
+        [atividade_id, tipo_problema_id, descricao]
       );
       await t.Any(
         `
       UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 6
-      WHERE etapa_id = $2 and unidade_trabalho_id = $3 and usuario_id = $4
+      WHERE id = $2
       `,
-        [data_fim, etapa_id, unidade_trabalho_id, usuario_id]
+        [data_fim, atividade_id]
+      );
+      let atividade = await db.one(
+        `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id = $1`,
+        [atividade_id]
       );
 
       await t.Any(
         `
-      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, etapa_id, usuario_id, tipo_situacao_id)
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
       VALUES($1,$2,$3,3)
       `,
-        [etapa_id, unidade_trabalho_id, usuario_id]
+        [atividade.etapa_id, atividade.unidade_trabalho_id, atividade.usuario_id]
       );
 
       await t.Any(
@@ -599,6 +604,28 @@ controller.problemaAtividade = async (
     err.information.descricao = descricao;
     err.information.trace = error;
     return { error: err };
+  }
+};
+
+controller.get_tipo_problema = async () => {
+  try {
+    let tipo_problema = await db.Any(
+      `SELECT code, nome
+      FROM macrocontrole.tipo_problema`
+    );
+    let dados = []
+    tipo_problema.forEach(p => {
+      dados.push({tipo_problema_id: p.code, tipo_problema: p.nome})
+    })
+    return { error: null, dados: dados };
+
+  } catch (error) {
+    const err = new Error("Falha durante tentativa de retornar tipo problema.");
+    err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.trace = error;
+    return { error: err, dados: null };
   }
 };
 

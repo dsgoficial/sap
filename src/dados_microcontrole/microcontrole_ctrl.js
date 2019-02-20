@@ -5,9 +5,7 @@ const { db } = require("../database");
 const controller = {};
 
 controller.armazenaFeicao = async (
-  usuario_id,
-  etapa_id,
-  unidade_trabalho_id,
+  atividade_id,
   data,
   dados
 ) => {
@@ -19,15 +17,13 @@ controller.armazenaFeicao = async (
 
     const cs = new pgp.helpers.ColumnSet(
       [
-        "operacao",
-        "camada",
-        "usuario_id",
+        "tipo_operacao_id",
+        "camada_id",
         "quantidade",
         "comprimento",
         "vertices",
         "data",
-        "etapa_id",
-        "unidade_trabalho_id"
+        "atividade_id"
       ],
       { table }
     );
@@ -35,15 +31,13 @@ controller.armazenaFeicao = async (
     const values = [];
     dados.foreach(d => {
       values.push({
-        operacao: d.operacao,
-        camada: d.camada,
-        usuario_id: usuario_id,
+        tipo_operacao_id: d.operacao,
+        camada_id: d.camada_id,
         quantidade: d.quantidade,
         comprimento: d.comprimento,
         vertices: d.vertices,
         data: data,
-        etapa_id: etapa_id,
-        unidade_trabalho_id: unidade_trabalho_id
+        atividade_id: atividade_id
       });
     });
 
@@ -59,9 +53,7 @@ controller.armazenaFeicao = async (
     err.status = 500;
     err.context = "microcontrole_ctrl";
     err.information = {};
-    err.information.usuario_id = usuario_id;
-    err.information.etapa_id = etapa_id;
-    err.information.unidade_trabalho_id = unidade_trabalho_id;
+    err.information.atividade_id = atividade_id;
     err.information.data = data;
     err.information.dados = dados;
     err.information.trace = error;
@@ -70,9 +62,7 @@ controller.armazenaFeicao = async (
 };
 
 controller.armazenaApontamento = async (
-  usuario_id,
-  etapa_id,
-  unidade_trabalho_id,
+  atividade_id,
   data,
   dados
 ) => {
@@ -84,12 +74,10 @@ controller.armazenaApontamento = async (
 
     const cs = new pgp.helpers.ColumnSet(
       [
-        "usuario_id",
         "quantidade",
         "categoria",
         "data",
-        "etapa_id",
-        "unidade_trabalho_id"
+        "atividade_id"
       ],
       { table }
     );
@@ -97,12 +85,10 @@ controller.armazenaApontamento = async (
     const values = [];
     dados.foreach(d => {
       values.push({
-        usuario_id: usuario_id,
         quantidade: d.quantidade,
         categoria: d.categoria,
         data: data,
-        etapa_id: etapa_id,
-        unidade_trabalho_id: unidade_trabalho_id
+        atividade_id: atividade_id
       });
     });
 
@@ -118,9 +104,7 @@ controller.armazenaApontamento = async (
     err.status = 500;
     err.context = "microcontrole_ctrl";
     err.information = {};
-    err.information.usuario_id = usuario_id;
-    err.information.etapa_id = etapa_id;
-    err.information.unidade_trabalho_id = unidade_trabalho_id;
+    err.information.atividade_id = atividade_id;
     err.information.data = data;
     err.information.dados = dados;
     err.information.trace = error;
@@ -129,9 +113,7 @@ controller.armazenaApontamento = async (
 };
 
 controller.armazenaTela = async (
-  usuario_id,
-  etapa_id,
-  unidade_trabalho_id,
+  atividade_id,
   dados
 ) => {
   try {
@@ -141,7 +123,7 @@ controller.armazenaTela = async (
     );
 
     const cs = new pgp.helpers.ColumnSet(
-      ["usuario_id", "geom", "data", "etapa_id", "unidade_trabalho_id"],
+      ["data", "atividade_id", "geom"],
       { table }
     );
 
@@ -151,11 +133,9 @@ controller.armazenaTela = async (
       // prettier-ignore
       let geom = `ST_GeomFromEWKT('SRID=4674;POLYGON(${d.x_min} ${d.y_min},${d.x_min} ${d.y_max},${d.x_max} ${d.y_max}, ${d.x_max} ${d.y_min}, ${d.x_min} ${d.y_min})')`;
       values.push({
-        usuario_id: usuario_id,
         geom: geom,
         data: d.data,
-        etapa_id: etapa_id,
-        unidade_trabalho_id: unidade_trabalho_id
+        atividade_id: atividade_id
       });
     });
 

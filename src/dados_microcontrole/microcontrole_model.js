@@ -3,37 +3,33 @@
 const Joi = require("joi");
 
 const feicao = Joi.object().keys({
-  usuario_id: Joi.number()
+  atividade_id: Joi.number()
     .integer()
     .strict()
     .required(),
   data: Joi.date().required(),
-  etapa_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  unidade_trabalho_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
   dados: Joi.array()
     .items(
       Joi.object().keys({
-        operacao: Joi.string()
-          .valid("INSERT", "DELETE", "UPDATE")
-          .required(),
+        operacao: Joi.number()
+        .integer()
+        .strict()
+        .required(),
         quantidade: Joi.number()
           .integer()
           .strict()
           .required(),
         comprimento: Joi.number()
           .strict()
-          .when("operacao", { is: "INSERT", then: Joi.required() }),
+          .when("operacao", { is: 1, then: Joi.required() }),
         vertices: Joi.number()
           .integer()
           .strict()
-          .when("operacao", { is: "INSERT", then: Joi.required() }),
-        camada: Joi.string().required()
+          .when("operacao", { is: 1, then: Joi.required() }),
+        camada_id: Joi.number()
+          .integer()
+          .strict()
+          .required(),
       })
     )
     .required()
@@ -41,19 +37,11 @@ const feicao = Joi.object().keys({
 });
 
 const apontamento = Joi.object().keys({
-  usuario_id: Joi.number()
+  atividade_id: Joi.number()
     .integer()
     .strict()
     .required(),
   data: Joi.date().required(),
-  etapa_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  unidade_trabalho_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
   dados: Joi.array()
     .items(
       Joi.object().keys({
@@ -69,15 +57,7 @@ const apontamento = Joi.object().keys({
 });
 
 const tela = Joi.object().keys({
-  usuario_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  etapa_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  unidade_trabalho_id: Joi.number()
+  atividade_id: Joi.number()
     .integer()
     .strict()
     .required(),
