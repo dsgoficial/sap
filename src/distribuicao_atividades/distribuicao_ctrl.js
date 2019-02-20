@@ -123,7 +123,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       let dadosut = await t.one(
         `SELECT u.id as usuario_id, u.nome_guerra, up.tipo_perfil_sistema_id, s.nome as subfase_nome, 
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
-        ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.nome as etapa_nome
+        ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.nome as etapa_nome, ee.observacao
         FROM macrocontrole.atividade as ee
         INNER JOIN macrocontrole.etapa as se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.tipo_etapa as e ON e.id = se.tipo_etapa_id
@@ -223,7 +223,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         info.atividade.rotinas[r.nome].push(aux);
       });
 
-
+      info.atividade.observacao = dadosut.observacao;
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
       info.atividade.unidade_trabalho_id = unidade_trabalho;
