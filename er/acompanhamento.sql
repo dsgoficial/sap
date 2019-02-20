@@ -152,7 +152,7 @@ $BODY$
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.data_fim::text END AS ' || nome_fixed || '_data_fim';
         jointxt := jointxt || ' LEFT JOIN macrocontrole.atividade as ee' || iterator || ' ON ee' || iterator || '.unidade_trabalho_id = ut.id and ee' || iterator || '.etapa_id = ' || r.id;
         jointxt := jointxt || ' LEFT JOIN dgeo.usuario as u' || iterator || ' ON u' || iterator || '.id = ee' || iterator || '.usuario_id';
-        wheretxt := wheretxt || ' AND ee' || iterator || '.tipo_situacao_id != 6';
+        wheretxt := wheretxt || ' AND (ee' || iterator || '.tipo_situacao_id IS NULL AND ee' || iterator || '.tipo_situacao_id != 6)';
         iterator := iterator + 1;
       END LOOP;
 
