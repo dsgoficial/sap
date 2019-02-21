@@ -243,10 +243,17 @@ CREATE TABLE macrocontrole.perfil_menu(
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 );
 
+CREATE TABLE macrocontrole.perfil_linhagem(
+	id SERIAL NOT NULL PRIMARY KEY,
+	exibir_linhagem BOOLEAN NOT NULL DEFAULT TRUE,
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+);
+
 CREATE TABLE macrocontrole.camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	alias VARCHAR(255)
+	alias VARCHAR(255),
+	documentacao VARCHAR(255)
 );
 
 CREATE TABLE macrocontrole.atributo(

@@ -143,7 +143,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       info.atividade = {};
 
       let camadas = await t.any(
-        `SELECT c.nome, c.alias
+        `SELECT c.nome, c.alias, c.documentacao
         FROM macrocontrole.perfil_propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.etapa_id = $1`,
@@ -270,6 +270,9 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         if (r.alias) {
           aux.alias = r.alias;
         }
+        if (r.documentacao) {
+          aux.documentacao = r.documentacao;
+        }
         let aux_att = [];
         atributos.forEach(a => {
           if (a.camada == r.nome) {
@@ -302,19 +305,26 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         });
       });
 
-      info.atividade.linhagem = await t.any(
-        `SELECT u.nome_guerra, ee.data_inicio, ee.data_fim, sit.nome as situacao,
-        sub.nome as subfase, et.nome as etapa
-        FROM macrocontrole.atividade AS ee
-        INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-        INNER JOIN macrocontrole.subfase as sub ON sub.id = se.subfase_id
-        INNER JOIN macrocontrole.tipo_etapa as et ON et.id = se.tipo_etapa_id
-        INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
-        INNER JOIN macrocontrole.tipo_situacao AS sit ON sit.code = ee.tipo_situacao_id
-        WHERE ee.unidade_trabalho_id = $1 and ee.etapa_id != $2
-        ORDER BY se.ordem`,
-        [unidade_trabalho, etapa]
+      let perfil_linhagem = await t.oneOrNone(
+        "SELECT exibir_linhagem FROM macrocontrole.perfil_linhagem WHERE etapa_id = $1 LIMIT 1",
+        [etapa]
       );
+
+      if(perfil_linhagem.exibir_linhagem){
+        info.atividade.linhagem = await t.any(
+          `SELECT u.nome_guerra, ee.data_inicio, ee.data_fim, sit.nome as situacao,
+          sub.nome as subfase, et.nome as etapa
+          FROM macrocontrole.atividade AS ee
+          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+          INNER JOIN macrocontrole.subfase as sub ON sub.id = se.subfase_id
+          INNER JOIN macrocontrole.tipo_etapa as et ON et.id = se.tipo_etapa_id
+          INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
+          INNER JOIN macrocontrole.tipo_situacao AS sit ON sit.code = ee.tipo_situacao_id
+          WHERE ee.unidade_trabalho_id = $1 and ee.etapa_id != $2
+          ORDER BY se.ordem`,
+          [unidade_trabalho, etapa]
+        );
+      }
 
       let requisitos = await t.any(
         `SELECT r.descricao
