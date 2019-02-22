@@ -14,7 +14,7 @@ INSERT INTO microcontrole.tipo_operacao (code, nome) VALUES
 
 CREATE TABLE microcontrole.monitoramento_feicao(
   id SERIAL NOT NULL PRIMARY KEY,
-  tipo_operacao_id INTEGER NOT NULL REFERENCES microcontrole.tipo_operacao (id),
+  tipo_operacao_id INTEGER NOT NULL REFERENCES microcontrole.tipo_operacao (code),
   camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
   quantidade integer NOT NULL,
   comprimento real,
