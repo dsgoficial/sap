@@ -44,7 +44,7 @@ CREATE INDEX monitoramento_apontamento_idx
 CREATE TABLE microcontrole.monitoramento_tela(
   id SERIAL NOT NULL PRIMARY KEY,
   data timestamp with time zone NOT NULL,
-  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
   geom geometry(POLYGON, 4674) NOT NULL
 );
 
