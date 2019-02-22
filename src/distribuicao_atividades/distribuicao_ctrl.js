@@ -132,7 +132,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
         LEFT JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
         LEFT JOIN macrocontrole.usuario_perfil_sistema AS up ON up.usuario_id = u.id
-        WHERE ee.etapa_id = $1 and ee.unidade_trabalho_id = $2`,
+        WHERE ee.etapa_id = $1 and ee.unidade_trabalho_id = $2 and ee.tipo_situacao_id != 6`,
         [etapa, unidade_trabalho]
       );
 
@@ -426,7 +426,7 @@ controller.finaliza = async (usuario_id, etapa_id, unidade_trabalho_id) => {
     let result = await db.result(
       `UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 4
-      WHERE etapa_id = $2 and unidade_trabalho_id = $3 and usuario_id = $4`,
+      WHERE etapa_id = $2 and unidade_trabalho_id = $3 and usuario_id = $4 and tipo_situacao_id != 6`,
       [data_fim, etapa_id, unidade_trabalho_id, usuario_id]
     );
 
