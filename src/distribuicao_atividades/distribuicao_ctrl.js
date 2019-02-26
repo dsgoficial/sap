@@ -8,10 +8,31 @@ const calculaFila = async usuario => {
   return db
     .task(async t => {
       let fila_prioritaria = await t.oneOrNone(
-        `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria as f
-        INNER JOIN macrocontrole.atividade as ee ON ee.id = f.atividade_id
-        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        WHERE f.usuario_id = $1 AND ut.disponivel IS TRUE AND ee.tipo_situacao_id IN (1,3) ORDER BY f.prioridade LIMIT 1`,
+        `SELECT etapa_id, unidade_trabalho_id
+        FROM (
+          SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fp.prioridade AS fp_prioridade
+          FROM macrocontrole.atividade AS ee
+          INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
+          INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
+          INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
+          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+          INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
+          INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+          INNER JOIN macrocontrole.fila_prioritaria AS fp ON fp.atividade_id = ee.id
+          LEFT JOIN
+          (
+            SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
+            INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+            WHERE ee.tipo_situacao_id != 6
+          ) 
+          AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
+          AND se.ordem > ee_ant.ordem
+          WHERE ut.disponivel IS TRUE AND ppo.usuario_id = $1 AND ee.tipo_situacao_id in (1,3) AND fp.usuario_id = $1
+        ) AS sit
+        GROUP BY etapa_id, unidade_trabalho_id, fp_prioridade
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
+        ORDER BY fp_prioridade
+        LIMIT 1`,
         [usuario]
       );
 
@@ -20,10 +41,31 @@ const calculaFila = async usuario => {
       }
 
       let fila_prioritaria_grupo = await t.oneOrNone(
-        `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.fila_prioritaria_grupo as f
-        INNER JOIN macrocontrole.atividade as ee ON ee.id = f.atividade_id
-        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        WHERE f.perfil_producao_id = $1 AND ut.disponivel IS TRUE AND ee.tipo_situacao_id IN (1,3) ORDER BY f.prioridade LIMIT 1`,
+        `SELECT etapa_id, unidade_trabalho_id
+        FROM (
+          SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fpg.prioridade AS fpg_prioridade
+          FROM macrocontrole.atividade AS ee
+          INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
+          INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
+          INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
+          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+          INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
+          INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+          INNER JOIN macrocontrole.fila_prioritaria_grupo AS fpg ON fpg.atividade_id = ee.id
+          LEFT JOIN
+          (
+            SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
+            INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+            WHERE ee.tipo_situacao_id != 6
+          ) 
+          AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
+          AND se.ordem > ee_ant.ordem
+          WHERE ut.disponivel IS TRUE AND ppo.usuario_id = $1 AND ee.tipo_situacao_id in (1,3) AND fpg.perfil_producao_id = ppo.perfil_producao_id
+        ) AS sit
+        GROUP BY etapa_id, unidade_trabalho_id, fpg_prioridade
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
+        ORDER BY fpg_prioridade
+        LIMIT 1`,
         [usuario]
       );
 
