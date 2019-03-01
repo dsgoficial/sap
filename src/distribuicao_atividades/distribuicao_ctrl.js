@@ -606,14 +606,14 @@ controller.problemaAtividade = async (
   try {
     const data_fim = new Date();
     await db.tx(async t => {
-      await t.Any(
+      await t.any(
         `
       INSERT INTO macrocontrole.problema_atividade(atividade_id, tipo_problema_id, descricao, resolvido)
       VALUES($1,$2,$3,FALSE)
       `,
         [atividade_id, tipo_problema_id, descricao]
       );
-      await t.Any(
+      await t.any(
         `
       UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 6
@@ -621,12 +621,12 @@ controller.problemaAtividade = async (
       `,
         [data_fim, atividade_id]
       );
-      let atividade = await db.one(
+      let atividade = await t.one(
         `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id = $1`,
         [atividade_id]
       );
 
-      await t.Any(
+      await t.any(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
       VALUES($1,$2,$3,3)
@@ -634,7 +634,7 @@ controller.problemaAtividade = async (
         [atividade.etapa_id, atividade.unidade_trabalho_id, atividade.usuario_id]
       );
 
-      await t.Any(
+      await t.any(
         `
         UPDATE macrocontrole.unidade_trabalho SET
         disponivel = FALSE
@@ -661,7 +661,7 @@ controller.problemaAtividade = async (
 
 controller.get_tipo_problema = async () => {
   try {
-    let tipo_problema = await db.Any(
+    let tipo_problema = await db.any(
       `SELECT code, nome
       FROM macrocontrole.tipo_problema`
     );

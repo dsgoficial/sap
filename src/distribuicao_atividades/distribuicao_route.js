@@ -298,7 +298,9 @@ router.post("/inicia", async (req, res, next) => {
 router.post("/resposta_questionario", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
-    producaoModel.resposta_questionario
+    producaoModel.resposta_questionario, {
+      stripUnknown: true
+    }
   );
   if (validationResult.error) {
     const err = new Error("Envia questionario validation error");
@@ -381,7 +383,9 @@ router.post("/resposta_questionario", async (req, res, next) => {
 router.post("/problema_atividade", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
-    producaoModel.problema_atividade
+    producaoModel.problema_atividade, {
+      stripUnknown: true
+    }
   );
   if (validationResult.error) {
     const err = new Error("Problema atividade validation error");
