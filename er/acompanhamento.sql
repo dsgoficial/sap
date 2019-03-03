@@ -124,8 +124,8 @@ $BODY$
     END IF;
 
     SELECT translate(replace(lower(nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
-          'aaaaaeeeeiiiiooooouuuucc_')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()',  
+          'aaaaaeeeeiiiiooooouuuucc____________________')
           INTO subfase_nome FROM macrocontrole.subfase WHERE id = subfase_ident;
 
     EXECUTE 'DROP VIEW IF EXISTS acompanhamento.subfase_'|| subfase_ident || '_' || subfase_nome;
@@ -141,8 +141,8 @@ $BODY$
       ORDER BY se.ordem
       LOOP
         SELECT translate(replace(lower(r.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
-          'aaaaaeeeeiiiiooooouuuucc_')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()',  
+          'aaaaaeeeeiiiiooooouuuucc____________________')
           INTO nome_fixed;
 
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.usuario_id::text END AS ' || nome_fixed || '_usuario_id';
@@ -206,8 +206,9 @@ $BODY$
     END IF;
 
     SELECT translate(replace(lower(tp.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
-          'aaaaaeeeeiiiiooooouuuucc_'), f.id, f.linha_producao_id
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()',  
+          'aaaaaeeeeiiiiooooouuuucc____________________'), 
+          f.id, f.linha_producao_id
           INTO fase_nome, fase_ident, linhaproducao_ident
           FROM macrocontrole.subfase AS sf
           INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
@@ -226,8 +227,8 @@ $BODY$
       ORDER BY s.ordem
       LOOP
         SELECT translate(replace(lower(r.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
-          'aaaaaeeeeiiiiooooouuuucc_')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()',  
+          'aaaaaeeeeiiiiooooouuuucc____________________')
           INTO nome_fixed;
         view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN min(ut' || iterator || '.data_inicio)::text ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
         view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim)::text ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
@@ -293,8 +294,9 @@ $BODY$
     END IF;
 
     SELECT translate(replace(lower(lp.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
-          'aaaaaeeeeiiiiooooouuuucc_'), lp.id
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()',  
+          'aaaaaeeeeiiiiooooouuuucc____________________'),
+          lp.id
           INTO linhaproducao_nome, linhaproducao_ident 
           FROM macrocontrole.fase AS f
           INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
@@ -313,8 +315,8 @@ $BODY$
       ORDER BY f.ordem
       LOOP
         SELECT translate(replace(lower(r.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/',  
-          'aaaaaeeeeiiiiooooouuuucc_')
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()',  
+          'aaaaaeeeeiiiiooooouuuucc____________________')
           INTO nome_fixed;
         view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN min(ut' || iterator || '.data_inicio)::text ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
         view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim)::text ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
