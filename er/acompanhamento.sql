@@ -190,7 +190,6 @@ $BODY$
     DECLARE view_txt text;
     DECLARE jointxt text := '';
     DECLARE linhaproducao_ident integer;
-    DECLARE subfase_ident integer;
     DECLARE fase_ident integer;
     DECLARE num integer;
     DECLARE fase_nome text;
@@ -200,20 +199,19 @@ $BODY$
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
-      subfase_ident := OLD.id;
+      fase_ident := OLD.fase_id;
     ELSE
-      subfase_ident := NEW.id;
+      fase_ident := NEW.fase_id;
     END IF;
 
     SELECT translate(replace(lower(tp.nome),' ', '_'),  
           'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()',  
           'aaaaaeeeeiiiiooooouuuucc____________________'), 
-          f.id, f.linha_producao_id
-          INTO fase_nome, fase_ident, linhaproducao_ident
-          FROM macrocontrole.subfase AS sf
-          INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
+          f.linha_producao_id
+          INTO fase_nome, linhaproducao_ident
+          FROM macrocontrole.fase AS f
           INNER JOIN macrocontrole.tipo_fase AS tp ON tp.code = f.tipo_fase_id
-          WHERE sf.id = subfase_ident;
+          WHERE f.id = fase_ident;
 
     EXECUTE 'DROP VIEW IF EXISTS acompanhamento.fase_'|| fase_ident || '_' || fase_nome;
 
@@ -279,7 +277,6 @@ $BODY$
     DECLARE view_txt text;
     DECLARE jointxt text := '';
     DECLARE linhaproducao_ident integer;
-    DECLARE fase_ident integer;
     DECLARE num integer;
     DECLARE linhaproducao_nome text;
     DECLARE nome_fixed text;
@@ -288,19 +285,17 @@ $BODY$
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
-      fase_ident := OLD.id;
+      linhaproducao_ident := OLD.linha_producao_id;
     ELSE
-      fase_ident := NEW.id;
+      linhaproducao_ident := NEW.linha_producao_id;
     END IF;
 
     SELECT translate(replace(lower(lp.nome),' ', '_'),  
           'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()',  
-          'aaaaaeeeeiiiiooooouuuucc____________________'),
-          lp.id
-          INTO linhaproducao_nome, linhaproducao_ident 
-          FROM macrocontrole.fase AS f
-          INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-          WHERE f.id = fase_ident;
+          'aaaaaeeeeiiiiooooouuuucc____________________')
+          INTO linhaproducao_nome
+          FROM macrocontrole.linha_producao AS lp
+          WHERE lp.id = linhaproducao_ident;
 
     EXECUTE 'DROP VIEW IF EXISTS acompanhamento.linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome;
 
