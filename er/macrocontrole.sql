@@ -157,7 +157,9 @@ INSERT INTO macrocontrole.tipo_etapa (nome, tipo_processo_id) VALUES
 ('Validação', 1),
 ('Ligação', 1),
 ('Execução Delimitador', 1),
-('Execução Centroide', 1);
+('Execução Centroide', 1),
+('Preparo', 1),
+('Atributação', 1);
 
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
