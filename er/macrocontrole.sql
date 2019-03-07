@@ -331,6 +331,10 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	UNIQUE (nome, subfase_id)
 );
 
+CREATE INDEX unidade_trabalho_subfase_id
+    ON macrocontrole.unidade_trabalho
+    (subfase_id);
+
 CREATE INDEX unidade_trabalho_geom
     ON macrocontrole.unidade_trabalho USING gist
     (geom)
@@ -400,6 +404,10 @@ CREATE TABLE macrocontrole.atividade(
 	data_fim timestamp with time zone,
 	observacao text
 );
+
+CREATE INDEX atividade_etapa_id
+    ON macrocontrole.atividade
+    (etapa_id);
 
 -- (etapa_id, unidade_trabalho_id) deve ser unico para tipo_situacao !=6
 CREATE UNIQUE INDEX atividade_unique_index
