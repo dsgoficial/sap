@@ -352,7 +352,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         [etapa]
       );
 
-      if(perfil_linhagem.exibir_linhagem){
+      if (perfil_linhagem && perfil_linhagem.exibir_linhagem) {
         info.atividade.linhagem = await t.any(
           `SELECT u.nome_guerra, ee.data_inicio, ee.data_fim, sit.nome as situacao,
           sub.nome as subfase, et.nome as etapa
@@ -418,6 +418,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       return { erro: null, dados: info };
     })
     .catch(error => {
+      console.log(error);
       const err = new Error("Falha durante calculo dos dados de Producao.");
       err.status = 500;
       err.context = "distribuicao_ctrl";
@@ -558,10 +559,7 @@ controller.inicia = async usuario_id => {
     });
 };
 
-controller.respondeQuestionario = async (
-  atividade_id,
-  respostas
-) => {
+controller.respondeQuestionario = async (atividade_id, respostas) => {
   const data_questionario = new Date();
   try {
     await db.tx(async t => {
@@ -631,7 +629,11 @@ controller.problemaAtividade = async (
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
       VALUES($1,$2,$3,3)
       `,
-        [atividade.etapa_id, atividade.unidade_trabalho_id, atividade.usuario_id]
+        [
+          atividade.etapa_id,
+          atividade.unidade_trabalho_id,
+          atividade.usuario_id
+        ]
       );
 
       await t.any(
@@ -665,12 +667,11 @@ controller.get_tipo_problema = async () => {
       `SELECT code, nome
       FROM macrocontrole.tipo_problema`
     );
-    let dados = []
+    let dados = [];
     tipo_problema.forEach(p => {
-      dados.push({tipo_problema_id: p.code, tipo_problema: p.nome})
-    })
+      dados.push({ tipo_problema_id: p.code, tipo_problema: p.nome });
+    });
     return { error: null, dados: dados };
-
   } catch (error) {
     const err = new Error("Falha durante tentativa de retornar tipo problema.");
     err.status = 500;
