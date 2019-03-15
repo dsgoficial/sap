@@ -12,9 +12,6 @@ const calculaFila = async usuario => {
         FROM (
           SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fp.prioridade AS fp_prioridade
           FROM macrocontrole.atividade AS ee
-          INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
-          INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
-          INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
           INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
@@ -27,7 +24,7 @@ const calculaFila = async usuario => {
           ) 
           AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
           AND se.ordem > ee_ant.ordem
-          WHERE ut.disponivel IS TRUE AND ppo.usuario_id = $1 AND ee.tipo_situacao_id in (1,3) AND fp.usuario_id = $1
+          WHERE ut.disponivel IS TRUE AND ee.tipo_situacao_id in (1,3) AND fp.usuario_id = $1
         ) AS sit
         GROUP BY etapa_id, unidade_trabalho_id, fp_prioridade
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
@@ -45,13 +42,11 @@ const calculaFila = async usuario => {
         FROM (
           SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fpg.prioridade AS fpg_prioridade
           FROM macrocontrole.atividade AS ee
-          INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
-          INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
-          INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
           INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
           INNER JOIN macrocontrole.fila_prioritaria_grupo AS fpg ON fpg.atividade_id = ee.id
+          INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = fpg.perfil_producao_id
           LEFT JOIN
           (
             SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
