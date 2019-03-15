@@ -75,7 +75,7 @@ const calculaFila = async usuario => {
 
       let cartas_pausadas = await t.oneOrNone(
         `SELECT ee.etapa_id, ee.unidade_trabalho_id FROM macrocontrole.atividade as ee
-        INNER JOIN macrocontrole.perfil_producao_etapa as pse ON pse.id = ee.etapa_id
+        INNER JOIN macrocontrole.perfil_producao_etapa as pse ON pse.etapa_id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
         WHERE ee.usuario_id = $1 and ee.tipo_situacao_id = 3 AND ut.disponivel IS TRUE
