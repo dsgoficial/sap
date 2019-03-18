@@ -13,7 +13,7 @@ const pgp = require("pg-promise")(initOptions);
 const createConfig = () => {
   console.log(chalk.blue("Importação em lote do DSGDocs"));
 
-  var questions = [
+  let questions = [
     {
       type: "input",
       name: "docs_url",

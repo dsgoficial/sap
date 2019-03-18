@@ -312,7 +312,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         }
         let aux_att = [];
         atributos.forEach(a => {
-          if (a.camada == r.nome) {
+          if (a.camada === r.nome) {
             aux_att.push({ nome: a.nome, alias: a.alias });
           }
         });
@@ -403,7 +403,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         });
       });
 
-      for (var key in perguntas) {
+      for (let key in perguntas) {
         info.atividade.questionario.perguntas.push(perguntas[key]);
       }
 

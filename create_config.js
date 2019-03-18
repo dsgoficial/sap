@@ -37,7 +37,7 @@ const createConfig = () => {
   console.log(chalk.blue("Sistema de Apoio a Produção"));
   console.log(chalk.blue("Criação do arquivo de configuração"));
 
-  var questions = [
+  let questions = [
     {
       type: "input",
       name: "db_server",

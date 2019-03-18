@@ -55,8 +55,7 @@ controller.geraMetadado = async uuid => {
   );
   //descobrir se o produto está finalizado
   let finalizado = producao.every(v => {
-    return v.data_fim
-  })
+    return v.data_fim })
   if(!finalizado){
     //throw error
   }
