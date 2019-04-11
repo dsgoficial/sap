@@ -637,7 +637,7 @@ controller.problemaAtividade = async (
         disponivel = FALSE
         WHERE unidade_trabalho_id = $1
         `,
-        [unidade_trabalho_id]
+        [atividade.unidade_trabalho_id]
       );
     });
     return { error: null };
@@ -646,9 +646,7 @@ controller.problemaAtividade = async (
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.usuario_id = usuario_id;
-    err.information.unidade_trabalho_id = unidade_trabalho_id;
-    err.information.etapa_id = etapa_id;
+    err.information.atividade_id = atividade_id;
     err.information.tipo_problema_id = tipo_problema_id;
     err.information.descricao = descricao;
     err.information.trace = error;
