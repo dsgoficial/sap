@@ -129,7 +129,7 @@ router.post("/feicao", async (req, res, next) => {
   }
 
   let information = {
-    atividade_id: req.body.atividade_id,
+    atividade_id: req.body.atividade_id
   };
   return sendJsonAndLog(
     true,
@@ -223,7 +223,7 @@ router.post("/apontamento", async (req, res, next) => {
   }
 
   let information = {
-    atividade_id: req.body.atividade_id,
+    atividade_id: req.body.atividade_id
   };
   return sendJsonAndLog(
     true,
