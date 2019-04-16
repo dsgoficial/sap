@@ -635,7 +635,7 @@ controller.problemaAtividade = async (
         `
         UPDATE macrocontrole.unidade_trabalho SET
         disponivel = FALSE
-        WHERE unidade_trabalho_id = $1
+        WHERE id = $1
         `,
         [atividade.unidade_trabalho_id]
       );
