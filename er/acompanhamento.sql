@@ -68,6 +68,32 @@ SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
 GROUP BY perfil_producao_id, subfase_id, lote_id
 ORDER BY perfil_producao_id, subfase_id, lote_id;
 
+CREATE VIEW acompanhamento.quantitativo_atividades AS
+SELECT ROW_NUMBER () OVER (ORDER BY etapa_id, subfase_id, lote_id) AS id, etapa_id, subfase_id, lote_id, count(*) quantidade
+FROM (
+SELECT etapa_id, unidade_trabalho_id, subfase_id, lote_id
+        FROM (
+        SELECT ut.lote_id, se.subfase_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
+        FROM macrocontrole.atividade AS ee
+        INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
+        INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+        LEFT JOIN
+        (
+          SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
+          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+          WHERE ee.tipo_situacao_id != 6
+        ) 
+        AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
+        AND se.ordem > ee_ant.ordem
+        WHERE ut.disponivel IS TRUE AND ee.tipo_situacao_id = 1
+        ) AS sit
+        GROUP BY etapa_id, unidade_trabalho_id, subfase_id, lote_id
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
+) AS ativ
+GROUP BY etapa_id, subfase_id, lote_id
+ORDER BY etapa_id, subfase_id, lote_id;
+
 CREATE VIEW acompanhamento.atividades_em_execucao AS
 SELECT ee.id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome,

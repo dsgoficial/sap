@@ -30,8 +30,13 @@ const sql5 = fs
 
 const sql6 = fs.readFileSync(path.resolve("./er/metadado.sql"), "utf-8").trim();
 
-const sql7 = fs.readFileSync(path.resolve("./er/simulacao.sql"), "utf-8").trim();
+const sql7 = fs
+  .readFileSync(path.resolve("./er/simulacao.sql"), "utf-8")
+  .trim();
 
+const sql8 = fs
+  .readFileSync(path.resolve("./er/permissao.sql"), "utf-8")
+  .trim();
 
 const createConfig = () => {
   console.log(chalk.blue("Sistema de Apoio a Produção"));
@@ -114,9 +119,18 @@ const createConfig = () => {
         await db.none(sql5);
         await db.none(sql6);
         await db.none(sql7);
+        await db.none(sql8);
 
         await db.none(
           `
+        CREATE TABLE public.versao(
+          code SMALLINT NOT NULL PRIMARY KEY,
+          nome VARCHAR(255) NOT NULL,
+        );
+
+        INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
+        (1, '2.0');
+
         GRANT ALL ON SCHEMA dgeo TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;
         GRANT ALL ON ALL SEQUENCES IN SCHEMA dgeo TO $1:name;
