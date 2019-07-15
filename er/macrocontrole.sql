@@ -253,6 +253,7 @@ CREATE TABLE macrocontrole.perfil_linhagem(
 
 CREATE TABLE macrocontrole.camada(
 	id SERIAL NOT NULL PRIMARY KEY,
+	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
 	alias VARCHAR(255),
 	documentacao VARCHAR(255)
