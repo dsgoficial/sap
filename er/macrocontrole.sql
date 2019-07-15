@@ -323,7 +323,7 @@ CREATE TABLE macrocontrole.lote(
 
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255),
+	nome VARCHAR(255) NOT NULL,
   	geom geometry(POLYGON, 4674) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
@@ -399,10 +399,10 @@ INSERT INTO macrocontrole.tipo_situacao (code, nome) VALUES
 
 CREATE TABLE macrocontrole.atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
-	etapa_id INTEGER REFERENCES macrocontrole.etapa (id),
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	usuario_id INTEGER REFERENCES dgeo.usuario (id),
-	tipo_situacao_id INTEGER REFERENCES macrocontrole.tipo_situacao (code),
+	tipo_situacao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_situacao (code),
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone,
 	observacao text
