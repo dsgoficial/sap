@@ -126,6 +126,22 @@ CREATE TABLE macrocontrole.subfase(
 	UNIQUE (nome, fase_id)
 );
 
+CREATE TABLE macrocontrole.tipo_pre_requisito(
+	code SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.tipo_pre_requisito (code, nome) VALUES
+(1, 'Região concluída');
+
+--restrição para as subfases serem do mesmo projeto
+CREATE TABLE macrocontrole.pre_requisito_subfase(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tipo_pre_requisito_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_pre_requisito (code),
+	subfase_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	subfase_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)	
+);
+
 CREATE TABLE macrocontrole.tipo_processo(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
@@ -308,6 +324,7 @@ INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
 (2, 'Operadores iguais'),
 (3, 'Operadores no mesmo turno');
 
+--restrição para as etapas serem do mesmo projeto
 CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),

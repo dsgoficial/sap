@@ -266,7 +266,7 @@ $BODY$
           ON a.unidade_trabalho_id = ut.id
           WHERE ut.subfase_id = ' || r.id || '
           GROUP BY ut.id) AS ut' || iterator || '
-          ON st_relate(ut' || iterator || '.geom, p.geom, ''T********'')';
+          ON st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
 
         iterator := iterator + 1;
       END LOOP;
@@ -352,7 +352,7 @@ $BODY$
           ON a.unidade_trabalho_id = ut.id
           WHERE s.fase_id = ' || r.id || '
           GROUP BY ut.id) AS ut' || iterator || '
-          ON st_relate(ut' || iterator || '.geom, p.geom, ''T********'')';
+          ON st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
 
         iterator := iterator + 1;
       END LOOP;
