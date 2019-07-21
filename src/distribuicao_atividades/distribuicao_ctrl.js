@@ -177,14 +177,18 @@ const calculaFila = async usuario => {
           INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
           INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
           INNER JOIN macrocontrole.etapa AS et ON et.id = a.etapa_id
+          INNER JOIN macrocontrole.subfase AS sub ON sub.id et.subfase_id
+          INNER JOIN macrocontrole.fase AS fa ON fa.id = sub.fase_id
           INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
           INNER JOIN macrocontrole.restricao_etapa AS re ON re.etapa_posterior_id = a.etapa_id
-          INNER JOIN macrocontrole.atividade AS a_re ON a_re.etapa_id = re.etapa_anterior_id
-          INNER JOIN macrocontrole.etapa AS et_re ON et_re.id = a_re.etapa_id
+          INNER JOIN macrocontrole.etapa AS et_re ON et_re.id = re.etapa_anterior_id AND et_re.subfase_id != et.subfase_id
+          INNER JOIN macrocontrole.subfase AS sub_re ON sub_re.id et_re.subfase_id
+          INNER JOIN macrocontrole.fase AS fa_re ON fa_re.id = sub_re.fase_id AND fa_re.linha_producao_id = fa.linha_producao_id
+          INNER JOIN macrocontrole.atividade AS a_re ON a_re.etapa_id = et_re.id
           INNER JOIN dgeo.usuario AS u_re ON u_re.id = a_re.usuario_id
-          INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.id = a_re.unidade_trabalho_id
-          WHERE ppo.usuario_id = $1 AND et_re.subfase_id != et.subfase_id AND st_relate(ut.geom, ut_re.geom, '2********') AND (
+          INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.id = a_re.unidade_trabalho_id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********')
+          WHERE ppo.usuario_id = $1 AND (
               (re.tipo_restricao_id = 1 AND a_re.usuario_id = $1) OR
               (re.tipo_restricao_id = 2 AND a_re.usuario_id != $1) OR 
               (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
@@ -248,12 +252,13 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
   return db
     .task(async t => {
       let dadosut = await t.one(
-        `SELECT ee.id as atividade_id, u.id as usuario_id, u.nome_guerra, up.tipo_perfil_sistema_id, s.nome as subfase_nome, 
+        `SELECT ee.id as atividade_id, u.id as usuario_id, u.nome_guerra, up.tipo_perfil_sistema_id, s.id as subfase_id, s.nome as subfase_nome, 
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
-        ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.nome as etapa_nome, ee.observacao
+        ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.code as etapa_code, e.nome as etapa_nome, ee.observacao as observacao_atividade,
+        se.observacao AS observacao_etapa, ut.observacao AS observacao_unidade_trabalho, ut.tamanho_buffer, s.observacao AS observacao_subfase
         FROM macrocontrole.atividade as ee
         INNER JOIN macrocontrole.etapa as se ON se.id = ee.etapa_id
-        INNER JOIN macrocontrole.tipo_etapa as e ON e.id = se.tipo_etapa_id
+        INNER JOIN macrocontrole.tipo_etapa as e ON e.code = se.tipo_etapa_id
         INNER JOIN macrocontrole.subfase as s ON s.id = se.subfase_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
@@ -269,50 +274,75 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       info.perfil = dadosut.tipo_perfil_sistema_id;
       info.atividade = {};
 
-      let camadas = await t.any(
-        `SELECT c.nome, c.alias, c.documentacao
-        FROM macrocontrole.perfil_propriedades_camada AS pc
-        INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
-        WHERE pc.etapa_id = $1`,
-        [etapa]
-      );
+      let camadas;
+      let atributos;
+      let menus;
 
-      let atributos = await t.any(
-        `SELECT a.nome, a.alias, c.nome as camada
-        FROM macrocontrole.atributo AS a
-        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = a.camada_id
-        INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
-        WHERE pc.etapa_id = $1`,
-        [etapa]
-      );
+      if (dadosut.etapa_code == 1 || dadosut.etapa_code == 4) {
+        camadas = await t.any(
+          `SELECT c.nome, c.alias, c.documentacao
+          FROM macrocontrole.perfil_propriedades_camada AS pc
+          INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
+          WHERE pc.subfase_id = $1 and not pc.camada_apontamento`,
+          [dadosut.subfase_id]
+        );
+        atributos = await t.any(
+          `SELECT a.nome, a.alias, c.nome as camada
+          FROM macrocontrole.atributo AS a
+          INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = a.camada_id
+          INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
+          WHERE pc.subfase_id = $1 and not pc.camada_apontamento`,
+          [dadosut.subfase_id]
+        );
+
+        menus = await t.any(
+          "SELECT nome FROM macrocontrole.perfil_menu WHERE subfase_id = $1 and not menu_revisao",
+          [dadosut.subfase_id]
+        );
+      } else {
+        camadas = await t.any(
+          `SELECT c.nome, c.alias, c.documentacao
+          FROM macrocontrole.perfil_propriedades_camada AS pc
+          INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
+          WHERE pc.subfase_id = $1`,
+          [dadosut.subfase_id]
+        );
+        atributos = await t.any(
+          `SELECT a.nome, a.alias, c.nome as camada
+          FROM macrocontrole.atributo AS a
+          INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = a.camada_id
+          INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
+          WHERE pc.subfase_id = $1`,
+          [dadosut.subfase_id]
+        );
+
+        menus = await t.any(
+          "SELECT nome FROM macrocontrole.perfil_menu WHERE subfase_id = $1",
+          [dadosut.subfase_id]
+        );
+      }
 
       let estilos = await t.any(
-        "SELECT nome FROM macrocontrole.perfil_estilo WHERE etapa_id = $1",
-        [etapa]
+        "SELECT nome FROM macrocontrole.perfil_estilo WHERE subfase_id = $1",
+        [dadosut.subfase_id]
       );
 
       let regras = await t.any(
-        "SELECT nome FROM macrocontrole.perfil_regras WHERE etapa_id = $1",
-        [etapa]
-      );
-
-      let menus = await t.any(
-        "SELECT nome FROM macrocontrole.perfil_menu WHERE etapa_id = $1",
-        [etapa]
+        "SELECT nome FROM macrocontrole.perfil_regras WHERE subfase_id = $1",
+        [dadosut.subfase_id]
       );
 
       let fme = await t.any(
-        "SELECT servidor, porta, categoria FROM macrocontrole.perfil_fme WHERE etapa_id = $1",
-        [etapa]
+        "SELECT servidor, porta, rotina FROM macrocontrole.perfil_fme WHERE subfase_id = $1",
+        [dadosut.subfase_id]
       );
 
       let monitoramento = await t.any(
-        `SELECT tm.nome as tipo_monitoramento, c.nome as camada
+        `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
         FROM macrocontrole.perfil_monitoramento AS pm
         INNER JOIN macrocontrole.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
-        LEFT JOIN macrocontrole.camada AS c ON c.id = pm.camada_id
-        WHERE etapa_id = $1`,
-        [etapa]
+        WHERE subfase_id = $1`,
+        [dadosut.subfase_id]
       );
 
       let insumos = await t.any(
@@ -329,8 +359,8 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         INNER JOIN macrocontrole.tipo_rotina AS r ON r.code = pr.tipo_rotina_id
         INNER JOIN macrocontrole.camada AS c1 ON c1.id = pr.camada_id
         INNER JOIN macrocontrole.camada AS c2 ON c2.id = pr.camada_apontamento_id
-        WHERE pr.etapa_id = $1`,
-        [etapa]
+        WHERE pr.subfase_id = $1`,
+        [dadosut.subfase_id]
       );
       info.atividade.rotinas = {};
       rotinas.forEach(r => {
@@ -351,11 +381,17 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       });
 
       info.atividade.id = dadosut.atividade_id;
-      info.atividade.observacao = dadosut.observacao;
+      info.atividade.observacao_atividade = dadosut.observacao_atividade; //modificar no ferramenta de produção para 3 observacoes. Subfase > UT > Etap > Ativ
+      info.atividade.observacao_etapa = dadosut.observacao_etapa;
+      info.atividade.observacao_subfase = dadosut.observacao_subfase;
+      info.atividade.observacao_unidade_trabalho =
+        dadosut.observacao_unidade_trabalho;
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
       info.atividade.unidade_trabalho_id = unidade_trabalho;
-      info.atividade.subfase_etapa_id = etapa;
+      info.atividade.buffer.unidade_trabalho = dadosut.tamanho_buffer; //modificar ferramenta prod para aceitar esse buffer
+      info.atividade.subfase_etapa_id = etapa; //modificar no ferramenta de produção nome da variavel
+      info.atividade.tipo_etapa_id = dadosut.etapa_code;
       info.atividade.nome =
         dadosut.subfase_nome +
         " - " +
@@ -368,19 +404,14 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         porta: dadosut.porta
       };
 
-      let categoria_fme = [];
-      let servidor_fme = "";
+      info.atividade.fme = []; //modificar no ferramentas de produção para aceeitar tabelas individuais
       fme.forEach(f => {
-        servidor_fme = f.servidor + ":" + f.porta;
-        categoria_fme.push(f.categoria);
+        let servidor_fme = f.servidor + ":" + f.porta;
+        info.atividade.fme.push({
+          rotina: f.rotina,
+          servidor: servidor_fme
+        });
       });
-
-      categoria_fme = categoria_fme.join();
-
-      info.atividade.fme = {
-        categoria: categoria_fme,
-        servidor: servidor_fme
-      };
 
       info.atividade.estilos = [];
       info.atividade.regras = [];
@@ -412,14 +443,10 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         info.atividade.camadas.push(aux);
       });
 
-      info.atividade.monitoramento = [];
-
-      monitoramento.forEach(m => {
-        info.atividade.monitoramento.push({
-          tipo: m.tipo_monitoramento,
-          camada: m.camada
-        });
-      });
+      info.atividade.monitoramento = {
+        id: monitoramento.tipo_monitoramento_id,
+        tipo_monitoramento: monitoramento.tipo_monitoramento
+      };
 
       info.atividade.insumos = [];
 
@@ -433,36 +460,45 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       });
 
       let perfil_linhagem = await t.oneOrNone(
-        "SELECT exibir_linhagem FROM macrocontrole.perfil_linhagem WHERE etapa_id = $1 LIMIT 1",
-        [etapa]
+        "SELECT tipo_exibicao_id FROM macrocontrole.perfil_linhagem WHERE subfase_id = $1 LIMIT 1",
+        [dadosut.subfase_id]
       );
 
-      if (perfil_linhagem && perfil_linhagem.exibir_linhagem) {
+      if (
+        perfil_linhagem &&
+        ((perfil_linhagem.tipo_exibicao_id == 2 && dadosut.etapa_code == 2) ||
+          perfil_linhagem.tipo_exibicao_id == 3)
+      ) {
         info.atividade.linhagem = await t.any(
-          `SELECT u.nome_guerra, ee.data_inicio, ee.data_fim, sit.nome as situacao,
-          sub.nome as subfase, et.nome as etapa
-          FROM macrocontrole.atividade AS ee
-          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          INNER JOIN macrocontrole.subfase as sub ON sub.id = se.subfase_id
-          INNER JOIN macrocontrole.tipo_etapa as et ON et.id = se.tipo_etapa_id
-          INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
-          INNER JOIN macrocontrole.tipo_situacao AS sit ON sit.code = ee.tipo_situacao_id
-          WHERE ee.unidade_trabalho_id = $1 and ee.etapa_id != $2
-          ORDER BY se.ordem`,
-          [unidade_trabalho, etapa]
+          `SELECT a_ant.data_inicio, a_ant.data_fim, a_ant.nome_guerra, a_ant.posto_grad
+          FROM macrocontrole.atividade AS a
+          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+          INNER JOIN
+          (
+            SELECT tpg.nome_abrev AS posto_grad, u.nome_guerra, a.data_inicio, a.data_fim, a.unidade_trabalho_id, e.ordem, e.subfase_id FROM macrocontrole.atividade AS a
+            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
+            INNER JOIN dgeo.tipo_posto_grad AS tpg ON tpg.id = u.tipo_posto_grad_id
+            WHERE a.tipo_situacao_id != 6
+          ) 
+          AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND a_ant.subfase_id = e.subfase_id AND e.ordem > a_ant.ordem
+          WHERE a.id = $1
+          ORDER BY a_ant.ordem
+          `,
+          [dadosut.atividade_id]
         );
       }
 
       let requisitos = await t.any(
         `SELECT r.descricao
         FROM macrocontrole.requisito_finalizacao AS r
-        INNER JOIN macrocontrole.etapa AS se ON se.id = r.etapa_id
-        WHERE r.etapa_id = $1 ORDER BY r.ordem`,
-        [etapa]
+        WHERE r.subfase_id = $1 ORDER BY r.ordem`,
+        [dadosut.subfase_id]
       );
       info.atividade.requisitos = [];
       requisitos.forEach(r => info.atividade.requisitos.push(r.descricao));
 
+      /*
       let questionario = await t.any(
         `SELECT q.nome nome_questionario, p.id AS pergunta_id, p.texto AS pergunta,
         o.id AS opcao_id, o.texto AS opcao
@@ -496,6 +532,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       for (let key in perguntas) {
         info.atividade.questionario.perguntas.push(perguntas[key]);
       }
+      */
 
       return info;
     })
