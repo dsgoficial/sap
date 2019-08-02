@@ -89,7 +89,7 @@ INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
 (5, 'Área Contínua'),
 (6, 'Carregamento BDGEx'),
 (7, 'Vetorização'),
-(8, 'Avaliação imagens'),
+(8, 'Avaliação imagens'), -- rever diferentes avaliações com o relatório
 (9, 'Avaliação ortoimagens'),
 (10, 'Avaliação MDS'),
 (11, 'Avaliação MDT'),
@@ -123,6 +123,7 @@ CREATE TABLE macrocontrole.subfase(
 	nome VARCHAR(255) NOT NULL,
 	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	ordem INTEGER NOT NULL, -- as subfases são ordenadas dentre de uma fase. Isso não impede o paralelismo de subfases. É uma ordenação para apresentação
+	observacao text,
 	UNIQUE (nome, fase_id)
 );
 
@@ -142,61 +143,39 @@ CREATE TABLE macrocontrole.pre_requisito_subfase(
 	subfase_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)	
 );
 
-CREATE TABLE macrocontrole.tipo_processo(
-	code SMALLINT NOT NULL PRIMARY KEY,
+CREATE TABLE macrocontrole.tipo_etapa(
+	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO macrocontrole.tipo_processo (code, nome) VALUES
-(1, 'Execução'),
-(2, 'Revisão'),
-(3, 'Correção');
-
-CREATE TABLE macrocontrole.tipo_etapa(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	tipo_processo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_processo (code)
-);
-
-INSERT INTO macrocontrole.tipo_etapa (nome, tipo_processo_id) VALUES
-('Execução', 1),
-('Revisão 1', 2),
-('Correção 1', 3),
-('Revisão 2', 2),
-('Correção 2', 3),
-('Revisão 3', 2),
-('Correção 3', 3),
-('Revisão por pares 1', 3),
-('Revisão por pares 2', 3),
-('Revisão por amostragem', 2),
-('Revisão por pares 3', 3),
-('Validação', 1),
-('Ligação', 1),
-('Execução Delimitador', 1),
-('Execução Centroide', 1),
-('Preparo', 1),
-('Atributação', 1);
+INSERT INTO macrocontrole.tipo_etapa (code,nome) VALUES
+(1,'Execução'),
+(2,'Revisão'),
+(3,'Correção'),
+(4,'Revisão e Correção');
 
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_etapa (id),
+	tipo_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	ordem INTEGER NOT NULL -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
+	ordem INTEGER NOT NULL, -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
+	observacao text,
+	UNIQUE (subfase_id, ordem)-- restrição para não ter ordem repetida para subfase
 );
 
 CREATE TABLE macrocontrole.requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
   ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma etapa
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
 CREATE TABLE macrocontrole.perfil_fme(
 	id SERIAL NOT NULL PRIMARY KEY,
 	servidor VARCHAR(255) NOT NULL,
 	porta VARCHAR(255) NOT NULL,
-	categoria VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	rotina VARCHAR(255) NOT NULL,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
 --CREATE TABLE macrocontrole.perfil_workspace_dsgtools(
@@ -205,7 +184,7 @@ CREATE TABLE macrocontrole.perfil_fme(
 --	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
 --);
 --TODO: configurar outras opções do DSGTools
-
+/*
 CREATE TABLE macrocontrole.menu_profile(
 	id SERIAL NOT NULL PRIMARY KEY,
     nome_do_perfil text NOT NULL,
@@ -242,29 +221,40 @@ CREATE TABLE macrocontrole.layer_rules(
     descricao TEXT NOT NULL,
     ordem INTEGER NOT NULL
 );
-
+*/
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
 CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	menu_revisao BOOLEAN NOT NULL DEFAULT FALSE,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
+
+CREATE TABLE macrocontrole.tipo_exibicao(
+	code SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.tipo_exibicao (code,nome) VALUES
+(1,'Não exibir linhagem'),
+(2,'Exibir linhagem para revisores'),
+(3,'Sempre exibir linhagem');
 
 CREATE TABLE macrocontrole.perfil_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
-	exibir_linhagem BOOLEAN NOT NULL DEFAULT TRUE,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	tipo_exibicao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_exibicao (code),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
 CREATE TABLE macrocontrole.camada(
@@ -287,7 +277,27 @@ CREATE TABLE macrocontrole.atributo(
 CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	camada_apontamento BOOLEAN NOT NULL DEFAULT FALSE,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+);
+
+CREATE TABLE macrocontrole.tipo_rotina(
+	code SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.tipo_rotina (code, nome) VALUES
+(1, 'outOfBoundsAngles'),
+(2, 'invalidGeometry'),
+(3, 'notSimpleGeometry');
+
+CREATE TABLE macrocontrole.perfil_rotina(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tipo_rotina_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (code),
+	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
+	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
+	parametros VARCHAR(255),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
 CREATE TABLE macrocontrole.banco_dados(
@@ -303,15 +313,15 @@ CREATE TABLE macrocontrole.tipo_monitoramento(
 );
 
 INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
-(1, 'Monitoramento de tela'),
-(2, 'Monitoramento de feição'),
-(3, 'Monitoramento de apontamento');
+(1, 'Sem monitoramento'),
+(2, 'Somente monitoramento de tela'),
+(3, 'Somente monitoramento de feição'),
+(4, 'Monitoramento de tela e feição');
 
 CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_monitoramento_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_monitoramento (code),
-	camada_id INTEGER REFERENCES macrocontrole.camada (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
 CREATE TABLE macrocontrole.tipo_restricao(
@@ -324,7 +334,7 @@ INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
 (2, 'Operadores iguais'),
 (3, 'Operadores no mesmo turno');
 
---restrição para as etapas serem do mesmo projeto
+--restrição para as etapas serem da mesma linha de produção (trigger?)
 CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),
@@ -341,13 +351,15 @@ CREATE TABLE macrocontrole.lote(
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-  	geom geometry(POLYGON, 4674) NOT NULL,
+  geom geometry(POLYGON, 4674) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	prioridade INTEGER NOT NULL,
+	observacao text,
+	tamanho_buffer REAL,
 	UNIQUE (nome, subfase_id)
 );
 
@@ -414,6 +426,7 @@ INSERT INTO macrocontrole.tipo_situacao (code, nome) VALUES
 (5, 'Não será executada'),
 (6, 'Não finalizada');
 
+--FIXME restrição que etapa_id e unidade_trabalho_id sejam da mesma subfase
 CREATE TABLE macrocontrole.atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
@@ -433,29 +446,6 @@ CREATE INDEX atividade_etapa_id
 CREATE UNIQUE INDEX atividade_unique_index
 ON macrocontrole.atividade (etapa_id, unidade_trabalho_id) 
 WHERE tipo_situacao_id != 6;
-
-
--- Tabela que associa um operador as operações que pode desempenhar
--- O numero da prioridade é unico por operador
--- Não pode associar um operador a mesma etapa duas vezes
-CREATE TABLE macrocontrole.tipo_rotina(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_rotina (code, nome) VALUES
-(1, 'outOfBoundsAngles'),
-(2, 'invalidGeometry'),
-(3, 'notSimpleGeometry');
-
-CREATE TABLE macrocontrole.perfil_rotina(
-	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_rotina_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (code),
-	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
-	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
-	parametros VARCHAR(255),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
-);
 
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,

@@ -56,17 +56,20 @@ CREATE TABLE simulacao.subfase(
 	UNIQUE (nome, fase_id)
 );
 
-CREATE TABLE simulacao.tipo_etapa(
+CREATE TABLE simulacao.pre_requisito_subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	tipo_processo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_processo (code)
+	tipo_pre_requisito_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_pre_requisito (code),
+	subfase_anterior_id INTEGER NOT NULL REFERENCES simulacao.subfase (id),
+	subfase_posterior_id INTEGER NOT NULL REFERENCES simulacao.subfase (id)	
 );
 
 CREATE TABLE simulacao.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_etapa_id INTEGER NOT NULL REFERENCES simulacao.tipo_etapa (id),
+	tipo_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES simulacao.subfase (id),
-	ordem INTEGER NOT NULL
+	ordem INTEGER NOT NULL,
+	observacao text,
+	UNIQUE (subfase_id, ordem)
 );
 
 CREATE TABLE simulacao.restricao_etapa(
