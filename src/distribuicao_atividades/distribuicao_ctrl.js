@@ -120,7 +120,7 @@ const calculaFila = async usuario => {
           INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
           INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
-          WHERE ee.usuario_id = $1 AND prs.tipo_pre_requisito_id = 1 AND 
+          WHERE a.usuario_id = $1 AND prs.tipo_pre_requisito_id = 1 AND 
           ut.geom && ut_re.geom AND
           st_relate(ut.geom, ut_re.geom, '2********') AND
           a_re.tipo_situacao_id IN (1, 2, 3)
