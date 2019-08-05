@@ -129,7 +129,7 @@ const createConfig = () => {
         );
 
         INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
-        (1, '2.0');
+        (1, '2.0.0');
 
         GRANT ALL ON SCHEMA dgeo TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;

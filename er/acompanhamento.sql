@@ -30,7 +30,7 @@ ON l.usuario_id = u.id
 WHERE u.ativo IS TRUE
 ORDER BY l.data_login DESC;
 
-CREATE VIEW acompanhamento.usuarios_logados AS
+CREATE VIEW acompanhamento.usuarios_logados_hoje AS
 SELECT u.id AS usuario_id, u.nome_guerra, u.tipo_posto_grad_id, u.tipo_turno_id, l.data_login
 FROM dgeo.usuario AS u
 INNER JOIN
@@ -290,7 +290,7 @@ $BODY$
           ON a.unidade_trabalho_id = ut.id
           WHERE ut.subfase_id = ' || r.id || '
           GROUP BY ut.id) AS ut' || iterator || '
-          ON st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
+          ON ut' || iterator || '.geom && p.geom AND st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
 
         iterator := iterator + 1;
       END LOOP;
@@ -376,7 +376,7 @@ $BODY$
           ON a.unidade_trabalho_id = ut.id
           WHERE s.fase_id = ' || r.id || '
           GROUP BY ut.id) AS ut' || iterator || '
-          ON st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
+          ON ut' || iterator || '.geom && p.geom AND st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
 
         iterator := iterator + 1;
       END LOOP;

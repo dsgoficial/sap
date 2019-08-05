@@ -479,7 +479,6 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
             INNER JOIN dgeo.tipo_posto_grad AS tpg ON tpg.id = u.tipo_posto_grad_id
-            WHERE a.tipo_situacao_id != 6
           ) 
           AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND a_ant.subfase_id = e.subfase_id AND e.ordem > a_ant.ordem
           WHERE a.id = $1
