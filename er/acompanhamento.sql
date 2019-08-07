@@ -183,7 +183,7 @@ $BODY$
     SELECT count(*) INTO num FROM macrocontrole.etapa WHERE subfase_id = subfase_ident;
     IF num > 0 THEN
       view_txt := 'CREATE VIEW acompanhamento.subfase_' || subfase_ident || '_'  || subfase_nome || ' AS 
-      SELECT ut.id, ut.disponivel, ut.lote_id, ut.nome, ut.banco_dados_id, ut.prioridade, ut.geom';
+      SELECT ut.id, ut.disponivel, l.nome AS lote, ut.nome, bd.servidor || '':'' || bd.porta || ''/'' || bd.nome as banco_dados, ut.prioridade, ut.geom';
 
       FOR r IN SELECT se.id, e.nome, rank() OVER (PARTITION BY e.nome ORDER BY se.ordem) as numero FROM macrocontrole.tipo_etapa AS e 
       INNER JOIN macrocontrole.etapa AS se ON e.code = se.tipo_etapa_id
@@ -195,19 +195,25 @@ $BODY$
           'aaaaaeeeeiiiiooooouuuucc________________________________') || '_' || r.numero
           INTO nome_fixed;
 
-        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.usuario_id::text END AS ' || nome_fixed || '_usuario_id';
-        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  u' || iterator || '.tipo_turno_id::text END AS ' || nome_fixed || '_turno';
-        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.tipo_situacao_id::text END AS ' || nome_fixed || '_situacao';
+        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.id::text END AS ' || nome_fixed || '_atividade_id';
+        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  tpg' || iterator || '.nome_abrev::text || '' '' || u' || iterator || '.nome_guerra::text END AS ' || nome_fixed || '_usuario';
+        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  tt' || iterator || '.nome::text END AS ' || nome_fixed || '_turno';
+        view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ts' || iterator || '.nome::text END AS ' || nome_fixed || '_situacao';
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.data_inicio::text END AS ' || nome_fixed || '_data_inicio';
         view_txt := view_txt || ', CASE WHEN ee' || iterator || '.etapa_id IS NULL THEN ''-'' ELSE  ee' || iterator || '.data_fim::text END AS ' || nome_fixed || '_data_fim';
         jointxt := jointxt || ' LEFT JOIN macrocontrole.atividade as ee' || iterator || ' ON ee' || iterator || '.unidade_trabalho_id = ut.id and ee' || iterator || '.etapa_id = ' || r.id;
+        jointxt := jointxt || ' LEFT JOIN macrocontrole.tipo_situacao as ts' || iterator || ' ON ts' || iterator || '.code = ee' || iterator || '.tipo_situacao_id';
         jointxt := jointxt || ' LEFT JOIN dgeo.usuario as u' || iterator || ' ON u' || iterator || '.id = ee' || iterator || '.usuario_id';
+        jointxt := jointxt || ' LEFT JOIN dgeo.tipo_posto_grad as tpg' || iterator || ' ON tpg' || iterator || '.code = u' || iterator || '.tipo_posto_grad_id';
+        jointxt := jointxt || ' LEFT JOIN dgeo.tipo_turno as tt' || iterator || ' ON tt' || iterator || '.code = u' || iterator || '.tipo_turno_id';
         wheretxt := wheretxt || ' AND (ee' || iterator || '.tipo_situacao_id IS NULL OR ee' || iterator || '.tipo_situacao_id != 6)';
         iterator := iterator + 1;
       END LOOP;
 
       view_txt := view_txt || ' FROM macrocontrole.unidade_trabalho AS ut';
       view_txt := view_txt || jointxt;
+      view_txt := view_txt || ' INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id';
+      view_txt := view_txt || ' INNER JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id';
       view_txt := view_txt || ' WHERE ut.subfase_id = ' || subfase_ident;
       view_txt := view_txt || wheretxt;
       view_txt := view_txt || ' ORDER BY ut.prioridade;';

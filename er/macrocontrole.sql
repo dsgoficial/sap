@@ -60,7 +60,7 @@ CREATE TABLE macrocontrole.linha_producao(
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	uuid uuid NOT NULL DEFAULT uuid_generate_v4(),
-	nome VARCHAR(255) NOT NULL,
+	nome VARCHAR(255),
 	mi VARCHAR(255),
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
@@ -160,13 +160,16 @@ CREATE TABLE macrocontrole.etapa(
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	ordem INTEGER NOT NULL, -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
 	observacao text,
+	CHECK (
+		tipo_etapa_id <> 1 or ordem = 1 -- Se tipo_etapa_id for 1 obrigatoriamente ordem tem que ser 1
+	),
 	UNIQUE (subfase_id, ordem)-- restrição para não ter ordem repetida para subfase
 );
 
 CREATE TABLE macrocontrole.requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
-  ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma etapa
+    ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma etapa
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
@@ -175,14 +178,10 @@ CREATE TABLE macrocontrole.perfil_fme(
 	servidor VARCHAR(255) NOT NULL,
 	porta VARCHAR(255) NOT NULL,
 	rotina VARCHAR(255) NOT NULL,
+	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
---CREATE TABLE macrocontrole.perfil_workspace_dsgtools(
---	id SERIAL NOT NULL PRIMARY KEY,
---	nome VARCHAR(255) NOT NULL,
---	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
---);
 --TODO: configurar outras opções do DSGTools
 /*
 CREATE TABLE macrocontrole.menu_profile(
@@ -277,26 +276,22 @@ CREATE TABLE macrocontrole.atributo(
 CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
+	escala_trabalho INTEGER,
+	atributo_filtro_subfase VARCHAR(255),
 	camada_apontamento BOOLEAN NOT NULL DEFAULT FALSE,
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	atributo_situacao_correcao VARCHAR(255),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	CHECK (
+		(camada_apontamento IS TRUE AND atributo_situacao_correcao IS NOT NULL) OR
+		(camada_apontamento IS FALSE AND atributo_situacao_correcao IS NULL)
+	),
 );
 
-CREATE TABLE macrocontrole.tipo_rotina(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_rotina (code, nome) VALUES
-(1, 'outOfBoundsAngles'),
-(2, 'invalidGeometry'),
-(3, 'notSimpleGeometry');
-
-CREATE TABLE macrocontrole.perfil_rotina(
+CREATE TABLE macrocontrole.perfil_rotina_dsgtools(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_rotina_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (code),
-	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
-	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
-	parametros VARCHAR(255),
+	nome VARCHAR(255) NOT NULL, --nome da rotina do dsgtools
+	parametros VARCHAR(255), --json de parametros conforme o padrão do dsgtools
+	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
@@ -313,10 +308,9 @@ CREATE TABLE macrocontrole.tipo_monitoramento(
 );
 
 INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
-(1, 'Sem monitoramento'),
-(2, 'Somente monitoramento de tela'),
-(3, 'Somente monitoramento de feição'),
-(4, 'Monitoramento de tela e feição');
+(1, 'Monitoramento de feição'),
+(2, 'Monitoramento de tela'),
+(3, 'Monitoramento de comportamento');
 
 CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -351,7 +345,7 @@ CREATE TABLE macrocontrole.lote(
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-  geom geometry(POLYGON, 4674) NOT NULL,
+    geom geometry(POLYGON, 4674) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
@@ -359,7 +353,6 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	prioridade INTEGER NOT NULL,
 	observacao text,
-	tamanho_buffer REAL,
 	UNIQUE (nome, subfase_id)
 );
 
@@ -410,7 +403,8 @@ CREATE INDEX insumo_geom
 CREATE TABLE macrocontrole.insumo_unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
-	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id)
+	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id),
+	caminho_padrao VARCHAR(255)
 );
 
 CREATE TABLE macrocontrole.tipo_situacao(
@@ -517,6 +511,7 @@ INSERT INTO macrocontrole.tipo_problema (code, nome) VALUES
 (1, 'Insumo não é suficiente para execução da atividade'),
 (2, 'Problema em etapa anterior, necessita ser refeita'),
 (3, 'Erro durante execução da atividade atual'),
+(4, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida')
 (99, 'Outros');
 
 CREATE TABLE macrocontrole.problema_atividade(

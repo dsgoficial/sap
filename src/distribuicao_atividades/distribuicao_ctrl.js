@@ -470,15 +470,17 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
           perfil_linhagem.tipo_exibicao_id == 3)
       ) {
         info.atividade.linhagem = await t.any(
-          `SELECT a_ant.data_inicio, a_ant.data_fim, a_ant.nome_guerra, a_ant.posto_grad
+          `SELECT a_ant.data_inicio, a_ant.data_fim, a_ant.nome_guerra, a_ant.posto_grad,
+          te.nome as etapa
           FROM macrocontrole.atividade AS a
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+          INNER JOIN macrocontrole.tipo_etapa AS te ON te.code = e.tipo_etapa_id
           INNER JOIN
           (
             SELECT tpg.nome_abrev AS posto_grad, u.nome_guerra, a.data_inicio, a.data_fim, a.unidade_trabalho_id, e.ordem, e.subfase_id FROM macrocontrole.atividade AS a
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
-            INNER JOIN dgeo.tipo_posto_grad AS tpg ON tpg.id = u.tipo_posto_grad_id
+            INNER JOIN dgeo.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
           ) 
           AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND a_ant.subfase_id = e.subfase_id AND e.ordem > a_ant.ordem
           WHERE a.id = $1

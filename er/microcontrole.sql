@@ -58,4 +58,16 @@ CREATE INDEX monitoramento_monitoramento_idx
     (data DESC)
     TABLESPACE pg_default;
 
+
+CREATE TABLE microcontrole.monitoramento_acao(
+  id SERIAL NOT NULL PRIMARY KEY,
+  data timestamp with time zone NOT NULL,
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
+);
+
+CREATE INDEX monitoramento_acao
+    ON microcontrole.monitoramento_acao USING btree
+    (data DESC)
+    TABLESPACE pg_default;
+
 COMMIT;
