@@ -166,6 +166,34 @@ CREATE TABLE macrocontrole.etapa(
 	UNIQUE (subfase_id, ordem)-- restrição para não ter ordem repetida para subfase
 );
 
+-- Constraint
+CREATE OR REPLACE FUNCTION macrocontrole.etapa_verifica_rev_corr()
+  RETURNS trigger AS
+$BODY$
+
+    BEGIN
+
+	
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.etapa_verifica_rev_corr()
+  OWNER TO postgres;
+
+CREATE TRIGGER etapa_verifica_rev_corr
+BEFORE UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
+
+--
+
 CREATE TABLE macrocontrole.requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
@@ -405,6 +433,36 @@ CREATE UNIQUE INDEX atividade_unique_index
 ON macrocontrole.atividade (etapa_id, unidade_trabalho_id) 
 WHERE tipo_situacao_id != 6;
 
+-- Constraint
+CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase()
+  RETURNS trigger AS
+$BODY$
+    DECLARE nr_erro integer;
+    BEGIN
+		SELECT count(*) into nr_erro AS ut_sufase_id from macrocontrole.atividade AS a
+		INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+		INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+		WHERE a.id = NEW.id AND e.subfase_id != ut.subfase_id;
+
+		IF nr_erro > 0 THEN
+			RAISE EXCEPTION 'Etapa e Unidade de Trabalho com Subfases distintas.';
+		END IF;
+    RETURN NEW;
+
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.atividade_verifica_subfase()
+  OWNER TO postgres;
+
+CREATE TRIGGER atividade_verifica_subfase
+BEFORE UPDATE OR INSERT ON macrocontrole.atividade
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
+
+--
+
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
   	nome VARCHAR(255) NOT NULL UNIQUE
@@ -485,5 +543,41 @@ CREATE TABLE macrocontrole.problema_atividade(
 	descricao TEXT NOT NULL,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+-- Constraint
+CREATE OR REPLACE FUNCTION macrocontrole.libera_problema_atividade()
+  RETURNS trigger AS
+$BODY$
+    DECLARE ut_id integer;
+    BEGIN
+		SELECT unidade_trabalho_id into ut_id 
+		FROM macrocontrole.atividade
+		WHERE id = NEW.atividade_id;
+
+		IF NEW.resolvido THEN
+			UPDATE macrocontrole.unidade_trabalho
+			SET disponivel = TRUE
+			WHERE id = ut_id;
+		ELSE
+			UPDATE macrocontrole.unidade_trabalho
+			SET disponivel = FALSE
+			WHERE id = ut_id;
+		END IF;
+
+
+    RETURN NEW;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.libera_problema_atividade()
+  OWNER TO postgres;
+
+CREATE TRIGGER libera_problema_atividade
+AFTER UPDATE ON macrocontrole.problema_atividade
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.libera_problema_atividade();
+
+--
 
 COMMIT;
