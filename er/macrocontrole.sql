@@ -183,44 +183,7 @@ CREATE TABLE macrocontrole.perfil_fme(
 );
 
 --TODO: configurar outras opções do DSGTools
-/*
-CREATE TABLE macrocontrole.menu_profile(
-	id SERIAL NOT NULL PRIMARY KEY,
-    nome_do_perfil text NOT NULL,
-    descricao text,
-    perfil json NOT NULL,
-    ordem_menu json NOT NULL
-);
 
-CREATE TABLE macrocontrole.layer_styles(
-	id SERIAL NOT NULL PRIMARY KEY,
-	f_table_catalog character varying,
-	f_table_schema character varying,
-	f_table_name character varying,
-	f_geometry_column character varying,
-	stylename character varying(255),
-	styleqml text,
-	stylesld xml,
-	useasdefault boolean,
-	description text,
-	owner character varying(30),
-	ui xml,
-	update_time timestamp without time zone DEFAULT now()
-);
-
-CREATE TABLE macrocontrole.layer_rules(
-	id SERIAL NOT NULL PRIMARY KEY,
-    camada TEXT NOT NULL,
-    tipo_regra TEXT NOT NULL,
-    nome TEXT NOT NULL,
-    cor_rgb TEXT NOT NULL,
-    regra TEXT NOT NULL,
-    tipo_estilo TEXT NOT NULL,
-    atributo TEXT NOT NULL,
-    descricao TEXT NOT NULL,
-    ordem INTEGER NOT NULL
-);
-*/
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
@@ -280,10 +243,11 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	atributo_filtro_subfase VARCHAR(255),
 	camada_apontamento BOOLEAN NOT NULL DEFAULT FALSE,
 	atributo_situacao_correcao VARCHAR(255),
+	atributo_justificativa_apontamento VARCHAR(255),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	CHECK (
-		(camada_apontamento IS TRUE AND atributo_situacao_correcao IS NOT NULL) OR
-		(camada_apontamento IS FALSE AND atributo_situacao_correcao IS NULL)
+		(camada_apontamento IS TRUE AND atributo_situacao_correcao IS NOT NULL AND atributo_justificativa_apontamento IS NOT NULL) OR
+		(camada_apontamento IS FALSE AND atributo_situacao_correcao IS NULL AND atributo_justificativa_apontamento IS NULL)
 	),
 );
 
