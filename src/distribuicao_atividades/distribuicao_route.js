@@ -93,8 +93,8 @@ router.post("/finaliza", async (req, res, next) => {
 
   let { finalizaError } = await producaoCtrl.finaliza(
     req.body.usuario_id,
-    req.body.subfase_etapa_id,
-    req.body.unidade_trabalho_id
+    req.body.atividade_id,
+    req.body.sem_correcao
   );
   if (finalizaError) {
     return next(finalizaError);
@@ -102,8 +102,8 @@ router.post("/finaliza", async (req, res, next) => {
 
   let information = {
     usuario_id: req.body.usuario_id,
-    etapa_id: req.body.subfase_etapa_id,
-    unidade_trabalho_id: req.body.unidade_trabalho_id
+    atividade_id: req.body.atividade_id,
+    sem_correcao: req.body.sem_correcao
   };
   return sendJsonAndLog(
     true,
@@ -441,6 +441,64 @@ router.get("/tipo_problema", async (req, res, next) => {
     200,
     dados
   );
+});
+
+/**
+ * @api {get} /distribuicao/atividade/id Retorna atividade em execução
+ * @apiGroup Distribuicao
+ * @apiVersion 2.0.0
+ * @apiName AtividadePorId
+ * @apiPermission operador
+ *
+ *
+ * @apiDescription Retorna a atividade de um determinado ID
+ *
+ *
+ * @apiSuccess {String} dados Em caso de existir uma atividade com o determinado ID retorna os dados desta atividade.
+ *
+ * @apiSuccessExample {json} Atividade retornada:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "success": true,
+ *       "message": "Atividade retornada.",
+ *       "dados": {...}
+ *     }
+ *
+ *
+ *
+ */
+router.get("/atividade/:id", async (req, res, next) => {
+  let { verificaError, dados } = await producaoCtrl.atividade(
+    req.params.id
+  );
+  if (verificaError) {
+    return next(verificaError);
+  }
+
+  let information = {
+    atividade_id: req.params.id
+  };
+  if (dados) {
+    return sendJsonAndLog(
+      true,
+      "Atividade retornada.",
+      "distribuicao_route",
+      information,
+      res,
+      200,
+      dados
+    );
+  } else {
+    return sendJsonAndLog(
+      true,
+      "Atividade não encontrada.",
+      "distribuicao_route",
+      information,
+      res,
+      200,
+      null
+    );
+  }
 });
 
 module.exports = router;

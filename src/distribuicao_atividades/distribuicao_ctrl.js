@@ -8,9 +8,9 @@ const calculaFila = async usuario => {
   return db
     .task(async t => {
       let fila_prioritaria = await t.oneOrNone(
-        `SELECT etapa_id, unidade_trabalho_id
+        `SELECT id
         FROM (
-        SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fp.prioridade AS fp_prioridade
+        SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fp.prioridade AS fp_prioridade
         FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
@@ -52,9 +52,9 @@ const calculaFila = async usuario => {
       }
 
       let fila_prioritaria_grupo = await t.oneOrNone(
-        `SELECT etapa_id, unidade_trabalho_id
+        `SELECT id
         FROM (
-        SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fpg.prioridade AS fpg_prioridade
+        SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fpg.prioridade AS fpg_prioridade
         FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
@@ -97,9 +97,9 @@ const calculaFila = async usuario => {
       }
 
       let cartas_pausadas = await t.oneOrNone(
-        `SELECT etapa_id, unidade_trabalho_id
+        `SELECT id
         FROM (
-        SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, lo.prioridade AS lo_prioridade, ut.prioridade AS ut_prioridade
+        SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, lo.prioridade AS lo_prioridade, ut.prioridade AS ut_prioridade
         FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
@@ -138,9 +138,9 @@ const calculaFila = async usuario => {
       }
 
       let prioridade_operador = await t.oneOrNone(
-        `SELECT etapa_id, unidade_trabalho_id
+        `SELECT id
         FROM (
-        SELECT ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, lo.prioridade AS lo_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
+        SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, lo.prioridade AS lo_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
         FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
         INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
@@ -248,11 +248,11 @@ const calculaFila = async usuario => {
     });
 };
 
-const dadosProducao = async (etapa, unidade_trabalho) => {
+const dadosProducao = async (atividade_id) => {
   return db
     .task(async t => {
       let dadosut = await t.one(
-        `SELECT ee.id as atividade_id, u.id as usuario_id, u.nome_guerra, up.tipo_perfil_sistema_id, s.id as subfase_id, s.nome as subfase_nome, 
+        `SELECT ee.unidade_trabalho_id, ee.etapa_id, u.id as usuario_id, u.nome_guerra, up.tipo_perfil_sistema_id, s.id as subfase_id, s.nome as subfase_nome, 
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
         ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.code as etapa_code, e.nome as etapa_nome, ee.observacao as observacao_atividade,
         se.observacao AS observacao_etapa, ut.observacao AS observacao_unidade_trabalho, ut.tamanho_buffer, s.observacao AS observacao_subfase
@@ -264,8 +264,8 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
         LEFT JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
         LEFT JOIN macrocontrole.usuario_perfil_sistema AS up ON up.usuario_id = u.id
-        WHERE ee.etapa_id = $1 and ee.unidade_trabalho_id = $2 and ee.tipo_situacao_id != 6`,
-        [etapa, unidade_trabalho]
+        WHERE ee.id = $1 and ee.tipo_situacao_id != 6`,
+        [atividade_id]
       );
 
       const info = {};
@@ -350,7 +350,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         FROM macrocontrole.insumo AS i
         INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
         WHERE iut.unidade_trabalho_id = $1`,
-        [unidade_trabalho]
+        [dadosut.unidade_trabalho_id]
       );
 
       let rotinas = await t.any(
@@ -380,17 +380,17 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
         info.atividade.rotinas[r.nome].push(aux);
       });
 
-      info.atividade.id = dadosut.atividade_id;
-      info.atividade.observacao_atividade = dadosut.observacao_atividade; //modificar no ferramenta de produção para 3 observacoes. Subfase > UT > Etap > Ativ
+      info.atividade.id = atividade_id;
+      info.atividade.observacao_atividade = dadosut.observacao_atividade;
       info.atividade.observacao_etapa = dadosut.observacao_etapa;
       info.atividade.observacao_subfase = dadosut.observacao_subfase;
       info.atividade.observacao_unidade_trabalho =
         dadosut.observacao_unidade_trabalho;
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
-      info.atividade.unidade_trabalho_id = unidade_trabalho;
-      info.atividade.buffer.unidade_trabalho = dadosut.tamanho_buffer; //modificar ferramenta prod para aceitar esse buffer
-      info.atividade.subfase_etapa_id = etapa; //modificar no ferramenta de produção nome da variavel
+      info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
+      info.atividade.buffer_unidade_trabalho = dadosut.tamanho_buffer; 
+      info.atividade.etapa_id = etapa_id;
       info.atividade.tipo_etapa_id = dadosut.etapa_code;
       info.atividade.nome =
         dadosut.subfase_nome +
@@ -486,7 +486,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
           WHERE a.id = $1
           ORDER BY a_ant.ordem
           `,
-          [dadosut.atividade_id]
+          [atividade_id]
         );
       }
 
@@ -546,8 +546,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
       err.status = 500;
       err.context = "distribuicao_ctrl";
       err.information = {};
-      err.information.etapa_id = etapa;
-      err.information.unidade_trabalho_id = unidade_trabalho;
+      err.information.atividade_id = atividade_id;
       err.information.trace = error;
       return { erro: err, dados: null };
     });
@@ -556,7 +555,7 @@ const dadosProducao = async (etapa, unidade_trabalho) => {
 controller.verifica = async usuario_id => {
   try {
     let em_andamento = await db.oneOrNone(
-      `SELECT a.etapa_id, a.unidade_trabalho_id
+      `SELECT a.id
       FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
       WHERE a.usuario_id = $1 and ut.disponivel IS TRUE and a.tipo_situacao_id = 2 LIMIT 1`,
@@ -566,12 +565,11 @@ controller.verifica = async usuario_id => {
       await db.none(
         `UPDATE macrocontrole.atividade SET
           tipo_situacao_id = 3 
-          WHERE tipo_situacao_id = 2 and usuario_id = $1 and etapa_id != $2 and unidade_trabalho_id != $3`,
-        [usuario_id, em_andamento.etapa_id, em_andamento.unidade_trabalho_id]
+          WHERE tipo_situacao_id = 2 and usuario_id = $1 and id != $2`,
+        [usuario_id, em_andamento.id]
       );
       const { erro, dados } = await dadosProducao(
-        em_andamento.etapa_id,
-        em_andamento.unidade_trabalho_id
+        em_andamento.id
       );
       if (erro) {
         return { verificaError: erro, dados: null };
@@ -591,18 +589,43 @@ controller.verifica = async usuario_id => {
   }
 };
 
-controller.finaliza = async (usuario_id, etapa_id, unidade_trabalho_id) => {
+controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
   const data_fim = new Date();
   try {
     let result = await db.result(
       `UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 4
-      WHERE etapa_id = $2 and unidade_trabalho_id = $3 and usuario_id = $4 and tipo_situacao_id != 6`,
-      [data_fim, etapa_id, unidade_trabalho_id, usuario_id]
+      WHERE id = $2 and usuario_id = $3 and tipo_situacao_id != 6`,
+      [data_fim, atividade_id, usuario_id]
     );
 
     if (!result.rowCount || result.rowCount != 1) {
       throw new Error("Erro ao finalizar atividade. Atividade não encontrada.");
+    }
+
+    if(sem_correcao){
+      let result = await db.result(
+        `UPDATE macrocontrole.atividade SET
+        tipo_situacao_id = 5
+        WHERE id in (
+          with prox as (select e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
+          from macrocontrole.atividade as a
+          inner join macrocontrole.etapa as erev on erev.id = a.etapa_id
+          inner join macrocontrole.etapa as e on e.subfase_id = erev.subfase_id
+          where erev.tipo_etapa_id = 2 and a.id = $1)
+          select a.id
+          from macrocontrole.atividade as a
+          inner join macrocontrole.atividade as arev on arev.unidade_trabalho_id = a.unidade_trabalho_id
+          inner join prox as p on p.prox_id = a.etapa_id and p.id = arev.etapa_id
+          where arev.id=$1
+        )`,
+        [atividade_id]
+      );
+
+      if (!result.rowCount || result.rowCount != 1) {
+        throw new Error("Erro ao bloquear correção.");
+      }
+
     }
 
     return { finalizaError: null };
@@ -639,23 +662,22 @@ controller.inicia = async usuario_id => {
       await t.none(
         `DELETE FROM macrocontrole.fila_prioritaria
           WHERE atividade_id IN (
-          SELECT id from macrocontrole.atividade WHERE etapa_id = $1 and unidade_trabalho_id = $2)`,
-        [prioridade.etapa_id, prioridade.unidade_trabalho_id]
+          SELECT id from macrocontrole.atividade WHERE id = $1)`,
+        [prioridade.id]
       );
       await t.none(
         `DELETE FROM macrocontrole.fila_prioritaria_grupo
           WHERE atividade_id IN (
-          SELECT id from macrocontrole.atividade WHERE etapa_id = $1 and unidade_trabalho_id = $2)`,
-        [prioridade.etapa_id, prioridade.unidade_trabalho_id]
+          SELECT id from macrocontrole.atividade WHERE id = $1)`,
+        [prioridade.id]
       );
       let result = await t.result(
         `UPDATE macrocontrole.atividade SET
-          data_inicio = $1, tipo_situacao_id = 2, usuario_id = $4
-          WHERE etapa_id = $2 and unidade_trabalho_id = $3 and tipo_situacao_id IN (1,3)`,
+          data_inicio = $1, tipo_situacao_id = 2, usuario_id = $3
+          WHERE id = $2 and tipo_situacao_id IN (1,3)`,
         [
           data_inicio,
-          prioridade.etapa_id,
-          prioridade.unidade_trabalho_id,
+          prioridade.id,
           usuario_id
         ]
       );
@@ -668,8 +690,7 @@ controller.inicia = async usuario_id => {
     })
     .then(async data => {
       const { erro, dados } = await dadosProducao(
-        prioridade.etapa_id,
-        prioridade.unidade_trabalho_id
+        prioridade.id
       );
       if (erro) {
         return { iniciaError: erro, dados: null };
@@ -805,6 +826,34 @@ controller.get_tipo_problema = async () => {
     err.information = {};
     err.information.trace = error;
     return { error: err, dados: null };
+  }
+};
+
+controller.atividade = async atividade_id => {
+  try {
+    let atividade = await db.oneOrNone(
+      `SELECT a.etapa_id, a.unidade_trabalho_id
+      FROM macrocontrole.atividade AS a
+      WHERE a.id = $1 LIMIT 1`,
+      [atividade_id]
+    );
+
+    const { erro, dados } = await dadosProducao(
+      atividade.id
+    );
+    if (erro) {
+      return { verificaError: erro, dados: null };
+    }
+    return { verificaError: null, dados: dados };
+
+  } catch (error) {
+    const err = new Error("Falha durante retorno dos dados da atividade.");
+    err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.atividade_id = atividade_id;
+    err.information.trace = error;
+    return { verificaError: err, dados: null };
   }
 };
 

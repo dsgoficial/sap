@@ -3,12 +3,11 @@
 const Joi = require("joi");
 
 const finaliza = Joi.object().keys({
-  subfase_etapa_id: Joi.number()
+  atividade_id: Joi.number()
     .integer()
     .strict()
     .required(),
-  unidade_trabalho_id: Joi.number()
-    .integer()
+  sem_correcao: Joi.boolean()
     .strict()
     .required(),
   usuario_id: Joi.number()
