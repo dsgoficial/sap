@@ -170,10 +170,23 @@ CREATE TABLE macrocontrole.etapa(
 CREATE OR REPLACE FUNCTION macrocontrole.etapa_verifica_rev_corr()
   RETURNS trigger AS
 $BODY$
-
+    DECLARE nr_erro integer;
     BEGIN
 
-	
+	WITH prev as (SELECT tipo_etapa_id, lag(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id ORDER BY ordem) as prev_tipo_etapa_id
+	FROM macrocontrole.etapa),
+	prox as (SELECT tipo_etapa_id, lead(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id ORDER BY ordem) as prox_tipo_etapa_id
+	FROM macrocontrole.etapa)
+	SELECT count(*) into nr_erro FROM (
+		SELECT 1 FROM prev WHERE tipo_etapa_id = 3 and prev_tipo_etapa_id != 2
+	    UNION
+		SELECT 1 FROM prox WHERE tipo_etapa_id = 2 and prox_tipo_etapa_id != 3
+	) as foo
+
+	IF nr_erro > 0 THEN
+		RAISE EXCEPTION 'Etapa de Correção deve ser imediatamente após a uma etapa de Revisão.';
+	END IF;
+
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;
     ELSE
