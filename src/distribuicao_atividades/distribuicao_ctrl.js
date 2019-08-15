@@ -280,44 +280,46 @@ const dadosProducao = async (atividade_id) => {
 
       if (dadosut.etapa_code == 1 || dadosut.etapa_code == 4) {
         camadas = await t.any(
-          `SELECT c.nome, c.alias, c.documentacao
+          `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.escala_trabalho, pc.atributo_filtro_subfase, 
           FROM macrocontrole.perfil_propriedades_camada AS pc
           INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
           WHERE pc.subfase_id = $1 and not pc.camada_apontamento`,
           [dadosut.subfase_id]
         );
         atributos = await t.any(
-          `SELECT a.nome, a.alias, c.nome as camada
+          `SELECT a.nome, a.alias, c.nome as camada, c.schema
           FROM macrocontrole.atributo AS a
           INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = a.camada_id
           INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
           WHERE pc.subfase_id = $1 and not pc.camada_apontamento`,
-          [dadosut.subfase_id]
-        );
-
-        menus = await t.any(
-          "SELECT nome FROM macrocontrole.perfil_menu WHERE subfase_id = $1 and not menu_revisao",
           [dadosut.subfase_id]
         );
       } else {
         camadas = await t.any(
-          `SELECT c.nome, c.alias, c.documentacao
+          `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.escala_trabalho, pc.atributo_filtro_subfase, pr.camada_apontamento, pr.atributo_justificativa_apontamento, pr.atributo_situacao_correcao
           FROM macrocontrole.perfil_propriedades_camada AS pc
           INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
           WHERE pc.subfase_id = $1`,
           [dadosut.subfase_id]
         );
         atributos = await t.any(
-          `SELECT a.nome, a.alias, c.nome as camada
+          `SELECT a.nome, a.alias, c.nome as camada, c.schema
           FROM macrocontrole.atributo AS a
           INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = a.camada_id
           INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
           WHERE pc.subfase_id = $1`,
           [dadosut.subfase_id]
         );
+      }
 
+      if (dadosut.etapa_code == 2) {
         menus = await t.any(
           "SELECT nome FROM macrocontrole.perfil_menu WHERE subfase_id = $1",
+          [dadosut.subfase_id]
+        );
+      } else {
+        menus = await t.any(
+          "SELECT nome FROM macrocontrole.perfil_menu WHERE subfase_id = $1 and not menu_revisao",
           [dadosut.subfase_id]
         );
       }
@@ -333,7 +335,7 @@ const dadosProducao = async (atividade_id) => {
       );
 
       let fme = await t.any(
-        "SELECT servidor, porta, rotina FROM macrocontrole.perfil_fme WHERE subfase_id = $1",
+        "SELECT servidor, porta, rotina, gera_falso_positivo FROM macrocontrole.perfil_fme WHERE subfase_id = $1",
         [dadosut.subfase_id]
       );
 
@@ -346,7 +348,7 @@ const dadosProducao = async (atividade_id) => {
       );
 
       let insumos = await t.any(
-        `SELECT i.nome, i.caminho, i.epsg, i.tipo_insumo_id
+        `SELECT i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
         FROM macrocontrole.insumo AS i
         INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
         WHERE iut.unidade_trabalho_id = $1`,
@@ -354,11 +356,9 @@ const dadosProducao = async (atividade_id) => {
       );
 
       let rotinas = await t.any(
-        `SELECT r.nome, c1.nome as camada, c2.nome as camada_apontamento, pr.parametros
-        FROM macrocontrole.perfil_rotina AS pr
-        INNER JOIN macrocontrole.tipo_rotina AS r ON r.code = pr.tipo_rotina_id
-        INNER JOIN macrocontrole.camada AS c1 ON c1.id = pr.camada_id
-        INNER JOIN macrocontrole.camada AS c2 ON c2.id = pr.camada_apontamento_id
+        `SELECT r.nome, pr.parametros, pr.gera_falso_positivo
+        FROM macrocontrole.perfil_rotina_dsgtools AS pr
+        INNER JOIN macrocontrole.rotina_dsgtools AS r ON r.code = pr.rotina_dsgtools_id
         WHERE pr.subfase_id = $1`,
         [dadosut.subfase_id]
       );
@@ -368,8 +368,7 @@ const dadosProducao = async (atividade_id) => {
           info.atividade.rotinas[r.nome] = [];
         }
         let aux = {
-          camada: r.camada,
-          camada_apontamento: r.camada_apontamento
+          gera_falso_positivo: r.gera_falso_positivo,
         };
 
         if (r.parametros) {
@@ -406,10 +405,11 @@ const dadosProducao = async (atividade_id) => {
 
       info.atividade.fme = []; //modificar no ferramentas de produção para aceeitar tabelas individuais
       fme.forEach(f => {
-        let servidor_fme = f.servidor + ":" + f.porta;
         info.atividade.fme.push({
           rotina: f.rotina,
-          servidor: servidor_fme
+          servidor: f.servidor,
+          porta: f.porta,
+          gera_falso_positivo: f.gera_falso_positivo
         });
       });
 
@@ -424,16 +424,27 @@ const dadosProducao = async (atividade_id) => {
       info.atividade.camadas = [];
 
       camadas.forEach(r => {
-        let aux = { nome: r.nome };
+        let aux = { nome: r.nome, schema: r.schema };
         if (r.alias) {
           aux.alias = r.alias;
         }
         if (r.documentacao) {
           aux.documentacao = r.documentacao;
         }
+        if (r.escala_trabalho) {
+          aux.escala_trabalho = r.escala_trabalho;
+        }
+        if (r.atributo_filtro_subfase) {
+          aux.atributo_filtro_subfase = r.atributo_filtro_subfase;
+        }
+        if (r.camada_apontamento) {
+          aux.camada_apontamento = r.camada_apontamento;
+          aux.atributo_situacao_correcao = r.atributo_situacao_correcao;
+          aux.atributo_justificativa_apontamento = r.atributo_justificativa_apontamento;
+        }
         let aux_att = [];
         atributos.forEach(a => {
-          if (a.camada === r.nome) {
+          if (a.camada === r.nome && a.schema === r.schema) {
             aux_att.push({ nome: a.nome, alias: a.alias });
           }
         });
@@ -455,7 +466,8 @@ const dadosProducao = async (atividade_id) => {
           nome: i.nome,
           caminho: i.caminho,
           epsg: i.epsg,
-          tipo_insumo_id: i.tipo_insumo_id
+          tipo_insumo_id: i.tipo_insumo_id,
+          caminho_padrao: i.caminho_padrao
         });
       });
 
