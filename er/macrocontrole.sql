@@ -143,6 +143,41 @@ CREATE TABLE macrocontrole.pre_requisito_subfase(
 	subfase_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)	
 );
 
+-- Constraint
+CREATE OR REPLACE FUNCTION macrocontrole.verifica_pre_requisito_subfase()
+  RETURNS trigger AS
+$BODY$
+    DECLARE nr_erro integer;
+    BEGIN
+
+	SELECT count(*) into nr_erro from macrocontrole.pre_requisito_subfase AS prs
+	INNER JOIN macrocontrole.subfase AS s1 ON s1.id = prs.subfase_anterior_id
+	INNER JOIN macrocontrole.fase AS f1 ON f1.id = s1.fase_id
+	INNER JOIN macrocontrole.linha_producao AS l1 ON l1.id = f1.linha_producao_id
+	INNER JOIN macrocontrole.subfase AS s2 ON s2.id = prs.subfase_posterior_id
+	INNER JOIN macrocontrole.fase AS f2 ON f2.id = s2.fase_id
+	INNER JOIN macrocontrole.linha_producao AS l2 ON l2.id = f2.linha_producao_id
+	WHERE l1.projeto_id != l2.projeto_id
+
+	IF nr_erro > 0 THEN
+		RAISE EXCEPTION 'O pré requisito deve ser entre subfases do mesmo projeto.';
+	END IF;
+
+	RETURN NEW;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.verifica_pre_requisito_subfase()
+  OWNER TO postgres;
+
+CREATE TRIGGER verifica_pre_requisito_subfase
+BEFORE UPDATE OR INSERT ON macrocontrole.pre_requisito_subfase
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.verifica_pre_requisito_subfase();
+
+--
+
 CREATE TABLE macrocontrole.tipo_etapa(
 	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
@@ -275,8 +310,6 @@ CREATE TABLE macrocontrole.atributo(
 	alias VARCHAR(255)
 );
 
---TODO: outras configurações de camadas, como bloquear certos atributos, 
---filtros adicionais, ou bloquear a camada como um todo
 CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
@@ -292,9 +325,18 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	),
 );
 
+CREATE TABLE macrocontrole.rotina_dsgtools(
+	code SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO macrocontrole.rotina_dsgtools (code, nome) VALUES
+(1, ''),
+(2, '');
+
 CREATE TABLE macrocontrole.perfil_rotina_dsgtools(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL, --nome da rotina do dsgtools
+	rotina_dsgtools_id INTEGER NOT NULL REFERENCES macrocontrole.rotina_dsgtools (id)
 	parametros VARCHAR(255), --json de parametros conforme o padrão do dsgtools
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
@@ -333,13 +375,49 @@ INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
 (2, 'Operadores iguais'),
 (3, 'Operadores no mesmo turno');
 
---restrição para as etapas serem da mesma linha de produção (trigger?)
 CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),
 	etapa_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
 	etapa_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)	
 );
+
+-- Constraint
+CREATE OR REPLACE FUNCTION macrocontrole.verifica_restricao_etapa()
+  RETURNS trigger AS
+$BODY$
+    DECLARE nr_erro integer;
+    BEGIN
+
+	SELECT count(*) into nr_erro from macrocontrole.restricao_etapa AS re
+	INNER JOIN macrocontrole.etapa AS e1 ON e1.id = re.etapa_anterior_id
+	INNER JOIN macrocontrole.subfase AS s1 ON s1.id = e1.subfase_id
+	INNER JOIN macrocontrole.fase AS f1 ON f1.id = s1.fase_id
+	INNER JOIN macrocontrole.linha_producao AS l1 ON l1.id = f1.linha_producao_id
+	INNER JOIN macrocontrole.etapa AS e2 ON e2.id = re.etapa_posterior_id
+	INNER JOIN macrocontrole.subfase AS s2 ON s2.id = e2.subfase_id
+	INNER JOIN macrocontrole.fase AS f2 ON f2.id = s2.fase_id
+	INNER JOIN macrocontrole.linha_producao AS l2 ON l2.id = f2.linha_producao_id
+	WHERE l1.projeto_id != l2.projeto_id
+
+	IF nr_erro > 0 THEN
+		RAISE EXCEPTION 'A restrição deve ser entre etapas do mesmo projeto.';
+	END IF;
+
+	RETURN NEW;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.verifica_restricao_etapa()
+  OWNER TO postgres;
+
+CREATE TRIGGER verifica_restricao_etapa
+BEFORE UPDATE OR INSERT ON macrocontrole.restricao_etapa
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.verifica_restricao_etapa();
+
+--
 
 CREATE TABLE macrocontrole.lote(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -425,7 +503,6 @@ INSERT INTO macrocontrole.tipo_situacao (code, nome) VALUES
 (5, 'Não será executada'),
 (6, 'Não finalizada');
 
---FIXME restrição que etapa_id e unidade_trabalho_id sejam da mesma subfase
 CREATE TABLE macrocontrole.atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
