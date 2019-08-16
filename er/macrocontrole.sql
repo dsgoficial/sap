@@ -6,26 +6,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE SCHEMA macrocontrole;
 
--- Tipo do perfil de acesso ao controle macro
-CREATE TABLE macrocontrole.tipo_perfil_sistema(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_perfil_sistema (code,nome) VALUES
-(1, 'Visualizador'),
-(2, 'Operador'),
-(3, 'Gerente de Fluxo'),
-(4, 'Chefe Seção'),
-(5, 'Administrador'); 
-
--- Tabela que associa os usuarios ao perfil
-CREATE TABLE macrocontrole.usuario_perfil_sistema(
-  id SERIAL NOT NULL PRIMARY KEY,
-  tipo_perfil_sistema_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perfil_sistema (code),
-  usuario_id INTEGER NOT NULL UNIQUE REFERENCES dgeo.usuario (id)
-);
-
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE --conforme bdgex
@@ -54,12 +34,13 @@ CREATE TABLE macrocontrole.linha_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
-	tipo_produto_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_produto (code)
+	tipo_produto_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_produto (code),
+	UNIQUE(nome,projeto_id)
 );
 
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	uuid uuid NOT NULL DEFAULT uuid_generate_v4(),
+	uuid uuid NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
 	nome VARCHAR(255),
 	mi VARCHAR(255),
 	inom VARCHAR(255),
@@ -140,7 +121,8 @@ CREATE TABLE macrocontrole.pre_requisito_subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_pre_requisito_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_pre_requisito (code),
 	subfase_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	subfase_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)	
+	subfase_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(subfase_anterior_id, subfase_posterior_id)
 );
 
 -- Constraint
@@ -255,7 +237,8 @@ CREATE TABLE macrocontrole.perfil_fme(
 	porta VARCHAR(255) NOT NULL,
 	rotina VARCHAR(255) NOT NULL,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(servidor,porta,rotina,subfase_id)
 );
 
 --TODO: configurar outras opções do DSGTools
@@ -263,20 +246,23 @@ CREATE TABLE macrocontrole.perfil_fme(
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	menu_revisao BOOLEAN NOT NULL DEFAULT FALSE,
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.tipo_exibicao(
@@ -292,7 +278,8 @@ INSERT INTO macrocontrole.tipo_exibicao (code,nome) VALUES
 CREATE TABLE macrocontrole.perfil_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_exibicao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_exibicao (code),
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(subfase_id)
 );
 
 CREATE TABLE macrocontrole.camada(
@@ -300,14 +287,16 @@ CREATE TABLE macrocontrole.camada(
 	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
 	alias VARCHAR(255),
-	documentacao VARCHAR(255)
+	documentacao VARCHAR(255),
+	UNIQUE(schema,nome)
 );
 
 CREATE TABLE macrocontrole.atributo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
 	nome VARCHAR(255) NOT NULL,
-	alias VARCHAR(255)
+	alias VARCHAR(255),
+	UNIQUE(camada_id,nome)
 );
 
 CREATE TABLE macrocontrole.perfil_propriedades_camada(
@@ -323,6 +312,7 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 		(camada_apontamento IS TRUE AND atributo_situacao_correcao IS NOT NULL AND atributo_justificativa_apontamento IS NOT NULL) OR
 		(camada_apontamento IS FALSE AND atributo_situacao_correcao IS NULL AND atributo_justificativa_apontamento IS NULL)
 	),
+	UNIQUE(camada_id, subfase_id)
 );
 
 CREATE TABLE macrocontrole.rotina_dsgtools(
@@ -339,14 +329,16 @@ CREATE TABLE macrocontrole.perfil_rotina_dsgtools(
 	rotina_dsgtools_id INTEGER NOT NULL REFERENCES macrocontrole.rotina_dsgtools (id)
 	parametros VARCHAR(255), --json de parametros conforme o padrão do dsgtools
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE (rotina_dsgtools_id, parametros, subfase_id)
 );
 
 CREATE TABLE macrocontrole.banco_dados(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	servidor VARCHAR(255) NOT NULL,
-	porta VARCHAR(255) NOT NULL
+	porta VARCHAR(255) NOT NULL,
+	UNIQUE(nome,servidor,porta)
 );
 
 CREATE TABLE macrocontrole.tipo_monitoramento(
@@ -362,7 +354,8 @@ INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
 CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_monitoramento_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_monitoramento (code),
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(tipo_monitoramento_id, subfase_id)
 );
 
 CREATE TABLE macrocontrole.tipo_restricao(
@@ -379,7 +372,8 @@ CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),
 	etapa_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-	etapa_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)	
+	etapa_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+	UNIQUE(etapa_anterior_id, etapa_posterior_id)	
 );
 
 -- Constraint
@@ -421,7 +415,7 @@ FOR EACH ROW EXECUTE PROCEDURE macrocontrole.verifica_restricao_etapa();
 
 CREATE TABLE macrocontrole.lote(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
+	nome VARCHAR(255) UNIQUE NOT NULL,
 	prioridade INTEGER NOT NULL
 );
 
@@ -450,7 +444,7 @@ CREATE INDEX unidade_trabalho_geom
 
 CREATE TABLE macrocontrole.grupo_insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
+	nome VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE macrocontrole.tipo_insumo(
@@ -487,7 +481,8 @@ CREATE TABLE macrocontrole.insumo_unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id),
-	caminho_padrao VARCHAR(255)
+	caminho_padrao VARCHAR(255),
+	UNIQUE(unidade_trabalho_id, insumo_id)
 );
 
 CREATE TABLE macrocontrole.tipo_situacao(
@@ -535,7 +530,7 @@ $BODY$
 		WHERE a.id = NEW.id AND e.subfase_id != ut.subfase_id;
 
 		IF nr_erro > 0 THEN
-			RAISE EXCEPTION 'Etapa e Unidade de Trabalho com Subfases distintas.';
+			RAISE EXCEPTION 'Etapa e Unidade de Trabalho não devem possuir subfases distintas.';
 		END IF;
     RETURN NEW;
 
@@ -577,14 +572,16 @@ CREATE TABLE macrocontrole.fila_prioritaria(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-	prioridade INTEGER NOT NULL
+	prioridade INTEGER NOT NULL,
+	UNIQUE(atividade_id, usuario_id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
  	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
-	prioridade INTEGER NOT NULL
+	prioridade INTEGER NOT NULL,
+	UNIQUE(atividade_id, perfil_producao_id)
 );
 
 CREATE TABLE macrocontrole.tipo_perda_recurso_humano(
