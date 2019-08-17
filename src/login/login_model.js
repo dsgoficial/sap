@@ -8,7 +8,9 @@ const login = Joi.object().keys({
   plugins: Joi.array().items(
     Joi.object({
       nome: Joi.string().required(),
-      versao: Joi.string().required()
+      versao: Joi.string()
+        .regex(/^\d+(\.\d+){0,2}$/)
+        .required()
     })
   )
 });
