@@ -59,4 +59,36 @@ CREATE TABLE dgeo.plugin(
   versao_minima TEXT,
 );
 
+CREATE TABLE dgeo.menu_profile(
+	  id SERIAL NOT NULL PRIMARY KEY,
+    nome_do_perfil text NOT NULL,
+    descricao text,
+    perfil json NOT NULL,
+    ordem_menu json NOT NULL
+);
+
+CREATE TABLE dgeo.layer_styles(
+	id SERIAL NOT NULL PRIMARY KEY,
+	f_table_schema character varying,
+	f_table_name character varying,
+	f_geometry_column character varying,
+	stylename character varying(255),
+	styleqml text,
+	ui xml,
+	update_time timestamp without time zone DEFAULT now()
+);
+
+CREATE TABLE dgeo.layer_rules(
+	id SERIAL NOT NULL PRIMARY KEY,
+  tipo_regra TEXT NOT NULL,
+  camada TEXT NOT NULL,
+  atributo TEXT NOT NULL,
+  regra TEXT NOT NULL,
+  nome TEXT NOT NULL,
+  cor_rgb TEXT NOT NULL,
+  tipo_estilo TEXT NOT NULL,
+  descricao TEXT NOT NULL,
+  ordem INTEGER NOT NULL
+);
+
 COMMIT;

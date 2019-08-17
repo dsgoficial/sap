@@ -248,7 +248,7 @@ const calculaFila = async usuario => {
     });
 };
 
-const dadosProducao = async (atividade_id) => {
+const dadosProducao = async atividade_id => {
   return db
     .task(async t => {
       let dadosut = await t.one(
@@ -314,23 +314,30 @@ const dadosProducao = async (atividade_id) => {
 
       if (dadosut.etapa_code == 2) {
         menus = await t.any(
-          "SELECT nome FROM macrocontrole.perfil_menu WHERE subfase_id = $1",
+          `SELECT mp.nome_do_perfil, mp.descricao, mp.perfil, mp.ordem_menu  FROM macrocontrole.perfil_menu AS pm
+          WHERE subfase_id = $1`,
           [dadosut.subfase_id]
         );
       } else {
         menus = await t.any(
-          "SELECT nome FROM macrocontrole.perfil_menu WHERE subfase_id = $1 and not menu_revisao",
+          `SELECT mp.nome_do_perfil, mp.descricao, mp.perfil, mp.ordem_menu  FROM macrocontrole.perfil_menu AS pm
+          INNER JOIN dgeo.menu_profile AS mp On mp.nome_do_perfil = pm.nome
+          WHERE subfase_id = $1 and not menu_revisao`,
           [dadosut.subfase_id]
         );
       }
 
       let estilos = await t.any(
-        "SELECT nome FROM macrocontrole.perfil_estilo WHERE subfase_id = $1",
+        `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
+        INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
+        WHERE pe.subfase_id = $1`,
         [dadosut.subfase_id]
       );
 
       let regras = await t.any(
-        "SELECT nome FROM macrocontrole.perfil_regras WHERE subfase_id = $1",
+        `SELECT lr.tipo_regra, lr.camada, lr.atributo, lr.regra, lr.nome, lr.cor_rgb, lr.tipo_estilo, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
+        INNER JOIN dgeo.layer_rules AS lr ON lr.tipo_regra = pr.nome
+        WHERE pr.subfase_id = $1`,
         [dadosut.subfase_id]
       );
 
@@ -368,7 +375,7 @@ const dadosProducao = async (atividade_id) => {
           info.atividade.rotinas[r.nome] = [];
         }
         let aux = {
-          gera_falso_positivo: r.gera_falso_positivo,
+          gera_falso_positivo: r.gera_falso_positivo
         };
 
         if (r.parametros) {
@@ -388,7 +395,7 @@ const dadosProducao = async (atividade_id) => {
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
       info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
-      info.atividade.buffer_unidade_trabalho = dadosut.tamanho_buffer; 
+      info.atividade.buffer_unidade_trabalho = dadosut.tamanho_buffer;
       info.atividade.etapa_id = etapa_id;
       info.atividade.tipo_etapa_id = dadosut.etapa_code;
       info.atividade.nome =
@@ -413,13 +420,9 @@ const dadosProducao = async (atividade_id) => {
         });
       });
 
-      info.atividade.estilos = [];
-      info.atividade.regras = [];
-      info.atividade.menus = [];
-
-      estilos.forEach(r => info.atividade.estilos.push(r.nome));
-      regras.forEach(r => info.atividade.regras.push(r.nome));
-      menus.forEach(r => info.atividade.menus.push(r.nome));
+      info.atividade.estilos = estilos;
+      info.atividade.regras = regras;
+      info.atividade.menus = menus;
 
       info.atividade.camadas = [];
 
@@ -440,7 +443,8 @@ const dadosProducao = async (atividade_id) => {
         if (r.camada_apontamento) {
           aux.camada_apontamento = r.camada_apontamento;
           aux.atributo_situacao_correcao = r.atributo_situacao_correcao;
-          aux.atributo_justificativa_apontamento = r.atributo_justificativa_apontamento;
+          aux.atributo_justificativa_apontamento =
+            r.atributo_justificativa_apontamento;
         }
         let aux_att = [];
         atributos.forEach(a => {
@@ -580,9 +584,7 @@ controller.verifica = async usuario_id => {
           WHERE tipo_situacao_id = 2 and usuario_id = $1 and id != $2`,
         [usuario_id, em_andamento.id]
       );
-      const { erro, dados } = await dadosProducao(
-        em_andamento.id
-      );
+      const { erro, dados } = await dadosProducao(em_andamento.id);
       if (erro) {
         return { verificaError: erro, dados: null };
       }
@@ -615,7 +617,7 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
       throw new Error("Erro ao finalizar atividade. Atividade não encontrada.");
     }
 
-    if(sem_correcao){
+    if (sem_correcao) {
       let result = await db.result(
         `UPDATE macrocontrole.atividade SET
         tipo_situacao_id = 5
@@ -637,7 +639,6 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
       if (!result.rowCount || result.rowCount != 1) {
         throw new Error("Erro ao bloquear correção.");
       }
-
     }
 
     return { finalizaError: null };
@@ -687,11 +688,7 @@ controller.inicia = async usuario_id => {
         `UPDATE macrocontrole.atividade SET
           data_inicio = $1, tipo_situacao_id = 2, usuario_id = $3
           WHERE id = $2 and tipo_situacao_id IN (1,3)`,
-        [
-          data_inicio,
-          prioridade.id,
-          usuario_id
-        ]
+        [data_inicio, prioridade.id, usuario_id]
       );
 
       if (!result.rowCount) {
@@ -701,9 +698,7 @@ controller.inicia = async usuario_id => {
       return result;
     })
     .then(async data => {
-      const { erro, dados } = await dadosProducao(
-        prioridade.id
-      );
+      const { erro, dados } = await dadosProducao(prioridade.id);
       if (erro) {
         return { iniciaError: erro, dados: null };
       }
@@ -850,14 +845,11 @@ controller.atividade = async atividade_id => {
       [atividade_id]
     );
 
-    const { erro, dados } = await dadosProducao(
-      atividade.id
-    );
+    const { erro, dados } = await dadosProducao(atividade.id);
     if (erro) {
       return { verificaError: erro, dados: null };
     }
     return { verificaError: null, dados: dados };
-
   } catch (error) {
     const err = new Error("Falha durante retorno dos dados da atividade.");
     err.status = 500;
