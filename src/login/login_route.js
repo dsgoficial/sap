@@ -59,7 +59,8 @@ router.post("/", async (req, res, next) => {
 
   let { loginError, token } = await loginCtrl.login(
     req.body.usuario,
-    req.body.senha
+    req.body.senha,
+    req.body.plugins
   );
   if (loginError) {
     return next(loginError);

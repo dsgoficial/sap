@@ -4,7 +4,44 @@ const jwt = require("jsonwebtoken");
 
 const { db, testdb } = require("../database");
 
+const semver = require("semver");
+
 const controller = {};
+
+const verificaPlugins = async plugins => {
+  try {
+    const plugins_minimos = await db.any(
+      "SELECT nome, versao_minima FROM dgeo.plugin",
+      [usuario]
+    );
+    plugins_minimos.forEach(pm => {
+      let notFound = true;
+      plugins.forEach(p => {
+        if (p.nome === pm.nome && semver.gt(p.versao, pm.versao)) {
+          notFound = false;
+        }
+      });
+
+      if (notFound) {
+        const err = new Error(
+          "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários:"
+        );
+        err.status = 401;
+        err.context = "login_ctrl";
+        err.information = { plugins };
+        return { error: err };
+      }
+    });
+
+    return { error: null };
+  } catch (error) {
+    const err = new Error("Erro verificando plugins. Procure o administrador.");
+    err.status = 500;
+    err.context = "login_ctrl";
+    err.information = { plugins, trace: error };
+    return { error: err };
+  }
+};
 
 const gravaLogin = async usuario_id => {
   try {
@@ -16,18 +53,20 @@ const gravaLogin = async usuario_id => {
     );
     return { error: null };
   } catch (error) {
-    const err = new Error("Erro gravando registro de login");
+    const err = new Error(
+      "Erro gravando registro de login. Procure o administrador."
+    );
     err.status = 500;
     err.context = "login_ctrl";
     err.information = { usuario_id, trace: error };
     return { error: err };
   }
-}
+};
 
-controller.login = async (usuario, senha) => {
+controller.login = async (usuario, senha, plugins) => {
   let verifycon = await testdb(usuario, senha);
   if (!verifycon) {
-    const err = new Error("Falha durante autenticação");
+    const err = new Error("Usuário ou senha inválida.");
     err.status = 401;
     err.context = "login_ctrl";
     err.information = {};
@@ -36,19 +75,26 @@ controller.login = async (usuario, senha) => {
   }
 
   try {
-    const { id } = await db.one("SELECT id FROM dgeo.usuario WHERE login = $1 and ativo IS TRUE", [
-      usuario
-    ]);
+    const { id } = await db.one(
+      "SELECT id FROM dgeo.usuario WHERE login = $1 and ativo IS TRUE",
+      [usuario]
+    );
     const token = jwt.sign({ id }, process.env.JWT_SECRET, {
       expiresIn: "10h"
     });
-    let {error} = await gravaLogin(id);
+
+    let { error } = await verificaPlugins(plugins);
+    if (error) {
+      return { loginError: error, token: null };
+    }
+
+    let { error } = await gravaLogin(id);
     if (error) {
       return { loginError: error, token: null };
     }
     return { loginError: null, token: token };
   } catch (error) {
-    const err = new Error("Usuário não cadastrado no SAP");
+    const err = new Error("Usuário não cadastrado no SAP ou inativo.");
     err.status = 401;
     err.context = "login_ctrl";
     err.information = {};

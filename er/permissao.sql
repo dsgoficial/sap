@@ -14,7 +14,6 @@ $BODY$
 
     BEGIN
 		IF TG_OP = 'INSERT' AND NEW.tipo_situacao_id = 2 AND NEW.usuario_id THEN
-    -- Da permissão para usuario NEW
       SELECT login INTO logintxt FROM dgeo.usuario WHERE id = NEW.usuario_id;
 
       SELECT string_agg (format('%I.%I', c.schema, c.nome), ',') INTO layertxt
@@ -24,7 +23,7 @@ $BODY$
         WHERE  e.id = NEW.etapa_id;
 
 
-      query := 'GRANT ALL ON TABLE ' || layertxt || ' TO ' || logintxt || ';';
+      query := 'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE ' || layertxt || ' TO ' || logintxt || ';';
 
       SELECT bd.nome, 'dbname=' || bd.nome ||' port=' || bd.porta ||' hostaddr=' || bd.servidor || ' user=USER password=PASSWORD' INTO dbname, dbconnection
       FROM macrocontrole.unidade_trabalho AS ut
@@ -33,8 +32,7 @@ $BODY$
 
 		END IF;
 
-		IF TG_OP = 'UPDATE' AND NEW.etapa_id = OLD.etapa_id THEN
-      -- FIXME testar se os bd relacionado as unidades de trabalho mudaram
+		IF TG_OP = 'UPDATE' AND NEW.etapa_id = OLD.etapa_id AND NEW.unidade_trabalho_id = OLD.unidade_trabalho_id THEN
 
       IF NEW.tipo_situacao_id = 2 AND OLD.tipo_situacao_id = 2 AND NEW.usuario_id != OLD.usuario_id THEN
       --Remove permissao old e da New
@@ -57,7 +55,6 @@ $BODY$
       END;
 
       IF NEW.tipo_situacao_id = 2 AND OLD.tipo_situacao_id != 2 THEN
-      --Da permissao New
       SELECT login INTO logintxt FROM dgeo.usuario WHERE id = NEW.usuario_id;
 
       SELECT string_agg (format('%I.%I', c.schema, c.nome), ',') INTO layertxt
@@ -72,7 +69,6 @@ $BODY$
       END;
 
       IF NEW.tipo_situacao_id != 2 AND OLD.tipo_situacao_id = 2 THEN
-      --Remove permissao Old
       SELECT login INTO logintxt FROM dgeo.usuario WHERE id = OLD.usuario_id;
 
       SELECT string_agg (format('%I.%I', c.schema, c.nome), ',') INTO layertxt
@@ -99,7 +95,6 @@ $BODY$
 		END IF;
 
 		IF TG_OP = 'DELETE' AND OLD.tipo_situacao_id = 2 AND OLD.usuario_id THEN
-        --remove permissao OLD
         SELECT login INTO logintxt FROM dgeo.usuario WHERE id = OLD.usuario_id;
 
         SELECT string_agg (format('%I.%I', c.schema, c.nome), ',') INTO layertxt

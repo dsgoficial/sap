@@ -53,4 +53,10 @@ CREATE TABLE dgeo.usuario(
   tipo_posto_grad_id INTEGER NOT NULL REFERENCES dgeo.tipo_posto_grad (code)
 );
 
+CREATE TABLE dgeo.plugin(
+  id SERIAL NOT NULL PRIMARY KEY,
+  nome VARCHAR(255) NOT NULL,
+  versao_minima TEXT,
+);
+
 COMMIT;
