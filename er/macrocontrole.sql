@@ -631,40 +631,4 @@ CREATE TABLE macrocontrole.problema_atividade(
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE
 );
 
--- Constraint
-CREATE OR REPLACE FUNCTION macrocontrole.libera_problema_atividade()
-  RETURNS trigger AS
-$BODY$
-    DECLARE ut_id integer;
-    BEGIN
-		SELECT unidade_trabalho_id into ut_id 
-		FROM macrocontrole.atividade
-		WHERE id = NEW.atividade_id;
-
-		IF NEW.resolvido THEN
-			UPDATE macrocontrole.unidade_trabalho
-			SET disponivel = TRUE
-			WHERE id = ut_id;
-		ELSE
-			UPDATE macrocontrole.unidade_trabalho
-			SET disponivel = FALSE
-			WHERE id = ut_id;
-		END IF;
-
-
-    RETURN NEW;
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION macrocontrole.libera_problema_atividade()
-  OWNER TO postgres;
-
-CREATE TRIGGER libera_problema_atividade
-AFTER UPDATE ON macrocontrole.problema_atividade
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.libera_problema_atividade();
-
---
-
 COMMIT;
