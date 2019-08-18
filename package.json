@@ -56,7 +56,7 @@
   },
   "apidoc": {
     "name": "API SAP",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "title": "API SAP",
     "description": "Comunicação com a API REST do SAP"
   }

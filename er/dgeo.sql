@@ -60,7 +60,7 @@ CREATE TABLE dgeo.plugin(
   CHECK (versao_minima ~ '^\d+(\.\d+){0,2}$')
 );
 
-CREATE TABLE dgeo.menu_profile(
+CREATE TABLE dgeo.layer_menus(
 	  id SERIAL NOT NULL PRIMARY KEY,
     nome_do_perfil text NOT NULL,
     descricao text,

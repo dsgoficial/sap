@@ -584,10 +584,10 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	UNIQUE(atividade_id, perfil_producao_id)
 );
 
-CREATE TABLE macrocontrole.tipo_perda_recurso_humano(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
+--CREATE TABLE macrocontrole.tipo_perda_recurso_humano(
+--	code SERIAL NOT NULL PRIMARY KEY,
+--	nome VARCHAR(255) NOT NULL
+--);
 
 --INSERT INTO macrocontrole.tipo_perda_recurso_humano (code, nome) VALUES
 --(1, 'Atividades extra PIT'),
