@@ -153,7 +153,7 @@ WHERE ee.tipo_situacao_id = 4 --finalizada
 ORDER BY ee.data_fim DESC
 LIMIT 100;
 
-CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento_subfase()
+CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_subfase()
   RETURNS trigger AS
 $BODY$
     DECLARE view_txt text;
@@ -233,14 +233,14 @@ $BODY$
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION macrocontrole.cria_view_acompanhamento_subfase()
+ALTER FUNCTION acompanhamento.cria_view_acompanhamento_subfase()
   OWNER TO postgres;
 
 CREATE TRIGGER cria_view_acompanhamento_subfase
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento_subfase();
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_subfase();
 
-CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento_fase()
+CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_fase()
   RETURNS trigger AS
 $BODY$
     DECLARE view_txt text;
@@ -320,14 +320,14 @@ $BODY$
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION macrocontrole.cria_view_acompanhamento_fase()
+ALTER FUNCTION acompanhamento.cria_view_acompanhamento_fase()
   OWNER TO postgres;
 
 CREATE TRIGGER cria_view_acompanhamento_fase
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.subfase
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento_fase();
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_fase();
 
-CREATE OR REPLACE FUNCTION macrocontrole.cria_view_acompanhamento_linha_producao()
+CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_linha_producao()
   RETURNS trigger AS
 $BODY$
     DECLARE view_txt text;
@@ -406,11 +406,11 @@ $BODY$
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION macrocontrole.cria_view_acompanhamento_linha_producao()
+ALTER FUNCTION acompanhamento.cria_view_acompanhamento_linha_producao()
   OWNER TO postgres;
 
 CREATE TRIGGER cria_view_acompanhamento_linha_producao
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.fase
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.cria_view_acompanhamento_linha_producao();
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_linha_producao();
 
 COMMIT;

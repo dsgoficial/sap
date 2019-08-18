@@ -20,6 +20,7 @@ const sql2 = fs
 const sql3 = fs
   .readFileSync(path.resolve("./er/acompanhamento.sql"), "utf-8")
   .trim();
+/*
 const sql4 = fs
   .readFileSync(path.resolve("./er/microcontrole.sql"), "utf-8")
   .trim();
@@ -37,7 +38,7 @@ const sql7 = fs
 const sql8 = fs
   .readFileSync(path.resolve("./er/permissao.sql"), "utf-8")
   .trim();
-
+*/
 const createConfig = () => {
   console.log(chalk.blue("Sistema de Apoio a Produção"));
   console.log(chalk.blue("Criação do arquivo de configuração"));
@@ -115,12 +116,43 @@ const createConfig = () => {
         await db.none(sql1);
         await db.none(sql2);
         await db.none(sql3);
-        await db.none(sql4);
-        await db.none(sql5);
-        await db.none(sql6);
-        await db.none(sql7);
-        await db.none(sql8);
+        //await db.none(sql4);
+        //await db.none(sql5);
+        //await db.none(sql6);
+        //await db.none(sql7);
+        //await db.none(sql8);
 
+        await db.none(
+          `
+        CREATE TABLE public.versao(
+          code SMALLINT NOT NULL PRIMARY KEY,
+          nome VARCHAR(255) NOT NULL
+        );
+
+        INSERT INTO public.versao (code, nome) VALUES
+        (1, '2.0.0');
+
+        GRANT USAGE ON schema public TO public;
+        GRANT SELECT ON ALL TABLES IN SCHEMA public TO $1:name;
+
+        GRANT USAGE ON SCHEMA dgeo TO $1:name;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;
+        GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA dgeo TO $1:name;
+
+        GRANT USAGE ON SCHEMA macrocontrole TO $1:name;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO $1:name;
+        GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
+        GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA macrocontrole TO $1:name;
+
+        GRANT USAGE ON schema acompanhamento TO public;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA acompanhamento TO $1:name;
+        GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA acompanhamento TO $1:name;
+        GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA acompanhamento TO $1:name;
+        `,
+          [answers.db_user]
+        );
+
+        /*
         await db.none(
           `
         CREATE TABLE public.versao(
@@ -128,7 +160,7 @@ const createConfig = () => {
           nome VARCHAR(255) NOT NULL,
         );
 
-        INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
+        INSERT INTO public.versao (code, nome) VALUES
         (1, '2.0.0');
 
         GRANT ALL ON SCHEMA dgeo TO $1:name;
@@ -161,7 +193,7 @@ const createConfig = () => {
         `,
           [answers.db_user]
         );
-
+        */
         console.log(chalk.blue("Banco de dados do SAP criado com sucesso!"));
       }
 

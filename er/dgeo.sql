@@ -57,7 +57,7 @@ CREATE TABLE dgeo.plugin(
   id SERIAL NOT NULL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
   versao_minima TEXT,
-  CHECK (versao_minima ~ $$^\d+(\.\d+){0,2}$$$)
+  CHECK (versao_minima ~ '^\d+(\.\d+){0,2}$')
 );
 
 CREATE TABLE dgeo.menu_profile(

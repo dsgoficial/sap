@@ -90,12 +90,12 @@ CREATE TABLE macrocontrole.fase(
 );
 
 --Meta anual estabelecida no PIT de uma fase
-CREATE TABLE macrocontrole.meta_anual(
-	id SERIAL NOT NULL PRIMARY KEY,
-	meta INTEGER NOT NULL,
-    ano INTEGER NOT NULL,
-    fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
-);
+--CREATE TABLE macrocontrole.meta_anual(
+--	id SERIAL NOT NULL PRIMARY KEY,
+--	meta INTEGER NOT NULL,
+--    ano INTEGER NOT NULL,
+--    fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
+--);
 
 -- Unidade de produção do controle de produção
 -- as combinações (nome,fase_id) são unicos
@@ -139,7 +139,7 @@ $BODY$
 	INNER JOIN macrocontrole.subfase AS s2 ON s2.id = prs.subfase_posterior_id
 	INNER JOIN macrocontrole.fase AS f2 ON f2.id = s2.fase_id
 	INNER JOIN macrocontrole.linha_producao AS l2 ON l2.id = f2.linha_producao_id
-	WHERE l1.projeto_id != l2.projeto_id
+	WHERE l1.projeto_id != l2.projeto_id;
 
 	IF nr_erro > 0 THEN
 		RAISE EXCEPTION 'O pré requisito deve ser entre subfases do mesmo projeto.';
@@ -198,7 +198,7 @@ $BODY$
 		SELECT 1 FROM prev WHERE tipo_etapa_id = 3 and prev_tipo_etapa_id != 2
 	    UNION
 		SELECT 1 FROM prox WHERE tipo_etapa_id = 2 and prox_tipo_etapa_id != 3
-	) as foo
+	) as foo;
 
 	IF nr_erro > 0 THEN
 		RAISE EXCEPTION 'Etapa de Correção deve ser imediatamente após a uma etapa de Revisão.';
@@ -326,7 +326,7 @@ INSERT INTO macrocontrole.rotina_dsgtools (code, nome) VALUES
 
 CREATE TABLE macrocontrole.perfil_rotina_dsgtools(
 	id SERIAL NOT NULL PRIMARY KEY,
-	rotina_dsgtools_id INTEGER NOT NULL REFERENCES macrocontrole.rotina_dsgtools (id)
+	rotina_dsgtools_id INTEGER NOT NULL REFERENCES macrocontrole.rotina_dsgtools (code),
 	parametros VARCHAR(255), --json de parametros conforme o padrão do dsgtools
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
@@ -392,7 +392,7 @@ $BODY$
 	INNER JOIN macrocontrole.subfase AS s2 ON s2.id = e2.subfase_id
 	INNER JOIN macrocontrole.fase AS f2 ON f2.id = s2.fase_id
 	INNER JOIN macrocontrole.linha_producao AS l2 ON l2.id = f2.linha_producao_id
-	WHERE l1.projeto_id != l2.projeto_id
+	WHERE l1.projeto_id != l2.projeto_id;
 
 	IF nr_erro > 0 THEN
 		RAISE EXCEPTION 'A restrição deve ser entre etapas do mesmo projeto.';
@@ -589,27 +589,27 @@ CREATE TABLE macrocontrole.tipo_perda_recurso_humano(
 	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO macrocontrole.tipo_perda_recurso_humano (code, nome) VALUES
-(1, 'Atividades extra PIT'),
-(2, 'Atividades militares'),
-(3, 'Atividades administrativas'),
-(4, 'Problemas técnicos'),
-(5, 'Feriado'),
-(6, 'Férias'),
-(7, 'Dispensa por motivo de saúde'),
-(8, 'Dispensa como recompensa'),
-(9, 'Dispensa por regresso de atividade de campo'),
-(10, 'Designação para realizar curso / capacitação'),
-(11, 'Designação para ministrar curso / capacitação'),
-(12, 'Designação para participação em eventos');
+--INSERT INTO macrocontrole.tipo_perda_recurso_humano (code, nome) VALUES
+--(1, 'Atividades extra PIT'),
+--(2, 'Atividades militares'),
+--(3, 'Atividades administrativas'),
+--(4, 'Problemas técnicos'),
+--(5, 'Feriado'),
+--(6, 'Férias'),
+--(7, 'Dispensa por motivo de saúde'),
+--(8, 'Dispensa como recompensa'),
+--(9, 'Dispensa por regresso de atividade de campo'),
+--(10, 'Designação para realizar curso / capacitação'),
+--(11, 'Designação para ministrar curso / capacitação'),
+--(12, 'Designação para participação em eventos');
 
-CREATE TABLE macrocontrole.perda_recurso_humano(
-	id SERIAL NOT NULL PRIMARY KEY,
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
- 	tipo_perda_recurso_humano_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perda_recurso_humano (code),
-	horas REAL NOT NULL,
-	data DATE NOT NULL
-);
+--CREATE TABLE macrocontrole.perda_recurso_humano(
+--	id SERIAL NOT NULL PRIMARY KEY,
+-- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+-- 	tipo_perda_recurso_humano_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perda_recurso_humano (code),
+--	horas REAL NOT NULL,
+--	data DATE NOT NULL
+--);
 
 CREATE TABLE macrocontrole.tipo_problema(
 	code SERIAL NOT NULL PRIMARY KEY,
@@ -620,7 +620,7 @@ INSERT INTO macrocontrole.tipo_problema (code, nome) VALUES
 (1, 'Insumo não é suficiente para execução da atividade'),
 (2, 'Problema em etapa anterior, necessita ser refeita'),
 (3, 'Erro durante execução da atividade atual'),
-(4, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida')
+(4, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida'),
 (99, 'Outros');
 
 CREATE TABLE macrocontrole.problema_atividade(
