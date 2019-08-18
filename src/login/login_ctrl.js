@@ -29,17 +29,17 @@ const verificaPlugins = async plugins => {
         err.status = 401;
         err.context = "login_ctrl";
         err.information = { plugins };
-        return { error: err };
+        return { error_plugin: err };
       }
     });
 
-    return { error: null };
+    return { error_plugin: null };
   } catch (error) {
     const err = new Error("Erro verificando plugins. Procure o administrador.");
     err.status = 500;
     err.context = "login_ctrl";
     err.information = { plugins, trace: error };
-    return { error: err };
+    return { error_plugin: err };
   }
 };
 
@@ -83,9 +83,9 @@ controller.login = async (usuario, senha, plugins) => {
       expiresIn: "10h"
     });
 
-    let { error } = await verificaPlugins(plugins);
-    if (error) {
-      return { loginError: error, token: null };
+    let { error_plugin } = await verificaPlugins(plugins);
+    if (error_plugin) {
+      return { loginError: error_plugin, token: null };
     }
 
     let { error } = await gravaLogin(id);
