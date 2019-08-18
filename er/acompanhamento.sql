@@ -39,6 +39,15 @@ ON l.usuario_id = u.id
 WHERE l.data_login::date = now()::date
 ORDER BY l.data_login DESC;
 
+CREATE VIEW acompanhamento.usuarios_nao_logados_hoje AS
+SELECT u.id AS usuario_id, u.nome_guerra, u.tipo_posto_grad_id, u.tipo_turno_id, l.data_login
+FROM dgeo.usuario AS u
+INNER JOIN
+(SELECT usuario_id, max(data_login) as data_login FROM acompanhamento.login GROUP BY usuario_id) AS l
+ON l.usuario_id = u.id
+WHERE u.ativo IS TRUE and l.data_login::date != now()::date
+ORDER BY l.data_login DESC;
+
 CREATE VIEW acompanhamento.quantitativo_fila_distribuicao AS
 SELECT ROW_NUMBER () OVER (ORDER BY perfil_producao_id, subfase_id, lote_id) AS id, perfil_producao_id, subfase_id, lote_id, count(*) quantidade
 FROM (
