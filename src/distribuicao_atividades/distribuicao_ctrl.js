@@ -845,11 +845,22 @@ controller.atividade = async atividade_id => {
       [atividade_id]
     );
 
-    const { erro, dados } = await dadosProducao(atividade.id);
-    if (erro) {
-      return { verificaError: erro, dados: null };
+    if(atividade){
+      const { erro, dados } = await dadosProducao(atividade_id);
+      if (erro) {
+        return { verificaError: erro, dados: null };
+      }
+      return { verificaError: null, dados: dados };
+    } else {
+      const err = new Error("ID inválido.");
+      err.status = 404;
+      err.context = "distribuicao_ctrl";
+      err.information = {};
+      err.information.atividade_id = atividade_id;
+      err.information.trace = error;
+      return { verificaError: err, dados: null };
     }
-    return { verificaError: null, dados: dados };
+
   } catch (error) {
     const err = new Error("Falha durante retorno dos dados da atividade.");
     err.status = 500;
