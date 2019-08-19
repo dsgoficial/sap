@@ -26,7 +26,7 @@ CREATE TABLE simulacao.linha_producao(
 
 CREATE TABLE simulacao.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	uuid uuid NOT NULL DEFAULT uuid_generate_v4(),
+	uuid text NOT NULL DEFAULT uuid_generate_v4(),
 	nome VARCHAR(255) NOT NULL,
 	mi VARCHAR(255),
 	inom VARCHAR(255),

@@ -40,7 +40,7 @@ CREATE TABLE macrocontrole.linha_producao(
 
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	uuid uuid NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
+	uuid text NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
 	nome VARCHAR(255),
 	mi VARCHAR(255),
 	inom VARCHAR(255),
@@ -197,7 +197,7 @@ $BODY$
 	SELECT count(*) into nr_erro FROM (
 		SELECT 1 FROM prev WHERE tipo_etapa_id = 3 and prev_tipo_etapa_id != 2
 	    UNION
-		SELECT 1 FROM prox WHERE tipo_etapa_id = 2 and prox_tipo_etapa_id != 3
+		SELECT 1 FROM prox WHERE tipo_etapa_id = 2 and (prox_tipo_etapa_id != 3 OR prox_tipo_etapa_id IS NULL)
 	) as foo;
 
 	IF nr_erro > 0 THEN
