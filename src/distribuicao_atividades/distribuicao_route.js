@@ -300,9 +300,7 @@ router.post("/inicia", async (req, res, next) => {
 router.post("/resposta_questionario", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
-    producaoModel.resposta_questionario, {
-      stripUnknown: true
-    }
+    producaoModel.resposta_questionario
   );
   if (validationResult.error) {
     const err = new Error("Envia questionario validation error");
@@ -385,9 +383,7 @@ router.post("/resposta_questionario", async (req, res, next) => {
 router.post("/problema_atividade", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
-    producaoModel.problema_atividade, {
-      stripUnknown: true
-    }
+    producaoModel.problema_atividade
   );
   if (validationResult.error) {
     const err = new Error("Problema atividade validation error");
@@ -423,7 +419,6 @@ router.post("/problema_atividade", async (req, res, next) => {
     null
   );
 });
-
 
 router.get("/tipo_problema", async (req, res, next) => {
   let { error, dados } = await producaoCtrl.get_tipo_problema();
@@ -470,9 +465,7 @@ router.get("/tipo_problema", async (req, res, next) => {
  *
  */
 router.get("/atividade/:id", verifyAdmin, async (req, res, next) => {
-  let { verificaError, dados } = await producaoCtrl.atividade(
-    req.params.id
-  );
+  let { verificaError, dados } = await producaoCtrl.atividade(req.params.id);
   if (verificaError) {
     return next(verificaError);
   }

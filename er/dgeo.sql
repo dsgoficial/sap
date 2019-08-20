@@ -25,11 +25,12 @@ CREATE TABLE dgeo.plugin(
 
 CREATE TABLE dgeo.layer_menus(
 	  id SERIAL NOT NULL PRIMARY KEY,
-    nome_do_perfil text NOT NULL,
-    perfil text NOT NULL,
+    nome_menu text NOT NULL,
+    definicao_menu text NOT NULL,
     ordem_menu text NOT NULL,
     owner varchar(255) NOT NULL,
-	  update_time timestamp without time zone NOT NULL DEFAULT now()
+	  update_time timestamp without time zone NOT NULL DEFAULT now(),
+    CONSTRAINT unique_menus UNIQUE (nome_menu)
 );
 
 CREATE TABLE dgeo.layer_styles(
@@ -42,16 +43,17 @@ CREATE TABLE dgeo.layer_styles(
   stylesld text,
 	ui text,
   owner varchar(255) NOT NULL,
-	update_time timestamp without time zone NOT NULL DEFAULT now()
+	update_time timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT unique_styles UNIQUE (f_table_schema,f_table_name,stylename)
 );
 
 CREATE TABLE dgeo.layer_rules(
 	id SERIAL NOT NULL PRIMARY KEY,
+  grupo_regra TEXT NOT NULL,
   tipo_regra TEXT NOT NULL,
   camada TEXT NOT NULL,
   atributo TEXT NOT NULL,
   regra TEXT NOT NULL,
-  nome TEXT NOT NULL,
   cor_rgb TEXT NOT NULL,
   descricao TEXT NOT NULL,
   ordem INTEGER NOT NULL,
