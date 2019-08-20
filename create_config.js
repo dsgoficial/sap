@@ -13,6 +13,7 @@ const initOptions = {
 
 const pgp = require("pg-promise")(initOptions);
 
+const sql0 = fs.readFileSync(path.resolve("./er/dominio.sql"), "utf-8").trim();
 const sql1 = fs.readFileSync(path.resolve("./er/dgeo.sql"), "utf-8").trim();
 const sql2 = fs
   .readFileSync(path.resolve("./er/macrocontrole.sql"), "utf-8")
@@ -113,6 +114,7 @@ const createConfig = () => {
 
         const db = pgp(connectionString);
 
+        await db.none(sql0);
         await db.none(sql1);
         await db.none(sql2);
         await db.none(sql3);
@@ -132,8 +134,11 @@ const createConfig = () => {
         INSERT INTO public.versao (code, nome) VALUES
         (1, '2.0.0');
 
-        GRANT USAGE ON schema public TO public;
+        GRANT USAGE ON schema public TO $1:name;
         GRANT SELECT ON ALL TABLES IN SCHEMA public TO $1:name;
+
+        GRANT USAGE ON schema dominio TO $1:name;
+        GRANT SELECT ON ALL TABLES IN SCHEMA dominio TO $1:name;
 
         GRANT USAGE ON SCHEMA dgeo TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;

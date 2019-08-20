@@ -258,7 +258,7 @@ const dadosProducao = async atividade_id => {
         se.observacao AS observacao_etapa, ut.observacao AS observacao_unidade_trabalho, ut.tamanho_buffer, s.observacao AS observacao_subfase
         FROM macrocontrole.atividade as ee
         INNER JOIN macrocontrole.etapa as se ON se.id = ee.etapa_id
-        INNER JOIN macrocontrole.tipo_etapa as e ON e.code = se.tipo_etapa_id
+        INNER JOIN dominio.tipo_etapa as e ON e.code = se.tipo_etapa_id
         INNER JOIN macrocontrole.subfase as s ON s.id = se.subfase_id
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
@@ -349,7 +349,7 @@ const dadosProducao = async atividade_id => {
       let monitoramento = await t.any(
         `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
         FROM macrocontrole.perfil_monitoramento AS pm
-        INNER JOIN macrocontrole.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
+        INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
         WHERE subfase_id = $1`,
         [dadosut.subfase_id]
       );
@@ -365,7 +365,7 @@ const dadosProducao = async atividade_id => {
       let rotinas = await t.any(
         `SELECT r.nome, pr.parametros, pr.gera_falso_positivo
         FROM macrocontrole.perfil_rotina_dsgtools AS pr
-        INNER JOIN macrocontrole.rotina_dsgtools AS r ON r.code = pr.rotina_dsgtools_id
+        INNER JOIN dominio.rotina_dsgtools AS r ON r.code = pr.rotina_dsgtools_id
         WHERE pr.subfase_id = $1`,
         [dadosut.subfase_id]
       );
@@ -490,13 +490,13 @@ const dadosProducao = async atividade_id => {
           te.nome as etapa
           FROM macrocontrole.atividade AS a
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-          INNER JOIN macrocontrole.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+          INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
           INNER JOIN
           (
             SELECT tpg.nome_abrev AS posto_grad, u.nome_guerra, a.data_inicio, a.data_fim, a.unidade_trabalho_id, e.ordem, e.subfase_id FROM macrocontrole.atividade AS a
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
-            INNER JOIN dgeo.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+            INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
           ) 
           AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND a_ant.subfase_id = e.subfase_id AND e.ordem > a_ant.ordem
           WHERE a.id = $1
@@ -819,7 +819,7 @@ controller.get_tipo_problema = async () => {
   try {
     let tipo_problema = await db.any(
       `SELECT code, nome
-      FROM macrocontrole.tipo_problema`
+      FROM dominio.tipo_problema`
     );
     let dados = [];
     tipo_problema.forEach(p => {

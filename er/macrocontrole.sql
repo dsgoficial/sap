@@ -11,30 +11,11 @@ CREATE TABLE macrocontrole.projeto(
 	nome VARCHAR(255) NOT NULL UNIQUE --conforme bdgex
 );
 
--- Tipos de produtos previstos na PCDG
-CREATE TABLE macrocontrole.tipo_produto(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_produto (code, nome) VALUES
-(1, 'Conjunto de dados geoespaciais vetoriais'),
-(2, 'Carta Topográfica'),
-(3, 'Carta Ortoimagem'),
-(4, 'Ortoimagem'),
-(5, 'Modelo Digital de Superfície'),
-(6, 'Modelo Digital de Terreno'),
-(7, 'Carta Temática'),
-(8, 'Conjunto de dados geoespaciais vetoriais - MGCP'),
-(9, 'Fototriangulação'),
-(10, 'Imagem aérea/satélite'),
-(11, 'Ponto de controle');
-
 CREATE TABLE macrocontrole.linha_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
-	tipo_produto_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_produto (code),
+	tipo_produto_id INTEGER NOT NULL REFERENCES dominio.tipo_produto (code),
 	UNIQUE(nome,projeto_id)
 );
 
@@ -54,36 +35,11 @@ CREATE INDEX produto_geom
     (geom)
     TABLESPACE pg_default;
 
--- Fase é somente para agrupar as Subfases
--- Deve ser correspondente as fases do RTM e a fases previstas no metadado do BDGEx
--- Adicionar outras fases do RTM
-CREATE TABLE macrocontrole.tipo_fase(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
-(1, 'Digitalização'),
-(2, 'Reambulação'),
-(3, 'Validação'),
-(4, 'Edição'),
-(5, 'Área Contínua'),
-(6, 'Carregamento BDGEx'),
-(7, 'Vetorização'),
-(8, 'Avaliação imagens'), -- rever diferentes avaliações com o relatório
-(9, 'Avaliação ortoimagens'),
-(10, 'Avaliação MDS'),
-(11, 'Avaliação MDT'),
-(12, 'Avaliação de dados vetoriais'),
-(13, 'Avaliação de cartas topográficas'),
-(14, 'Avaliação de aerotriangulação'),
-(15, 'Generalização');
-
 -- Associa uma fase prevista no BDGEx ao projeto
 -- as combinações (tipo_fase, linha_producao_id) são unicos
 CREATE TABLE macrocontrole.fase(
     id SERIAL NOT NULL PRIMARY KEY,
-    tipo_fase_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_fase (code),
+    tipo_fase_id INTEGER NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
     ordem INTEGER NOT NULL, -- as fases são ordenadas dentro de uma linha de produção de um projeto
     UNIQUE (linha_producao_id, tipo_fase_id)
@@ -108,18 +64,10 @@ CREATE TABLE macrocontrole.subfase(
 	UNIQUE (nome, fase_id)
 );
 
-CREATE TABLE macrocontrole.tipo_pre_requisito(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_pre_requisito (code, nome) VALUES
-(1, 'Região concluída');
-
 --restrição para as subfases serem do mesmo projeto
 CREATE TABLE macrocontrole.pre_requisito_subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_pre_requisito_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_pre_requisito (code),
+	tipo_pre_requisito_id INTEGER NOT NULL REFERENCES dominio.tipo_pre_requisito (code),
 	subfase_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	subfase_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(subfase_anterior_id, subfase_posterior_id)
@@ -160,20 +108,9 @@ FOR EACH ROW EXECUTE PROCEDURE macrocontrole.verifica_pre_requisito_subfase();
 
 --
 
-CREATE TABLE macrocontrole.tipo_etapa(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_etapa (code,nome) VALUES
-(1,'Execução'),
-(2,'Revisão'),
-(3,'Correção'),
-(4,'Revisão e Correção');
-
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_etapa (code),
+	tipo_etapa_id INTEGER NOT NULL REFERENCES dominio.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	ordem INTEGER NOT NULL, -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
 	observacao text,
@@ -265,19 +202,9 @@ CREATE TABLE macrocontrole.perfil_menu(
 	UNIQUE(nome,subfase_id)
 );
 
-CREATE TABLE macrocontrole.tipo_exibicao(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_exibicao (code,nome) VALUES
-(1,'Não exibir linhagem'),
-(2,'Exibir linhagem para revisores'),
-(3,'Sempre exibir linhagem');
-
 CREATE TABLE macrocontrole.perfil_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_exibicao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_exibicao (code),
+	tipo_exibicao_id INTEGER NOT NULL REFERENCES dominio.tipo_exibicao (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(subfase_id)
 );
@@ -315,18 +242,9 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	UNIQUE(camada_id, subfase_id)
 );
 
-CREATE TABLE macrocontrole.rotina_dsgtools(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.rotina_dsgtools (code, nome) VALUES
-(1, ''),
-(2, '');
-
 CREATE TABLE macrocontrole.perfil_rotina_dsgtools(
 	id SERIAL NOT NULL PRIMARY KEY,
-	rotina_dsgtools_id INTEGER NOT NULL REFERENCES macrocontrole.rotina_dsgtools (code),
+	rotina_dsgtools_id INTEGER NOT NULL REFERENCES dominio.rotina_dsgtools (code),
 	parametros VARCHAR(255), --json de parametros conforme o padrão do dsgtools
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
@@ -341,36 +259,16 @@ CREATE TABLE macrocontrole.banco_dados(
 	UNIQUE(nome,servidor,porta)
 );
 
-CREATE TABLE macrocontrole.tipo_monitoramento(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
-(1, 'Monitoramento de feição'),
-(2, 'Monitoramento de tela'),
-(3, 'Monitoramento de comportamento');
-
 CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_monitoramento_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_monitoramento (code),
+	tipo_monitoramento_id INTEGER NOT NULL REFERENCES dominio.tipo_monitoramento (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(tipo_monitoramento_id, subfase_id)
 );
 
-CREATE TABLE macrocontrole.tipo_restricao(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
-(1, 'Operadores distintos'),
-(2, 'Operadores iguais'),
-(3, 'Operadores no mesmo turno');
-
 CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),
+	tipo_restricao_id INTEGER NOT NULL REFERENCES dominio.tipo_restricao (code),
 	etapa_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
 	etapa_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
 	UNIQUE(etapa_anterior_id, etapa_posterior_id)	
@@ -447,27 +345,12 @@ CREATE TABLE macrocontrole.grupo_insumo(
 	nome VARCHAR(255) UNIQUE NOT NULL
 );
 
-CREATE TABLE macrocontrole.tipo_insumo(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_insumo (code, nome) VALUES
-(1, 'Arquivo (download)'),
-(2, 'Arquivo (via rede)'),
-(3, 'Banco de dados PostGIS'),
-(4, 'Insumo físico'),
-(5, 'URL'),
-(6, 'Serviço WMS'),
-(7, 'Serviço WFS'),
-(8, 'Projeto QGIS');
-
 CREATE TABLE macrocontrole.insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	caminho VARCHAR(255) NOT NULL,
 	epsg VARCHAR(5),
-	tipo_insumo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_insumo (code),
+	tipo_insumo_id INTEGER NOT NULL REFERENCES dominio.tipo_insumo (code),
 	grupo_insumo_id INTEGER NOT NULL REFERENCES macrocontrole.grupo_insumo (id),
 	geom geometry(POLYGON, 4674) --se for não espacial a geometria é nula
 );
@@ -485,25 +368,12 @@ CREATE TABLE macrocontrole.insumo_unidade_trabalho(
 	UNIQUE(unidade_trabalho_id, insumo_id)
 );
 
-CREATE TABLE macrocontrole.tipo_situacao(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255)
-);
-
-INSERT INTO macrocontrole.tipo_situacao (code, nome) VALUES
-(1, 'Não iniciada'),
-(2, 'Em execução'),
-(3, 'Pausada'),
-(4, 'Finalizada'),
-(5, 'Não será executada'),
-(6, 'Não finalizada');
-
 CREATE TABLE macrocontrole.atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
 	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	usuario_id INTEGER REFERENCES dgeo.usuario (id),
-	tipo_situacao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_situacao (code),
+	tipo_situacao_id INTEGER NOT NULL REFERENCES dominio.tipo_situacao (code),
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone,
 	observacao text
@@ -584,49 +454,18 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	UNIQUE(atividade_id, perfil_producao_id)
 );
 
---CREATE TABLE macrocontrole.tipo_perda_recurso_humano(
---	code SERIAL NOT NULL PRIMARY KEY,
---	nome VARCHAR(255) NOT NULL
---);
-
---INSERT INTO macrocontrole.tipo_perda_recurso_humano (code, nome) VALUES
---(1, 'Atividades extra PIT'),
---(2, 'Atividades militares'),
---(3, 'Atividades administrativas'),
---(4, 'Problemas técnicos'),
---(5, 'Feriado'),
---(6, 'Férias'),
---(7, 'Dispensa por motivo de saúde'),
---(8, 'Dispensa como recompensa'),
---(9, 'Dispensa por regresso de atividade de campo'),
---(10, 'Designação para realizar curso / capacitação'),
---(11, 'Designação para ministrar curso / capacitação'),
---(12, 'Designação para participação em eventos');
-
 --CREATE TABLE macrocontrole.perda_recurso_humano(
 --	id SERIAL NOT NULL PRIMARY KEY,
 -- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
--- 	tipo_perda_recurso_humano_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perda_recurso_humano (code),
+-- 	tipo_perda_recurso_humano_id INTEGER NOT NULL REFERENCES dominio.tipo_perda_recurso_humano (code),
 --	horas REAL NOT NULL,
 --	data DATE NOT NULL
 --);
 
-CREATE TABLE macrocontrole.tipo_problema(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_problema (code, nome) VALUES
-(1, 'Insumo não é suficiente para execução da atividade'),
-(2, 'Problema em etapa anterior, necessita ser refeita'),
-(3, 'Erro durante execução da atividade atual'),
-(4, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida'),
-(99, 'Outros');
-
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
-	tipo_problema_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_problema (code),
+	tipo_problema_id INTEGER NOT NULL REFERENCES dominio.tipo_problema (code),
 	descricao TEXT NOT NULL,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE
 );

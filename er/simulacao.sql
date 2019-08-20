@@ -8,8 +8,8 @@ CREATE TABLE simulacao.usuario(
   nome_guerra VARCHAR(255) NOT NULL,
   login VARCHAR(255) UNIQUE NOT NULL,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
-  tipo_turno_id INTEGER NOT NULL REFERENCES dgeo.tipo_turno (code),
-  tipo_posto_grad_id INTEGER NOT NULL REFERENCES dgeo.tipo_posto_grad (code)
+  tipo_turno_id INTEGER NOT NULL REFERENCES dominio.tipo_turno (code),
+  tipo_posto_grad_id INTEGER NOT NULL REFERENCES dominio.tipo_posto_grad (code)
 );
 
 CREATE TABLE simulacao.projeto(
@@ -21,7 +21,7 @@ CREATE TABLE simulacao.linha_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	projeto_id INTEGER NOT NULL REFERENCES simulacao.projeto (id),
-	tipo_produto_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_produto (code)
+	tipo_produto_id INTEGER NOT NULL REFERENCES dominio.tipo_produto (code)
 );
 
 CREATE TABLE simulacao.produto(
@@ -42,7 +42,7 @@ CREATE INDEX produto_geom
 
 CREATE TABLE simulacao.fase(
     id SERIAL NOT NULL PRIMARY KEY,
-    tipo_fase_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_fase (code),
+    tipo_fase_id INTEGER NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES simulacao.linha_producao (id),
     ordem INTEGER NOT NULL,
     UNIQUE (linha_producao_id, tipo_fase_id)
@@ -58,14 +58,14 @@ CREATE TABLE simulacao.subfase(
 
 CREATE TABLE simulacao.pre_requisito_subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_pre_requisito_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_pre_requisito (code),
+	tipo_pre_requisito_id INTEGER NOT NULL REFERENCES dominio.tipo_pre_requisito (code),
 	subfase_anterior_id INTEGER NOT NULL REFERENCES simulacao.subfase (id),
 	subfase_posterior_id INTEGER NOT NULL REFERENCES simulacao.subfase (id)	
 );
 
 CREATE TABLE simulacao.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_etapa (code),
+	tipo_etapa_id INTEGER NOT NULL REFERENCES dominio.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES simulacao.subfase (id),
 	ordem INTEGER NOT NULL,
 	observacao text,
@@ -74,7 +74,7 @@ CREATE TABLE simulacao.etapa(
 
 CREATE TABLE simulacao.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),
+	tipo_restricao_id INTEGER NOT NULL REFERENCES dominio.tipo_restricao (code),
 	etapa_anterior_id INTEGER NOT NULL REFERENCES simulacao.etapa (id),
 	etapa_posterior_id INTEGER NOT NULL REFERENCES simulacao.etapa (id)	
 );
@@ -108,7 +108,7 @@ CREATE TABLE simulacao.atividade(
 	etapa_id INTEGER REFERENCES simulacao.etapa (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES simulacao.unidade_trabalho (id),
 	usuario_id INTEGER REFERENCES simulacao.usuario (id),
-	tipo_situacao_id INTEGER REFERENCES macrocontrole.tipo_situacao (code),
+	tipo_situacao_id INTEGER REFERENCES dominio.tipo_situacao (code),
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone
 );
