@@ -23,7 +23,7 @@ const verifyToken = function(req, res, next) {
         };
         return sendJsonAndLog(
           false,
-          "Failed to authenticate token",
+          "Falha ao autenticar token.",
           "login_middleware",
           information,
           res,
@@ -31,8 +31,9 @@ const verifyToken = function(req, res, next) {
           null
         );
       } else {
-        // se tudo estiver ok segue para a próxima rota com o atributo id
+        // se tudo estiver ok segue para a próxima rota com o atributo id e informa se é administrador ou não
         req.body.usuario_id = decoded.id;
+        req.body.administrador = decoded.administrador;
         next();
       }
     });
@@ -42,7 +43,7 @@ const verifyToken = function(req, res, next) {
     };
     return sendJsonAndLog(
       false,
-      "No token provided",
+      "Nenhum token fornecido.",
       "login_middleware",
       information,
       res,

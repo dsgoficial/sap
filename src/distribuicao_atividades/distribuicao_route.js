@@ -5,6 +5,8 @@ const Joi = require("joi");
 
 const { sendJsonAndLog } = require("../logger");
 
+const { verifyAdmin } = require("../login");
+
 const producaoCtrl = require("./distribuicao_ctrl");
 const producaoModel = require("./distribuicao_model");
 
@@ -467,7 +469,7 @@ router.get("/tipo_problema", async (req, res, next) => {
  *
  *
  */
-router.get("/atividade/:id", async (req, res, next) => {
+router.get("/atividade/:id", verifyAdmin, async (req, res, next) => {
   let { verificaError, dados } = await producaoCtrl.atividade(
     req.params.id
   );

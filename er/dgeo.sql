@@ -10,6 +10,7 @@ CREATE TABLE dgeo.usuario(
   nome VARCHAR(255) NOT NULL,
   nome_guerra VARCHAR(255) NOT NULL,
   login VARCHAR(255) UNIQUE NOT NULL,
+  administrador BOOLEAN NOT NULL DEFAULT FALSE,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
   tipo_turno_id INTEGER NOT NULL REFERENCES dominio.tipo_turno (code),
   tipo_posto_grad_id INTEGER NOT NULL REFERENCES dominio.tipo_posto_grad (code)

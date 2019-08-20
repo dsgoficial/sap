@@ -14,23 +14,31 @@ const verificaPlugins = async plugins => {
       "SELECT nome, versao_minima FROM dgeo.plugin",
       [usuario]
     );
-    plugins_minimos.forEach(pm => {
+    for (let i = 0; i < plugins_minimos.length; i++) {
       let notFound = true;
       plugins.forEach(p => {
-        if (p.nome === pm.nome && semver.gt(p.versao, pm.versao)) {
+        if (p.nome === plugins_minimos[i].nome && semver.gt(p.versao, plugins_minimos[i].versao)) {
           notFound = false;
         }
       });
 
       if (notFound) {
+        let listplugins = []
+        plugins_minimos.forEach(pm => {
+          listplugins.push(pm.nome + '-' + pm.versao_minima )
+        })
+        
         const err = new Error(
-          "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários:"
+          "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " + ', '.join(listplugins)
         );
         err.status = 401;
         err.context = "login_ctrl";
         err.information = { plugins };
         return { error_plugin: err };
       }
+    }
+    plugins_minimos.forEach(pm => {
+
     });
 
     return { error_plugin: null };
