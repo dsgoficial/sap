@@ -134,6 +134,22 @@ const createConfig = () => {
         INSERT INTO public.versao (code, nome) VALUES
         (1, '2.0.0');
 
+        CREATE TABLE public.layer_styles(
+          id serial NOT NULL PRIMARY KEY,
+          f_table_catalog varchar(255),
+          f_table_schema varchar(255),
+          f_table_name varchar(255),
+          f_geometry_column varchar(255),
+          stylename varchar(255),
+          styleqml text,
+          stylesld text,
+          useasdefault boolean,
+          description text,
+          owner varchar(255),
+          ui text,
+          update_time timestamp without time zone DEFAULT now(),
+        );
+
         GRANT USAGE ON schema public TO $1:name;
         GRANT SELECT ON ALL TABLES IN SCHEMA public TO $1:name;
 
@@ -149,7 +165,7 @@ const createConfig = () => {
         GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
         GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA macrocontrole TO $1:name;
 
-        GRANT USAGE ON schema acompanhamento TO public;
+        GRANT USAGE ON schema acompanhamento TO $1:name;
         GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA acompanhamento TO $1:name;
         GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA acompanhamento TO $1:name;
         GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA acompanhamento TO $1:name;

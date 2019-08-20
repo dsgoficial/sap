@@ -26,20 +26,23 @@ CREATE TABLE dgeo.plugin(
 CREATE TABLE dgeo.layer_menus(
 	  id SERIAL NOT NULL PRIMARY KEY,
     nome_do_perfil text NOT NULL,
-    descricao text,
-    perfil json NOT NULL,
-    ordem_menu json NOT NULL
+    perfil text NOT NULL,
+    ordem_menu text NOT NULL,
+    owner varchar(255) NOT NULL,
+	  update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
 CREATE TABLE dgeo.layer_styles(
 	id SERIAL NOT NULL PRIMARY KEY,
-	f_table_schema character varying,
-	f_table_name character varying,
-	f_geometry_column character varying,
-	stylename character varying(255),
+	f_table_schema varchar(255) NOT NULL,
+	f_table_name varchar(255) NOT NULL,
+	f_geometry_column varchar(255) NOT NULL,
+	stylename varchar(255) NOT NULL,
 	styleqml text,
-	ui xml,
-	update_time timestamp without time zone DEFAULT now()
+  stylesld text,
+	ui text,
+  owner varchar(255) NOT NULL,
+	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
 CREATE TABLE dgeo.layer_rules(
@@ -50,9 +53,10 @@ CREATE TABLE dgeo.layer_rules(
   regra TEXT NOT NULL,
   nome TEXT NOT NULL,
   cor_rgb TEXT NOT NULL,
-  tipo_estilo TEXT NOT NULL,
   descricao TEXT NOT NULL,
-  ordem INTEGER NOT NULL
+  ordem INTEGER NOT NULL,
+  owner varchar(255) NOT NULL,
+	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
 COMMIT;
