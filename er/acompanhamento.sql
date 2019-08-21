@@ -57,9 +57,9 @@ WHERE u.ativo IS TRUE and l.data_login::date != now()::date
 ORDER BY l.data_login DESC;
 
 CREATE VIEW acompanhamento.quantitativo_fila_distribuicao AS
-SELECT ROW_NUMBER () OVER (ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.lote_id) AS id, 
+SELECT ROW_NUMBER () OVER (ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.lote_id) AS id,
 ativ.perfil_producao_id, pp.nome AS perfil_producao, 
-ativ.subfase_id, s.nome AS subfase, 
+ativ.subfase_id, s.nome AS subfase,
 ativ.lote_id, l.nome AS lote,  count(*) quantidade
 FROM (
 SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
@@ -97,15 +97,15 @@ SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
         GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
 ) AS ativ
-INNER JOIN macrocontrole.perfil_producao AS pp INNER JOIN pp.id = ativ.perfil_producao_id
-INNER JOIN macrocontrole.subfase AS s INNER JOIN s.id = ativ.subfase_id
-INNER JOIN macrocontrole.lote AS l INNER JOIN l.id = ativ.lote_id
-GROUP BY perfil_producao_id, subfase_id, lote_id
-ORDER BY perfil_producao_id, subfase_id, lote_id;
+INNER JOIN macrocontrole.perfil_producao AS pp ON pp.id = ativ.perfil_producao_id
+INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
+INNER JOIN macrocontrole.lote AS l ON l.id = ativ.lote_id
+GROUP BY ativ.perfil_producao_id, l.nome, s.nome, pp.nome, ativ.subfase_id, ativ.lote_id
+ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.lote_id;
 
 CREATE VIEW acompanhamento.quantitativo_atividades AS
 SELECT ROW_NUMBER () OVER (ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.lote_id) AS id, 
-ativ.etapa_id, e.nome as etapa,
+ativ.etapa_id, te.nome as etapa,
 ativ.subfase_id, s.nome as subfase,
 ativ.lote_id, l.nome as lote,
 count(*) quantidade
@@ -142,17 +142,18 @@ SELECT etapa_id, unidade_trabalho_id, subfase_id, lote_id
         GROUP BY etapa_id, unidade_trabalho_id, subfase_id, lote_id
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
 ) AS ativ
-INNER JOIN macrocontrole.etapa AS e INNER JOIN e.id = ativ.etapa_id
-INNER JOIN macrocontrole.subfase AS s INNER JOIN s.id = ativ.subfase_id
-INNER JOIN macrocontrole.lote AS l INNER JOIN l.id = ativ.lote_id
-GROUP BY etapa_id, subfase_id, lote_id
-ORDER BY etapa_id, subfase_id, lote_id;
+INNER JOIN macrocontrole.etapa AS e ON e.id = ativ.etapa_id
+INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
+INNER JOIN macrocontrole.lote AS l ON l.id = ativ.lote_id
+GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.lote_id
+ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.lote_id;
 
 CREATE VIEW acompanhamento.atividades_em_execucao AS
 SELECT ee.id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome,
 u.id AS usuario_id, 
-tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno
+tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
 ee.data_inicio, ee.id as atividade_id
 FROM macrocontrole.atividade AS ee
 INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
@@ -172,7 +173,7 @@ ORDER BY ee.data_inicio ASC;
 CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
 SELECT ee.id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome, u.id AS usuario_id, 
-tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno
+tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
 ee.data_inicio, ee.data_fim, ee.id as atividade_id
 FROM macrocontrole.atividade AS ee
 INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
@@ -220,7 +221,7 @@ $BODY$
     EXECUTE 'DROP VIEW IF EXISTS acompanhamento.subfase_'|| subfase_ident || '_' || subfase_nome;
 
     DELETE FROM public.layer_styles
-    WHERE f_table_schema = 'acompanhamento' AND f_table_name = 'subfase_'|| subfase_ident || '_' || subfase_nome AND stylename = 'acompanhamento_subfase';
+    WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('subfase_'|| subfase_ident || '_' || subfase_nome) AND stylename = 'acompanhamento_subfase';
 
     SELECT count(*) INTO num FROM macrocontrole.etapa WHERE subfase_id = subfase_ident;
     IF num > 0 THEN
@@ -262,32 +263,6 @@ $BODY$
 
       EXECUTE view_txt;
       EXECUTE 'GRANT ALL ON TABLE acompanhamento.subfase_' || subfase_ident || '_'  || subfase_nome || ' TO PUBLIC';
-
-
-    estilo_txt := '<!DOCTYPE qgis PUBLIC ''http://mrcc.com/qgis.dtd'' ''SYSTEM''>';
-    estilo_txt := estilo_txt || '<qgis styleCategories="Symbology|Labeling" labelsEnabled="1" version="3.4.10-Madeira">';
-    rotulo_config := '<settings>'
-    '<text-style multilineHeight="1" blendMode="0" previewBkgrdColor="#ffffff" fontCapitals="0" fontWeight="50" textColor="0,0,0,255" fontWordSpacing="0" fontSizeMapUnitScale="3x:0,0,0,0,0,0" fontStrikeout="0" fontUnderline="0" fontSizeUnit="MapUnit" namedStyle="Normal" fieldName="{{ORDEM}}" fontItalic="0" textOpacity="1" useSubstitutions="0" fontSize="0.04" fontLetterSpacing="0" isExpression="1" fontFamily="Arial">'
-    '<text-buffer bufferOpacity="1" bufferDraw="1" bufferSizeUnits="MM" bufferSize="1" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferNoFill="1" bufferBlendMode="0" bufferColor="255,255,255,255" bufferJoinStyle="128"/>'
-    '<background shapeOffsetX="0" shapeJoinStyle="64" shapeSizeX="0" shapeBorderWidthUnit="MM" shapeRotationType="0" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeOpacity="1" shapeRadiiUnit="MM" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeBorderColor="128,128,128,255" shapeType="0" shapeFillColor="255,255,255,255" shapeSizeUnit="MM" shapeRotation="0" shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeRadiiX="0" shapeOffsetY="0" shapeBlendMode="0" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeRadiiY="0" shapeDraw="0" shapeSizeY="0" shapeBorderWidth="0" shapeSVGFile="" shapeSizeType="0" shapeOffsetUnit="MM"/>'
-    '<shadow shadowDraw="0" shadowOffsetDist="1" shadowOffsetGlobal="1" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetAngle="135" shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowRadius="1.5" shadowOffsetUnit="MM" shadowOpacity="0.7" shadowRadiusAlphaOnly="0" shadowColor="0,0,0,255" shadowScale="100" shadowRadiusUnit="MM" shadowBlendMode="6" shadowUnder="0"/>'
-    '<substitutions/>'
-    '</text-style>'
-    '<text-format useMaxLineLengthForAutoWrap="1" reverseDirectionSymbol="0" wrapChar="" rightDirectionSymbol=">" formatNumbers="0" autoWrapLength="0" placeDirectionSymbol="0" addDirectionSymbol="0" decimals="3" multilineAlign="4294967295" plussign="0" leftDirectionSymbol="&lt;"/>'
-    '<placement distMapUnitScale="3x:0,0,0,0,0,0" centroidWhole="1" preserveRotation="1" placementFlags="10" repeatDistanceMapUnitScale="3x:0,0,0,0,0,0" labelOffsetMapUnitScale="3x:0,0,0,0,0,0" fitInPolygonOnly="0" maxCurvedCharAngleOut="-25" rotationAngle="0" distUnits="MM" maxCurvedCharAngleIn="25" repeatDistanceUnits="MM" offsetType="0" dist="0" offsetUnits="MM" xOffset="0" placement="1" priority="5" repeatDistance="0" centroidInside="0" yOffset="0" quadOffset="4" predefinedPositionOrder="TR,TL,BR,BL,R,L,TSR,BSR"/>'
-    '<rendering scaleMin="0" labelPerPart="0" obstacleType="0" zIndex="0" obstacleFactor="1" maxNumLabels="2000" fontMaxPixelSize="10000" fontMinPixelSize="3" scaleVisibility="0" limitNumLabels="0" mergeLines="0" fontLimitPixelSize="0" displayAll="0" obstacle="1" drawLabels="1" scaleMax="0" upsidedownLabels="0" minFeatureSize="0"/>'
-    '<dd_properties>'
-    '<Option type="Map">'
-    '<Option name="name" value="" type="QString"/>'
-    '<Option name="properties"/>'
-    '<Option name="type" value="collection" type="QString"/>'
-    '</Option>'
-    '</dd_properties>'
-    '</settings>'
-    estilo_txt := estilo_txt || '<blendMode>0</blendMode><featureBlendMode>0</featureBlendMode><layerGeometryType>2</layerGeometryType></qgis>';
-
-    INSERT INTO public.layer_styles(f_table_catalog, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, useasdefault, owner, ui, update_time) VALUES
-    (current_database(), 'acompanhamento', 'subfase_'|| subfase_ident || '_' || subfase_nome, 'geom', 'acompanhamento_subfase', estilo_txt, NULL, TRUE, current_user, NULL, now());
 
     END IF;
 

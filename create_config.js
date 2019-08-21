@@ -147,7 +147,7 @@ const createConfig = () => {
           description text,
           owner varchar(255),
           ui text,
-          update_time timestamp without time zone DEFAULT now(),
+          update_time timestamp without time zone DEFAULT now()
         );
 
         GRANT USAGE ON schema public TO $1:name;
