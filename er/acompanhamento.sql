@@ -202,6 +202,8 @@ $BODY$
     DECLARE nome_fixed text;
     DECLARE r record;
     DECLARE iterator integer := 1;
+    DECLARE estilo_txt text;
+    DECLARE rotulo_config text;
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
@@ -216,6 +218,9 @@ $BODY$
           INTO subfase_nome FROM macrocontrole.subfase WHERE id = subfase_ident;
 
     EXECUTE 'DROP VIEW IF EXISTS acompanhamento.subfase_'|| subfase_ident || '_' || subfase_nome;
+
+    DELETE FROM public.layer_styles
+    WHERE f_table_schema = 'acompanhamento' AND f_table_name = 'subfase_'|| subfase_ident || '_' || subfase_nome AND stylename = 'acompanhamento_subfase';
 
     SELECT count(*) INTO num FROM macrocontrole.etapa WHERE subfase_id = subfase_ident;
     IF num > 0 THEN
@@ -257,6 +262,32 @@ $BODY$
 
       EXECUTE view_txt;
       EXECUTE 'GRANT ALL ON TABLE acompanhamento.subfase_' || subfase_ident || '_'  || subfase_nome || ' TO PUBLIC';
+
+
+    estilo_txt := '<!DOCTYPE qgis PUBLIC ''http://mrcc.com/qgis.dtd'' ''SYSTEM''>';
+    estilo_txt := estilo_txt || '<qgis styleCategories="Symbology|Labeling" labelsEnabled="1" version="3.4.10-Madeira">';
+    rotulo_config := '<settings>'
+    '<text-style multilineHeight="1" blendMode="0" previewBkgrdColor="#ffffff" fontCapitals="0" fontWeight="50" textColor="0,0,0,255" fontWordSpacing="0" fontSizeMapUnitScale="3x:0,0,0,0,0,0" fontStrikeout="0" fontUnderline="0" fontSizeUnit="MapUnit" namedStyle="Normal" fieldName="{{ORDEM}}" fontItalic="0" textOpacity="1" useSubstitutions="0" fontSize="0.04" fontLetterSpacing="0" isExpression="1" fontFamily="Arial">'
+    '<text-buffer bufferOpacity="1" bufferDraw="1" bufferSizeUnits="MM" bufferSize="1" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferNoFill="1" bufferBlendMode="0" bufferColor="255,255,255,255" bufferJoinStyle="128"/>'
+    '<background shapeOffsetX="0" shapeJoinStyle="64" shapeSizeX="0" shapeBorderWidthUnit="MM" shapeRotationType="0" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeOpacity="1" shapeRadiiUnit="MM" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeBorderColor="128,128,128,255" shapeType="0" shapeFillColor="255,255,255,255" shapeSizeUnit="MM" shapeRotation="0" shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeRadiiX="0" shapeOffsetY="0" shapeBlendMode="0" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeRadiiY="0" shapeDraw="0" shapeSizeY="0" shapeBorderWidth="0" shapeSVGFile="" shapeSizeType="0" shapeOffsetUnit="MM"/>'
+    '<shadow shadowDraw="0" shadowOffsetDist="1" shadowOffsetGlobal="1" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetAngle="135" shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowRadius="1.5" shadowOffsetUnit="MM" shadowOpacity="0.7" shadowRadiusAlphaOnly="0" shadowColor="0,0,0,255" shadowScale="100" shadowRadiusUnit="MM" shadowBlendMode="6" shadowUnder="0"/>'
+    '<substitutions/>'
+    '</text-style>'
+    '<text-format useMaxLineLengthForAutoWrap="1" reverseDirectionSymbol="0" wrapChar="" rightDirectionSymbol=">" formatNumbers="0" autoWrapLength="0" placeDirectionSymbol="0" addDirectionSymbol="0" decimals="3" multilineAlign="4294967295" plussign="0" leftDirectionSymbol="&lt;"/>'
+    '<placement distMapUnitScale="3x:0,0,0,0,0,0" centroidWhole="1" preserveRotation="1" placementFlags="10" repeatDistanceMapUnitScale="3x:0,0,0,0,0,0" labelOffsetMapUnitScale="3x:0,0,0,0,0,0" fitInPolygonOnly="0" maxCurvedCharAngleOut="-25" rotationAngle="0" distUnits="MM" maxCurvedCharAngleIn="25" repeatDistanceUnits="MM" offsetType="0" dist="0" offsetUnits="MM" xOffset="0" placement="1" priority="5" repeatDistance="0" centroidInside="0" yOffset="0" quadOffset="4" predefinedPositionOrder="TR,TL,BR,BL,R,L,TSR,BSR"/>'
+    '<rendering scaleMin="0" labelPerPart="0" obstacleType="0" zIndex="0" obstacleFactor="1" maxNumLabels="2000" fontMaxPixelSize="10000" fontMinPixelSize="3" scaleVisibility="0" limitNumLabels="0" mergeLines="0" fontLimitPixelSize="0" displayAll="0" obstacle="1" drawLabels="1" scaleMax="0" upsidedownLabels="0" minFeatureSize="0"/>'
+    '<dd_properties>'
+    '<Option type="Map">'
+    '<Option name="name" value="" type="QString"/>'
+    '<Option name="properties"/>'
+    '<Option name="type" value="collection" type="QString"/>'
+    '</Option>'
+    '</dd_properties>'
+    '</settings>'
+    estilo_txt := estilo_txt || '<blendMode>0</blendMode><featureBlendMode>0</featureBlendMode><layerGeometryType>2</layerGeometryType></qgis>';
+
+    INSERT INTO public.layer_styles(f_table_catalog, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, useasdefault, owner, ui, update_time) VALUES
+    (current_database(), 'acompanhamento', 'subfase_'|| subfase_ident || '_' || subfase_nome, 'geom', 'acompanhamento_subfase', estilo_txt, NULL, TRUE, current_user, NULL, now());
 
     END IF;
 
