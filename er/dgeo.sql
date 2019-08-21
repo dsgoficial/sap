@@ -61,4 +61,13 @@ CREATE TABLE dgeo.layer_rules(
 	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
+CREATE VIEW dgeo.menus AS
+SELECT DISTINCT(nome_menu) AS nome FROM dgeo.layer_menus;
+
+CREATE VIEW dgeo.styles AS
+SELECT DISTINCT(stylename) AS nome FROM dgeo.layer_styles;
+
+CREATE VIEW dgeo.rules AS
+SELECT DISTINCT(grupo_regra) AS nome FROM dgeo.layer_rules;
+
 COMMIT;
