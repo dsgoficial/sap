@@ -82,7 +82,7 @@ const router = express.Router();
  *
  */
 router.post("/finaliza", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, producaoModel.finaliza);
+  let validationResult = Joi.validate(req.body, producaoModel.finaliza, { stripUnknown: true });;
   if (validationResult.error) {
     const err = new Error("Finaliza Post validation error");
     err.status = 400;
@@ -301,7 +301,7 @@ router.post("/resposta_questionario", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
     producaoModel.resposta_questionario
-  );
+    , { stripUnknown: true });
   if (validationResult.error) {
     const err = new Error("Envia questionario validation error");
     err.status = 400;
@@ -384,7 +384,7 @@ router.post("/problema_atividade", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
     producaoModel.problema_atividade
-  );
+    , { stripUnknown: true });
   if (validationResult.error) {
     const err = new Error("Problema atividade validation error");
     err.status = 400;

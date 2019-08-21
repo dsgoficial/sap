@@ -37,7 +37,6 @@ const testdb = async (usuario, senha) => {
       result = true;
     })
     .catch(function(error) {
-      console.log(error);
       result = false;
     });
 

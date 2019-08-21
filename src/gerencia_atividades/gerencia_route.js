@@ -13,7 +13,7 @@ const gerenciaModel = require("./gerencia_model");
 const router = express.Router();
 
 router.post("/estilos", verifyAdmin, async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, gerenciaModel.estilos);
+  let validationResult = Joi.validate(req.body, gerenciaModel.estilos, { stripUnknown: true });;
   if (validationResult.error) {
     const err = new Error("Estilos Post validation error");
     err.status = 400;
@@ -48,7 +48,7 @@ router.post("/estilos", verifyAdmin, async (req, res, next) => {
 });
 
 router.post("/regras", verifyAdmin, async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, gerenciaModel.regras);
+  let validationResult = Joi.validate(req.body, gerenciaModel.regras, { stripUnknown: true });;
   if (validationResult.error) {
     const err = new Error("Regras Post validation error");
     err.status = 400;
@@ -83,7 +83,7 @@ router.post("/regras", verifyAdmin, async (req, res, next) => {
 });
 
 router.post("/menus", verifyAdmin, async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, gerenciaModel.menus);
+  let validationResult = Joi.validate(req.body, gerenciaModel.menus, { stripUnknown: true });;
   if (validationResult.error) {
     const err = new Error("Menus Post validation error");
     err.status = 400;

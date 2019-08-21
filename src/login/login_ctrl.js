@@ -11,8 +11,7 @@ const controller = {};
 const verificaPlugins = async plugins => {
   try {
     const plugins_minimos = await db.any(
-      "SELECT nome, versao_minima FROM dgeo.plugin",
-      [usuario]
+      "SELECT nome, versao_minima FROM dgeo.plugin"
     );
     for (let i = 0; i < plugins_minimos.length; i++) {
       let notFound = true;
@@ -37,9 +36,6 @@ const verificaPlugins = async plugins => {
         return { error_plugin: err };
       }
     }
-    plugins_minimos.forEach(pm => {
-
-    });
 
     return { error_plugin: null };
   } catch (error) {

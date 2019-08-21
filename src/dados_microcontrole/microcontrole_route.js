@@ -106,7 +106,7 @@ const router = express.Router();
  *
  */
 router.post("/feicao", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, microcontroleModel.feicao);
+  let validationResult = Joi.validate(req.body, microcontroleModel.feicao, { stripUnknown: true });;
   if (validationResult.error) {
     const err = new Error("Microcontrole Feição Post validation error");
     err.status = 400;
@@ -198,7 +198,7 @@ router.post("/feicao", async (req, res, next) => {
  *
  */
 router.post("/apontamento", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, microcontroleModel.apontamento);
+  let validationResult = Joi.validate(req.body, microcontroleModel.apontamento, { stripUnknown: true });;
   if (validationResult.error) {
     const err = new Error("Microcontrole Apontamento Post validation error");
     err.status = 400;
@@ -290,7 +290,7 @@ router.post("/apontamento", async (req, res, next) => {
  *
  */
 router.post("/tela", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, microcontroleModel.tela);
+  let validationResult = Joi.validate(req.body, microcontroleModel.tela, { stripUnknown: true });;
   if (validationResult.error) {
     const err = new Error("Microcontrole Tela Post validation error");
     err.status = 400;

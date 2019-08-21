@@ -40,7 +40,7 @@ const calculaFila = async usuario => {
           a_re.tipo_situacao_id IN (1, 2, 3)
         )
         ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, fp_prioridade
+        GROUP BY id, fp_prioridade
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
         ORDER BY fp_prioridade
         LIMIT 1`,
@@ -85,7 +85,7 @@ const calculaFila = async usuario => {
           a_re.tipo_situacao_id IN (1, 2, 3)
         )
         ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, fpg_prioridade
+        GROUP BY id, fpg_prioridade
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
         ORDER BY fpg_prioridade
         LIMIT 1`,
@@ -126,7 +126,7 @@ const calculaFila = async usuario => {
           a_re.tipo_situacao_id IN (1, 2, 3)
         )
         ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, lo_prioridade, ut_prioridade
+        GROUP BY id, lo_prioridade, ut_prioridade
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
         ORDER BY lo_prioridade, ut_prioridade
         LIMIT 1`,
@@ -177,13 +177,13 @@ const calculaFila = async usuario => {
           INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
           INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
           INNER JOIN macrocontrole.etapa AS et ON et.id = a.etapa_id
-          INNER JOIN macrocontrole.subfase AS sub ON sub.id et.subfase_id
+          INNER JOIN macrocontrole.subfase AS sub ON sub.id = et.subfase_id
           INNER JOIN macrocontrole.fase AS fa ON fa.id = sub.fase_id
           INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
           INNER JOIN macrocontrole.restricao_etapa AS re ON re.etapa_posterior_id = a.etapa_id
           INNER JOIN macrocontrole.etapa AS et_re ON et_re.id = re.etapa_anterior_id AND et_re.subfase_id != et.subfase_id
-          INNER JOIN macrocontrole.subfase AS sub_re ON sub_re.id et_re.subfase_id
+          INNER JOIN macrocontrole.subfase AS sub_re ON sub_re.id = et_re.subfase_id
           INNER JOIN macrocontrole.fase AS fa_re ON fa_re.id = sub_re.fase_id AND fa_re.linha_producao_id = fa.linha_producao_id
           INNER JOIN macrocontrole.atividade AS a_re ON a_re.etapa_id = et_re.id
           INNER JOIN dgeo.usuario AS u_re ON u_re.id = a_re.usuario_id
@@ -221,7 +221,7 @@ const calculaFila = async usuario => {
           SELECT atividade_id FROM macrocontrole.fila_prioritaria_grupo
         )
         ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, lo_prioridade, pse_prioridade, ut_prioridade
+        GROUP BY id, lo_prioridade, pse_prioridade, ut_prioridade
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
         ORDER BY lo_prioridade, pse_prioridade, ut_prioridade
         LIMIT 1`,
@@ -238,6 +238,7 @@ const calculaFila = async usuario => {
       return { erro: null, prioridade: prioridade };
     })
     .catch(error => {
+      console.log(error)
       const err = new Error("Falha durante calculo da fila.");
       err.status = 500;
       err.context = "distribuicao_ctrl";
@@ -252,10 +253,10 @@ const dadosProducao = async atividade_id => {
   return db
     .task(async t => {
       let dadosut = await t.one(
-        `SELECT ee.unidade_trabalho_id, ee.etapa_id, u.id as usuario_id, u.nome_guerra, up.tipo_perfil_sistema_id, s.id as subfase_id, s.nome as subfase_nome, 
+        `SELECT ee.unidade_trabalho_id, ee.etapa_id, u.id as usuario_id, u.nome_guerra, s.id as subfase_id, s.nome as subfase_nome, 
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
         ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.code as etapa_code, e.nome as etapa_nome, ee.observacao as observacao_atividade,
-        se.observacao AS observacao_etapa, ut.observacao AS observacao_unidade_trabalho, ut.tamanho_buffer, s.observacao AS observacao_subfase
+        se.observacao AS observacao_etapa, ut.observacao AS observacao_unidade_trabalho, s.observacao AS observacao_subfase
         FROM macrocontrole.atividade as ee
         INNER JOIN macrocontrole.etapa as se ON se.id = ee.etapa_id
         INNER JOIN dominio.tipo_etapa as e ON e.code = se.tipo_etapa_id
@@ -263,7 +264,6 @@ const dadosProducao = async atividade_id => {
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
         LEFT JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
-        LEFT JOIN macrocontrole.usuario_perfil_sistema AS up ON up.usuario_id = u.id
         WHERE ee.id = $1 and ee.tipo_situacao_id != 6`,
         [atividade_id]
       );
@@ -271,7 +271,6 @@ const dadosProducao = async atividade_id => {
       const info = {};
       info.usuario_id = dadosut.usuario_id;
       info.usuario = dadosut.nome_guerra;
-      info.perfil = dadosut.tipo_perfil_sistema_id;
       info.atividade = {};
 
       let camadas;
@@ -280,7 +279,7 @@ const dadosProducao = async atividade_id => {
 
       if (dadosut.etapa_code == 1 || dadosut.etapa_code == 4) {
         camadas = await t.any(
-          `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.escala_trabalho, pc.atributo_filtro_subfase, 
+          `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.escala_trabalho, pc.atributo_filtro_subfase
           FROM macrocontrole.perfil_propriedades_camada AS pc
           INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
           WHERE pc.subfase_id = $1 and not pc.camada_apontamento`,
@@ -296,7 +295,7 @@ const dadosProducao = async atividade_id => {
         );
       } else {
         camadas = await t.any(
-          `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.escala_trabalho, pc.atributo_filtro_subfase, pr.camada_apontamento, pr.atributo_justificativa_apontamento, pr.atributo_situacao_correcao
+          `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.escala_trabalho, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
           FROM macrocontrole.perfil_propriedades_camada AS pc
           INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
           WHERE pc.subfase_id = $1`,
@@ -314,14 +313,15 @@ const dadosProducao = async atividade_id => {
 
       if (dadosut.etapa_code == 2) {
         menus = await t.any(
-          `SELECT mp.nome_do_perfil, mp.descricao, mp.perfil, mp.ordem_menu  FROM macrocontrole.perfil_menu AS pm
+          `SELECT mp.nome_menu, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
+          INNER JOIN dgeo.layer_menus AS mp On mp.nome_menu = pm.nome
           WHERE subfase_id = $1`,
           [dadosut.subfase_id]
         );
       } else {
         menus = await t.any(
-          `SELECT mp.nome_do_perfil, mp.descricao, mp.perfil, mp.ordem_menu  FROM macrocontrole.perfil_menu AS pm
-          INNER JOIN dgeo.menu_profile AS mp On mp.nome_do_perfil = pm.nome
+          `SELECT mp.nome_menu, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
+          INNER JOIN dgeo.layer_menus AS mp On mp.nome_menu = pm.nome
           WHERE subfase_id = $1 and not menu_revisao`,
           [dadosut.subfase_id]
         );
@@ -335,7 +335,7 @@ const dadosProducao = async atividade_id => {
       );
 
       let regras = await t.any(
-        `SELECT lr.tipo_regra, lr.camada, lr.atributo, lr.regra, lr.nome, lr.cor_rgb, lr.tipo_estilo, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
+        `SELECT lr.tipo_regra, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
         INNER JOIN dgeo.layer_rules AS lr ON lr.tipo_regra = pr.nome
         WHERE pr.subfase_id = $1`,
         [dadosut.subfase_id]
@@ -395,8 +395,7 @@ const dadosProducao = async atividade_id => {
       info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
       info.atividade.geom = dadosut.unidade_trabalho_geom;
       info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
-      info.atividade.buffer_unidade_trabalho = dadosut.tamanho_buffer;
-      info.atividade.etapa_id = etapa_id;
+      info.atividade.etapa_id = dadosut.etapa_id;
       info.atividade.tipo_etapa_id = dadosut.etapa_code;
       info.atividade.nome =
         dadosut.subfase_nome +
@@ -410,7 +409,7 @@ const dadosProducao = async atividade_id => {
         porta: dadosut.porta
       };
 
-      info.atividade.fme = []; //modificar no ferramentas de produção para aceeitar tabelas individuais
+      info.atividade.fme = []; 
       fme.forEach(f => {
         info.atividade.fme.push({
           rotina: f.rotina,

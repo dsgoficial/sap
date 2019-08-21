@@ -157,7 +157,7 @@ ALTER FUNCTION macrocontrole.etapa_verifica_rev_corr()
 
 CREATE TRIGGER etapa_verifica_rev_corr
 BEFORE UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
+FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
 
 --
 
