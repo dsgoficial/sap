@@ -104,7 +104,7 @@ ALTER FUNCTION macrocontrole.verifica_pre_requisito_subfase()
 
 CREATE TRIGGER verifica_pre_requisito_subfase
 BEFORE UPDATE OR INSERT ON macrocontrole.pre_requisito_subfase
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.verifica_pre_requisito_subfase();
+FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.verifica_pre_requisito_subfase();
 
 --
 
@@ -307,7 +307,7 @@ ALTER FUNCTION macrocontrole.verifica_restricao_etapa()
 
 CREATE TRIGGER verifica_restricao_etapa
 BEFORE UPDATE OR INSERT ON macrocontrole.restricao_etapa
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.verifica_restricao_etapa();
+FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.verifica_restricao_etapa();
 
 --
 
@@ -414,7 +414,7 @@ ALTER FUNCTION macrocontrole.atividade_verifica_subfase()
 
 CREATE TRIGGER atividade_verifica_subfase
 BEFORE UPDATE OR INSERT ON macrocontrole.atividade
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
+FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
 
 --
 
