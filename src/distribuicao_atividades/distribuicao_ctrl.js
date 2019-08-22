@@ -330,14 +330,18 @@ const dadosProducao = async atividade_id => {
       let estilos = await t.any(
         `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
         INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
-        WHERE pe.subfase_id = $1`,
+        INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
+        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
+        WHERE pe.subfase_id = $1 AND pc.subfase_id = $1`,
         [dadosut.subfase_id]
       );
 
       let regras = await t.any(
-        `SELECT lr.tipo_regra, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
-        INNER JOIN dgeo.layer_rules AS lr ON lr.tipo_regra = pr.nome
-        WHERE pr.subfase_id = $1`,
+        `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
+        INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra = pr.nome
+        INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
+        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
+        WHERE pr.subfase_id = $1 AND pc.subfase_id = $1`,
         [dadosut.subfase_id]
       );
 
@@ -761,13 +765,6 @@ controller.problemaAtividade = async (
     await db.tx(async t => {
       await t.any(
         `
-      INSERT INTO macrocontrole.problema_atividade(atividade_id, tipo_problema_id, descricao, resolvido)
-      VALUES($1,$2,$3,FALSE)
-      `,
-        [atividade_id, tipo_problema_id, descricao]
-      );
-      await t.any(
-        `
       UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 6
       WHERE id = $2
@@ -779,10 +776,10 @@ controller.problemaAtividade = async (
         [atividade_id]
       );
 
-      await t.any(
+      let new_id = await t.one(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
-      VALUES($1,$2,$3,3)
+      VALUES($1,$2,$3,3) RETURNING id
       `,
         [
           atividade.etapa_id,
@@ -790,7 +787,13 @@ controller.problemaAtividade = async (
           atividade.usuario_id
         ]
       );
-
+      await t.any(
+        `
+      INSERT INTO macrocontrole.problema_atividade(atividade_id, tipo_problema_id, descricao, resolvido)
+      VALUES($1,$2,$3,FALSE)
+      `,
+        [new_id, tipo_problema_id, descricao]
+      );
       await t.any(
         `
         UPDATE macrocontrole.unidade_trabalho SET
