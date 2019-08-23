@@ -253,7 +253,7 @@ const dadosProducao = async atividade_id => {
   return db
     .task(async t => {
       let dadosut = await t.one(
-        `SELECT ee.unidade_trabalho_id, ee.etapa_id, u.id as usuario_id, u.nome_guerra, s.id as subfase_id, s.nome as subfase_nome, 
+        `SELECT ee.unidade_trabalho_id, ee.etapa_id, u.id as usuario_id, u.nome_guerra, s.id as subfase_id, s.nome as subfase_nome, ut.epsg, 
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
         ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.code as etapa_code, e.nome as etapa_nome, ee.observacao as observacao_atividade,
         se.observacao AS observacao_etapa, ut.observacao AS observacao_unidade_trabalho, s.observacao AS observacao_subfase
@@ -313,15 +313,15 @@ const dadosProducao = async atividade_id => {
 
       if (dadosut.etapa_code == 2) {
         menus = await t.any(
-          `SELECT mp.nome_menu, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
-          INNER JOIN dgeo.layer_menus AS mp On mp.nome_menu = pm.nome
+          `SELECT mp.nome, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
+          INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
           WHERE subfase_id = $1`,
           [dadosut.subfase_id]
         );
       } else {
         menus = await t.any(
-          `SELECT mp.nome_menu, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
-          INNER JOIN dgeo.layer_menus AS mp On mp.nome_menu = pm.nome
+          `SELECT mp.nome, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
+          INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
           WHERE subfase_id = $1 and not menu_revisao`,
           [dadosut.subfase_id]
         );
@@ -366,31 +366,25 @@ const dadosProducao = async atividade_id => {
         [dadosut.unidade_trabalho_id]
       );
 
-      let rotinas = await t.any(
-        `SELECT r.nome, pr.parametros, pr.gera_falso_positivo
-        FROM macrocontrole.perfil_rotina_dsgtools AS pr
-        INNER JOIN dominio.rotina_dsgtools AS r ON r.code = pr.rotina_dsgtools_id
-        WHERE pr.subfase_id = $1`,
+      let models_qgis = await t.any(
+        `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo
+        FROM macrocontrole.perfil_model_qgis AS pmq
+        INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.nome = lqm.nome
+        WHERE pmq.subfase_id = $1`,
         [dadosut.subfase_id]
       );
-      info.atividade.rotinas = {};
-      rotinas.forEach(r => {
-        if (!(r.nome in info.atividade.rotinas)) {
-          info.atividade.rotinas[r.nome] = [];
-        }
-        let aux = {
+      info.atividade.models_qgis = [];
+      models_qgis.forEach(r => {
+        info.atividade.models_qgis.push({
+          nome: r.nome,
+          descricao: r.descricao,
+          model_xml: r.model_xml,
           gera_falso_positivo: r.gera_falso_positivo
-        };
-
-        if (r.parametros) {
-          let param = JSON.parse(r.parametros);
-          aux = { ...aux, ...param };
-        }
-
-        info.atividade.rotinas[r.nome].push(aux);
+        });
       });
 
       info.atividade.id = atividade_id;
+      info.atividade.epsg = dadosut.epsg;
       info.atividade.observacao_atividade = dadosut.observacao_atividade;
       info.atividade.observacao_etapa = dadosut.observacao_etapa;
       info.atividade.observacao_subfase = dadosut.observacao_subfase;
@@ -490,14 +484,15 @@ const dadosProducao = async atividade_id => {
       ) {
         info.atividade.linhagem = await t.any(
           `SELECT a_ant.data_inicio, a_ant.data_fim, a_ant.nome_guerra, a_ant.posto_grad,
-          te.nome as etapa
+          a_ant.nome_etapa as etapa
           FROM macrocontrole.atividade AS a
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
           INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
           INNER JOIN
           (
-            SELECT tpg.nome_abrev AS posto_grad, u.nome_guerra, a.data_inicio, a.data_fim, a.unidade_trabalho_id, e.ordem, e.subfase_id FROM macrocontrole.atividade AS a
+            SELECT te.nome AS nome_etapa, tpg.nome_abrev AS posto_grad, u.nome_guerra, a.data_inicio, a.data_fim, a.unidade_trabalho_id, e.ordem, e.subfase_id FROM macrocontrole.atividade AS a
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
             INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
             INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
           ) 
@@ -792,7 +787,7 @@ controller.problemaAtividade = async (
       INSERT INTO macrocontrole.problema_atividade(atividade_id, tipo_problema_id, descricao, resolvido)
       VALUES($1,$2,$3,FALSE)
       `,
-        [new_id, tipo_problema_id, descricao]
+        [new_id.id, tipo_problema_id, descricao]
       );
       await t.any(
         `

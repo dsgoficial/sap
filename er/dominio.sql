@@ -113,15 +113,6 @@ INSERT INTO dominio.tipo_exibicao (code,nome) VALUES
 (2,'Exibir linhagem para revisores'),
 (3,'Sempre exibir linhagem');
 
-CREATE TABLE dominio.rotina_dsgtools(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO dominio.rotina_dsgtools (code, nome) VALUES
-(1, ''),
-(2, '');
-
 CREATE TABLE dominio.tipo_monitoramento(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL

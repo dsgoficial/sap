@@ -73,7 +73,7 @@ router.post("/", async (req, res, next) => {
     null,
     res,
     200,
-    { token }
+    { version: '2', token }
   );
 });
 

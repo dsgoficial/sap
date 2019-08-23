@@ -242,13 +242,12 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	UNIQUE(camada_id, subfase_id)
 );
 
-CREATE TABLE macrocontrole.perfil_rotina_dsgtools(
+CREATE TABLE macrocontrole.perfil_model_qgis(
 	id SERIAL NOT NULL PRIMARY KEY,
-	rotina_dsgtools_id INTEGER NOT NULL REFERENCES dominio.rotina_dsgtools (code),
-	parametros VARCHAR(255), --json de parametros conforme o padrão do dsgtools
+	nome VARCHAR(255) NOT NULL,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE (rotina_dsgtools_id, parametros, subfase_id)
+	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.banco_dados(
