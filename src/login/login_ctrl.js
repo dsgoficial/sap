@@ -16,7 +16,7 @@ const verificaPlugins = async plugins => {
     for (let i = 0; i < plugins_minimos.length; i++) {
       let notFound = true;
       plugins.forEach(p => {
-        if (p.nome === plugins_minimos[i].nome && semver.gt(p.versao, plugins_minimos[i].versao)) {
+        if (p.nome === plugins_minimos[i].nome && semver.gte(p.versao, plugins_minimos[i].versao_minima)) {
           notFound = false;
         }
       });
@@ -28,13 +28,13 @@ const verificaPlugins = async plugins => {
         })
         
         const err = new Error(
-          "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " + ', '.join(listplugins)
+          "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " + listplugins.join(', ')
         );
         err.status = 401;
         err.context = "login_ctrl";
         err.information = { plugins };
         return { error_plugin: err };
-      }
+      } 
     }
 
     return { error_plugin: null };

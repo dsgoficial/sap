@@ -52,6 +52,7 @@ CREATE TABLE dgeo.layer_rules(
   grupo_regra varchar(255) NOT NULL,
   tipo_regra varchar(255) NOT NULL,
   camada varchar(255) NOT NULL,
+  schema varchar(255) NOT NULL,
   atributo varchar(255) NOT NULL,
   regra TEXT NOT NULL,
   cor_rgb varchar(255) NOT NULL,
