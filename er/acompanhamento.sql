@@ -305,7 +305,7 @@ $BODY$
       view_txt := view_txt || ' FROM macrocontrole.unidade_trabalho AS ut';
       view_txt := view_txt || jointxt;
       view_txt := view_txt || ' INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id';
-      view_txt := view_txt || ' INNER JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id';
+      view_txt := view_txt || ' LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id';
       view_txt := view_txt || ' WHERE ut.subfase_id = ' || subfase_ident;
       view_txt := view_txt || wheretxt;
       view_txt := view_txt || ' ORDER BY ut.prioridade;';
