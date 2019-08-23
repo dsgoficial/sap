@@ -9,7 +9,6 @@ const login = Joi.object().keys({
     Joi.object({
       nome: Joi.string().required(),
       versao: Joi.string()
-        .regex(/^\d+(\.\d+){0,2}$/)
         .required()
     })
   )
