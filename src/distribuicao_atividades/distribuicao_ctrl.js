@@ -169,7 +169,7 @@ const calculaFila = async usuario => {
           WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 1 AND 
           ut.geom && ut_re.geom AND
           st_relate(ut.geom, ut_re.geom, '2********') AND
-          a_re.tipo_situacao_id IN (1, 2, 3)
+          a_re.tipo_situacao_id IN (1, 2, 3) AND a.tipo_situacao_id = 1
         )
         AND ee.id NOT IN
         (
@@ -192,7 +192,7 @@ const calculaFila = async usuario => {
               (re.tipo_restricao_id = 1 AND a_re.usuario_id = $1) OR
               (re.tipo_restricao_id = 2 AND a_re.usuario_id != $1) OR 
               (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
-          )
+          ) AND a_re.tipo_situacao_id != 6  AND a.tipo_situacao_id = 1
         )
         AND ee.id NOT IN
         (
@@ -210,7 +210,7 @@ const calculaFila = async usuario => {
             (re.tipo_restricao_id = 1 AND ee_re.usuario_id = $1) OR
             (re.tipo_restricao_id = 2 AND ee_re.usuario_id != $1) OR 
             (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
-          )
+          ) AND ee_re.tipo_situacao_id != 6  AND ee.tipo_situacao_id = 1
         )
         AND ee.id NOT IN
         (
@@ -238,7 +238,7 @@ const calculaFila = async usuario => {
       return { erro: null, prioridade: prioridade };
     })
     .catch(error => {
-      console.log(error)
+      console.log(error);
       const err = new Error("Falha durante calculo da fila.");
       err.status = 500;
       err.context = "distribuicao_ctrl";
@@ -407,7 +407,7 @@ const dadosProducao = async atividade_id => {
         porta: dadosut.porta
       };
 
-      info.atividade.fme = []; 
+      info.atividade.fme = [];
       fme.forEach(f => {
         info.atividade.fme.push({
           rotina: f.rotina,
@@ -842,7 +842,7 @@ controller.atividade = async atividade_id => {
       [atividade_id]
     );
 
-    if(atividade){
+    if (atividade) {
       const { erro, dados } = await dadosProducao(atividade_id);
       if (erro) {
         return { verificaError: erro, dados: null };
@@ -857,7 +857,6 @@ controller.atividade = async atividade_id => {
       err.information.trace = error;
       return { verificaError: err, dados: null };
     }
-
   } catch (error) {
     const err = new Error("Falha durante retorno dos dados da atividade.");
     err.status = 500;
