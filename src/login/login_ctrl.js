@@ -15,11 +15,13 @@ const verificaPlugins = async plugins => {
     );
     for (let i = 0; i < plugins_minimos.length; i++) {
       let notFound = true;
-      plugins.forEach(p => {
-        if (p.nome === plugins_minimos[i].nome && semver.gte(p.versao, plugins_minimos[i].versao_minima)) {
-          notFound = false;
-        }
-      });
+      if(plugins){
+        plugins.forEach(p => {
+          if (p.nome === plugins_minimos[i].nome && semver.gte(p.versao, plugins_minimos[i].versao_minima)) {
+            notFound = false;
+          }
+        });
+      }
 
       if (notFound) {
         let listplugins = []
@@ -79,11 +81,11 @@ controller.login = async (usuario, senha, plugins) => {
   }
 
   try {
-    const { id } = await db.one(
-      "SELECT id FROM dgeo.usuario WHERE login = $1 and ativo IS TRUE",
+    const { id, administrador } = await db.one(
+      "SELECT id, administrador FROM dgeo.usuario WHERE login = $1 and ativo IS TRUE",
       [usuario]
     );
-    const token = jwt.sign({ id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id, administrador }, process.env.JWT_SECRET, {
       expiresIn: "10h"
     });
 
