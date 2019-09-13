@@ -109,9 +109,9 @@ CREATE TABLE dominio.tipo_exibicao(
 );
 
 INSERT INTO dominio.tipo_exibicao (code,nome) VALUES
-(1,'Não exibir linhagem'),
-(2,'Exibir linhagem para revisores'),
-(3,'Sempre exibir linhagem');
+(1,'Não exibir usuários na linhagem'),
+(2,'Exibir usuários na linhagem somente para revisores'),
+(3,'Sempre exibir usuários na linhagem');
 
 CREATE TABLE dominio.tipo_monitoramento(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -146,7 +146,7 @@ INSERT INTO dominio.tipo_insumo (code, nome) VALUES
 (5, 'URL'),
 (6, 'Serviço WMS'),
 (7, 'Serviço WFS'),
-(8, 'Projeto QGIS');
+(8, 'XYZ Tiles');
 
 CREATE TABLE dominio.tipo_situacao(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -161,6 +161,18 @@ INSERT INTO dominio.tipo_situacao (code, nome) VALUES
 (5, 'Não será executada'),
 (6, 'Não finalizada');
 
+CREATE TABLE dominio.tipo_configuracao(
+	code SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255)
+);
+
+INSERT INTO dominio.tipo_configuracao (code, nome) VALUES
+(1, 'Grid'),
+(2, 'DSGTools - Mão livre'),
+(3, 'DSGTools - Seletor Genérico'),
+(4, 'DSGTools - Ângulo Reto'),
+(5, 'DSGTools - Informação Raster');
+
 CREATE TABLE dominio.tipo_problema(
 	code SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
@@ -171,25 +183,26 @@ INSERT INTO dominio.tipo_problema (code, nome) VALUES
 (2, 'Problema em etapa anterior, necessita ser refeita'),
 (3, 'Erro durante execução da atividade atual'),
 (4, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida'),
+(5, 'Problema nas rotinas')
 (99, 'Outros');
 
---CREATE TABLE dominio.tipo_perda_recurso_humano(
---	code SERIAL NOT NULL PRIMARY KEY,
---	nome VARCHAR(255) NOT NULL
---);
+CREATE TABLE dominio.tipo_perda_recurso_humano(
+	code SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
 
---INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES
---(1, 'Atividades extra PIT'),
---(2, 'Atividades militares'),
---(3, 'Atividades administrativas'),
---(4, 'Problemas técnicos'),
---(5, 'Feriado'),
---(6, 'Férias'),
---(7, 'Dispensa por motivo de saúde'),
---(8, 'Dispensa como recompensa'),
---(9, 'Dispensa por regresso de atividade de campo'),
---(10, 'Designação para realizar curso / capacitação'),
---(11, 'Designação para ministrar curso / capacitação'),
---(12, 'Designação para participação em eventos');
+INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES
+(1, 'Atividades extra SAP'),
+(2, 'Atividades militares'),
+(3, 'Atividades administrativas'),
+(4, 'Problemas técnicos'),
+(5, 'Feriado'),
+(6, 'Férias'),
+(7, 'Dispensa por motivo de saúde'),
+(8, 'Dispensa como recompensa'),
+(9, 'Dispensa de atividade de campo'),
+(10, 'Designação para realizar curso / capacitação'),
+(11, 'Designação para ministrar curso / capacitação'),
+(12, 'Designação para participação em eventos');
 
 COMMIT;

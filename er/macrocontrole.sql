@@ -178,7 +178,14 @@ CREATE TABLE macrocontrole.perfil_fme(
 	UNIQUE(servidor,porta,rotina,subfase_id)
 );
 
---TODO: configurar outras opções do DSGTools
+CREATE TABLE macrocontrole.perfil_configuracao_qgis(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tipo_configuracao_id INTEGER NOT NULL REFERENCES dominio.tipo_configuracao (code),
+	parametros TEXT,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(tipo_configuracao_id,subfase_id)
+);
+
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -206,6 +213,7 @@ CREATE TABLE macrocontrole.perfil_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_exibicao_id INTEGER NOT NULL REFERENCES dominio.tipo_exibicao (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	atributos_linhagem TEXT,
 	UNIQUE(subfase_id)
 );
 
@@ -453,13 +461,14 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	UNIQUE(atividade_id, perfil_producao_id)
 );
 
---CREATE TABLE macrocontrole.perda_recurso_humano(
---	id SERIAL NOT NULL PRIMARY KEY,
--- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
--- 	tipo_perda_recurso_humano_id INTEGER NOT NULL REFERENCES dominio.tipo_perda_recurso_humano (code),
---	horas REAL NOT NULL,
---	data DATE NOT NULL
---);
+CREATE TABLE macrocontrole.perda_recurso_humano(
+	id SERIAL NOT NULL PRIMARY KEY,
+ 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+ 	tipo_perda_recurso_humano_id INTEGER NOT NULL REFERENCES dominio.tipo_perda_recurso_humano (code),
+	horas REAL,
+	data DATE NOT NULL,
+	observacao TEXT
+);
 
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,

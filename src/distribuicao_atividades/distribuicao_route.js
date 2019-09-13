@@ -312,7 +312,7 @@ router.post("/resposta_questionario", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await producaoCtrl.respondeQuestionario(
+  let { error } = await producaoCtrl.responde_questionario(
     req.body.atividade_id,
     req.body.respostas
   );
@@ -338,7 +338,7 @@ router.post("/resposta_questionario", async (req, res, next) => {
 /**
  * @api {post} /distribuicao/problema_atividade Envia um problema na atividade
  * @apiVersion 1.0.0
- * @apiName EnviaProblemaAtividade
+ * @apiName Enviaproblema_atividade
  * @apiGroup Distribuicao
  * @apiPermission operador
  *
@@ -395,7 +395,7 @@ router.post("/problema_atividade", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await producaoCtrl.problemaAtividade(
+  let { error } = await producaoCtrl.problema_atividade(
     req.body.atividade_id,
     req.body.tipo_problema_id,
     req.body.descricao
@@ -465,7 +465,7 @@ router.get("/tipo_problema", async (req, res, next) => {
  *
  */
 router.get("/atividade/:id", verifyAdmin, async (req, res, next) => {
-  let { verificaError, dados } = await producaoCtrl.atividade(req.params.id);
+  let { verificaError, dados } = await producaoCtrl.get_atividade(req.params.id);
   if (verificaError) {
     return next(verificaError);
   }

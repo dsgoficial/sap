@@ -8,8 +8,25 @@ const semver = require("semver");
 
 const controller = {};
 
-const verificaPlugins = async plugins => {
+const verificaPlugins = async (plugins, qgis) => {
   try {
+    const qgis_minimo = await db.any(
+      "SELECT versao_minima FROM dgeo.versao_qgis"
+    );
+    let qgis_wrong_version = true;
+    if(qgis && semver.gte(qgis, qgis_minimo.versao_minima)){
+      qgis_wrong_version = false;
+    }
+    if (qgis_wrong_version) {
+      const err = new Error(
+        "Versão incorreta do QGIS. A seguinte versão é necessária: " + qgis_minimo.versao_minima
+      );
+      err.status = 401;
+      err.context = "login_ctrl";
+      err.information = { plugins };
+      return { error_plugin: err };
+    } 
+
     const plugins_minimos = await db.any(
       "SELECT nome, versao_minima FROM dgeo.plugin"
     );
@@ -69,7 +86,7 @@ const gravaLogin = async usuario_id => {
   }
 };
 
-controller.login = async (usuario, senha, plugins) => {
+controller.login = async (usuario, senha, plugins, qgis) => {
   let verifycon = await testdb(usuario, senha);
   if (!verifycon) {
     const err = new Error("Usuário ou senha inválida.");
@@ -77,7 +94,7 @@ controller.login = async (usuario, senha, plugins) => {
     err.context = "login_ctrl";
     err.information = {};
     err.information.usuario = usuario;
-    return { loginError: err, token: null };
+    return { loginError: err, token: null, administrador: null };
   }
 
   try {
@@ -89,16 +106,16 @@ controller.login = async (usuario, senha, plugins) => {
       expiresIn: "10h"
     });
 
-    let { error_plugin } = await verificaPlugins(plugins);
+    let { error_plugin } = await verificaPlugins(plugins, qgis);
     if (error_plugin) {
-      return { loginError: error_plugin, token: null };
+      return { loginError: error_plugin, token: null, administrador: null };
     }
 
     let { error } = await gravaLogin(id);
     if (error) {
-      return { loginError: error, token: null };
+      return { loginError: error, token: null, administrador: null };
     }
-    return { loginError: null, token: token };
+    return { loginError: null, token, administrador };
   } catch (error) {
     const err = new Error("Usuário não cadastrado no SAP ou inativo.");
     err.status = 401;
@@ -106,7 +123,7 @@ controller.login = async (usuario, senha, plugins) => {
     err.information = {};
     err.information.usuario = usuario;
     err.information.trace = error;
-    return { loginError: err, token: null };
+    return { loginError: err, token: null, administrador: null };
   }
 };
 

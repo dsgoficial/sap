@@ -11,7 +11,8 @@ const login = Joi.object().keys({
       versao: Joi.string()
         .required()
     })
-  )
+  ),
+  qgis: Joi.string()
 });
 
 module.exports.login = login;

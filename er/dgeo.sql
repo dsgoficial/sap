@@ -23,6 +23,12 @@ CREATE TABLE dgeo.plugin(
   CHECK (versao_minima ~ '^\d+(\.\d+){0,2}$')
 );
 
+CREATE TABLE dgeo.versao_qgis(
+  id SERIAL NOT NULL PRIMARY KEY,
+  versao_minima TEXT,
+  CHECK (versao_minima ~ '^\d+(\.\d+){0,2}$')
+);
+
 CREATE TABLE dgeo.layer_menus(
 	  id SERIAL NOT NULL PRIMARY KEY,
     nome text NOT NULL,

@@ -57,10 +57,11 @@ router.post("/", async (req, res, next) => {
     return next(err);
   }
 
-  let { loginError, token } = await loginCtrl.login(
+  let { loginError, token, administrador } = await loginCtrl.login(
     req.body.usuario,
     req.body.senha,
-    req.body.plugins
+    req.body.plugins,
+    req.body.qgis
   );
   if (loginError) {
     return next(loginError);
@@ -73,7 +74,7 @@ router.post("/", async (req, res, next) => {
     null,
     res,
     200,
-    { version: '2', token }
+    { version: '2', token, administrador }
   );
 });
 
