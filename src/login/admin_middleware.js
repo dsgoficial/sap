@@ -5,7 +5,7 @@ const { sendJsonAndLog } = require("../logger");
 //middleware para verificar se o usuário é administrador
 const verifyAdmin = function(req, res, next) {
   
-  if(administrador in req.body && req.body.administrador){
+  if("administrador" in req.body && req.body.administrador){
     next();
   } else {
     let information = {

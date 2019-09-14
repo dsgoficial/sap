@@ -4,7 +4,7 @@ const { db } = require("../database");
 
 const controller = {};
 
-const calculaFila = async usuario => {
+const calcula_fila = async usuario => {
   return db
     .task(async t => {
       let fila_prioritaria = await t.oneOrNone(
@@ -238,7 +238,6 @@ const calculaFila = async usuario => {
       return { erro: null, prioridade: prioridade };
     })
     .catch(error => {
-      console.log(error);
       const err = new Error("Falha durante calculo da fila.");
       err.status = 500;
       err.context = "distribuicao_ctrl";
@@ -249,7 +248,7 @@ const calculaFila = async usuario => {
     });
 };
 
-const dadosProducao = async atividade_id => {
+const dados_producao = async atividade_id => {
   return db
     .task(async t => {
       let dadosut = await t.one(
@@ -264,7 +263,7 @@ const dadosProducao = async atividade_id => {
         INNER JOIN macrocontrole.unidade_trabalho as ut ON ut.id = ee.unidade_trabalho_id
         LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
         LEFT JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
-        WHERE ee.id = $1 and ee.tipo_situacao_id != 6`,
+        WHERE ee.id = $1`,
         [atividade_id]
       );
 
@@ -350,6 +349,11 @@ const dadosProducao = async atividade_id => {
         [dadosut.subfase_id]
       );
 
+      let configuracao = await t.any(
+        "SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $1",
+        [dadosut.subfase_id]
+      );
+
       let monitoramento = await t.any(
         `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
         FROM macrocontrole.perfil_monitoramento AS pm
@@ -420,6 +424,7 @@ const dadosProducao = async atividade_id => {
       info.atividade.estilos = estilos;
       info.atividade.regras = regras;
       info.atividade.menus = menus;
+      info.atividade.configuracoes = configuracao;
 
       info.atividade.camadas = [];
 
@@ -476,33 +481,58 @@ const dadosProducao = async atividade_id => {
         "SELECT tipo_exibicao_id FROM macrocontrole.perfil_linhagem WHERE subfase_id = $1 LIMIT 1",
         [dadosut.subfase_id]
       );
-
+      let linhagem;
       if (
         perfil_linhagem &&
         ((perfil_linhagem.tipo_exibicao_id == 2 && dadosut.etapa_code == 2) ||
           perfil_linhagem.tipo_exibicao_id == 3)
       ) {
-        info.atividade.linhagem = await t.any(
-          `SELECT a_ant.data_inicio, a_ant.data_fim, a_ant.nome_guerra, a_ant.posto_grad,
-          a_ant.nome_etapa as etapa
+        linhagem = await t.any(
+          `SELECT a_ant.data_inicio, a_ant.data_fim, u.nome_guerra, tpg.nome_abrev AS posto_grad,
+          replace(etapa.nome || ' - ' || etapa.numero, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
           FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-          INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-          INNER JOIN
-          (
-            SELECT te.nome AS nome_etapa, tpg.nome_abrev AS posto_grad, u.nome_guerra, a.data_inicio, a.data_fim, a.unidade_trabalho_id, e.ordem, e.subfase_id FROM macrocontrole.atividade AS a
-            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-            INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-            INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
-            INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-          ) 
-          AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND a_ant.subfase_id = e.subfase_id AND e.ordem > a_ant.ordem
+          INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+          INNER JOIN (
+            SELECT e.nome, se.id, se.ordem,
+            rank() OVER (PARTITION BY e.nome ORDER BY se.ordem) as numero 
+            FROM dominio.tipo_etapa AS e
+            INNER JOIN macrocontrole.etapa AS se ON e.code = se.tipo_etapa_id) AS etapa ON etapa.id = a_ant.etapa_id
+          INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a_ant.tipo_situacao_id
+          INNER JOIN dgeo.usuario AS u ON u.id = a_ant.usuario_id
+          INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
           WHERE a.id = $1
-          ORDER BY a_ant.ordem
+          ORDER BY etapa.ordem, a_ant.data_fim
+          `,
+          [atividade_id]
+        );
+      } else {
+        linhagem = await t.any(
+          `SELECT a_ant.data_inicio, a_ant.data_fim,
+          replace(etapa.nome || ' - ' || etapa.numero, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
+          FROM macrocontrole.atividade AS a
+          INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+          INNER JOIN (
+            SELECT e.nome, se.id, se.ordem,
+            rank() OVER (PARTITION BY e.nome ORDER BY se.ordem) as numero 
+            FROM dominio.tipo_etapa AS e
+            INNER JOIN macrocontrole.etapa AS se ON e.code = se.tipo_etapa_id) AS etapa ON etapa.id = a_ant.etapa_id
+          INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a_ant.tipo_situacao_id
+          WHERE a.id = $1
+          ORDER BY etapa.ordem, a_ant.data_fim
           `,
           [atividade_id]
         );
       }
+      linhagem.forEach(r => {
+        if (r.data_inicio) {
+          r.data_inicio = new Date(r.data_inicio).toLocaleString();
+        }
+        if (r.data_fim) {
+          r.data_fim = new Date(r.data_fim).toLocaleString();
+        }
+      });
+
+      info.atividade.linhagem = linhagem;
 
       let requisitos = await t.any(
         `SELECT r.descricao
@@ -555,7 +585,6 @@ const dadosProducao = async atividade_id => {
       return { erro: null, dados: info };
     })
     .catch(error => {
-      console.log(error);
       const err = new Error("Falha durante calculo dos dados de Producao.");
       err.status = 500;
       err.context = "distribuicao_ctrl";
@@ -582,7 +611,7 @@ controller.verifica = async usuario_id => {
           WHERE tipo_situacao_id = 2 and usuario_id = $1 and id != $2`,
         [usuario_id, em_andamento.id]
       );
-      const { erro, dados } = await dadosProducao(em_andamento.id);
+      const { erro, dados } = await dados_producao(em_andamento.id);
       if (erro) {
         return { verificaError: erro, dados: null };
       }
@@ -655,7 +684,7 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
 
 controller.inicia = async usuario_id => {
   const data_inicio = new Date();
-  const { erro, prioridade } = await calculaFila(usuario_id);
+  const { erro, prioridade } = await calcula_fila(usuario_id);
   if (erro) {
     return { iniciaError: erro, dados: null };
   }
@@ -696,7 +725,7 @@ controller.inicia = async usuario_id => {
       return result;
     })
     .then(async data => {
-      const { erro, dados } = await dadosProducao(prioridade.id);
+      const { erro, dados } = await dados_producao(prioridade.id);
       if (erro) {
         return { iniciaError: erro, dados: null };
       }
@@ -713,7 +742,7 @@ controller.inicia = async usuario_id => {
     });
 };
 
-controller.respondeQuestionario = async (atividade_id, respostas) => {
+controller.responde_questionario = async (atividade_id, respostas) => {
   const data_questionario = new Date();
   try {
     await db.tx(async t => {
@@ -750,7 +779,7 @@ controller.respondeQuestionario = async (atividade_id, respostas) => {
   }
 };
 
-controller.problemaAtividade = async (
+controller.problema_atividade = async (
   atividade_id,
   tipo_problema_id,
   descricao
@@ -833,7 +862,7 @@ controller.get_tipo_problema = async () => {
   }
 };
 
-controller.atividade = async atividade_id => {
+controller.get_atividade = async atividade_id => {
   try {
     let atividade = await db.oneOrNone(
       `SELECT a.etapa_id, a.unidade_trabalho_id
@@ -843,7 +872,7 @@ controller.atividade = async atividade_id => {
     );
 
     if (atividade) {
-      const { erro, dados } = await dadosProducao(atividade_id);
+      const { erro, dados } = await dados_producao(atividade_id);
       if (erro) {
         return { verificaError: erro, dados: null };
       }
@@ -865,6 +894,31 @@ controller.atividade = async atividade_id => {
     err.information.atividade_id = atividade_id;
     err.information.trace = error;
     return { verificaError: err, dados: null };
+  }
+};
+
+controller.get_atividade_usuario = async usuario_id => {
+  try {
+    const { erro, prioridade } = await calcula_fila(usuario_id);
+    if (erro) {
+      return { erro: erro, dados: null };
+    }
+
+    const { erro, dados } = await dados_producao(prioridade);
+    if (erro) {
+      return { erro: erro, dados: null };
+    }
+    return { erro: null, dados: dados };
+  } catch (error) {
+    const err = new Error(
+      "Falha durante retorno dos dados da atividade de um usuário."
+    );
+    err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.usuario_id = usuario_id;
+    err.information.trace = error;
+    return { erro: err, dados: null };
   }
 };
 
