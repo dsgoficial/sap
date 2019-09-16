@@ -114,6 +114,38 @@ const observacao = Joi.object().keys({
   observacao_unidade_trabalho: Joi.string()
 });
 
+const atividade_voltar = Joi.object().keys({
+  atividade_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  manter_usuarios: Joi.boolean().strict()
+  .required()
+});
+
+const atividade_avancar = Joi.object().keys({
+  atividade_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  concluida: Joi.boolean().strict()
+  .required()
+});
+
+const atividade_criar_revisao = Joi.object().keys({
+  atividade_id: Joi.number()
+    .integer()
+    .strict()
+    .required()
+});
+
+const atividade_criar_revcorr = Joi.object().keys({
+  atividade_id: Joi.number()
+    .integer()
+    .strict()
+    .required()
+});
+
 module.exports.estilos = estilos;
 module.exports.menus = menus;
 module.exports.regras = regras;
@@ -123,3 +155,7 @@ module.exports.atividade_reiniciar = atividade_reiniciar;
 module.exports.fila_prioritaria = fila_prioritaria;
 module.exports.fila_prioritaria_grupo = fila_prioritaria_grupo;
 module.exports.observacao = observacao;
+module.exports.atividade_voltar = atividade_voltar;
+module.exports.atividade_avancar = atividade_avancar;
+module.exports.atividade_criar_revisao = atividade_criar_revisao;
+module.exports.atividade_criar_revcorr = atividade_criar_revcorr;

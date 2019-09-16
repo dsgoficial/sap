@@ -540,6 +540,8 @@ $BODY$
     DECLARE fase_ident integer;
     DECLARE num integer;
     DECLARE fase_nome text;
+    DECLARE subfase_nome_old text;
+    DECLARE subfase_nome_new text;
     DECLARE nome_fixed text;
     DECLARE r record;
     DECLARE iterator integer := 1;
@@ -552,8 +554,34 @@ $BODY$
 
     IF TG_OP = 'DELETE' THEN
       fase_ident := OLD.fase_id;
+
+      subfase_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
+
+      EXECUTE 'DROP VIEW IF EXISTS acompanhamento.subfase_'|| OLD.id || '_' || subfase_nome_old;
+
+      DELETE FROM public.layer_styles
+      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('subfase_'|| OLD.id || '_' || subfase_nome_old) AND stylename = 'acompanhamento_subfase';
+
     ELSE
       fase_ident := NEW.fase_id;
+    END IF;
+
+    IF TG_OP = 'UPDATE' THEN
+      subfase_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
+
+      subfase_nome_new := translate(replace(lower(NEW.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
+
+      EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.subfase_'|| OLD.id || '_' || subfase_nome_old || ' RENAME TO subfase_' || NEW.id || '_' || subfase_nome_new;
+
+      UPDATE public.layer_styles SET f_table_name = ('subfase_'|| NEW.id || '_' || subfase_nome_new)
+      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('subfase_'|| OLD.id || '_' || subfase_nome_old) AND stylename = 'acompanhamento_subfase';
+
     END IF;
 
     SELECT translate(replace(lower(tp.nome),' ', '_'),  
@@ -572,26 +600,6 @@ $BODY$
 
     SELECT count(*) INTO num FROM macrocontrole.subfase WHERE fase_id = fase_ident;
     IF num > 0 THEN
-
-      IF num = 1 THEN
-  	    color_array := ARRAY['216,179,101','245,245,245', '90,180,172'];
-      ELSIF num = 2 THEN 
-  	    color_array := ARRAY['166,97,26','223,194,125', '128,205,193', '1,133,113'];
-      ELSIF num = 3 THEN 
-  	    color_array := ARRAY['166,97,26','223,194,125', '128,205,193', '1,133,113'];
-      ELSIF num = 4 THEN 
-  	    color_array := ARRAY['166,97,26','223,194,125', '128,205,193', '1,133,113'];
-      ELSIF num = 5 THEN 
-  	    color_array := ARRAY['166,97,26','223,194,125', '128,205,193', '1,133,113'];
-      ELSIF num = 6 THEN 
-  	    color_array := ARRAY['166,97,26','223,194,125', '128,205,193', '1,133,113'];
-      ELSIF num = 7 THEN 
-  	    color_array := ARRAY['166,97,26','223,194,125', '128,205,193', '1,133,113'];
-      ELSIF num = 8 THEN 
-  	    color_array := ARRAY['166,97,26','223,194,125', '128,205,193', '1,133,113'];
-      ELSIF num >= 9 THEN 
-  	    color_array := ARRAY['166,97,26','223,194,125', '128,205,193', '1,133,113'];
-      END IF;
 
       view_txt := 'CREATE VIEW acompanhamento.fase_' || fase_ident || '_'  || fase_nome || ' AS 
       SELECT p.id, p.nome, p.mi, p.inom, p.escala, p.geom';
@@ -619,15 +627,6 @@ $BODY$
           GROUP BY ut.id) AS ut' || iterator || '
           ON ut' || iterator || '.geom && p.geom AND st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
 
-        IF iterator = 1 THEN
-           symbols_txt := replace('<symbol force_rhr="0" name="0" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="{{COLOR}},255"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol>', '{{NUMERACAO}}', color_array[iterator]);
-           rules_txt := '<rule symbol="0" key="{' || uuid_generate_v4() ||'}" label="Não iniciada" filter="' || nome_fixed || '_data_inicio IS NULL "/>';
-        END IF;
-
-        symbols_txt := symbols_txt || replace(replace('<symbol force_rhr="0" name="{{NUMERACAO}}" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="{{COLOR}},255"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol>', '{{NUMERACAO}}', iterator::text), color_array[iterator+1]);
-        rules_txt := rules_txt || '<rule symbol="' ||  iterator || '" key="{' || uuid_generate_v4() ||'}" label="' || nome_fixed || '" filter="' || subfases_concluidas_txt || nome_fixed || '_data_fim IS NULL "/>';
-        subfases_concluidas_txt := subfases_concluidas_txt || nome_fixed || '_data_fim NOT NULL AND ';
-
         iterator := iterator + 1;
 
       END LOOP;
@@ -638,24 +637,6 @@ $BODY$
 
       EXECUTE view_txt;
       EXECUTE 'GRANT ALL ON TABLE acompanhamento.fase_' || fase_ident || '_'  || fase_nome || ' TO PUBLIC';
-
-
-    rules_txt := rules_txt || '<rule symbol="' ||  iterator || '" key="{' || uuid_generate_v4() ||'}" label="Concluído" filter="' || subfases_concluidas_txt || ' TRUE"/>';
-    symbols_txt := symbols_txt || replace(replace('<symbol force_rhr="0" name="{{NUMERACAO}}" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="{{COLOR}},255"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol>', '{{NUMERACAO}}', iterator::text), color_array[iterator+1]);
-    iterator := iterator + 1;
-   
-    rules_txt := rules_txt || '<rule symbol="' ||  iterator || '" key="{' || uuid_generate_v4() ||'}" label="ERRO" filter="ELSE"/>';
-    symbols_txt := symbols_txt || replace('<symbol force_rhr="0" name="{{NUMERACAO}}" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="25,4,250,255"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol>', '{{NUMERACAO}}', iterator::text);
-
-    estilo_txt := '<!DOCTYPE qgis PUBLIC ''http://mrcc.com/qgis.dtd'' ''SYSTEM''>';
-    estilo_txt := estilo_txt || '<qgis styleCategories="Symbology|Labeling" labelsEnabled="1" version="3.4.10-Madeira">';
-    estilo_txt := estilo_txt || '<renderer-v2 symbollevels="0" forceraster="0" type="RuleRenderer" enableorderby="0">';
-    estilo_txt := estilo_txt || '<rules key="{' || uuid_generate_v4() || '}">' || rules_txt;
-    estilo_txt := estilo_txt || '</rules><symbols>' || symbols_txt;
-    estilo_txt := estilo_txt || '</symbols></renderer-v2><blendMode>0</blendMode><featureBlendMode>0</featureBlendMode><layerGeometryType>2</layerGeometryType></qgis>';
-
-    INSERT INTO public.layer_styles(f_table_catalog, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, useasdefault, owner, ui, update_time) VALUES
-    (current_database(), 'acompanhamento', 'fase_'|| fase_ident || '_' || fase_nome, 'geom', 'acompanhamento_fase', estilo_txt, NULL, TRUE, current_user, NULL, now());
 
     END IF;
 
@@ -684,6 +665,8 @@ $BODY$
     DECLARE linhaproducao_ident integer;
     DECLARE num integer;
     DECLARE linhaproducao_nome text;
+    DECLARE fase_nome_old text;
+    DECLARE fase_nome_new text;
     DECLARE nome_fixed text;
     DECLARE r record;
     DECLARE iterator integer := 1;
@@ -691,8 +674,45 @@ $BODY$
 
     IF TG_OP = 'DELETE' THEN
       linhaproducao_ident := OLD.linha_producao_id;
+
+      SELECT translate(replace(lower(tp.nome),' ', '_'),  
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+          'aaaaaeeeeiiiiooooouuuucc________________________________'),
+          f.linha_producao_id
+          INTO fase_nome_old
+          FROM dominio.tipo_fase
+          WHERE code = OLD.tipo_fase_id;
+
+      EXECUTE 'DROP VIEW IF EXISTS acompanhamento.fase_'|| OLD.id || '_' || fase_nome_old;
+
+      DELETE FROM public.layer_styles
+      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('fase_'|| OLD.id || '_' || fase_nome_old) AND stylename = 'acompanhamento_fase';
     ELSE
       linhaproducao_ident := NEW.linha_producao_id;
+    END IF;
+
+    IF TG_OP = 'UPDATE' THEN
+      SELECT translate(replace(lower(tp.nome),' ', '_'),  
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+          'aaaaaeeeeiiiiooooouuuucc________________________________'),
+          f.linha_producao_id
+          INTO fase_nome_old
+          FROM dominio.tipo_fase
+          WHERE code = OLD.tipo_fase_id;
+
+      SELECT translate(replace(lower(tp.nome),' ', '_'),  
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+          'aaaaaeeeeiiiiooooouuuucc________________________________'),
+          f.linha_producao_id
+          INTO fase_nome_new
+          FROM dominio.tipo_fase
+          WHERE code = NEW.tipo_fase_id;
+
+      EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.fase_'|| OLD.id || '_' || fase_nome_old || ' RENAME TO fase_' || NEW.id || '_' || fase_nome_new;
+
+      UPDATE public.layer_styles SET f_table_name = ('fase_'|| NEW.id || '_' || fase_nome_new)
+      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('fase_'|| OLD.id || '_' || fase_nome_old) AND stylename = 'acompanhamento_fase';
+
     END IF;
 
     SELECT translate(replace(lower(lp.nome),' ', '_'),  
@@ -703,6 +723,9 @@ $BODY$
           WHERE lp.id = linhaproducao_ident;
 
     EXECUTE 'DROP VIEW IF EXISTS acompanhamento.linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome;
+
+    DELETE FROM public.layer_styles
+    WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome) AND stylename = 'acompanhamento_linha_producao';
 
     SELECT count(*) INTO num FROM macrocontrole.fase WHERE linha_producao_id = linhaproducao_ident;
     IF num > 0 THEN
@@ -761,5 +784,66 @@ ALTER FUNCTION acompanhamento.cria_view_acompanhamento_linha_producao()
 CREATE TRIGGER cria_view_acompanhamento_linha_producao
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.fase
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_linha_producao();
+
+CREATE OR REPLACE FUNCTION acompanhamento.atualiza_view_acompanhamento_linha_producao()
+  RETURNS trigger AS
+$BODY$
+    DECLARE linhaproducao_nome_old text;
+    DECLARE linhaproducao_nome_new text;
+    BEGIN
+
+    IF TG_OP = 'DELETE' THEN
+      SELECT translate(replace(lower(lp.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________')
+            INTO linhaproducao_nome_old
+            FROM macrocontrole.linha_producao AS lp
+            WHERE lp.id = OLD.id;
+
+    EXECUTE 'DROP VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old;
+
+      DELETE FROM public.layer_styles
+      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
+
+    END IF;
+
+    IF TG_OP = 'UPDATE' THEN
+      SELECT translate(replace(lower(lp.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________')
+            INTO linhaproducao_nome_old
+            FROM macrocontrole.linha_producao AS lp
+            WHERE lp.id = OLD.id;
+
+      SELECT translate(replace(lower(lp.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________')
+            INTO linhaproducao_nome_new
+            FROM macrocontrole.linha_producao AS lp
+            WHERE lp.id = NEW.id;
+
+      EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old || ' RENAME TO linha_producao_' || NEW.id || '_' || linhaproducao_nome_new;
+
+      UPDATE public.layer_styles SET f_table_name = ('linha_producao_'|| NEW.id || '_' || linhaproducao_nome_new)
+      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
+
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.atualiza_view_acompanhamento_linha_producao()
+  OWNER TO postgres;
+
+CREATE TRIGGER atualiza_view_acompanhamento_linha_producao
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.linha_producao
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.atualiza_view_acompanhamento_linha_producao();
 
 COMMIT;

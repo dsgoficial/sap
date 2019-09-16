@@ -254,12 +254,28 @@ controller.gravaMenus = async (menus, usuario_id) => {
 controller.get_usuario = async () => {
   try {
     let usuarios = await db.any(
-      `SELECT tpg.nome_abrev || ' ' || u.nome_guerra AS nome
+      `SELECT u.id, tpg.nome_abrev || ' ' || u.nome_guerra AS nome
       FROM dgeo.usuario AS u INNER JOIN dominio.tipo_posto_graduacao AS tpg ON tpg.code = u.tipo_posto_grad_id WHERE u.disponivel IS TRUE`
     );
     return { error: null, dados: usuarios };
   } catch (error) {
-    const err = new Error("Falha durante tentativa de retornar tipo problema.");
+    const err = new Error("Falha durante tentativa de retornar usuarios.");
+    err.status = 500;
+    err.context = "gerencia_ctrl";
+    err.information = {};
+    err.information.trace = error;
+    return { error: err, dados: null };
+  }
+};
+
+controller.get_perfil_producao = async () => {
+  try {
+    let perfil_producao = await db.any(
+      `SELECT id, nome FROM macrocontrole.perfil-producao`
+    );
+    return { error: null, dados: perfil_producao };
+  } catch (error) {
+    const err = new Error("Falha durante tentativa de retornar perfis de produção.");
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
@@ -381,6 +397,222 @@ controller.reinicia_atividade = async atividade_id => {
     const err = new Error("Falha durante reiniciar atividade.");
     err.status = 500;
     err.context = "gerencia_ctrl";
+    err.information = {};
+    err.information.atividade_id = atividade_id;
+    err.information.trace = error;
+    return { error: err };
+  }
+};
+
+controller.volta_atividade = async (atividade_id, manter_usuarios) => {
+  try {
+    const data_fim = new Date();
+    await db.tx(async t => {
+      await t.none(
+        `
+      UPDATE macrocontrole.atividade SET
+      tipo_situacao_id = 6, data_fim = COALESCE(data_fim, $2)
+      WHERE id IN (
+          SELECT a_ant.id
+          FROM macrocontrole.atividade AS a
+          INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+          INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
+          WHERE a.id = $1 AND e_ant.ordem >= e.ordem AND a._ant.tipo_situacao_id IN (2,4)
+      )
+      `,
+        [atividade_id, data_fim]
+      );
+      if(manter_usuarios){
+        await t.none(
+          `
+        INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id, observacao)
+        (
+          SELECT a_ant.etapa_id, a_ant.unidade_trabalho_id, a_ant.usuario_id, 3 AS tipo_situacao_id, a_ant.observacao
+          FROM macrocontrole.atividade AS a
+          INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+          INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
+          WHERE a.id = $1 AND e_ant.ordem >= e.ordem AND a._ant.tipo_situacao_id IN (2,4)
+        )
+        `,
+          [ atividade_id ]
+        );
+      } else {
+        await t.none(
+          `
+          INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id, observacao)
+          (
+            SELECT a_ant.etapa_id, a_ant.unidade_trabalho_id, 1 AS tipo_situacao_id, a_ant.observacao
+            FROM macrocontrole.atividade AS a
+            INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
+            WHERE a.id = $1 AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,4)
+          )
+          `,
+            [ atividade_id ]
+        );
+      }
+    });
+    return { error: null };
+  } catch (error) {
+    const err = new Error("Falha durante voltar atividade.");
+    err.status = 500;
+    err.context = "gerencia_ctrl";
+    err.information = {};
+    err.information.atividade_id = atividade_id;
+    err.information.manter_usuarios = manter_usuarios;
+    err.information.trace = error;
+    return { error: err };
+  }
+};
+
+controller.avanca_atividade = async (atividade_id, concluida) => {
+  try {
+    await db.tx(async t => {
+      if(concluida){
+        await t.none(
+            `
+          UPDATE macrocontrole.atividade SET
+          tipo_situacao_id = 5, data_inicio = NULL, data_fim = NULL, usuario_id = NULL
+          WHERE id IN (
+              SELECT a_ant.id
+              FROM macrocontrole.atividade AS a
+              INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+              INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+              INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
+              WHERE a.id = $1 AND a_ant.tipo_situacao_id IN (1,2,3)
+          )
+          `,
+          [ atividade_id ]
+        );
+      } else {
+        await t.none(
+          `
+        UPDATE macrocontrole.atividade SET
+        tipo_situacao_id = 5, data_inicio = NULL, data_fim = NULL, usuario_id = NULL
+        WHERE id IN (
+            SELECT a_ant.id
+            FROM macrocontrole.atividade AS a
+            INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
+            WHERE a.id = $1 AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (1,2,3)
+        )
+        `,
+          [atividade_id]
+        );
+      }
+    });
+    return { error: null };
+  } catch (error) {
+    const err = new Error("Falha durante avançar atividade.");
+    err.status = 500;
+    err.context = "gerencia_ctrl";
+    err.information = {};
+    err.information.atividade_id = atividade_id;
+    err.information.concluida = concluida;
+    err.information.trace = error;
+    return { error: err };
+  }
+};
+
+controller.cria_revisao = async atividade_id => {
+  try {
+    await db.tx(async t => {
+
+      let atividade = await t.one(
+        `SELECT a.unidade_trabalho_id, ut.subfase_id, max(e.ordem) AS ordem FROM macrocontrole.atividade AS a 
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+        INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
+        WHERE a.id = $1
+        GROUP BY a.etapa_id, a.unidade_trabalho_id, ut.subfase_id`,
+        [atividade_id]
+      );
+
+      let revisao = await t.one(
+        `
+      INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
+      VALUES($1,$2,$3) RETURNING id
+      `,
+        [
+          2,
+          atividade.subfase_id,
+          atividade.ordem + 1
+        ]
+      );
+      let correcao = await t.one(
+        `
+      INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
+      VALUES($1,$2,$3) RETURNING id
+      `,
+        [
+          3,
+          atividade.subfase_id,
+          atividade.ordem + 2
+        ]
+      );
+
+      await t.none(
+        `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+      VALUES ($1,$3,1),($2,$3,1)
+      `,
+        [revisao.id, correcao.id, atividade.unidade_trabalho_id]
+      );
+
+    });
+    return { error: null };
+  } catch (error) {
+    const err = new Error("Falha durante criação da revisão.");
+    err.status = 500;
+    err.context = "distribuicao_ctrl";
+    err.information = {};
+    err.information.atividade_id = atividade_id;
+    err.information.trace = error;
+    return { error: err };
+  }
+};
+
+controller.cria_revcorr = async atividade_id => {
+  try {
+    await db.tx(async t => {
+
+      let atividade = await t.one(
+        `SELECT a.unidade_trabalho_id, ut.subfase_id, max(e.ordem) AS ordem FROM macrocontrole.atividade AS a 
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+        INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
+        WHERE a.id = $1
+        GROUP BY a.etapa_id, a.unidade_trabalho_id, ut.subfase_id`,
+        [atividade_id]
+      );
+
+      let revcorr = await t.one(
+        `
+      INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
+      VALUES($1,$2,$3) RETURNING id
+      `,
+        [
+          4,
+          atividade.subfase_id,
+          atividade.ordem + 1
+        ]
+      );
+      await t.none(
+        `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+      VALUES ($1,$2,1)
+      `,
+        [revcorr.id, atividade.unidade_trabalho_id]
+      );
+
+    });
+    return { error: null };
+  } catch (error) {
+    const err = new Error("Falha durante criação da revisão/correção.");
+    err.status = 500;
+    err.context = "distribuicao_ctrl";
     err.information = {};
     err.information.atividade_id = atividade_id;
     err.information.trace = error;

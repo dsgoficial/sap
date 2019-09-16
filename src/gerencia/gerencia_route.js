@@ -231,6 +231,26 @@ router.get("/usuario", async (req, res, next) => {
   );
 });
 
+router.get("/perfil_producao", async (req, res, next) => {
+  let { error, dados } = await gerenciaCtrl.get_perfil_producao();
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id
+  };
+  return sendJsonAndLog(
+    true,
+    "Perfis de produção retornados.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    dados
+  );
+});
+
 router.post("/unidade_trabalho/disponivel", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
@@ -338,6 +358,156 @@ router.post("/atividade/reiniciar", async (req, res, next) => {
   return sendJsonAndLog(
     true,
     "Atividade reiniciada com sucesso.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    null
+  );
+});
+
+router.post("/atividade/voltar", async (req, res, next) => {
+  let validationResult = Joi.validate(
+    req.body,
+    gerenciaModel.atividade_voltar,
+    {
+      stripUnknown: true
+    }
+  );
+  if (validationResult.error) {
+    const err = new Error("Volta atividade Post validation error");
+    err.status = 400;
+    err.context = "gerencia_route";
+    err.information = {};
+    err.information.body = req.body;
+    err.information.trace = validationResult.error;
+    return next(err);
+  }
+
+  let { error } = await gerenciaCtrl.volta_atividade(req.body.atividade_id, req.body.manter_usuarios);
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    atividade_id: req.body.atividade_id,
+    manter_usuarios: req.body.manter_usuarios
+  };
+  return sendJsonAndLog(
+    true,
+    "Atividade voltou para etapa anterior com sucesso.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    null
+  );
+});
+
+router.post("/atividade/avancar", async (req, res, next) => {
+  let validationResult = Joi.validate(
+    req.body,
+    gerenciaModel.atividade_avancar,
+    {
+      stripUnknown: true
+    }
+  );
+  if (validationResult.error) {
+    const err = new Error("Avança atividade Post validation error");
+    err.status = 400;
+    err.context = "gerencia_route";
+    err.information = {};
+    err.information.body = req.body;
+    err.information.trace = validationResult.error;
+    return next(err);
+  }
+
+  let { error } = await gerenciaCtrl.avanca_atividade(req.body.atividade_id, req.body.concluida);
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    atividade_id: req.body.atividade_id,
+    concluida: req.body.concluida
+  };
+  return sendJsonAndLog(
+    true,
+    "Atividade avançou para próxima etapa com sucesso.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    null
+  );
+});
+
+router.post("/atividade/criar_revisao", async (req, res, next) => {
+  let validationResult = Joi.validate(
+    req.body,
+    gerenciaModel.atividade_criar_revisao,
+    {
+      stripUnknown: true
+    }
+  );
+  if (validationResult.error) {
+    const err = new Error("Criar revisão Post validation error");
+    err.status = 400;
+    err.context = "gerencia_route";
+    err.information = {};
+    err.information.body = req.body;
+    err.information.trace = validationResult.error;
+    return next(err);
+  }
+
+  let { error } = await gerenciaCtrl.cria_revisao(req.body.atividade_id);
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    atividade_id: req.body.atividade_id
+  };
+  return sendJsonAndLog(
+    true,
+    "Revisão criada com sucesso.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    null
+  );
+});
+
+router.post("/atividade/criar_revcorr", async (req, res, next) => {
+  let validationResult = Joi.validate(
+    req.body,
+    gerenciaModel.atividade_criar_revcorr,
+    {
+      stripUnknown: true
+    }
+  );
+  if (validationResult.error) {
+    const err = new Error("Criar revcorr Post validation error");
+    err.status = 400;
+    err.context = "gerencia_route";
+    err.information = {};
+    err.information.body = req.body;
+    err.information.trace = validationResult.error;
+    return next(err);
+  }
+
+  let { error } = await gerenciaCtrl.cria_revcorr(req.body.atividade_id);
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    atividade_id: req.body.atividade_id
+  };
+  return sendJsonAndLog(
+    true,
+    "Revisão/Correção criada com sucesso.",
     "gerencia_route",
     information,
     res,
