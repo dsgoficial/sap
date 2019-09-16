@@ -4,7 +4,7 @@ const { db } = require("../database");
 
 const controller = {};
 
-const calcula_fila = async usuario => {
+controller.calcula_fila = async usuario => {
   return db
     .task(async t => {
       let fila_prioritaria = await t.oneOrNone(
@@ -248,7 +248,7 @@ const calcula_fila = async usuario => {
     });
 };
 
-const dados_producao = async atividade_id => {
+controller.dados_producao = async atividade_id => {
   return db
     .task(async t => {
       let dadosut = await t.one(
@@ -611,7 +611,7 @@ controller.verifica = async usuario_id => {
           WHERE tipo_situacao_id = 2 and usuario_id = $1 and id != $2`,
         [usuario_id, em_andamento.id]
       );
-      const { erro, dados } = await dados_producao(em_andamento.id);
+      const { erro, dados } = await controller.dados_producao(em_andamento.id);
       if (erro) {
         return { verificaError: erro, dados: null };
       }
@@ -684,7 +684,7 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
 
 controller.inicia = async usuario_id => {
   const data_inicio = new Date();
-  const { erro, prioridade } = await calcula_fila(usuario_id);
+  const { erro, prioridade } = await controller.calcula_fila(usuario_id);
   if (erro) {
     return { iniciaError: erro, dados: null };
   }
@@ -725,7 +725,7 @@ controller.inicia = async usuario_id => {
       return result;
     })
     .then(async data => {
-      const { erro, dados } = await dados_producao(prioridade.id);
+      const { erro, dados } = await controller.dados_producao(prioridade.id);
       if (erro) {
         return { iniciaError: erro, dados: null };
       }
@@ -859,66 +859,6 @@ controller.get_tipo_problema = async () => {
     err.information = {};
     err.information.trace = error;
     return { error: err, dados: null };
-  }
-};
-
-controller.get_atividade = async atividade_id => {
-  try {
-    let atividade = await db.oneOrNone(
-      `SELECT a.etapa_id, a.unidade_trabalho_id
-      FROM macrocontrole.atividade AS a
-      WHERE a.id = $1 LIMIT 1`,
-      [atividade_id]
-    );
-
-    if (atividade) {
-      const { erro, dados } = await dados_producao(atividade_id);
-      if (erro) {
-        return { verificaError: erro, dados: null };
-      }
-      return { verificaError: null, dados: dados };
-    } else {
-      const err = new Error("ID inválido.");
-      err.status = 404;
-      err.context = "distribuicao_ctrl";
-      err.information = {};
-      err.information.atividade_id = atividade_id;
-      err.information.trace = error;
-      return { verificaError: err, dados: null };
-    }
-  } catch (error) {
-    const err = new Error("Falha durante retorno dos dados da atividade.");
-    err.status = 500;
-    err.context = "distribuicao_ctrl";
-    err.information = {};
-    err.information.atividade_id = atividade_id;
-    err.information.trace = error;
-    return { verificaError: err, dados: null };
-  }
-};
-
-controller.get_atividade_usuario = async usuario_id => {
-  try {
-    const { erro, prioridade } = await calcula_fila(usuario_id);
-    if (erro) {
-      return { erro: erro, dados: null };
-    }
-
-    const { erro, dados } = await dados_producao(prioridade);
-    if (erro) {
-      return { erro: erro, dados: null };
-    }
-    return { erro: null, dados: dados };
-  } catch (error) {
-    const err = new Error(
-      "Falha durante retorno dos dados da atividade de um usuário."
-    );
-    err.status = 500;
-    err.context = "distribuicao_ctrl";
-    err.information = {};
-    err.information.usuario_id = usuario_id;
-    err.information.trace = error;
-    return { erro: err, dados: null };
   }
 };
 

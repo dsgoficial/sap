@@ -5,8 +5,6 @@ const Joi = require("joi");
 
 const { sendJsonAndLog } = require("../logger");
 
-const { verifyAdmin } = require("../login");
-
 const producaoCtrl = require("./distribuicao_ctrl");
 const producaoModel = require("./distribuicao_model");
 
@@ -82,7 +80,9 @@ const router = express.Router();
  *
  */
 router.post("/finaliza", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, producaoModel.finaliza, { stripUnknown: true });;
+  let validationResult = Joi.validate(req.body, producaoModel.finaliza, {
+    stripUnknown: true
+  });
   if (validationResult.error) {
     const err = new Error("Finaliza Post validation error");
     err.status = 400;
@@ -300,8 +300,9 @@ router.post("/inicia", async (req, res, next) => {
 router.post("/resposta_questionario", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
-    producaoModel.resposta_questionario
-    , { stripUnknown: true });
+    producaoModel.resposta_questionario,
+    { stripUnknown: true }
+  );
   if (validationResult.error) {
     const err = new Error("Envia questionario validation error");
     err.status = 400;
@@ -383,8 +384,9 @@ router.post("/resposta_questionario", async (req, res, next) => {
 router.post("/problema_atividade", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
-    producaoModel.problema_atividade
-    , { stripUnknown: true });
+    producaoModel.problema_atividade,
+    { stripUnknown: true }
+  );
   if (validationResult.error) {
     const err = new Error("Problema atividade validation error");
     err.status = 400;
@@ -438,62 +440,6 @@ router.get("/tipo_problema", async (req, res, next) => {
     200,
     dados
   );
-});
-
-/**
- * @api {get} /distribuicao/atividade/id Retorna atividade em execução
- * @apiGroup Distribuicao
- * @apiVersion 2.0.0
- * @apiName AtividadePorId
- * @apiPermission operador
- *
- *
- * @apiDescription Retorna a atividade de um determinado ID
- *
- *
- * @apiSuccess {String} dados Em caso de existir uma atividade com o determinado ID retorna os dados desta atividade.
- *
- * @apiSuccessExample {json} Atividade retornada:
- *     HTTP/1.1 200 OK
- *     {
- *       "success": true,
- *       "message": "Atividade retornada.",
- *       "dados": {...}
- *     }
- *
- *
- *
- */
-router.get("/atividade/:id", verifyAdmin, async (req, res, next) => {
-  let { verificaError, dados } = await producaoCtrl.get_atividade(req.params.id);
-  if (verificaError) {
-    return next(verificaError);
-  }
-
-  let information = {
-    atividade_id: req.params.id
-  };
-  if (dados) {
-    return sendJsonAndLog(
-      true,
-      "Atividade retornada.",
-      "distribuicao_route",
-      information,
-      res,
-      200,
-      dados
-    );
-  } else {
-    return sendJsonAndLog(
-      true,
-      "Atividade não encontrada.",
-      "distribuicao_route",
-      information,
-      res,
-      200,
-      null
-    );
-  }
 });
 
 module.exports = router;
