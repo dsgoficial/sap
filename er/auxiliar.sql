@@ -66,18 +66,3 @@ SET tempo_execucao = cte.minutos + cte.minutos_dias
 FROM cte
 INNER JOIN data_login AS dl ON TRUE
 WHERE a.id = cte.id and a.data_inicio::date > dl.data_min::date;
-
-
--- aproxima tempo execução a partir de monitoramento_acao
-WITH dl AS (
-SELECT data, LAG(data,1) OVER(ORDER BY data) AS previous_data
-FROM microcontrole.monitoramento_acao
-WHERE atividade_id = 1
-)
-SELECT 
-SUM(CASE 
-WHEN data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )) < 16
-THEN 60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )
-ELSE 0
-END) AS tempo
-FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL;

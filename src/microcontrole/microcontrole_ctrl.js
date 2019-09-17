@@ -141,20 +141,20 @@ controller.armazenaTela = async (atividade_id, dados) => {
   }
 };
 
-controller.armazenaAcao = async (atividade_id, data) => {
+controller.armazenaAcao = async (atividade_id) => {
   try {
     await db.any(
       `
-      INSERT INTO microcontrole.monitoramento_acao(atividade_id, data) VALUES($1, $2)
+      INSERT INTO microcontrole.monitoramento_acao(atividade_id, data) VALUES($1, NOW())
       `,
-      [atividade_id, data]
+      [atividade_id]
     );
     return { error: null };
   } catch (error) {
     const err = new Error("Falha durante tentativa de inserção de ação.");
     err.status = 500;
     err.context = "microcontrole_ctrl";
-    err.information = { atividade_id, data, dados, trace: error };
+    err.information = { atividade_id, trace: error };
     return { error: err };
   }
 };

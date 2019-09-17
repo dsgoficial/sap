@@ -384,7 +384,8 @@ CREATE TABLE macrocontrole.atividade(
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone,
 	observacao text,
-	tempo_execucao integer
+	tempo_execucao_microcontrole integer,
+	tempo_execucao_estimativa integer
 );
 
 CREATE INDEX atividade_etapa_id
@@ -426,10 +427,68 @@ FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
 
 --
 
-CREATE TRIGGER calcula_tempo_execucao
-AFTER UPDATE OR INSERT ON macrocontrole.atividade
-FOR EACH ROW EXECUTE PROCEDURE macrocontrole.calcula_tempo_execucao();
+CREATE OR REPLACE FUNCTION macrocontrole.tempo_execucao_estimativa(i integer) RETURNS integer AS $$
+DECLARE
+   tempo_minutos integer;
+BEGIN
+        WITH datas AS (
+        SELECT a.id, COUNT (DISTINCT data_login::date) as nr_dias 
+        FROM macrocontrole.atividade AS a
+        INNER JOIN acompanhamento.login AS l ON l.usuario_id = a.usuario_id
+        WHERE a.id = i
+        AND l.data_login >= a.data_inicio AND l.data_login <= a.data_fim
+        )
+        , cte AS (
+        SELECT a.id,
+        CASE 
+        WHEN data_fim::date = data_inicio::date
+        THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio )
+        WHEN DATE_PART('hour', data_fim  - data_inicio ) < 12
+        THEN 0
+        WHEN DATE_PART('hour', data_fim  - data_inicio ) <= 18
+        THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 12*60
+        ELSE
+        60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 18*60
+        END AS minutos,
+        CASE
+        WHEN d.nr_dias > 2
+        THEN (d.nr_dias - 2 )*6*60
+        ELSE 0
+        END AS minutos_dias
+        FROM macrocontrole.atividade AS a
+        INNER JOIN datas AS d ON d.id = a.id
+        )
+        SELECT (minutos + minutos_dias) INTO tempo_minutos
+        FROM cte;
 
+        RETURN tempo_minutos;
+END;
+$$ LANGUAGE plpgsql;
+ALTER FUNCTION macrocontrole.tempo_execucao_estimativa(integer)
+  OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION macrocontrole.tempo_execucao_microcontrole(i integer) RETURNS integer AS $$
+DECLARE
+   tempo_minutos integer;
+BEGIN
+        WITH dl AS (
+        SELECT data, LAG(data,1) OVER(ORDER BY data) AS previous_data
+        FROM microcontrole.monitoramento_acao
+        WHERE atividade_id = i
+        )
+        SELECT 
+        SUM(CASE 
+        WHEN data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )) < 16
+        THEN 60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )
+        ELSE 0
+        END) INTO tempo_minutos
+        FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL;
+
+        RETURN tempo_minutos;
+END;
+$$ LANGUAGE plpgsql;
+ALTER FUNCTION macrocontrole.tempo_execucao_microcontrole(integer)
+  OWNER TO postgres;
 --
 
 CREATE TABLE macrocontrole.perfil_producao(

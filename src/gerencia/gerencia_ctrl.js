@@ -271,7 +271,7 @@ controller.get_usuario = async () => {
 controller.get_perfil_producao = async () => {
   try {
     let perfil_producao = await db.any(
-      `SELECT id, nome FROM macrocontrole.perfil-producao`
+      `SELECT id, nome FROM macrocontrole.perfil_producao`
     );
     return { error: null, dados: perfil_producao };
   } catch (error) {
@@ -329,7 +329,7 @@ controller.pausa_atividade = async atividade_id => {
       await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      data_fim = $1, tipo_situacao_id = 6
+      data_fim = $1, tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
       WHERE id = $2
       `,
         [data_fim, atividade_id]
@@ -370,7 +370,7 @@ controller.reinicia_atividade = async atividade_id => {
       await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      data_fim = $1, tipo_situacao_id = 6
+      data_fim = $1, tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
       WHERE id = $2
       `,
         [data_fim, atividade_id]
@@ -411,7 +411,7 @@ controller.volta_atividade = async (atividade_id, manter_usuarios) => {
       await t.none(
         `
       UPDATE macrocontrole.atividade SET
-      tipo_situacao_id = 6, data_fim = COALESCE(data_fim, $2)
+      tipo_situacao_id = 6, data_fim = COALESCE(data_fim, $2), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
       WHERE id IN (
           SELECT a_ant.id
           FROM macrocontrole.atividade AS a
@@ -475,7 +475,7 @@ controller.avanca_atividade = async (atividade_id, concluida) => {
         await t.none(
             `
           UPDATE macrocontrole.atividade SET
-          tipo_situacao_id = 5, data_inicio = NULL, data_fim = NULL, usuario_id = NULL
+          tipo_situacao_id = 5, data_inicio = NULL, data_fim = NULL, usuario_id = NULL, tempo_execucao_microcontrole = NULL, tempo_execucao_estimativa = NULL
           WHERE id IN (
               SELECT a_ant.id
               FROM macrocontrole.atividade AS a

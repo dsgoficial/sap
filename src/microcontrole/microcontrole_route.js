@@ -346,16 +346,14 @@ router.post("/acao", async (req, res, next) => {
   }
 
   let { error } = await microcontroleCtrl.armazenaAcao(
-    req.body.atividade_id,
-    req.body.data
+    req.body.atividade_id
   );
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_id: req.body.atividade_id,
-    data: req.body.data
+    atividade_id: req.body.atividade_id
   };
   return sendJsonAndLog(
     true,

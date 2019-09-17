@@ -635,7 +635,7 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
   try {
     let result = await db.result(
       `UPDATE macrocontrole.atividade SET
-      data_fim = $1, tipo_situacao_id = 4
+      data_fim = $1, tipo_situacao_id = 4, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
       WHERE id = $2 and usuario_id = $3 and tipo_situacao_id != 6`,
       [data_fim, atividade_id, usuario_id]
     );
@@ -790,7 +790,7 @@ controller.problema_atividade = async (
       await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      data_fim = $1, tipo_situacao_id = 6
+      data_fim = $1, tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
       WHERE id = $2
       `,
         [data_fim, atividade_id]

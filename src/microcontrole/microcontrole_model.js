@@ -87,8 +87,7 @@ const acao = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
-    .required(),
-  data: Joi.date().required()
+    .required()
 });
 
 module.exports.feicao = feicao;
