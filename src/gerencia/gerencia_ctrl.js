@@ -151,6 +151,7 @@ controller.gravaRegras = async (regras, usuario_id) => {
       [
         "grupo_regra",
         "tipo_regra",
+        "schema",
         "camada",
         "atributo",
         "regra",
@@ -168,6 +169,7 @@ controller.gravaRegras = async (regras, usuario_id) => {
       values.push({
         grupo_regra: d.grupo_regra,
         tipo_regra: d.tipo_regra,
+        schema: d.schema,
         camada: d.camada,
         atributo: d.atributo,
         regra: d.regra,

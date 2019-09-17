@@ -121,6 +121,43 @@ router.post("/menus", async (req, res, next) => {
   );
 });
 
+router.post("/modelos", async (req, res, next) => {
+  let validationResult = Joi.validate(req.body, gerenciaModel.qgis_models, {
+    stripUnknown: true
+  });
+  if (validationResult.error) {
+    const err = new Error("Modelos Post validation error");
+    err.status = 400;
+    err.context = "gerencia_route";
+    err.information = {};
+    err.information.body = req.body;
+    err.information.trace = validationResult.error;
+    return next(err);
+  }
+
+  let { error } = await gerenciaCtrl.gravaModelos(
+    req.body.modelos,
+    req.body.usuario_id
+  );
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id,
+    menus: req.body.modelos
+  };
+  return sendJsonAndLog(
+    true,
+    "Modelos gravados com sucesso.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    null
+  );
+});
+
 /**
  * @api {get} /gerencia/atividade/id Retorna atividade em execução
  * @apiGroup Distribuicao

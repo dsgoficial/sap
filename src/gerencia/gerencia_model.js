@@ -2,7 +2,8 @@
 
 const Joi = require("joi");
 
-const estilos = Joi.array()
+const estilos = Joi.object().keys({
+  estilos: Joi.array()
   .items(
     Joi.object().keys({
       f_table_schema: Joi.string().required(),
@@ -15,9 +16,11 @@ const estilos = Joi.array()
     })
   )
   .required()
-  .min(1);
+  .min(1)
+});
 
-const menus = Joi.array()
+const menus = Joi.object().keys({
+  menus: Joi.array()
   .items(
     Joi.object().keys({
       nome_menu: Joi.string().required(),
@@ -26,16 +29,19 @@ const menus = Joi.array()
     })
   )
   .required()
-  .min(1);
+  .min(1)
+});
 
-const regras = Joi.array()
+const regras = Joi.object().keys({
+  regras: Joi.array()
   .items(
     Joi.object().keys({
+      grupo_regra: Joi.string().required(),
       tipo_regra: Joi.string().required(),
+      schema: Joi.string().required(),
       camada: Joi.string().required(),
       atributo: Joi.string().required(),
       regra: Joi.string().required(),
-      grupo_regra: Joi.string().required(),
       cor_rgb: Joi.string().required(),
       descricao: Joi.string().required(),
       ordem: Joi.number()
@@ -45,7 +51,21 @@ const regras = Joi.array()
     })
   )
   .required()
-  .min(1);
+  .min(1)
+});
+
+const qgis_models = Joi.object().keys({
+  modelos: Joi.array()
+  .items(
+    Joi.object().keys({
+      nome: Joi.string().required(),
+      descricao: Joi.string().required(),
+      model_xml: Joi.string().required()
+    })
+  )
+  .required()
+  .min(1)
+});
 
 const unidade_trabalho_disponivel = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
@@ -149,6 +169,7 @@ const atividade_criar_revcorr = Joi.object().keys({
 module.exports.estilos = estilos;
 module.exports.menus = menus;
 module.exports.regras = regras;
+module.exports.qgis_models = qgis_models;
 module.exports.unidade_trabalho_disponivel = unidade_trabalho_disponivel;
 module.exports.atividade_pausar = atividade_pausar;
 module.exports.atividade_reiniciar = atividade_reiniciar;
