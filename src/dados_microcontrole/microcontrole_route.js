@@ -106,7 +106,9 @@ const router = express.Router();
  *
  */
 router.post("/feicao", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, microcontroleModel.feicao, { stripUnknown: true });;
+  let validationResult = Joi.validate(req.body, microcontroleModel.feicao, {
+    stripUnknown: true
+  });
   if (validationResult.error) {
     const err = new Error("Microcontrole Feição Post validation error");
     err.status = 400;
@@ -198,7 +200,11 @@ router.post("/feicao", async (req, res, next) => {
  *
  */
 router.post("/apontamento", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, microcontroleModel.apontamento, { stripUnknown: true });;
+  let validationResult = Joi.validate(
+    req.body,
+    microcontroleModel.apontamento,
+    { stripUnknown: true }
+  );
   if (validationResult.error) {
     const err = new Error("Microcontrole Apontamento Post validation error");
     err.status = 400;
@@ -290,7 +296,9 @@ router.post("/apontamento", async (req, res, next) => {
  *
  */
 router.post("/tela", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, microcontroleModel.tela, { stripUnknown: true });;
+  let validationResult = Joi.validate(req.body, microcontroleModel.tela, {
+    stripUnknown: true
+  });
   if (validationResult.error) {
     const err = new Error("Microcontrole Tela Post validation error");
     err.status = 400;
@@ -315,6 +323,43 @@ router.post("/tela", async (req, res, next) => {
   return sendJsonAndLog(
     true,
     "Informações de tela armazenadas com sucesso.",
+    "microcontrole_route",
+    information,
+    res,
+    200,
+    null
+  );
+});
+
+router.post("/acao", async (req, res, next) => {
+  let validationResult = Joi.validate(req.body, microcontroleModel.acao, {
+    stripUnknown: true
+  });
+  if (validationResult.error) {
+    const err = new Error("Microcontrole Ação Post validation error");
+    err.status = 400;
+    err.context = "microcontrole_route";
+    err.information = {};
+    err.information.body = req.body;
+    err.information.trace = validationResult.error;
+    return next(err);
+  }
+
+  let { error } = await microcontroleCtrl.armazenaAcao(
+    req.body.atividade_id,
+    req.body.data
+  );
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    atividade_id: req.body.atividade_id,
+    data: req.body.data
+  };
+  return sendJsonAndLog(
+    true,
+    "Informações de ação armazenadas com sucesso.",
     "microcontrole_route",
     information,
     res,

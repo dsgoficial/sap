@@ -12,9 +12,9 @@ const feicao = Joi.object().keys({
     .items(
       Joi.object().keys({
         operacao: Joi.number()
-        .integer()
-        .strict()
-        .required(),
+          .integer()
+          .strict()
+          .required(),
         quantidade: Joi.number()
           .integer()
           .strict()
@@ -29,7 +29,7 @@ const feicao = Joi.object().keys({
         camada_id: Joi.number()
           .integer()
           .strict()
-          .required(),
+          .required()
       })
     )
     .required()
@@ -83,6 +83,15 @@ const tela = Joi.object().keys({
     .min(1)
 });
 
+const acao = Joi.object().keys({
+  atividade_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  data: Joi.date().required()
+});
+
 module.exports.feicao = feicao;
 module.exports.apontamento = apontamento;
 module.exports.tela = tela;
+module.exports.acao = acao;

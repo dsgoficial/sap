@@ -48,12 +48,12 @@ CREATE TABLE microcontrole.monitoramento_tela(
   geom geometry(POLYGON, 4674) NOT NULL
 );
 
-CREATE INDEX monitoramento_monitoramento_geom
+CREATE INDEX monitoramento_tela_geom
     ON microcontrole.monitoramento_tela USING gist
     (geom)
     TABLESPACE pg_default;
 
-CREATE INDEX monitoramento_monitoramento_idx
+CREATE INDEX monitoramento_tela_idx
     ON microcontrole.monitoramento_tela USING btree
     (data DESC)
     TABLESPACE pg_default;
@@ -65,9 +65,19 @@ CREATE TABLE microcontrole.monitoramento_acao(
   atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
 );
 
-CREATE INDEX monitoramento_acao
-    ON microcontrole.monitoramento_acao USING btree
-    (data DESC)
-    TABLESPACE pg_default;
+CREATE INDEX monitoramento_acao_idx ON microcontrole.monitoramento_acao USING BRIN (data) WITH (pages_per_range = 32);
+
+WITH dl AS (
+SELECT data, LAG(data,1) OVER(ORDER BY data) AS previous_data
+FROM microcontrole.monitoramento_acao
+WHERE atividade_id = 1
+)
+SELECT 
+SUM(CASE 
+WHEN data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )) < 10
+THEN 60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )
+ELSE 0
+END) AS tempo
+FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL;
 
 COMMIT;

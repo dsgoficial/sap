@@ -4,11 +4,7 @@ const { db } = require("../database");
 
 const controller = {};
 
-controller.armazenaFeicao = async (
-  atividade_id,
-  data,
-  dados
-) => {
+controller.armazenaFeicao = async (atividade_id, data, dados) => {
   try {
     const table = new pgp.helpers.TableName(
       "monitoramento_feicao",
@@ -61,11 +57,7 @@ controller.armazenaFeicao = async (
   }
 };
 
-controller.armazenaApontamento = async (
-  atividade_id,
-  data,
-  dados
-) => {
+controller.armazenaApontamento = async (atividade_id, data, dados) => {
   try {
     const table = new pgp.helpers.TableName(
       "monitoramento_apontamento",
@@ -73,12 +65,7 @@ controller.armazenaApontamento = async (
     );
 
     const cs = new pgp.helpers.ColumnSet(
-      [
-        "quantidade",
-        "categoria",
-        "data",
-        "atividade_id"
-      ],
+      ["quantidade", "categoria", "data", "atividade_id"],
       { table }
     );
 
@@ -112,20 +99,16 @@ controller.armazenaApontamento = async (
   }
 };
 
-controller.armazenaTela = async (
-  atividade_id,
-  dados
-) => {
+controller.armazenaTela = async (atividade_id, dados) => {
   try {
     const table = new pgp.helpers.TableName(
       "monitoramento_tela",
       "microcontrole"
     );
 
-    const cs = new pgp.helpers.ColumnSet(
-      ["data", "atividade_id", "geom"],
-      { table }
-    );
+    const cs = new pgp.helpers.ColumnSet(["data", "atividade_id", "geom"], {
+      table
+    });
 
     const values = [];
 
@@ -151,12 +134,27 @@ controller.armazenaTela = async (
     err.status = 500;
     err.context = "microcontrole_ctrl";
     err.information = {};
-    err.information.usuario_id = usuario_id;
-    err.information.etapa_id = etapa_id;
-    err.information.unidade_trabalho_id = unidade_trabalho_id;
-    err.information.data = data;
+    err.information.atividade_id = atividade_id;
     err.information.dados = dados;
     err.information.trace = error;
+    return { error: err };
+  }
+};
+
+controller.armazenaAcao = async (atividade_id, data) => {
+  try {
+    await db.any(
+      `
+      INSERT INTO microcontrole.monitoramento_acao(atividade_id, data) VALUES($1, $2)
+      `,
+      [atividade_id, data]
+    );
+    return { error: null };
+  } catch (error) {
+    const err = new Error("Falha durante tentativa de inserção de ação.");
+    err.status = 500;
+    err.context = "microcontrole_ctrl";
+    err.information = { atividade_id, data, dados, trace: error };
     return { error: err };
   }
 };
