@@ -65,19 +65,7 @@ CREATE TABLE microcontrole.monitoramento_acao(
   atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
 );
 
-CREATE INDEX monitoramento_acao_idx ON microcontrole.monitoramento_acao USING BRIN (data) WITH (pages_per_range = 32);
-
-WITH dl AS (
-SELECT data, LAG(data,1) OVER(ORDER BY data) AS previous_data
-FROM microcontrole.monitoramento_acao
-WHERE atividade_id = 1
-)
-SELECT 
-SUM(CASE 
-WHEN data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )) < 10
-THEN 60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )
-ELSE 0
-END) AS tempo
-FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL;
+CREATE INDEX monitoramento_acao_data_idx ON microcontrole.monitoramento_acao USING BRIN (data) WITH (pages_per_range = 128);
+CREATE INDEX monitoramento_acao_atividade_id_idx ON microcontrole.monitoramento_acao (atividade_id);
 
 COMMIT;

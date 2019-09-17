@@ -121,7 +121,8 @@ CREATE TABLE dominio.tipo_monitoramento(
 INSERT INTO dominio.tipo_monitoramento (code, nome) VALUES
 (1, 'Monitoramento de feição'),
 (2, 'Monitoramento de tela'),
-(3, 'Monitoramento de comportamento');
+(3, 'Monitoramento de apontamento'),
+(4, 'Monitoramento de comportamento');
 
 CREATE TABLE dominio.tipo_restricao(
 	code SMALLINT NOT NULL PRIMARY KEY,

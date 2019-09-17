@@ -426,49 +426,6 @@ FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
 
 --
 
--- Calcula tempo execucao
-CREATE OR REPLACE FUNCTION macrocontrole.calcula_tempo_execucao()
-  RETURNS trigger AS 
-$BODY$
-    DECLARE minutos integer;
-    DECLARE minutos_dias integer;
-    BEGIN
-	
-	IF NEW.data_fim IS NOT NULL AND NEW.data_inicio IS NOT NULL THEN
-		minutos := CASE 
-					WHEN data_fim::date = data_inicio::date
-						THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio )
-					WHEN DATE_PART('hour', data_fim  - data_inicio ) <= 12
-						THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio )
-					WHEN DATE_PART('hour', data_fim  - data_inicio ) <= 18
-						THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 12*60
-					ELSE
-						60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 18*60
-					END;
-		minutos_dias := CASE
-						WHEN ((SELECT count(*) AS count_days_no_weekend
-							FROM   generate_series(data_inicio::date
-											, data_fim::date
-											, interval  '1 day') the_day
-								WHERE  extract('ISODOW' FROM the_day) < 6)) > 2
-						THEN ((SELECT count(*) AS count_days_no_weekend
-							FROM   generate_series(data_inicio::date
-											, data_fim::date
-											, interval  '1 day') the_day
-								WHERE  extract('ISODOW' FROM the_day) < 6) - 2 )*6*60
-						ELSE 0
-						END;
-		
-		NEW.tempo_execucao = minutos + minutos_dias;
-	END IF;						
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION macrocontrole.calcula_tempo_execucao()
-  OWNER TO postgres;
-
 CREATE TRIGGER calcula_tempo_execucao
 AFTER UPDATE OR INSERT ON macrocontrole.atividade
 FOR EACH ROW EXECUTE PROCEDURE macrocontrole.calcula_tempo_execucao();
