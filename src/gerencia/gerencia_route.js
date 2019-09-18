@@ -10,6 +10,86 @@ const gerenciaModel = require("./gerencia_model");
 
 const router = express.Router();
 
+router.get("/estilos", async (req, res, next) => {
+  let { error, dados } = await gerenciaCtrl.get_estilos();
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id
+  };
+  return sendJsonAndLog(
+    true,
+    "Estilos retornados.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    dados
+  );
+});
+
+router.get("/regras", async (req, res, next) => {
+  let { error, dados } = await gerenciaCtrl.get_regras();
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id
+  };
+  return sendJsonAndLog(
+    true,
+    "Regras retornados.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    dados
+  );
+});
+
+router.get("/modelos", async (req, res, next) => {
+  let { error, dados } = await gerenciaCtrl.get_modelos();
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id
+  };
+  return sendJsonAndLog(
+    true,
+    "Modelos retornados.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    dados
+  );
+});
+
+router.get("/menus", async (req, res, next) => {
+  let { error, dados } = await gerenciaCtrl.get_menus();
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id
+  };
+  return sendJsonAndLog(
+    true,
+    "Menus retornados.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    dados
+  );
+});
+
 router.post("/estilos", async (req, res, next) => {
   let validationResult = Joi.validate(req.body, gerenciaModel.estilos, {
     stripUnknown: true
@@ -24,7 +104,7 @@ router.post("/estilos", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.gravaEstilos(
+  let { error } = await gerenciaCtrl.grava_estilos(
     req.body.estilos,
     req.body.usuario_id
   );
@@ -61,7 +141,7 @@ router.post("/regras", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.gravaRegras(
+  let { error } = await gerenciaCtrl.grava_regras(
     req.body.regras,
     req.body.usuario_id
   );
@@ -98,7 +178,7 @@ router.post("/menus", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.gravaMenus(
+  let { error } = await gerenciaCtrl.grava_menus(
     req.body.menus,
     req.body.usuario_id
   );
@@ -135,7 +215,7 @@ router.post("/modelos", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.gravaModelos(
+  let { error } = await gerenciaCtrl.grava_modelos(
     req.body.modelos,
     req.body.usuario_id
   );
