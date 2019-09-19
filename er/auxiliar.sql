@@ -3,13 +3,13 @@ WITH cte AS (
 SELECT id,
 CASE 
 WHEN data_fim::date = data_inicio::date
-THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio )
-WHEN DATE_PART('hour', data_fim  - data_inicio ) < 12
+THEN round(60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) + DATE_PART('seconds', data_fim - data_inicio )/60)
+WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) < 12
 THEN 0
-WHEN DATE_PART('hour', data_fim  - data_inicio ) <= 18
-THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 12*60
+WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) <= 18
+THEN round(24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) + DATE_PART('seconds', data_fim - data_inicio )/60  - 12*60)
 ELSE
-60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 18*60
+round(24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) + DATE_PART('seconds', data_fim - data_inicio )/60 - 18*60)
 END AS minutos,
 CASE
 WHEN ((SELECT count(*) AS count_days_no_weekend
@@ -44,13 +44,13 @@ GROUP BY a.id)
 SELECT a.id,
 CASE 
 WHEN data_fim::date = data_inicio::date
-THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio )
-WHEN DATE_PART('hour', data_fim  - data_inicio ) < 12
+THEN round(60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) + DATE_PART('seconds', data_fim - data_inicio )/60)
+WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) < 12
 THEN 0
-WHEN DATE_PART('hour', data_fim  - data_inicio ) <= 18
-THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 12*60
+WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) <= 18
+THEN round(24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) + DATE_PART('seconds', data_fim - data_inicio )/60  - 12*60)
 ELSE
-60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 18*60
+round(24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) + DATE_PART('seconds', data_fim - data_inicio )/60 - 18*60)
 END AS minutos,
 CASE
 WHEN d.nr_dias > 2

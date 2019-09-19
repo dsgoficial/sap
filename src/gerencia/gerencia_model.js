@@ -98,7 +98,7 @@ const fila_prioritaria = Joi.object().keys({
     .integer()
     .strict()
     .required(),
-  usuario_id: Joi.number()
+  usuario_prioridade_id: Joi.number()
     .integer()
     .strict()
     .required(),

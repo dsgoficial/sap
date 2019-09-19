@@ -141,12 +141,7 @@ $BODY$
 		RAISE EXCEPTION 'Etapa de Correção deve ser imediatamente após a uma etapa de Revisão.';
 	END IF;
 
-    IF TG_OP = 'DELETE' THEN
-      RETURN OLD;
-    ELSE
-      RETURN NEW;
-    END IF;
-
+    RETURN NULL
 
     END;
 $BODY$
@@ -156,7 +151,7 @@ ALTER FUNCTION macrocontrole.etapa_verifica_rev_corr()
   OWNER TO postgres;
 
 CREATE TRIGGER etapa_verifica_rev_corr
-BEFORE UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
 FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
 
 --
@@ -431,24 +426,25 @@ CREATE OR REPLACE FUNCTION macrocontrole.tempo_execucao_estimativa(i integer) RE
 DECLARE
    tempo_minutos integer;
 BEGIN
-        WITH datas AS (
+ WITH datas AS (
         SELECT a.id, COUNT (DISTINCT data_login::date) as nr_dias 
         FROM macrocontrole.atividade AS a
         INNER JOIN acompanhamento.login AS l ON l.usuario_id = a.usuario_id
         WHERE a.id = i
-        AND l.data_login >= a.data_inicio AND l.data_login <= a.data_fim
-        )
-        , cte AS (
+        AND l.data_login::date >= a.data_inicio::date AND l.data_login::date <= a.data_fim::date
+		GROUP BY a.id
+        ),
+		cte AS (
         SELECT a.id,
         CASE 
         WHEN data_fim::date = data_inicio::date
         THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio )
-        WHEN DATE_PART('hour', data_fim  - data_inicio ) < 12
+        WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) < 12
         THEN 0
-        WHEN DATE_PART('hour', data_fim  - data_inicio ) <= 18
-        THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 12*60
+        WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) <= 18
+        THEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) +DATE_PART('seconds', data_fim - data_inicio )/60  - 12*60
         ELSE
-        60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 18*60
+        24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 18*60
         END AS minutos,
         CASE
         WHEN d.nr_dias > 2
@@ -458,7 +454,7 @@ BEGIN
         FROM macrocontrole.atividade AS a
         INNER JOIN datas AS d ON d.id = a.id
         )
-        SELECT (minutos + minutos_dias) INTO tempo_minutos
+        SELECT (minutos + minutos_dias)
         FROM cte;
 
         RETURN tempo_minutos;
@@ -471,18 +467,28 @@ CREATE OR REPLACE FUNCTION macrocontrole.tempo_execucao_microcontrole(i integer)
 DECLARE
    tempo_minutos integer;
 BEGIN
-        WITH dl AS (
-        SELECT data, LAG(data,1) OVER(ORDER BY data) AS previous_data
-        FROM microcontrole.monitoramento_acao
-        WHERE atividade_id = i
-        )
-        SELECT 
-        SUM(CASE 
-        WHEN data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )) < 16
-        THEN 60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data )
-        ELSE 0
-        END) INTO tempo_minutos
-        FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL;
+		WITH datas AS (
+		SELECT data_inicio AS data FROM macrocontrole.atividade WHERE id = i
+		UNION
+		(SELECT data
+		FROM microcontrole.monitoramento_acao AS ma
+		INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
+		WHERE ma.atividade_id = i AND a.data_inicio < ma.data AND a.data_fim > ma.data
+		ORDER BY data)
+		UNION 
+		SELECT data_fim AS data FROM macrocontrole.atividade WHERE id = i
+		)
+		, dl AS (
+		SELECT data, LAG(data,1) OVER(ORDER BY data) AS previous_data
+		FROM datas
+		)
+		SELECT 
+		round(SUM(CASE 
+		WHEN data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60) < 5
+		THEN (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60)
+		ELSE 0
+        END)) INTO tempo_minutos
+		FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL;
 
         RETURN tempo_minutos;
 END;
@@ -539,6 +545,7 @@ CREATE TABLE macrocontrole.perda_recurso_humano(
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
+ 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	tipo_problema_id INTEGER NOT NULL REFERENCES dominio.tipo_problema (code),
 	descricao TEXT NOT NULL,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE

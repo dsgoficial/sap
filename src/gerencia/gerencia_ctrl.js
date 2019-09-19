@@ -1,5 +1,7 @@
 "use strict";
 
+const pgp = require('pg-promise')();
+
 const { db } = require("../database");
 
 const { distribuicaoCtrl } = require("../distribuicao_atividades");
@@ -14,7 +16,6 @@ controller.get_atividade = async atividade_id => {
       WHERE a.id = $1 LIMIT 1`,
       [atividade_id]
     );
-
     if (atividade) {
       const { erro, dados } = await distribuicaoCtrl.dados_producao(
         atividade_id
@@ -29,7 +30,6 @@ controller.get_atividade = async atividade_id => {
       err.context = "gerencia_ctrl";
       err.information = {};
       err.information.atividade_id = atividade_id;
-      err.information.trace = error;
       return { verificaError: err, dados: null };
     }
   } catch (error) {
@@ -52,9 +52,9 @@ controller.get_atividade_usuario = async usuario_id => {
       return { erro: erro, dados: null };
     }
 
-    const { erro, dados } = await distribuicaoCtrl.dados_producao(prioridade);
-    if (erro) {
-      return { erro: erro, dados: null };
+    const { erro2, dados } = await distribuicaoCtrl.dados_producao(prioridade.id);
+    if (erro2) {
+      return { erro: erro2, dados: null };
     }
     return { erro: null, dados: dados };
   } catch (error) {
@@ -166,7 +166,7 @@ controller.grava_estilos = async (estilos, usuario_id) => {
       );
   
       const values = [];
-      estilos.foreach(d => {
+      estilos.forEach(d => {
         values.push({
           f_table_schema: d.f_table_schema,
           f_table_name: d.f_table_name,
@@ -237,7 +237,7 @@ controller.grava_regras = async (regras, usuario_id) => {
       );
   
       const values = [];
-      regras.foreach(d => {
+      regras.forEach(d => {
         values.push({
           grupo_regra: d.grupo_regra,
           tipo_regra: d.tipo_regra,
@@ -303,7 +303,7 @@ controller.grava_modelos = async (modelos, usuario_id) => {
       );
   
       const values = [];
-      modelos.foreach(d => {
+      modelos.forEach(d => {
         values.push({
           nome: d.nome,
           descricao: d.descricao,
@@ -357,7 +357,7 @@ controller.grava_menus = async (menus, usuario_id) => {
       );
   
       const values = [];
-      menus.foreach(d => {
+      menus.forEach(d => {
         values.push({
           nome_menu: d.nome_menu,
           definicao_menu: d.definicao_menu,
@@ -389,11 +389,27 @@ controller.grava_menus = async (menus, usuario_id) => {
   }
 };
 
+controller.get_banco_dados = async () => {
+  try {
+    let banco_dados = await db.any(
+      `SELECT nome, servidor, porta FROM macrocontrole.banco_dados`
+    );
+    return { error: null, dados: banco_dados };
+  } catch (error) {
+    const err = new Error("Falha durante tentativa de retornar banco de dados.");
+    err.status = 500;
+    err.context = "gerencia_ctrl";
+    err.information = {};
+    err.information.trace = error;
+    return { error: err, dados: null };
+  }
+};
+
 controller.get_usuario = async () => {
   try {
     let usuarios = await db.any(
       `SELECT u.id, tpg.nome_abrev || ' ' || u.nome_guerra AS nome
-      FROM dgeo.usuario AS u INNER JOIN dominio.tipo_posto_graduacao AS tpg ON tpg.code = u.tipo_posto_grad_id WHERE u.disponivel IS TRUE`
+      FROM dgeo.usuario AS u INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id WHERE u.ativo IS TRUE`
     );
     return { error: null, dados: usuarios };
   } catch (error) {
@@ -428,14 +444,16 @@ controller.unidade_trabalho_disponivel = async (
 ) => {
   try {
     const table = new pgp.helpers.TableName(
-      "macrocontrole",
-      "unidade_trabalho"
+      {
+        table: "unidade_trabalho",
+        schema: "macrocontrole"
+      }
     );
 
     const cs = new pgp.helpers.ColumnSet(["?id", "disponivel"], { table });
 
     const values = [];
-    unidade_trabalho_ids.foreach(d => {
+    unidade_trabalho_ids.forEach(d => {
       values.push({
         id: d,
         disponivel: disponivel
@@ -443,7 +461,7 @@ controller.unidade_trabalho_disponivel = async (
     });
 
     const query =
-      pgp.helpers.update(values, cs, { tableAlias: "X", valueAlias: "Y" }) +
+      pgp.helpers.update(values, cs, null, { tableAlias: "X", valueAlias: "Y" }) +
       "WHERE Y.id = X.id";
 
     db.none(query);
@@ -521,12 +539,11 @@ controller.reinicia_atividade = async atividade_id => {
       await t.none(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
-      VALUES($1,$2,$3,1)
+      VALUES($1,$2,1)
       `,
         [
           atividade.etapa_id,
-          atividade.unidade_trabalho_id,
-          atividade.usuario_id
+          atividade.unidade_trabalho_id
         ]
       );
     });
@@ -546,50 +563,50 @@ controller.volta_atividade = async (atividade_id, manter_usuarios) => {
   try {
     const data_fim = new Date();
     await db.tx(async t => {
-      await t.none(
+      let atividades_updates = await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      tipo_situacao_id = 6, data_fim = COALESCE(data_fim, $2), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
+      tipo_situacao_id = 6, data_fim = COALESCE(data_fim, $2), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($1), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($1)
       WHERE id IN (
           SELECT a_ant.id
           FROM macrocontrole.atividade AS a
           INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-          INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
-          WHERE a.id = $1 AND e_ant.ordem >= e.ordem AND a._ant.tipo_situacao_id IN (2,4)
-      )
+          INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+          WHERE a.id = $1 AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,4)
+      ) RETURNING id 
       `,
         [atividade_id, data_fim]
       );
+      let ids = [];
+      atividades_updates.forEach(i => {
+        ids.push(i.id)
+      })
+      ids = ids.join(',');
+
       if(manter_usuarios){
         await t.none(
           `
         INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id, observacao)
         (
-          SELECT a_ant.etapa_id, a_ant.unidade_trabalho_id, a_ant.usuario_id, 3 AS tipo_situacao_id, a_ant.observacao
-          FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-          INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
-          WHERE a.id = $1 AND e_ant.ordem >= e.ordem AND a._ant.tipo_situacao_id IN (2,4)
+          SELECT etapa_id, unidade_trabalho_id, usuario_id, 3 AS tipo_situacao_id, observacao
+          FROM macrocontrole.atividade
+          WHERE id in ($1:raw)
         )
         `,
-          [ atividade_id ]
+          [ ids ]
         );
       } else {
         await t.none(
           `
           INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id, observacao)
           (
-            SELECT a_ant.etapa_id, a_ant.unidade_trabalho_id, 1 AS tipo_situacao_id, a_ant.observacao
-            FROM macrocontrole.atividade AS a
-            INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
-            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-            INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
-            WHERE a.id = $1 AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,4)
+            SELECT etapa_id, unidade_trabalho_id, 1 AS tipo_situacao_id, observacao
+            FROM macrocontrole.atividade
+            WHERE id in ($1:raw)
           )
           `,
-            [ atividade_id ]
+            [ ids ]
         );
       }
     });
@@ -608,7 +625,9 @@ controller.volta_atividade = async (atividade_id, manter_usuarios) => {
 
 controller.avanca_atividade = async (atividade_id, concluida) => {
   try {
+    const data_fim = new Date();
     await db.tx(async t => {
+      let atividades_updates;
       if(concluida){
         await t.none(
             `
@@ -619,29 +638,78 @@ controller.avanca_atividade = async (atividade_id, concluida) => {
               FROM macrocontrole.atividade AS a
               INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
               INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-              INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
-              WHERE a.id = $1 AND a_ant.tipo_situacao_id IN (1,2,3)
+              INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+              WHERE a.id = $1 AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (1,3)
           )
           `,
           [ atividade_id ]
+        );
+        atividades_updates = await t.any(
+            `
+          UPDATE macrocontrole.atividade SET
+          tipo_situacao_id = 6, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($1), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($1)
+          WHERE id IN (
+              SELECT a_ant.id
+              FROM macrocontrole.atividade AS a
+              INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+              INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+              INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+              WHERE a.id = $1 AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (2)
+          ) RETURNING id
+          `,
+            [atividade_id, data_fim]
         );
       } else {
         await t.none(
           `
         UPDATE macrocontrole.atividade SET
-        tipo_situacao_id = 5, data_inicio = NULL, data_fim = NULL, usuario_id = NULL
+        tipo_situacao_id = 5, data_inicio = NULL, data_fim = NULL, usuario_id = NULL, tempo_execucao_microcontrole = NULL, tempo_execucao_estimativa = NULL
         WHERE id IN (
             SELECT a_ant.id
             FROM macrocontrole.atividade AS a
             INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-            INNER JOIN macrocontrole.etapa AS e_ant ON e.id = a_ant.etapa_id
-            WHERE a.id = $1 AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (1,2,3)
+            INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+            WHERE a.id = $1 AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (1,3)
         )
         `,
           [atividade_id]
         );
+        atividades_updates = await t.any(
+          `
+        UPDATE macrocontrole.atividade SET
+        tipo_situacao_id = 6, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($1), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($1)
+        WHERE id IN (
+            SELECT a_ant.id
+            FROM macrocontrole.atividade AS a
+            INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+            WHERE a.id = $1 AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (2)
+        )  RETURNING id
+        `,
+          [atividade_id, data_fim]
+        );
       }
+      let ids = [];
+      atividades_updates.forEach(i => {
+        ids.push(i.id)
+      })
+      ids = ids.join(',');
+      if(ids.length > 0){
+        await t.none(
+          `
+          INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id, observacao)
+          (
+            SELECT etapa_id, unidade_trabalho_id, 5 AS tipo_situacao_id, observacao
+            FROM macrocontrole.atividade
+            WHERE id in ($1:raw)
+          )
+          `,
+            [ ids ]
+        );
+      }
+
     });
     return { error: null };
   } catch (error) {
@@ -668,36 +736,54 @@ controller.cria_revisao = async atividade_id => {
         GROUP BY a.etapa_id, a.unidade_trabalho_id, ut.subfase_id`,
         [atividade_id]
       );
-
-      let revisao = await t.one(
-        `
-      INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
-      VALUES($1,$2,$3) RETURNING id
-      `,
-        [
-          2,
-          atividade.subfase_id,
-          atividade.ordem + 1
-        ]
+      let etapa_rev = await t.oneOrNone(
+        `SELECT e_ant.id FROM macrocontrole.atividade AS a
+        INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+        INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.subfase_id = e.subfase_id
+        LEFT JOIN macrocontrole.atividade AS a_ant ON 
+        a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND
+        a_ant.etapa_id = e_ant.id
+        WHERE a.id = $1 AND a_ant.id IS NULL AND e.ordem < e_ant.ordem AND e_ant.tipo_etapa_id = 2
+        ORDER BY e_ant.ordem
+        LIMIT 1`,
+        [atividade_id]
       );
-      let correcao = await t.one(
+      let etapa_corr = await t.oneOrNone(
+        `SELECT e_ant.id FROM macrocontrole.atividade AS a
+        INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+        INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.subfase_id = e.subfase_id
+        LEFT JOIN macrocontrole.atividade AS a_ant ON 
+        a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND
+        a_ant.etapa_id = e_ant.id
+        WHERE a.id = $1 AND a_ant.id IS NULL AND e.ordem < e_ant.ordem AND e_ant.tipo_etapa_id = 3
+        ORDER BY e_ant.ordem
+        LIMIT 1`,
+        [atividade_id]
+      );
+      let ids;
+      if(etapa_rev && etapa_corr){
+        ids = []
+        ids.push(etapa_rev)
+        ids.push(etapa_corr)
+      } else {
+       ids = await t.any(
         `
       INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
-      VALUES($1,$2,$3) RETURNING id
+      VALUES(2,$1,$2),(3,$1,$3) RETURNING id
       `,
         [
-          3,
           atividade.subfase_id,
+          atividade.ordem + 1,
           atividade.ordem + 2
         ]
       );
-
+      }
       await t.none(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
       VALUES ($1,$3,1),($2,$3,1)
       `,
-        [revisao.id, correcao.id, atividade.unidade_trabalho_id]
+        [ids[0].id, ids[1].id, atividade.unidade_trabalho_id]
       );
 
     });
@@ -725,18 +811,34 @@ controller.cria_revcorr = async atividade_id => {
         GROUP BY a.etapa_id, a.unidade_trabalho_id, ut.subfase_id`,
         [atividade_id]
       );
-
-      let revcorr = await t.one(
-        `
-      INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
-      VALUES($1,$2,$3) RETURNING id
-      `,
-        [
-          4,
-          atividade.subfase_id,
-          atividade.ordem + 1
-        ]
+      let etapa_revcorr = await t.oneOrNone(
+        `SELECT e_ant.id FROM macrocontrole.atividade AS a
+        INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+        INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.subfase_id = e.subfase_id
+        LEFT JOIN macrocontrole.atividade AS a_ant ON 
+        a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND
+        a_ant.etapa_id = e_ant.id
+        WHERE a.id = $1 AND a_ant.id IS NULL AND e.ordem < e_ant.ordem AND e_ant.tipo_etapa_id = 4
+        ORDER BY e_ant.ordem
+        LIMIT 1`,
+        [atividade_id]
       );
+      let revcorr;
+      if(etapa_revcorr){
+        revcorr = etapa_revcorr
+      } else {
+        revcorr = await t.one(
+          `
+        INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
+        VALUES($1,$2,$3) RETURNING id
+        `,
+          [
+            4,
+            atividade.subfase_id,
+            atividade.ordem + 1
+          ]
+        );
+      }
       await t.none(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
@@ -760,7 +862,7 @@ controller.cria_revcorr = async atividade_id => {
 
 controller.cria_fila_prioritaria = async (
   atividade_id,
-  usuario_id,
+  usuario_prioridade_id,
   prioridade
 ) => {
   try {
@@ -769,7 +871,7 @@ controller.cria_fila_prioritaria = async (
       INSERT INTO macrocontrole.fila_prioritaria(atividade_id, usuario_id, prioridade)
       VALUES($1,$2,$3)
       `,
-      [atividade_id, usuario_id, prioridade]
+      [atividade_id, usuario_prioridade_id, prioridade]
     );
     return { error: null };
   } catch (error) {
@@ -778,7 +880,7 @@ controller.cria_fila_prioritaria = async (
     err.context = "distribuicao_ctrl";
     err.information = {};
     err.information.atividade_id = atividade_id;
-    err.information.usuario_id = usuario_id;
+    err.information.usuario_prioridade_id = usuario_prioridade_id;
     err.information.prioridade = prioridade;
     err.information.trace = error;
     return { error: err };

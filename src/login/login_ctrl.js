@@ -10,23 +10,24 @@ const controller = {};
 
 const verificaPlugins = async (plugins, qgis) => {
   try {
-    const qgis_minimo = await db.any(
-      "SELECT versao_minima FROM dgeo.versao_qgis"
+    const qgis_minimo = await db.oneOrNone(
+      "SELECT versao_minima FROM dgeo.versao_qgis LIMIT 1"
     );
-    let qgis_wrong_version = true;
-    if(qgis && semver.gte(qgis, qgis_minimo.versao_minima)){
-      qgis_wrong_version = false;
+    if(qgis_minimo){
+      let qgis_wrong_version = true;
+      if(qgis && semver.gte(qgis, qgis_minimo.versao_minima)){
+        qgis_wrong_version = false;
+      }
+      if (qgis_wrong_version) {
+        const err = new Error(
+          "Versão incorreta do QGIS. A seguinte versão é necessária: " + qgis_minimo.versao_minima
+        );
+        err.status = 401;
+        err.context = "login_ctrl";
+        err.information = { plugins };
+        return { error_plugin: err };
+      } 
     }
-    if (qgis_wrong_version) {
-      const err = new Error(
-        "Versão incorreta do QGIS. A seguinte versão é necessária: " + qgis_minimo.versao_minima
-      );
-      err.status = 401;
-      err.context = "login_ctrl";
-      err.information = { plugins };
-      return { error_plugin: err };
-    } 
-
     const plugins_minimos = await db.any(
       "SELECT nome, versao_minima FROM dgeo.plugin"
     );

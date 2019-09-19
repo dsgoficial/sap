@@ -318,7 +318,7 @@ router.get("/atividade/usuario/:id", async (req, res, next) => {
   } else {
     return sendJsonAndLog(
       true,
-      "Atividade não encontrada.",
+      "Atividade do usuário não encontrada.",
       "gerencia_route",
       information,
       res,
@@ -326,6 +326,26 @@ router.get("/atividade/usuario/:id", async (req, res, next) => {
       null
     );
   }
+});
+
+router.get("/banco_dados", async (req, res, next) => {
+  let { error, dados } = await gerenciaCtrl.get_banco_dados();
+  if (error) {
+    return next(error);
+  }
+
+  let information = {
+    usuario_id: req.body.usuario_id
+  };
+  return sendJsonAndLog(
+    true,
+    "Banco de dados retornados.",
+    "gerencia_route",
+    information,
+    res,
+    200,
+    dados
+  );
 });
 
 router.get("/usuario", async (req, res, next) => {
@@ -653,7 +673,7 @@ router.post("/fila_prioritaria", async (req, res, next) => {
 
   let { error } = await gerenciaCtrl.cria_fila_prioritaria(
     req.body.atividade_id,
-    req.body.usuario_id,
+    req.body.usuario_prioridade_id,
     req.body.prioridade
   );
   if (error) {
@@ -662,7 +682,7 @@ router.post("/fila_prioritaria", async (req, res, next) => {
 
   let information = {
     atividade_id: req.body.atividade_id,
-    usuario_id: req.body.usuario_id,
+    usuario_prioridade_id: req.body.usuario_prioridade_id,
     prioridade: req.body.prioridade
   };
   return sendJsonAndLog(

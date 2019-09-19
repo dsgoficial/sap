@@ -674,9 +674,8 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.usuario_id = usuario_id;
-    err.information.etapa_id = etapa_id;
-    err.information.unidade_trabalho_id = unidade_trabalho_id;
+    err.information.atividade_id = atividade_id;
+    err.information.sem_correcao = sem_correcao;
     err.information.trace = error;
     return { finalizaError: err };
   }
@@ -813,10 +812,10 @@ controller.problema_atividade = async (
       );
       await t.any(
         `
-      INSERT INTO macrocontrole.problema_atividade(atividade_id, tipo_problema_id, descricao, resolvido)
-      VALUES($1,$2,$3,FALSE)
+      INSERT INTO macrocontrole.problema_atividade(atividade_id, unidade_trabalho_id, tipo_problema_id, descricao, resolvido)
+      VALUES($1,$2,$3,$4,FALSE)
       `,
-        [new_id.id, tipo_problema_id, descricao]
+        [new_id.id, atividade.unidade_trabalho_id, tipo_problema_id, descricao]
       );
       await t.any(
         `

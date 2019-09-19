@@ -35,15 +35,15 @@ WHERE u.ativo IS TRUE
 ORDER BY l.data_login DESC;
 
 CREATE VIEW acompanhamento.usuarios_logados_hoje AS
-SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno, l.data_login
+SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno, l.data_ultimo_login
 FROM dgeo.usuario AS u
 INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
 INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
 INNER JOIN
-(SELECT usuario_id, max(data_login) as data_login FROM acompanhamento.login GROUP BY usuario_id) AS l
+(SELECT usuario_id, max(data_login) as data_ultimo_login FROM acompanhamento.login GROUP BY usuario_id) AS l
 ON l.usuario_id = u.id
-WHERE l.data_login::date = now()::date
-ORDER BY l.data_login DESC;
+WHERE l.data_ultimo_login::date = now()::date
+ORDER BY l.data_ultimo_login DESC;
 
 CREATE VIEW acompanhamento.usuarios_nao_logados_hoje AS
 SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno, l.data_login
@@ -150,11 +150,11 @@ GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.lote_id
 ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.lote_id;
 
 CREATE VIEW acompanhamento.atividades_em_execucao AS
-SELECT ee.id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
-te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome,
+SELECT ROW_NUMBER () OVER (ORDER BY ee.data_inicio) AS id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+te.nome AS etapa_nome, l.nome AS lote, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,
 u.id AS usuario_id, 
 tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-ee.data_inicio, ee.id as atividade_id
+ee.data_inicio
 FROM macrocontrole.atividade AS ee
 INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
 INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
@@ -162,6 +162,7 @@ INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
 INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ee.unidade_trabalho_id = ut.id
+INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
@@ -171,10 +172,11 @@ WHERE ee.tipo_situacao_id = 2 --em execucao
 ORDER BY ee.data_inicio ASC;
 
 CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
-SELECT ee.id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
-te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome, u.id AS usuario_id, 
+SELECT ROW_NUMBER () OVER (ORDER BY ee.data_fim DESC) AS id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+te.nome AS etapa_nome, l.nome AS lote, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,  u.id AS usuario_id, 
 tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-ee.data_inicio, ee.data_fim, ee.id as atividade_id
+ee.data_inicio, ee.data_fim, 
+ee.tempo_execucao_estimativa, ee.tempo_execucao_microcontrole
 FROM macrocontrole.atividade AS ee
 INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
 INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
@@ -182,6 +184,7 @@ INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
 INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ee.unidade_trabalho_id = ut.id
+INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
@@ -192,7 +195,7 @@ ORDER BY ee.data_fim DESC
 LIMIT 100;
 
 CREATE VIEW acompanhamento.atividades_bloqueadas AS
-SELECT atividade_id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+SELECT atividade_id, ut.id as unidade_trabalho_id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome, motivo, ut.geom
 FROM (
 SELECT a.id AS atividade_id, 'Unidade de trabalho não disponível. Atividade ' || situacao AS motivo
