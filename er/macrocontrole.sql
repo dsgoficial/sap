@@ -454,7 +454,7 @@ BEGIN
         FROM macrocontrole.atividade AS a
         INNER JOIN datas AS d ON d.id = a.id
         )
-        SELECT (minutos + minutos_dias)
+        SELECT (minutos + minutos_dias) INTO tempo_minutos
         FROM cte;
 
         RETURN tempo_minutos;
