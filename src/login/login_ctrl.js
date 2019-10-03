@@ -3,6 +3,7 @@
 const jwt = require("jsonwebtoken");
 
 const { db, testdb } = require("../database");
+const {serializeError} = require('serialize-error');
 
 const semver = require("semver");
 
@@ -123,7 +124,7 @@ controller.login = async (usuario, senha, plugins, qgis) => {
     err.context = "login_ctrl";
     err.information = {};
     err.information.usuario = usuario;
-    err.information.trace = error;
+    err.information.trace = serializeError(error)
     return { loginError: err, token: null, administrador: null };
   }
 };

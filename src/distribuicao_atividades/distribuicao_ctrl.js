@@ -3,6 +3,7 @@
 const { db } = require("../database");
 
 const controller = {};
+const {serializeError} = require('serialize-error');
 
 controller.calcula_fila = async usuario => {
   return db
@@ -243,7 +244,7 @@ controller.calcula_fila = async usuario => {
       err.context = "distribuicao_ctrl";
       err.information = {};
       err.information.usuario_id = usuario;
-      err.information.trace = error;
+      err.information.trace = serializeError(error)
       return { erro: err, prioridade: null };
     });
 };
@@ -590,7 +591,7 @@ controller.dados_producao = async atividade_id => {
       err.context = "distribuicao_ctrl";
       err.information = {};
       err.information.atividade_id = atividade_id;
-      err.information.trace = error;
+      err.information.trace = serializeError(error)
       return { erro: err, dados: null };
     });
 };
@@ -625,7 +626,7 @@ controller.verifica = async usuario_id => {
     err.context = "distribuicao_ctrl";
     err.information = {};
     err.information.usuario_id = usuario_id;
-    err.information.trace = error;
+    err.information.trace = serializeError(error)
     return { verificaError: err, dados: null };
   }
 };
@@ -676,7 +677,7 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
     err.information = {};
     err.information.atividade_id = atividade_id;
     err.information.sem_correcao = sem_correcao;
-    err.information.trace = error;
+    err.information.trace = serializeError(error)
     return { finalizaError: err };
   }
 };
@@ -736,7 +737,7 @@ controller.inicia = async usuario_id => {
       err.context = "distribuicao_ctrl";
       err.information = {};
       err.information.usuario_id = usuario_id;
-      err.information.trace = error;
+      err.information.trace = serializeError(error)
       return { iniciaError, dados: null };
     });
 };
@@ -773,7 +774,7 @@ controller.responde_questionario = async (atividade_id, respostas) => {
     err.information.usuario_id = usuario_id;
     err.information.atividade_id = atividade_id;
     err.information.respostas = respostas;
-    err.information.trace = error;
+    err.information.trace = serializeError(error)
     return { error: err };
   }
 };
@@ -835,7 +836,7 @@ controller.problema_atividade = async (
     err.information.atividade_id = atividade_id;
     err.information.tipo_problema_id = tipo_problema_id;
     err.information.descricao = descricao;
-    err.information.trace = error;
+    err.information.trace = serializeError(error)
     return { error: err };
   }
 };
@@ -856,7 +857,7 @@ controller.get_tipo_problema = async () => {
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.trace = error;
+    err.information.trace = serializeError(error)
     return { error: err, dados: null };
   }
 };

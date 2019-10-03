@@ -4,67 +4,67 @@ const Joi = require("joi");
 
 const estilos = Joi.object().keys({
   estilos: Joi.array()
-  .items(
-    Joi.object().keys({
-      f_table_schema: Joi.string().required(),
-      f_table_name: Joi.string().required(),
-      f_geometry_column: Joi.string().required(),
-      stylename: Joi.string().required(),
-      styleqml: Joi.string().required(),
-      stylesld: Joi.string().required(),
-      ui: Joi.string().required()
-    })
-  )
-  .required()
-  .min(1)
+    .items(
+      Joi.object().keys({
+        f_table_schema: Joi.string().required(),
+        f_table_name: Joi.string().required(),
+        f_geometry_column: Joi.string().required(),
+        stylename: Joi.string().required(),
+        styleqml: Joi.string().required(),
+        stylesld: Joi.string().required(),
+        ui: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
 });
 
 const menus = Joi.object().keys({
   menus: Joi.array()
-  .items(
-    Joi.object().keys({
-      nome_menu: Joi.string().required(),
-      definicao_menu: Joi.string().required(),
-      ordem_menu: Joi.string().required()
-    })
-  )
-  .required()
-  .min(1)
+    .items(
+      Joi.object().keys({
+        nome_menu: Joi.string().required(),
+        definicao_menu: Joi.string().required(),
+        ordem_menu: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
 });
 
 const regras = Joi.object().keys({
   regras: Joi.array()
-  .items(
-    Joi.object().keys({
-      grupo_regra: Joi.string().required(),
-      tipo_regra: Joi.string().required(),
-      schema: Joi.string().required(),
-      camada: Joi.string().required(),
-      atributo: Joi.string().required(),
-      regra: Joi.string().required(),
-      cor_rgb: Joi.string().required(),
-      descricao: Joi.string().required(),
-      ordem: Joi.number()
-        .integer()
-        .strict()
-        .required()
-    })
-  )
-  .required()
-  .min(1)
+    .items(
+      Joi.object().keys({
+        grupo_regra: Joi.string().required(),
+        tipo_regra: Joi.string().required(),
+        schema: Joi.string().required(),
+        camada: Joi.string().required(),
+        atributo: Joi.string().required(),
+        regra: Joi.string().required(),
+        cor_rgb: Joi.string().required(),
+        descricao: Joi.string().required(),
+        ordem: Joi.number()
+          .integer()
+          .strict()
+          .required()
+      })
+    )
+    .required()
+    .min(1)
 });
 
 const qgis_models = Joi.object().keys({
   modelos: Joi.array()
-  .items(
-    Joi.object().keys({
-      nome: Joi.string().required(),
-      descricao: Joi.string().required(),
-      model_xml: Joi.string().required()
-    })
-  )
-  .required()
-  .min(1)
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        descricao: Joi.string().required(),
+        model_xml: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
 });
 
 const unidade_trabalho_disponivel = Joi.object().keys({
@@ -80,24 +80,36 @@ const unidade_trabalho_disponivel = Joi.object().keys({
 });
 
 const atividade_pausar = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
+  atividade_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
     .required()
+    .min(1)
 });
 
 const atividade_reiniciar = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
+  atividade_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
     .required()
+    .min(1)
 });
 
 const fila_prioritaria = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
+  atividade_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
   usuario_prioridade_id: Joi.number()
     .integer()
     .strict()
@@ -109,10 +121,14 @@ const fila_prioritaria = Joi.object().keys({
 });
 
 const fila_prioritaria_grupo = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
+  atividade_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
   perfil_producao_id: Joi.number()
     .integer()
     .strict()
@@ -124,10 +140,14 @@ const fila_prioritaria_grupo = Joi.object().keys({
 });
 
 const observacao = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
+  atividade_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
   observacao_atividade: Joi.string(),
   observacao_etapa: Joi.string(),
   observacao_subfase: Joi.string(),
@@ -135,35 +155,53 @@ const observacao = Joi.object().keys({
 });
 
 const atividade_voltar = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
+  atividade_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
+  manter_usuarios: Joi.boolean()
     .strict()
-    .required(),
-  manter_usuarios: Joi.boolean().strict()
-  .required()
+    .required()
 });
 
 const atividade_avancar = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
+  atividade_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
+  concluida: Joi.boolean()
     .strict()
-    .required(),
-  concluida: Joi.boolean().strict()
-  .required()
+    .required()
 });
 
 const atividade_criar_revisao = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
+  atividade_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
     .required()
+    .min(1)
 });
 
 const atividade_criar_revcorr = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
+  atividade_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
     .required()
+    .min(1)
 });
 
 module.exports.estilos = estilos;

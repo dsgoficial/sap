@@ -447,13 +447,13 @@ router.post("/atividade/pausar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.pausa_atividade(req.body.atividade_id);
+  let { error } = await gerenciaCtrl.pausa_atividade(req.body.atividade_ids);
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_id: req.body.atividade_id
+    atividade_ids: req.body.atividade_ids
   };
   return sendJsonAndLog(
     true,
@@ -484,13 +484,13 @@ router.post("/atividade/reiniciar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.reinicia_atividade(req.body.atividade_id);
+  let { error } = await gerenciaCtrl.reinicia_atividade(req.body.atividade_ids);
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_id: req.body.atividade_id
+    atividade_ids: req.body.atividade_ids
   };
   return sendJsonAndLog(
     true,
@@ -521,13 +521,13 @@ router.post("/atividade/voltar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.volta_atividade(req.body.atividade_id, req.body.manter_usuarios);
+  let { error } = await gerenciaCtrl.volta_atividade(req.body.atividade_ids, req.body.manter_usuarios);
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_id: req.body.atividade_id,
+    atividade_ids: req.body.atividade_ids,
     manter_usuarios: req.body.manter_usuarios
   };
   return sendJsonAndLog(
@@ -559,13 +559,13 @@ router.post("/atividade/avancar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.avanca_atividade(req.body.atividade_id, req.body.concluida);
+  let { error } = await gerenciaCtrl.avanca_atividade(req.body.atividade_ids, req.body.concluida);
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_id: req.body.atividade_id,
+    atividade_ids: req.body.atividade_ids,
     concluida: req.body.concluida
   };
   return sendJsonAndLog(
@@ -597,13 +597,13 @@ router.post("/atividade/criar_revisao", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.cria_revisao(req.body.atividade_id);
+  let { error } = await gerenciaCtrl.cria_revisao(req.body.atividade_ids);
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_id: req.body.atividade_id
+    atividade_ids: req.body.atividade_ids
   };
   return sendJsonAndLog(
     true,
@@ -634,13 +634,13 @@ router.post("/atividade/criar_revcorr", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.cria_revcorr(req.body.atividade_id);
+  let { error } = await gerenciaCtrl.cria_revcorr(req.body.atividade_ids);
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_id: req.body.atividade_id
+    atividade_ids: req.body.atividade_ids
   };
   return sendJsonAndLog(
     true,
@@ -672,7 +672,7 @@ router.post("/fila_prioritaria", async (req, res, next) => {
   }
 
   let { error } = await gerenciaCtrl.cria_fila_prioritaria(
-    req.body.atividade_id,
+    req.body.atividade_ids,
     req.body.usuario_prioridade_id,
     req.body.prioridade
   );
@@ -681,7 +681,7 @@ router.post("/fila_prioritaria", async (req, res, next) => {
   }
 
   let information = {
-    atividade_id: req.body.atividade_id,
+    atividade_ids: req.body.atividade_ids,
     usuario_prioridade_id: req.body.usuario_prioridade_id,
     prioridade: req.body.prioridade
   };
@@ -715,7 +715,7 @@ router.post("/fila_prioritaria_grupo", async (req, res, next) => {
   }
 
   let { error } = await gerenciaCtrl.cria_fila_prioritaria_grupo(
-    req.body.atividade_id,
+    req.body.atividade_ids,
     req.body.perfil_producao_id,
     req.body.prioridade
   );
@@ -724,7 +724,7 @@ router.post("/fila_prioritaria_grupo", async (req, res, next) => {
   }
 
   let information = {
-    atividade_id: req.body.atividade_id,
+    atividade_ids: req.body.atividade_ids,
     perfil_producao_id: req.body.perfil_producao_id,
     prioridade: req.body.prioridade
   };
@@ -754,7 +754,7 @@ router.post("/observacao", async (req, res, next) => {
   }
 
   let { error } = await gerenciaCtrl.cria_observacao(
-    req.body.atividade_id,
+    req.body.atividade_ids,
     req.body.observacao_atividade,
     req.body.observacao_etapa,
     req.body.observacao_subfase,
@@ -765,7 +765,7 @@ router.post("/observacao", async (req, res, next) => {
   }
 
   let information = {
-    atividade_id: req.body.atividade_id,
+    atividade_ids: req.body.atividade_ids,
     observacao_atividade: req.body.observacao_atividade,
     observacao_etapa: req.body.observacao_etapa,
     observacao_subfase: req.body.observacao_subfase,

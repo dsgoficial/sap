@@ -1,6 +1,7 @@
 "use strict";
 
 const { db } = require("../database");
+const {serializeError} = require('serialize-error');
 
 const controller = {};
 
@@ -52,7 +53,7 @@ controller.armazenaFeicao = async (atividade_id, data, dados) => {
     err.information.atividade_id = atividade_id;
     err.information.data = data;
     err.information.dados = dados;
-    err.information.trace = error;
+    err.information.trace = serializeError(error)
     return { error: err };
   }
 };
@@ -94,7 +95,7 @@ controller.armazenaApontamento = async (atividade_id, data, dados) => {
     err.information.atividade_id = atividade_id;
     err.information.data = data;
     err.information.dados = dados;
-    err.information.trace = error;
+    err.information.trace = serializeError(error)
     return { error: err };
   }
 };
@@ -136,7 +137,7 @@ controller.armazenaTela = async (atividade_id, dados) => {
     err.information = {};
     err.information.atividade_id = atividade_id;
     err.information.dados = dados;
-    err.information.trace = error;
+    err.information.trace = serializeError(error)
     return { error: err };
   }
 };
@@ -154,7 +155,9 @@ controller.armazenaAcao = async (atividade_id) => {
     const err = new Error("Falha durante tentativa de inserção de ação.");
     err.status = 500;
     err.context = "microcontrole_ctrl";
-    err.information = { atividade_id, trace: error };
+    err.information = {};
+    err.information.atividade_id = atividade_id;
+    err.information.trace = serializeError(error)
     return { error: err };
   }
 };
