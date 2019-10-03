@@ -8,9 +8,11 @@ const controller = {};
 controller.armazenaFeicao = async (atividade_id, data, dados) => {
   try {
     const table = new pgp.helpers.TableName(
-      "monitoramento_feicao",
-      "microcontrole"
-    );
+      {
+        table: "monitoramento_feicao",
+        schema: "microcontrole"
+      }
+      );
 
     const cs = new pgp.helpers.ColumnSet(
       [
@@ -61,9 +63,11 @@ controller.armazenaFeicao = async (atividade_id, data, dados) => {
 controller.armazenaApontamento = async (atividade_id, data, dados) => {
   try {
     const table = new pgp.helpers.TableName(
-      "monitoramento_apontamento",
-      "microcontrole"
-    );
+      {
+        table: "monitoramento_apontamento",
+        schema: "microcontrole"
+      }
+      );
 
     const cs = new pgp.helpers.ColumnSet(
       ["quantidade", "categoria", "data", "atividade_id"],
@@ -103,9 +107,11 @@ controller.armazenaApontamento = async (atividade_id, data, dados) => {
 controller.armazenaTela = async (atividade_id, dados) => {
   try {
     const table = new pgp.helpers.TableName(
-      "monitoramento_tela",
-      "microcontrole"
-    );
+      {
+        table: "monitoramento_tela",
+        schema: "microcontrole"
+      }
+      );
 
     const cs = new pgp.helpers.ColumnSet(["data", "atividade_id", "geom"], {
       table

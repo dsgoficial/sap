@@ -148,10 +148,10 @@ const observacao = Joi.object().keys({
     )
     .required()
     .min(1),
-  observacao_atividade: Joi.string(),
-  observacao_etapa: Joi.string(),
-  observacao_subfase: Joi.string(),
-  observacao_unidade_trabalho: Joi.string()
+  observacao_atividade: Joi.string().allow('', null),
+  observacao_etapa: Joi.string().allow('', null),
+  observacao_subfase: Joi.string().allow('', null),
+  observacao_unidade_trabalho: Joi.string().allow('', null)
 });
 
 const atividade_voltar = Joi.object().keys({

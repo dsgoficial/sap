@@ -149,7 +149,12 @@ controller.grava_estilos = async (estilos, usuario_id) => {
         `DELETE FROM dgeo.layer_styles`
       );
 
-      const table = new pgp.helpers.TableName("layer_styles", "dgeo");
+      const table = new pgp.helpers.TableName(
+        {
+          table: "layer_styles",
+          schema: "dgeo"
+        }
+        );
 
       const cs = new pgp.helpers.ColumnSet(
         [
@@ -183,9 +188,9 @@ controller.grava_estilos = async (estilos, usuario_id) => {
   
       const query = pgp.helpers.insert(values, cs)
   
-      let result = t.result(query);
+      let result = await t.result(query);
   
-      if (!result.rowCount || result.rowCount != 1) {
+      if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir estilo.");
       }
 
@@ -218,7 +223,12 @@ controller.grava_regras = async (regras, usuario_id) => {
         `DELETE FROM dgeo.layer_rules`
       );
 
-      const table = new pgp.helpers.TableName("layer_rules", "dgeo");
+      const table = new pgp.helpers.TableName(
+        {
+          table: "layer_rules",
+          schema: "dgeo"
+        }
+        );
 
       const cs = new pgp.helpers.ColumnSet(
         [
@@ -256,9 +266,9 @@ controller.grava_regras = async (regras, usuario_id) => {
   
       const query = pgp.helpers.insert(values, cs);
   
-      let result = t.result(query);
+      let result = await t.result(query);
   
-      if (!result.rowCount || result.rowCount != 1) {
+      if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir regra.");
       }
     });
@@ -290,7 +300,12 @@ controller.grava_modelos = async (modelos, usuario_id) => {
         `DELETE FROM dgeo.layer_qgis_models`
       );
 
-      const table = new pgp.helpers.TableName("layer_qgis_models", "dgeo");
+      const table = new pgp.helpers.TableName(
+        {
+          table: "layer_qgis_models",
+          schema: "dgeo"
+        }
+        );
 
       const cs = new pgp.helpers.ColumnSet(
         [
@@ -316,9 +331,9 @@ controller.grava_modelos = async (modelos, usuario_id) => {
   
       const query = pgp.helpers.insert(values, cs);
   
-      let result = t.result(query);
+      let result = await t.result(query);
   
-      if (!result.rowCount || result.rowCount != 1) {
+      if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir modelo.");
       }
     });
@@ -350,7 +365,12 @@ controller.grava_menus = async (menus, usuario_id) => {
         `DELETE FROM dgeo.layer_menus`
       );
 
-      const table = new pgp.helpers.TableName("layer_menus", "dgeo");
+      const table = new pgp.helpers.TableName(
+        {
+          table: "layer_menus",
+          schema: "dgeo"
+        }
+        );
 
       const cs = new pgp.helpers.ColumnSet(
         ["nome_menu", "definicao_menu", "ordem_menu", "owner", "update_time"],
@@ -370,9 +390,9 @@ controller.grava_menus = async (menus, usuario_id) => {
   
       const query = pgp.helpers.insert(values, cs)
   
-      let result = t.result(query);
+      let result = await t.result(query);
   
-      if (!result.rowCount || result.rowCount != 1) {
+      if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir/atualizar menu.");
       }
     });
@@ -488,16 +508,21 @@ controller.pausa_atividade = async atividade_ids => {
         `
       UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
-      WHERE id in ($2::raw)
+      WHERE id in ($2:raw)
       `,
-        [data_fim, atividade_ids]
+        [data_fim, atividade_ids.join(',')]
       );
       let atividades = await t.any(
-        `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id in ($1::raw)`,
-        [atividade_ids]
+        `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
+        [atividade_ids.join(',')]
       );
 
-      const table = new pgp.helpers.TableName("atividade", "macrocontrole");
+      const table = new pgp.helpers.TableName(
+        {
+          table: "atividade",
+          schema: "macrocontrole"
+        }
+        );
 
       const cs = new pgp.helpers.ColumnSet(
         [
@@ -521,9 +546,9 @@ controller.pausa_atividade = async atividade_ids => {
   
       const query = pgp.helpers.insert(values, cs)
   
-      let result = t.result(query);
-  
-      if (!result.rowCount || result.rowCount != 1) {
+      let result = await t.result(query);
+
+      if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir atividades.");
       }
     });
@@ -546,17 +571,21 @@ controller.reinicia_atividade = async atividade_ids => {
       await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      data_fim = $1, tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
-      WHERE id in ($2::raw)
+      data_inicio = COALESCE(data_inicio, $1), data_fim = COALESCE(data_fim, $1), tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
+      WHERE id in ($2:raw)
       `,
-        [data_fim, atividade_ids]
+        [data_fim, atividade_ids.join(',')]
       );
       let atividades = await t.any(
-        `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($1::raw)`,
-        [atividade_ids]
+        `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
+        [atividade_ids.join(',')]
       );
-      const table = new pgp.helpers.TableName("atividade", "macrocontrole");
-
+      const table = new pgp.helpers.TableName(
+        {
+          table: "atividade",
+          schema: "macrocontrole"
+        }
+        );
       const cs = new pgp.helpers.ColumnSet(
         [
           "etapa_id",
@@ -577,9 +606,9 @@ controller.reinicia_atividade = async atividade_ids => {
   
       const query = pgp.helpers.insert(values, cs)
   
-      let result = t.result(query);
+      let result = await t.result(query);
   
-      if (!result.rowCount || result.rowCount != 1) {
+      if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir atividades.");
       }
 
@@ -603,48 +632,49 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
       let atividades_updates = await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      tipo_situacao_id = 6, data_fim = COALESCE(data_fim, $2), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
+      tipo_situacao_id = 6, data_inicio = COALESCE(data_inicio, $2), data_fim = COALESCE(data_fim, $2), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
       WHERE id IN (
           SELECT a_ant.id
           FROM macrocontrole.atividade AS a
           INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
           INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-          WHERE a.id in ($1::raw) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,4)
+          WHERE a.id in ($1:raw) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,3,4,5)
       ) RETURNING id 
       `,
-        [atividade_ids, data_fim]
+        [atividade_ids.join(','), data_fim]
       );
       let ids = [];
       atividades_updates.forEach(i => {
         ids.push(i.id)
       })
-      ids = ids.join(',');
-
-      if(manter_usuarios){
-        await t.none(
-          `
-        INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id, observacao)
-        (
-          SELECT etapa_id, unidade_trabalho_id, usuario_id, 3 AS tipo_situacao_id, observacao
-          FROM macrocontrole.atividade
-          WHERE id in ($1:raw)
-        )
-        `,
-          [ ids ]
-        );
-      } else {
-        await t.none(
-          `
-          INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id, observacao)
+      if(ids.length > 0){
+        ids = ids.join(',');
+        if(manter_usuarios){
+          await t.none(
+            `
+          INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id, observacao)
           (
-            SELECT etapa_id, unidade_trabalho_id, 1 AS tipo_situacao_id, observacao
+            SELECT etapa_id, unidade_trabalho_id, usuario_id, 3 AS tipo_situacao_id, observacao
             FROM macrocontrole.atividade
             WHERE id in ($1:raw)
           )
           `,
             [ ids ]
-        );
+          );
+        } else {
+          await t.none(
+            `
+            INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id, observacao)
+            (
+              SELECT etapa_id, unidade_trabalho_id, 1 AS tipo_situacao_id, observacao
+              FROM macrocontrole.atividade
+              WHERE id in ($1:raw)
+            )
+            `,
+              [ ids ]
+          );
+        }
       }
     });
     return { error: null };
@@ -676,25 +706,25 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
               INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
               INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
               INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-              WHERE a.id in ($1::raw) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (1,3)
+              WHERE a.id in ($1:raw) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (1,3)
           )
           `,
-          [ atividade_ids ]
+          [ atividade_ids.join(',') ]
         );
         atividades_updates = await t.any(
             `
           UPDATE macrocontrole.atividade SET
-          tipo_situacao_id = 6, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($1), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($1)
+          tipo_situacao_id = 6, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
           WHERE id IN (
               SELECT a_ant.id
               FROM macrocontrole.atividade AS a
               INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
               INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
               INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-              WHERE a.id in ($1::raw) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (2)
+              WHERE a.id in ($1:raw) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (2)
           ) RETURNING id
           `,
-            [atividade_ids, data_fim]
+            [atividade_ids.join(','), data_fim]
         );
       } else {
         await t.none(
@@ -707,33 +737,33 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
             INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-            WHERE a.id in ($1::raw) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (1,3)
+            WHERE a.id in ($1:raw) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (1,3)
         )
         `,
-          [atividade_ids]
+          [atividade_ids.join(',')]
         );
         atividades_updates = await t.any(
           `
         UPDATE macrocontrole.atividade SET
-        tipo_situacao_id = 6, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($1), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($1)
+        tipo_situacao_id = 6, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
         WHERE id IN (
             SELECT a_ant.id
             FROM macrocontrole.atividade AS a
             INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-            WHERE a.id in ($1::raw) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (2)
+            WHERE a.id in ($1:raw) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (2)
         )  RETURNING id
         `,
-          [atividade_ids, data_fim]
+          [atividade_ids.join(','), data_fim]
         );
       }
       let ids = [];
       atividades_updates.forEach(i => {
         ids.push(i.id)
       })
-      ids = ids.join(',');
       if(ids.length > 0){
+        ids = ids.join(',');
         await t.none(
           `
           INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id, observacao)
@@ -798,6 +828,9 @@ controller.cria_revisao = async atividade_ids => {
           [atividade_id]
         );
         let ids;
+        console.log(atividade_id)
+        console.log(etapa_rev)
+        console.log(etapa_corr)
         if(etapa_rev && etapa_corr){
           ids = []
           ids.push(etapa_rev)
@@ -912,7 +945,7 @@ controller.cria_fila_prioritaria = async (
         WHERE id in ($1:raw)
       )
       `,
-      [atividade_ids, usuario_prioridade_id, prioridade]
+      [atividade_ids.join(','), usuario_prioridade_id, prioridade]
     );
     return { error: null };
   } catch (error) {
@@ -943,7 +976,7 @@ controller.cria_fila_prioritaria_grupo = async (
         WHERE id in ($1:raw)
       )
       `,
-      [atividade_ids, perfil_producao_id, prioridade]
+      [atividade_ids.join(','), perfil_producao_id, prioridade]
     );
     return { error: null };
   } catch (error) {
@@ -968,51 +1001,47 @@ controller.cria_observacao = async (
 ) => {
   try {
     await db.tx(async t => {
-      if (observacao_atividade) {
         await t.any(
           `
         UPDATE macrocontrole.atividade SET
-        observacao = $2 WHERE id in ($1::raw)
+        observacao = $2 WHERE id in ($1:raw)
         `,
-          [atividade_ids, observacao_atividade]
+          [atividade_ids.join(','), observacao_atividade]
         );
-      }
-      if (observacao_etapa) {
+
         await t.any(
           `
         UPDATE macrocontrole.etapa SET
         observacao = $2 WHERE id in (
           SELECT DISTINCT e.id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1::raw)
+          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:raw)
         )
         `,
-          [atividade_ids, observacao_etapa]
+          [atividade_ids.join(','), observacao_etapa]
         );
-      }
-      if (observacao_subfase) {
+
         await t.any(
           `
         UPDATE macrocontrole.subfase SET
         observacao = $2 WHERE id in (
           SELECT DISTINCT e.subfase_id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1::raw)
+          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:raw)
         )
         `,
-          [atividade_ids, observacao_subfase]
+          [atividade_ids.join(','), observacao_subfase]
         );
-      }
-      if (observacao_unidade_trabalho) {
+
         await t.any(
           `
         UPDATE macrocontrole.unidade_trabalho SET
         observacao = $2 WHERE id in (
           SELECT DISTINCT a.unidade_trabalho_id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1::raw)
+          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:raw)
         )
         `,
-          [atividade_ids, observacao_unidade_trabalho]
+          [atividade_ids.join(','), observacao_unidade_trabalho]
         );
-      }
+
     });
     return { error: null };
   } catch (error) {
