@@ -16,7 +16,7 @@ const verificaPlugins = async (plugins, qgis) => {
     );
     if(qgis_minimo){
       let qgis_wrong_version = true;
-      if(qgis && semver.gte(qgis, qgis_minimo.versao_minima)){
+      if(qgis && semver.gte(semver.coerce(qgis), semver.coerce(qgis_minimo.versao_minima))){
         qgis_wrong_version = false;
       }
       if (qgis_wrong_version) {
@@ -36,7 +36,7 @@ const verificaPlugins = async (plugins, qgis) => {
       let notFound = true;
       if(plugins){
         plugins.forEach(p => {
-          if (p.nome === plugins_minimos[i].nome && semver.gte(p.versao, plugins_minimos[i].versao_minima)) {
+          if (p.nome === plugins_minimos[i].nome && semver.gte(semver.coerce(p.versao), semver.coerce(plugins_minimos[i].versao_minima))) {
             notFound = false;
           }
         });
