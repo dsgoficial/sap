@@ -794,7 +794,7 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
 controller.cria_revisao = async atividade_ids => {
   try {
     await db.tx(async t => {
-      atividade_ids.forEach(async atividade_id => {
+      for (const atividade_id of atividade_ids) {
         let atividade = await t.one(
           `SELECT a.unidade_trabalho_id, ut.subfase_id, max(e.ordem) AS ordem FROM macrocontrole.atividade AS a 
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
@@ -828,9 +828,6 @@ controller.cria_revisao = async atividade_ids => {
           [atividade_id]
         );
         let ids;
-        console.log(atividade_id)
-        console.log(etapa_rev)
-        console.log(etapa_corr)
         if(etapa_rev && etapa_corr){
           ids = []
           ids.push(etapa_rev)
@@ -855,7 +852,7 @@ controller.cria_revisao = async atividade_ids => {
         `,
           [ids[0].id, ids[1].id, atividade.unidade_trabalho_id]
         );
-      })
+      }
     });
     return { error: null };
   } catch (error) {
@@ -872,7 +869,7 @@ controller.cria_revisao = async atividade_ids => {
 controller.cria_revcorr = async atividade_ids => {
   try {
     await db.tx(async t => {
-      atividade_ids.forEach(async atividade_id => {
+      for (const atividade_id of atividade_ids) {
         let atividade = await t.one(
           `SELECT a.unidade_trabalho_id, ut.subfase_id, max(e.ordem) AS ordem FROM macrocontrole.atividade AS a 
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
@@ -916,7 +913,7 @@ controller.cria_revcorr = async atividade_ids => {
         `,
           [revcorr.id, atividade.unidade_trabalho_id]
         );
-      })
+      }
     });
     return { error: null };
   } catch (error) {
