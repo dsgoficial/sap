@@ -263,11 +263,9 @@ router.post("/modelos", async (req, res, next) => {
  *
  */
 router.get("/atividade/:id", async (req, res, next) => {
-  let { verificaError, dados } = await gerenciaCtrl.get_atividade(
-    req.params.id
-  );
-  if (verificaError) {
-    return next(verificaError);
+  let { error, dados } = await gerenciaCtrl.get_atividade(req.params.id);
+  if (error) {
+    return next(error);
   }
 
   let information = {
@@ -447,13 +445,15 @@ router.post("/atividade/pausar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.pausa_atividade(req.body.atividade_ids);
+  let { error } = await gerenciaCtrl.pausa_atividade(
+    req.body.unidade_trabalho_ids
+  );
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_ids: req.body.atividade_ids
+    unidade_trabalho_ids: req.body.unidade_trabalho_ids
   };
   return sendJsonAndLog(
     true,
@@ -484,13 +484,15 @@ router.post("/atividade/reiniciar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.reinicia_atividade(req.body.atividade_ids);
+  let { error } = await gerenciaCtrl.reinicia_atividade(
+    req.body.unidade_trabalho_ids
+  );
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_ids: req.body.atividade_ids
+    unidade_trabalho_ids: req.body.unidade_trabalho_ids
   };
   return sendJsonAndLog(
     true,
@@ -521,7 +523,10 @@ router.post("/atividade/voltar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.volta_atividade(req.body.atividade_ids, req.body.manter_usuarios);
+  let { error } = await gerenciaCtrl.volta_atividade(
+    req.body.atividade_ids,
+    req.body.manter_usuarios
+  );
   if (error) {
     return next(error);
   }
@@ -559,7 +564,10 @@ router.post("/atividade/avancar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.avanca_atividade(req.body.atividade_ids, req.body.concluida);
+  let { error } = await gerenciaCtrl.avanca_atividade(
+    req.body.atividade_ids,
+    req.body.concluida
+  );
   if (error) {
     return next(error);
   }
@@ -597,13 +605,15 @@ router.post("/atividade/criar_revisao", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.cria_revisao(req.body.atividade_ids);
+  let { error } = await gerenciaCtrl.cria_revisao(
+    req.body.unidade_trabalho_ids
+  );
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_ids: req.body.atividade_ids
+    unidade_trabalho_ids: req.body.unidade_trabalho_ids
   };
   return sendJsonAndLog(
     true,
@@ -634,13 +644,15 @@ router.post("/atividade/criar_revcorr", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.cria_revcorr(req.body.atividade_ids);
+  let { error } = await gerenciaCtrl.cria_revcorr(
+    req.body.unidade_trabalho_ids
+  );
   if (error) {
     return next(error);
   }
 
   let information = {
-    atividade_ids: req.body.atividade_ids
+    unidade_trabalho_ids: req.body.unidade_trabalho_ids
   };
   return sendJsonAndLog(
     true,

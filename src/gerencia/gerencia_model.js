@@ -80,7 +80,7 @@ const unidade_trabalho_disponivel = Joi.object().keys({
 });
 
 const atividade_pausar = Joi.object().keys({
-  atividade_ids: Joi.array()
+  unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
         .integer()
@@ -91,7 +91,7 @@ const atividade_pausar = Joi.object().keys({
 });
 
 const atividade_reiniciar = Joi.object().keys({
-  atividade_ids: Joi.array()
+  unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
         .integer()
@@ -148,10 +148,10 @@ const observacao = Joi.object().keys({
     )
     .required()
     .min(1),
-  observacao_atividade: Joi.string().allow('', null),
-  observacao_etapa: Joi.string().allow('', null),
-  observacao_subfase: Joi.string().allow('', null),
-  observacao_unidade_trabalho: Joi.string().allow('', null)
+  observacao_atividade: Joi.string().allow("", null),
+  observacao_etapa: Joi.string().allow("", null),
+  observacao_subfase: Joi.string().allow("", null),
+  observacao_unidade_trabalho: Joi.string().allow("", null)
 });
 
 const atividade_voltar = Joi.object().keys({
@@ -183,7 +183,7 @@ const atividade_avancar = Joi.object().keys({
 });
 
 const atividade_criar_revisao = Joi.object().keys({
-  atividade_ids: Joi.array()
+  unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
         .integer()
@@ -194,7 +194,7 @@ const atividade_criar_revisao = Joi.object().keys({
 });
 
 const atividade_criar_revcorr = Joi.object().keys({
-  atividade_ids: Joi.array()
+  unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
         .integer()

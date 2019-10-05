@@ -1,9 +1,9 @@
 "use strict";
 
-const pgp = require('pg-promise')();
+const pgp = require("pg-promise")();
 
 const { db } = require("../database");
-const {serializeError} = require('serialize-error');
+const { serializeError } = require("serialize-error");
 
 const { distribuicaoCtrl } = require("../distribuicao_atividades");
 
@@ -39,7 +39,7 @@ controller.get_atividade = async atividade_id => {
     err.context = "gerencia_ctrl";
     err.information = {};
     err.information.atividade_id = atividade_id;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { verificaError: err, dados: null };
   }
 };
@@ -53,7 +53,9 @@ controller.get_atividade_usuario = async usuario_id => {
       return { erro: erro, dados: null };
     }
 
-    const { erro2, dados } = await distribuicaoCtrl.dados_producao(prioridade.id);
+    const { erro2, dados } = await distribuicaoCtrl.dados_producao(
+      prioridade.id
+    );
     if (erro2) {
       return { erro: erro2, dados: null };
     }
@@ -66,71 +68,63 @@ controller.get_atividade_usuario = async usuario_id => {
     err.context = "gerencia_ctrl";
     err.information = {};
     err.information.usuario_id = usuario_id;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { erro: err, dados: null };
   }
 };
 
 controller.get_estilos = async () => {
   try {
-    let dados = await db.any(
-      `SELECT * FROM dgeo.layer_styles`
-    );
+    let dados = await db.any(`SELECT * FROM dgeo.layer_styles`);
     return { error: null, dados: dados };
   } catch (error) {
     const err = new Error("Falha durante tentativa de retornar estilos.");
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err, dados: null };
   }
 };
 
 controller.get_regras = async () => {
   try {
-    let dados = await db.any(
-      `SELECT * FROM dgeo.layer_rules`
-    );
+    let dados = await db.any(`SELECT * FROM dgeo.layer_rules`);
     return { error: null, dados: dados };
   } catch (error) {
     const err = new Error("Falha durante tentativa de retornar regras.");
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err, dados: null };
   }
 };
 
 controller.get_modelos = async () => {
   try {
-    let dados = await db.any(
-      `SELECT * FROM dgeo.layer_qgis_models`
-    );
+    let dados = await db.any(`SELECT * FROM dgeo.layer_qgis_models`);
     return { error: null, dados: dados };
   } catch (error) {
     const err = new Error("Falha durante tentativa de retornar modelos.");
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err, dados: null };
   }
 };
 
 controller.get_menus = async () => {
   try {
-    let dados = await db.any(
-      `SELECT * FROM dgeo.layer_menus`
-    );
+    let dados = await db.any(`SELECT * FROM dgeo.layer_menus`);
     return { error: null, dados: dados };
   } catch (error) {
     const err = new Error("Falha durante tentativa de retornar menus.");
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err, dados: null };
   }
 };
@@ -145,16 +139,12 @@ controller.grava_estilos = async (estilos, usuario_id) => {
         WHERE u.id = $1`,
         [usuario_id]
       );
-      await t.none(
-        `DELETE FROM dgeo.layer_styles`
-      );
+      await t.none(`DELETE FROM dgeo.layer_styles`);
 
-      const table = new pgp.helpers.TableName(
-        {
-          table: "layer_styles",
-          schema: "dgeo"
-        }
-        );
+      const table = new pgp.helpers.TableName({
+        table: "layer_styles",
+        schema: "dgeo"
+      });
 
       const cs = new pgp.helpers.ColumnSet(
         [
@@ -170,7 +160,7 @@ controller.grava_estilos = async (estilos, usuario_id) => {
         ],
         { table }
       );
-  
+
       const values = [];
       estilos.forEach(d => {
         values.push({
@@ -185,15 +175,14 @@ controller.grava_estilos = async (estilos, usuario_id) => {
           update_time: data_gravacao
         });
       });
-  
-      const query = pgp.helpers.insert(values, cs)
-  
+
+      const query = pgp.helpers.insert(values, cs);
+
       let result = await t.result(query);
-  
+
       if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir estilo.");
       }
-
     });
 
     return { error: null };
@@ -204,7 +193,7 @@ controller.grava_estilos = async (estilos, usuario_id) => {
     err.information = {};
     err.information.usuario_id = usuario_id;
     err.information.estilos = estilos;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -219,16 +208,12 @@ controller.grava_regras = async (regras, usuario_id) => {
         WHERE u.id = $1`,
         [usuario_id]
       );
-      await t.none(
-        `DELETE FROM dgeo.layer_rules`
-      );
+      await t.none(`DELETE FROM dgeo.layer_rules`);
 
-      const table = new pgp.helpers.TableName(
-        {
-          table: "layer_rules",
-          schema: "dgeo"
-        }
-        );
+      const table = new pgp.helpers.TableName({
+        table: "layer_rules",
+        schema: "dgeo"
+      });
 
       const cs = new pgp.helpers.ColumnSet(
         [
@@ -246,7 +231,7 @@ controller.grava_regras = async (regras, usuario_id) => {
         ],
         { table }
       );
-  
+
       const values = [];
       regras.forEach(d => {
         values.push({
@@ -263,11 +248,11 @@ controller.grava_regras = async (regras, usuario_id) => {
           update_time: data_gravacao
         });
       });
-  
+
       const query = pgp.helpers.insert(values, cs);
-  
+
       let result = await t.result(query);
-  
+
       if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir regra.");
       }
@@ -281,7 +266,7 @@ controller.grava_regras = async (regras, usuario_id) => {
     err.information = {};
     err.information.usuario_id = usuario_id;
     err.information.regras = regras;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -296,28 +281,18 @@ controller.grava_modelos = async (modelos, usuario_id) => {
         WHERE u.id = $1`,
         [usuario_id]
       );
-      await t.none(
-        `DELETE FROM dgeo.layer_qgis_models`
-      );
+      await t.none(`DELETE FROM dgeo.layer_qgis_models`);
 
-      const table = new pgp.helpers.TableName(
-        {
-          table: "layer_qgis_models",
-          schema: "dgeo"
-        }
-        );
+      const table = new pgp.helpers.TableName({
+        table: "layer_qgis_models",
+        schema: "dgeo"
+      });
 
       const cs = new pgp.helpers.ColumnSet(
-        [
-          "nome",
-          "descricao",
-          "model_xml",
-          "owner",
-          "update_time"
-        ],
+        ["nome", "descricao", "model_xml", "owner", "update_time"],
         { table }
       );
-  
+
       const values = [];
       modelos.forEach(d => {
         values.push({
@@ -328,11 +303,11 @@ controller.grava_modelos = async (modelos, usuario_id) => {
           update_time: data_gravacao
         });
       });
-  
+
       const query = pgp.helpers.insert(values, cs);
-  
+
       let result = await t.result(query);
-  
+
       if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir modelo.");
       }
@@ -346,7 +321,7 @@ controller.grava_modelos = async (modelos, usuario_id) => {
     err.information = {};
     err.information.usuario_id = usuario_id;
     err.information.modelos = modelos;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -361,22 +336,18 @@ controller.grava_menus = async (menus, usuario_id) => {
         WHERE u.id = $1`,
         [usuario_id]
       );
-      await t.none(
-        `DELETE FROM dgeo.layer_menus`
-      );
+      await t.none(`DELETE FROM dgeo.layer_menus`);
 
-      const table = new pgp.helpers.TableName(
-        {
-          table: "layer_menus",
-          schema: "dgeo"
-        }
-        );
+      const table = new pgp.helpers.TableName({
+        table: "layer_menus",
+        schema: "dgeo"
+      });
 
       const cs = new pgp.helpers.ColumnSet(
         ["nome_menu", "definicao_menu", "ordem_menu", "owner", "update_time"],
         { table }
       );
-  
+
       const values = [];
       menus.forEach(d => {
         values.push({
@@ -387,11 +358,11 @@ controller.grava_menus = async (menus, usuario_id) => {
           update_time: data_gravacao
         });
       });
-  
-      const query = pgp.helpers.insert(values, cs)
-  
+
+      const query = pgp.helpers.insert(values, cs);
+
       let result = await t.result(query);
-  
+
       if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir/atualizar menu.");
       }
@@ -405,7 +376,7 @@ controller.grava_menus = async (menus, usuario_id) => {
     err.information = {};
     err.information.usuario_id = usuario_id;
     err.information.menus = menus;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -417,11 +388,13 @@ controller.get_banco_dados = async () => {
     );
     return { error: null, dados: banco_dados };
   } catch (error) {
-    const err = new Error("Falha durante tentativa de retornar banco de dados.");
+    const err = new Error(
+      "Falha durante tentativa de retornar banco de dados."
+    );
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err, dados: null };
   }
 };
@@ -438,7 +411,7 @@ controller.get_usuario = async () => {
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err, dados: null };
   }
 };
@@ -450,11 +423,13 @@ controller.get_perfil_producao = async () => {
     );
     return { error: null, dados: perfil_producao };
   } catch (error) {
-    const err = new Error("Falha durante tentativa de retornar perfis de produção.");
+    const err = new Error(
+      "Falha durante tentativa de retornar perfis de produção."
+    );
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err, dados: null };
   }
 };
@@ -464,12 +439,10 @@ controller.unidade_trabalho_disponivel = async (
   disponivel
 ) => {
   try {
-    const table = new pgp.helpers.TableName(
-      {
-        table: "unidade_trabalho",
-        schema: "macrocontrole"
-      }
-    );
+    const table = new pgp.helpers.TableName({
+      table: "unidade_trabalho",
+      schema: "macrocontrole"
+    });
 
     const cs = new pgp.helpers.ColumnSet(["?id", "disponivel"], { table });
 
@@ -482,8 +455,10 @@ controller.unidade_trabalho_disponivel = async (
     });
 
     const query =
-      pgp.helpers.update(values, cs, null, { tableAlias: "X", valueAlias: "Y" }) +
-      "WHERE Y.id = X.id";
+      pgp.helpers.update(values, cs, null, {
+        tableAlias: "X",
+        valueAlias: "Y"
+      }) + "WHERE Y.id = X.id";
 
     db.none(query);
 
@@ -495,61 +470,60 @@ controller.unidade_trabalho_disponivel = async (
     err.information = {};
     err.information.unidade_trabalho_ids = unidade_trabalho_ids;
     err.information.disponivel = disponivel;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
 
-controller.pausa_atividade = async atividade_ids => {
+controller.pausa_atividade = async unidade_trabalho_ids => {
   try {
     const data_fim = new Date();
     await db.tx(async t => {
-      await t.any(
+      let updated_ids = await t.any(
         `
       UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
-      WHERE id in ($2:raw)
+      WHERE id in (
+        SELECT a.id FROM macrocontrole.atividade AS a
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
+        WHERE ut.id in ($2:raw) AND a.tipo_situacao_id = 2
+        ) RETURNING id
       `,
-        [data_fim, atividade_ids.join(',')]
+        [data_fim, unidade_trabalho_ids.join(",")]
       );
-      let atividades = await t.any(
-        `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
-        [atividade_ids.join(',')]
-      );
-
-      const table = new pgp.helpers.TableName(
-        {
-          table: "atividade",
-          schema: "macrocontrole"
-        }
+      if (updated_ids.length > 0) {
+        let atividades = await t.any(
+          `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
+          [updated_ids.join(",")]
         );
 
-      const cs = new pgp.helpers.ColumnSet(
-        [
-          "etapa_id",
-          "unidade_trabalho_id",
-          "usuario_id",
-          "tipo_situacao_id"
-        ],
-        { table }
-      );
-  
-      const values = [];
-      atividades.forEach(d => {
-        values.push({
-          etapa_id: d.etapa_id,
-          unidade_trabalho_id: d.unidade_trabalho_id,
-          usuario_id: d.usuario_id,
-          tipo_situacao_id: 3
+        const table = new pgp.helpers.TableName({
+          table: "atividade",
+          schema: "macrocontrole"
         });
-      });
-  
-      const query = pgp.helpers.insert(values, cs)
-  
-      let result = await t.result(query);
 
-      if (!result.rowCount || result.rowCount == 0) {
-        throw new Error("Erro ao inserir atividades.");
+        const cs = new pgp.helpers.ColumnSet(
+          ["etapa_id", "unidade_trabalho_id", "usuario_id", "tipo_situacao_id"],
+          { table }
+        );
+
+        const values = [];
+        atividades.forEach(d => {
+          values.push({
+            etapa_id: d.etapa_id,
+            unidade_trabalho_id: d.unidade_trabalho_id,
+            usuario_id: d.usuario_id,
+            tipo_situacao_id: 3
+          });
+        });
+
+        const query = pgp.helpers.insert(values, cs);
+
+        let result = await t.result(query);
+
+        if (!result.rowCount || result.rowCount == 0) {
+          throw new Error("Erro ao inserir atividades.");
+        }
       }
     });
     return { error: null };
@@ -558,60 +532,61 @@ controller.pausa_atividade = async atividade_ids => {
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
-    err.information.atividade_ids = atividade_ids;
-    err.information.trace = serializeError(error)
+    err.information.unidade_trabalho_ids = unidade_trabalho_ids;
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
 
-controller.reinicia_atividade = async atividade_ids => {
+controller.reinicia_atividade = async unidade_trabalho_ids => {
   try {
     const data_fim = new Date();
-    await db.tx(async t => {
+    let updated_ids = await db.tx(async t => {
       await t.any(
         `
       UPDATE macrocontrole.atividade SET
       data_inicio = COALESCE(data_inicio, $1), data_fim = COALESCE(data_fim, $1), tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
-      WHERE id in ($2:raw)
+      WHERE id in (
+        SELECT DISTINCT ON (ut.id) a.id FROM macrocontrole.atividade AS a
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
+        INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+        WHERE ut.id in ($2:raw) AND a.tipo_situacao_id in(2,3)
+        ORDER BY e.ordem
+        ) RETURNING id
       `,
-        [data_fim, atividade_ids.join(',')]
+        [data_fim, unidade_trabalho_ids.join(",")]
       );
-      let atividades = await t.any(
-        `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
-        [atividade_ids.join(',')]
-      );
-      const table = new pgp.helpers.TableName(
-        {
+      if (updated_ids.length > 0) {
+        let atividades = await t.any(
+          `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
+          [updated_ids.join(",")]
+        );
+        const table = new pgp.helpers.TableName({
           table: "atividade",
           schema: "macrocontrole"
-        }
-        );
-      const cs = new pgp.helpers.ColumnSet(
-        [
-          "etapa_id",
-          "unidade_trabalho_id",
-          "tipo_situacao_id"
-        ],
-        { table }
-      );
-  
-      const values = [];
-      atividades.forEach(d => {
-        values.push({
-          etapa_id: d.etapa_id,
-          unidade_trabalho_id: d.unidade_trabalho_id,
-          tipo_situacao_id: 1
         });
-      });
-  
-      const query = pgp.helpers.insert(values, cs)
-  
-      let result = await t.result(query);
-  
-      if (!result.rowCount || result.rowCount == 0) {
-        throw new Error("Erro ao inserir atividades.");
-      }
+        const cs = new pgp.helpers.ColumnSet(
+          ["etapa_id", "unidade_trabalho_id", "tipo_situacao_id"],
+          { table }
+        );
 
+        const values = [];
+        atividades.forEach(d => {
+          values.push({
+            etapa_id: d.etapa_id,
+            unidade_trabalho_id: d.unidade_trabalho_id,
+            tipo_situacao_id: 1
+          });
+        });
+
+        const query = pgp.helpers.insert(values, cs);
+
+        let result = await t.result(query);
+
+        if (!result.rowCount || result.rowCount == 0) {
+          throw new Error("Erro ao inserir atividades.");
+        }
+      }
     });
     return { error: null };
   } catch (error) {
@@ -619,8 +594,8 @@ controller.reinicia_atividade = async atividade_ids => {
     err.status = 500;
     err.context = "gerencia_ctrl";
     err.information = {};
-    err.information.atividade_ids = atividade_ids;
-    err.information.trace = serializeError(error)
+    err.information.unidade_trabalho_ids = unidade_trabalho_ids;
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -642,15 +617,15 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
           WHERE a.id in ($1:raw) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,3,4,5)
       ) RETURNING id 
       `,
-        [atividade_ids.join(','), data_fim]
+        [atividade_ids.join(","), data_fim]
       );
       let ids = [];
       atividades_updates.forEach(i => {
-        ids.push(i.id)
-      })
-      if(ids.length > 0){
-        ids = ids.join(',');
-        if(manter_usuarios){
+        ids.push(i.id);
+      });
+      if (ids.length > 0) {
+        ids = ids.join(",");
+        if (manter_usuarios) {
           await t.none(
             `
           INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id, observacao)
@@ -660,7 +635,7 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
             WHERE id in ($1:raw)
           )
           `,
-            [ ids ]
+            [ids]
           );
         } else {
           await t.none(
@@ -672,7 +647,7 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
               WHERE id in ($1:raw)
             )
             `,
-              [ ids ]
+            [ids]
           );
         }
       }
@@ -685,7 +660,7 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
     err.information = {};
     err.information.atividade_ids = atividade_ids;
     err.information.manter_usuarios = manter_usuarios;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -695,9 +670,9 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
     const data_fim = new Date();
     await db.tx(async t => {
       let atividades_updates;
-      if(concluida){
+      if (concluida) {
         await t.none(
-            `
+          `
           UPDATE macrocontrole.atividade SET
           tipo_situacao_id = 5, data_inicio = NULL, data_fim = NULL, usuario_id = NULL, tempo_execucao_microcontrole = NULL, tempo_execucao_estimativa = NULL
           WHERE id IN (
@@ -709,10 +684,10 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
               WHERE a.id in ($1:raw) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (1,3)
           )
           `,
-          [ atividade_ids.join(',') ]
+          [atividade_ids.join(",")]
         );
         atividades_updates = await t.any(
-            `
+          `
           UPDATE macrocontrole.atividade SET
           tipo_situacao_id = 6, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
           WHERE id IN (
@@ -724,7 +699,7 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
               WHERE a.id in ($1:raw) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (2)
           ) RETURNING id
           `,
-            [atividade_ids.join(','), data_fim]
+          [atividade_ids.join(","), data_fim]
         );
       } else {
         await t.none(
@@ -740,7 +715,7 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
             WHERE a.id in ($1:raw) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (1,3)
         )
         `,
-          [atividade_ids.join(',')]
+          [atividade_ids.join(",")]
         );
         atividades_updates = await t.any(
           `
@@ -755,15 +730,15 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
             WHERE a.id in ($1:raw) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (2)
         )  RETURNING id
         `,
-          [atividade_ids.join(','), data_fim]
+          [atividade_ids.join(","), data_fim]
         );
       }
       let ids = [];
       atividades_updates.forEach(i => {
-        ids.push(i.id)
-      })
-      if(ids.length > 0){
-        ids = ids.join(',');
+        ids.push(i.id);
+      });
+      if (ids.length > 0) {
+        ids = ids.join(",");
         await t.none(
           `
           INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id, observacao)
@@ -773,10 +748,9 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
             WHERE id in ($1:raw)
           )
           `,
-            [ ids ]
+          [ids]
         );
       }
-
     });
     return { error: null };
   } catch (error) {
@@ -786,71 +760,61 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
     err.information = {};
     err.information.atividade_ids = atividade_ids;
     err.information.concluida = concluida;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
 
-controller.cria_revisao = async atividade_ids => {
+controller.cria_revisao = async unidade_trabalho_ids => {
   try {
     await db.tx(async t => {
-      for (const atividade_id of atividade_ids) {
+      for (const unidade_trabalho_id of unidade_trabalho_ids) {
         let atividade = await t.one(
-          `SELECT a.unidade_trabalho_id, ut.subfase_id, max(e.ordem) AS ordem FROM macrocontrole.atividade AS a 
-          INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+          `SELECT ut.subfase_id, max(e.ordem) AS ordem 
+          FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
-          WHERE a.id = $1
-          GROUP BY a.etapa_id, a.unidade_trabalho_id, ut.subfase_id`,
-          [atividade_id]
+          WHERE ut.id = $1
+          GROUP BY ut.subfase_id`,
+          [unidade_trabalho_id]
         );
         let etapa_rev = await t.oneOrNone(
-          `SELECT e_ant.id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-          INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.subfase_id = e.subfase_id
-          LEFT JOIN macrocontrole.atividade AS a_ant ON 
-          a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND
-          a_ant.etapa_id = e_ant.id
-          WHERE a.id = $1 AND a_ant.id IS NULL AND e.ordem < e_ant.ordem AND e_ant.tipo_etapa_id = 2
-          ORDER BY e_ant.ordem
+          `SELECT e.id FROM macrocontrole.unidade_trabalho_id AS ut
+          INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
+          LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.etapa_id = e.id
+          WHERE ut.id = $1 AND a.id IS NULL AND e.tipo_etapa_id = 2
+          ORDER BY e.ordem
           LIMIT 1`,
-          [atividade_id]
+          [unidade_trabalho_id]
         );
         let etapa_corr = await t.oneOrNone(
-          `SELECT e_ant.id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-          INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.subfase_id = e.subfase_id
-          LEFT JOIN macrocontrole.atividade AS a_ant ON 
-          a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND
-          a_ant.etapa_id = e_ant.id
-          WHERE a.id = $1 AND a_ant.id IS NULL AND e.ordem < e_ant.ordem AND e_ant.tipo_etapa_id = 3
-          ORDER BY e_ant.ordem
+          `SELECT e.id FROM macrocontrole.unidade_trabalho_id AS ut
+          INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
+          LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.etapa_id = e.id
+          WHERE ut.id = $1 AND a.id IS NULL AND e.tipo_etapa_id = 3
+          ORDER BY e.ordem
           LIMIT 1`,
-          [atividade_id]
+          [unidade_trabalho_id]
         );
         let ids;
-        if(etapa_rev && etapa_corr){
-          ids = []
-          ids.push(etapa_rev)
-          ids.push(etapa_corr)
+        if (etapa_rev && etapa_corr) {
+          ids = [];
+          ids.push(etapa_rev);
+          ids.push(etapa_corr);
         } else {
-         ids = await t.any(
-          `
+          ids = await t.any(
+            `
         INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
         VALUES(2,$1,$2),(3,$1,$3) RETURNING id
         `,
-          [
-            atividade.subfase_id,
-            atividade.ordem + 1,
-            atividade.ordem + 2
-          ]
-        );
+            [atividade.subfase_id, atividade.ordem + 1, atividade.ordem + 2]
+          );
         }
         await t.none(
           `
         INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
         VALUES ($1,$3,1),($2,$3,1)
         `,
-          [ids[0].id, ids[1].id, atividade.unidade_trabalho_id]
+          [ids[0].id, ids[1].id, unidade_trabalho_id]
         );
       }
     });
@@ -860,50 +824,43 @@ controller.cria_revisao = async atividade_ids => {
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.atividade_ids = atividade_ids;
-    err.information.trace = serializeError(error)
+    err.information.unidade_trabalho_ids = unidade_trabalho_ids;
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
 
-controller.cria_revcorr = async atividade_ids => {
+controller.cria_revcorr = async unidade_trabalho_ids => {
   try {
     await db.tx(async t => {
-      for (const atividade_id of atividade_ids) {
+      for (const unidade_trabalho_id of unidade_trabalho_ids) {
         let atividade = await t.one(
-          `SELECT a.unidade_trabalho_id, ut.subfase_id, max(e.ordem) AS ordem FROM macrocontrole.atividade AS a 
-          INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+          `SELECT ut.subfase_id, max(e.ordem) AS ordem 
+          FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
-          WHERE a.id = $1
-          GROUP BY a.etapa_id, a.unidade_trabalho_id, ut.subfase_id`,
-          [atividade_id]
+          WHERE ut.id = $1
+          GROUP BY ut.subfase_id`,
+          [unidade_trabalho_id]
         );
         let etapa_revcorr = await t.oneOrNone(
-          `SELECT e_ant.id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-          INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.subfase_id = e.subfase_id
-          LEFT JOIN macrocontrole.atividade AS a_ant ON 
-          a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND
-          a_ant.etapa_id = e_ant.id
-          WHERE a.id = $1 AND a_ant.id IS NULL AND e.ordem < e_ant.ordem AND e_ant.tipo_etapa_id = 4
-          ORDER BY e_ant.ordem
+          `SELECT e.id FROM macrocontrole.unidade_trabalho_id AS ut
+          INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
+          LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.etapa_id = e.id
+          WHERE ut.id = $1 AND a.id IS NULL AND e.tipo_etapa_id = 4
+          ORDER BY e.ordem
           LIMIT 1`,
-          [atividade_id]
+          [unidade_trabalho_id]
         );
         let revcorr;
-        if(etapa_revcorr){
-          revcorr = etapa_revcorr
+        if (etapa_revcorr) {
+          revcorr = etapa_revcorr;
         } else {
           revcorr = await t.one(
             `
           INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
           VALUES($1,$2,$3) RETURNING id
           `,
-            [
-              4,
-              atividade.subfase_id,
-              atividade.ordem + 1
-            ]
+            [4, atividade.subfase_id, atividade.ordem + 1]
           );
         }
         await t.none(
@@ -911,7 +868,7 @@ controller.cria_revcorr = async atividade_ids => {
         INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
         VALUES ($1,$2,1)
         `,
-          [revcorr.id, atividade.unidade_trabalho_id]
+          [revcorr.id, unidade_trabalho_id]
         );
       }
     });
@@ -921,8 +878,8 @@ controller.cria_revcorr = async atividade_ids => {
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.atividade_ids = atividade_ids;
-    err.information.trace = serializeError(error)
+    err.information.unidade_trabalho_ids = unidade_trabalho_ids;
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -937,12 +894,12 @@ controller.cria_fila_prioritaria = async (
       `
       INSERT INTO macrocontrole.fila_prioritaria(atividade_id, usuario_id, prioridade)
       (
-        SELECT id, $2 as usuario_id, $3 as prioridade
+        SELECT id, $2 as usuario_id, row_number() over(order by id) + $3-1 as prioridade
         FROM macrocontrole.atividade
         WHERE id in ($1:raw)
       )
       `,
-      [atividade_ids.join(','), usuario_prioridade_id, prioridade]
+      [atividade_ids.join(","), usuario_prioridade_id, prioridade]
     );
     return { error: null };
   } catch (error) {
@@ -953,7 +910,7 @@ controller.cria_fila_prioritaria = async (
     err.information.atividade_ids = atividade_ids;
     err.information.usuario_prioridade_id = usuario_prioridade_id;
     err.information.prioridade = prioridade;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -968,12 +925,12 @@ controller.cria_fila_prioritaria_grupo = async (
       `
       INSERT INTO macrocontrole.fila_prioritaria_grupo(atividade_id, perfil_producao_id, prioridade)
       (
-        SELECT id, $2 as perfil_producao_id, $3 as prioridade
+        SELECT id, $2 as perfil_producao_id, row_number() over(order by id) + $3-1 as prioridade
         FROM macrocontrole.atividade
         WHERE id in ($1:raw)
       )
       `,
-      [atividade_ids.join(','), perfil_producao_id, prioridade]
+      [atividade_ids.join(","), perfil_producao_id, prioridade]
     );
     return { error: null };
   } catch (error) {
@@ -984,7 +941,7 @@ controller.cria_fila_prioritaria_grupo = async (
     err.information.atividade_ids = atividade_ids;
     err.information.perfil_producao_id = perfil_producao_id;
     err.information.prioridade = prioridade;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -998,47 +955,46 @@ controller.cria_observacao = async (
 ) => {
   try {
     await db.tx(async t => {
-        await t.any(
-          `
+      await t.any(
+        `
         UPDATE macrocontrole.atividade SET
         observacao = $2 WHERE id in ($1:raw)
         `,
-          [atividade_ids.join(','), observacao_atividade]
-        );
+        [atividade_ids.join(","), observacao_atividade]
+      );
 
-        await t.any(
-          `
+      await t.any(
+        `
         UPDATE macrocontrole.etapa SET
         observacao = $2 WHERE id in (
           SELECT DISTINCT e.id FROM macrocontrole.atividade AS a
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:raw)
         )
         `,
-          [atividade_ids.join(','), observacao_etapa]
-        );
+        [atividade_ids.join(","), observacao_etapa]
+      );
 
-        await t.any(
-          `
+      await t.any(
+        `
         UPDATE macrocontrole.subfase SET
         observacao = $2 WHERE id in (
           SELECT DISTINCT e.subfase_id FROM macrocontrole.atividade AS a
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:raw)
         )
         `,
-          [atividade_ids.join(','), observacao_subfase]
-        );
+        [atividade_ids.join(","), observacao_subfase]
+      );
 
-        await t.any(
-          `
+      await t.any(
+        `
         UPDATE macrocontrole.unidade_trabalho SET
         observacao = $2 WHERE id in (
           SELECT DISTINCT a.unidade_trabalho_id FROM macrocontrole.atividade AS a
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:raw)
         )
         `,
-          [atividade_ids.join(','), observacao_unidade_trabalho]
-        );
-
+        [atividade_ids.join(","), observacao_unidade_trabalho]
+      );
     });
     return { error: null };
   } catch (error) {
@@ -1051,7 +1007,7 @@ controller.cria_observacao = async (
     err.information.observacao_etapa = observacao_etapa;
     err.information.observacao_subfase = observacao_subfase;
     err.information.observacao_unidade_trabalho = observacao_unidade_trabalho;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
