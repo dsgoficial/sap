@@ -33,8 +33,4 @@ router.get("/acao/usuario/:id", async (req, res, next) => {
   );
 });
 
-router.get("/activity_time", function(req, res) {
-  res.sendFile(path.join(__dirname + "/html/activity_time.html"));
-});
-
 module.exports = router;
