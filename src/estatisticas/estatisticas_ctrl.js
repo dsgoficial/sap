@@ -99,6 +99,8 @@ const activity_statistics = activity_fixed => {
   return activity_fixed;
 };
 
+get_acao_em_execucao;
+
 controller.get_acao_usuario = async (usuario_id, days) => {
   try {
     let no_activity = await db.any(
@@ -107,7 +109,7 @@ controller.get_acao_usuario = async (usuario_id, days) => {
         SELECT ma.data
         FROM microcontrole.monitoramento_acao AS ma
         INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
-        WHERE a.usuario_id = $1 AND ma.data > NOW() - interval '$2:raw day'
+        WHERE a.usuario_id = $1 AND ma.data::date > NOW()::date - interval '$2:raw day'
         ORDER BY data
         )
         , dl AS (
@@ -117,7 +119,7 @@ controller.get_acao_usuario = async (usuario_id, days) => {
         SELECT to_char(data::date, 'YYYY-MM-DD') AS dia, to_char(previous_data, 'YYYY-MM-DD HH24:MI:00') as previous_data, 
         to_char(data, 'YYYY-MM-DD HH24:MI:00') as data
         FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL
-        AND data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60) > 5
+        AND data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60) > 3
         ORDER BY data::date, previous_data;
       `,
       [usuario_id, days]
@@ -147,9 +149,59 @@ controller.get_acao_usuario = async (usuario_id, days) => {
     err.context = "estatisticas_ctrl";
     err.information = {};
     err.information.usuario_id = usuario_id;
+    err.information.days = days;
     err.information.trace = serializeError(error);
     return { error: err, dados: null };
   }
 };
 
+controller.get_acao_em_execucao = async () => {
+  try {
+    let no_activity = await db.any(
+      `
+      WITH datas AS (
+        SELECT a.usuario_id, ma.data
+        FROM microcontrole.monitoramento_acao AS ma
+        INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
+        WHERE a.tipo_situacao_id = 2 AND ma.data::date = NOW()::date
+        ORDER BY data
+        )
+        , dl AS (
+        SELECT usuario_id, data, LAG(data,1) OVER(PARTITION BY usuario_id ORDER BY data) AS previous_data
+        FROM datas
+        )
+        SELECT usuario_id, to_char(data::date, 'YYYY-MM-DD') AS dia, to_char(previous_data, 'YYYY-MM-DD HH24:MI:00') as previous_data, 
+        to_char(data, 'YYYY-MM-DD HH24:MI:00') as data
+        FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL
+        AND data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60) > 3
+        ORDER BY usuario_id, data::date, previous_data;
+      `
+    );
+    let min_max_points = await db.any(
+      `
+      SELECT u.id AS usuario_id, to_char(ma.data::date, 'YYYY-MM-DD') AS dia, to_char(min(ma.data), 'YYYY-MM-DD HH24:MI:00') as min_data, to_char(max(ma.data), 'YYYY-MM-DD HH24:MI:00') as max_data, tpg.nome_abrev || ' ' || u.nome_guerra as usuario
+      FROM microcontrole.monitoramento_acao AS ma
+      INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
+      INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
+      INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+      WHERE a.tipo_situacao_id = 2 AND ma.data::date = NOW()::date
+      GROUP BY data::date, u.id, tpg.nome_abrev , u.nome_guerra
+      ORDER BY data::date
+      `
+    );
+    let activity_fixed = fix_activity(no_activity, min_max_points);
+    activity_fixed = activity_statistics(activity_fixed);
+
+    return { error: null, dados: activity_fixed };
+  } catch (error) {
+    const err = new Error(
+      "Falha durante retorno dos dados de ação do usuário."
+    );
+    err.status = 500;
+    err.context = "estatisticas_ctrl";
+    err.information = {};
+    err.information.trace = serializeError(error);
+    return { error: err, dados: null };
+  }
+};
 module.exports = controller;

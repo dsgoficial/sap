@@ -24,9 +24,26 @@ router.get("/acao/usuario/:id", async (req, res, next) => {
   };
   return sendJsonAndLog(
     true,
-    "Ações por usuário retornados.",
+    "Ações por usuário retornadas.",
     "estatisticas_route",
     information,
+    res,
+    200,
+    dados
+  );
+});
+
+router.get("/acao/em_execucao", async (req, res, next) => {
+  let { error, dados } = await estatisticasCtrl.get_acao_em_execucao();
+  if (error) {
+    return next(error);
+  }
+
+  return sendJsonAndLog(
+    true,
+    "Ações de usuários com atividade em exeucução retornadas.",
+    "estatisticas_route",
+    null,
     res,
     200,
     dados
