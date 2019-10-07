@@ -492,9 +492,13 @@ controller.pausa_atividade = async unidade_trabalho_ids => {
         [data_fim, unidade_trabalho_ids.join(",")]
       );
       if (updated_ids.length > 0) {
+        let updated_ids_fixed = []
+        updated_ids.forEach(u => {
+          updated_ids_fixed.push(u.id)
+        })
         let atividades = await t.any(
           `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
-          [updated_ids.join(",")]
+          [updated_ids_fixed.join(",")]
         );
 
         const table = new pgp.helpers.TableName({
@@ -541,8 +545,8 @@ controller.pausa_atividade = async unidade_trabalho_ids => {
 controller.reinicia_atividade = async unidade_trabalho_ids => {
   try {
     const data_fim = new Date();
-    let updated_ids = await db.tx(async t => {
-      await t.any(
+   await db.tx(async t => {
+    let updated_ids = await t.any(
         `
       UPDATE macrocontrole.atividade SET
       data_inicio = COALESCE(data_inicio, $1), data_fim = COALESCE(data_fim, $1), tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
@@ -551,15 +555,19 @@ controller.reinicia_atividade = async unidade_trabalho_ids => {
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
         INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
         WHERE ut.id in ($2:raw) AND a.tipo_situacao_id in(2,3)
-        ORDER BY e.ordem
+        ORDER BY ut.id, e.ordem
         ) RETURNING id
       `,
         [data_fim, unidade_trabalho_ids.join(",")]
       );
       if (updated_ids.length > 0) {
+        let updated_ids_fixed = []
+        updated_ids.forEach(u => {
+          updated_ids_fixed.push(u.id)
+        })
         let atividades = await t.any(
           `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
-          [updated_ids.join(",")]
+          [updated_ids_fixed.join(",")]
         );
         const table = new pgp.helpers.TableName({
           table: "atividade",
