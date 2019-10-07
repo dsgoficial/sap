@@ -99,8 +99,6 @@ const activity_statistics = activity_fixed => {
   return activity_fixed;
 };
 
-get_acao_em_execucao;
-
 controller.get_acao_usuario = async (usuario_id, days) => {
   try {
     let no_activity = await db.any(
