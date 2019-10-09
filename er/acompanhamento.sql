@@ -385,9 +385,14 @@ $BODY$
     DECLARE symbols_txt text := '';
     DECLARE tipo_txt text;
     DECLARE tipo_andamento_txt text;
+    DECLARE tipo_pausada_txt text;
     DECLARE etapas_concluidas_txt text := '';
     DECLARE etapas_nome text := '';
     DECLARE exec_andamento_txt text;
+    DECLARE exec_pausada_txt text;
+    DECLARE rev_pausada_txt text;
+    DECLARE revcor_pausada_txt text;
+    DECLARE cor_pausada_txt text;
     DECLARE exec_txt text;
     DECLARE rev_txt text;
     DECLARE rev_andamento_txt text;
