@@ -401,7 +401,7 @@ $BODY$
 		SELECT count(*) into nr_erro AS ut_sufase_id from macrocontrole.atividade AS a
 		INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
 		INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-		WHERE a.id = NEW.id AND e.subfase_id != ut.subfase_id;
+		WHERE e.subfase_id != ut.subfase_id;
 
 		IF nr_erro > 0 THEN
 			RAISE EXCEPTION 'Etapa e Unidade de Trabalho não devem possuir subfases distintas.';
