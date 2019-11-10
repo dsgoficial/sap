@@ -1,5 +1,11 @@
 "use strict";
 
+const VERSION = '2.0.0';
+const MIN_DATABASE_VERSION = '2.0.0';
+
+//READ DATABASE VERSION FROM DATABASE
+//VALIDATE MIN DATABASE VERSION
+
 const dotenv = require('dotenv');
 dotenv.config();
 module.exports = {
@@ -11,5 +17,5 @@ module.exports = {
   DB_PASSWORD: process.env.DB_PASSWORD,
   JWT_SECRET: process.env.JWT_SECRET,
   DATABASE_VERSION: process.env.DATABASE_VERSION,
-  VERSION: '2.0.0',
+  VERSION: VERSION,
 };
