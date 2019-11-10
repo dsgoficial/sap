@@ -19,7 +19,7 @@ const routes = app => {
 
   app.use("/microcontrole", microcontroleRoute);
 
-  //Todas as requisições abaixo necessitam de admin
+  //Todas as requisições abaixo necessitam de admin (e token)
   app.use(verifyAdmin);
 
   app.use("/gerencia", gerenciaRoute);

@@ -57,14 +57,14 @@ router.post("/", async (req, res, next) => {
     return next(err);
   }
 
-  let { loginError, token, administrador } = await loginCtrl.login(
+  let { error, token, administrador } = await loginCtrl.login(
     req.body.usuario,
     req.body.senha,
     req.body.plugins,
     req.body.qgis
   );
-  if (loginError) {
-    return next(loginError);
+  if (error) {
+    return next(error);
   }
 
   return sendJsonAndLog(
@@ -74,7 +74,7 @@ router.post("/", async (req, res, next) => {
     null,
     res,
     200,
-    { version: '2', token, administrador }
+    { token, administrador }
   );
 });
 

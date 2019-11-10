@@ -9,6 +9,8 @@ const initOptions = {
 
 const pgp = require("pg-promise")(initOptions);
 
+const { DB_SERVER, DB_PORT, DB_NAME } = require('./config');
+
 const testeddbs = {};
 
 const testdb = async (usuario, senha) => {
@@ -18,11 +20,11 @@ const testdb = async (usuario, senha) => {
     ":" +
     senha +
     "@" +
-    process.env.DB_SERVER +
+    DB_SERVER +
     ":" +
-    process.env.DB_PORT +
+    DB_PORT +
     "/" +
-    process.env.DB_NAME;
+    DB_NAME;
 
   if (!(con in testeddbs)) {
     testeddbs[con] = pgp(con);

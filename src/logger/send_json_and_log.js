@@ -2,6 +2,8 @@
 
 const logger = require("./logger");
 
+const { VERSION } = require('./config');
+
 const sendJsonAndLog = (
   sucess,
   message,
@@ -16,20 +18,16 @@ const sendJsonAndLog = (
     information: information,
     status: status
   });
-  let jsonData;
+  let jsonData = {
+    version: VERSION,
+    sucess: sucess,
+    message: message
+  };
 
   if (dados) {
-    jsonData = {
-      sucess: sucess,
-      message: message,
-      dados: dados
-    };
-  } else {
-    jsonData = {
-      sucess: sucess,
-      message: message
-    };
+    jsonData.dados = dados
   }
+
   return res.status(status).json(jsonData);
 };
 

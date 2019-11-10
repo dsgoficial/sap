@@ -1,16 +1,18 @@
 "use strict";
 
-require("dotenv").config();
+const { VERSION, PORT, DATABASE_VERSION } = require('./config');
 
 const app = require("./app");
 const { logger } = require("./logger");
 
 //Starts server
-app.listen(process.env.PORT, () => {
+app.listen(PORT, () => {
   logger.info("Server start", {
     context: "index",
     information: {
-      port: process.env.PORT
+      version: VERSION,
+      database_version: DATABASE_VERSION,
+      port: PORT
     }
   });
 });

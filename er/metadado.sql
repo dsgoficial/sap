@@ -2,7 +2,7 @@ BEGIN;
 
 CREATE SCHEMA metadado;
 
-CREATE TABLE metadado.responsavel_metadado(
+CREATE TABLE metadado.responsavel_produto(
   id SERIAL NOT NULL PRIMARY KEY,
 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	data_inicio timestamp with time zone NOT NULL,

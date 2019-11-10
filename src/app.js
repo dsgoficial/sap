@@ -11,6 +11,9 @@ const routes = require("./routes");
 const { sendJsonAndLog } = require("./logger");
 
 const app = express();
+
+const { VERSION, DATABASE_VERSION } = require('./config');
+
 app.disable("x-powered-by");
 
 app.use(bodyParser.json());
@@ -46,6 +49,8 @@ app.use((req, res, next) => {
 //informa que o serviço de dados do SAP está operacional
 app.get("/", (req, res, next) => {
   res.status(200).json({
+    version: VERSION,
+    database_version: DATABASE_VERSION,
     sucess: true,
     message: "Sistema de Apoio a produção operacional"
   });

@@ -7,9 +7,11 @@ const {serializeError} = require('serialize-error');
 
 const semver = require("semver");
 
+const { JWT_SECRET } = require('./config');
+
 const controller = {};
 
-const verificaPlugins = async (plugins, qgis) => {
+const verificaQGIS = async qgis => {
   try {
     const qgis_minimo = await db.oneOrNone(
       "SELECT versao_minima FROM dgeo.versao_qgis LIMIT 1"
@@ -26,9 +28,21 @@ const verificaPlugins = async (plugins, qgis) => {
         err.status = 401;
         err.context = "login_ctrl";
         err.information = { plugins };
-        return { error_plugin: err };
+        return { error: err };
       } 
     }
+    return { error: null };
+  } catch (error) {
+    const err = new Error("Erro verificando QGIS. Procure o administrador.");
+    err.status = 500;
+    err.context = "login_ctrl";
+    err.information = { plugins, trace: serializeError(error) };
+    return { error: err };
+  }
+};
+
+const verificaPlugins = async plugins => {
+  try {
     const plugins_minimos = await db.any(
       "SELECT nome, versao_minima FROM dgeo.plugin"
     );
@@ -54,17 +68,17 @@ const verificaPlugins = async (plugins, qgis) => {
         err.status = 401;
         err.context = "login_ctrl";
         err.information = { plugins };
-        return { error_plugin: err };
+        return { error: err };
       } 
     }
 
-    return { error_plugin: null };
+    return { error: null };
   } catch (error) {
     const err = new Error("Erro verificando plugins. Procure o administrador.");
     err.status = 500;
     err.context = "login_ctrl";
-    err.information = { plugins, trace: error };
-    return { error_plugin: err };
+    err.information = { plugins, trace: serializeError(error) };
+    return { error: err };
   }
 };
 
@@ -83,41 +97,47 @@ const gravaLogin = async usuario_id => {
     );
     err.status = 500;
     err.context = "login_ctrl";
-    err.information = { usuario_id, trace: error };
+    err.information = { usuario_id, trace: serializeError(error) };
     return { error: err };
   }
 };
 
 controller.login = async (usuario, senha, plugins, qgis) => {
-  let verifycon = await testdb(usuario, senha);
-  if (!verifycon) {
-    const err = new Error("Usuário ou senha inválida.");
-    err.status = 401;
-    err.context = "login_ctrl";
-    err.information = {};
-    err.information.usuario = usuario;
-    return { loginError: err, token: null, administrador: null };
-  }
-
   try {
+    const verifycon = await testdb(usuario, senha);
+    if (!verifycon) {
+      const err = new Error("Usuário ou senha inválida.");
+      err.status = 401;
+      err.context = "login_ctrl";
+      err.information = {};
+      err.information.usuario = usuario;
+      return { error: err, token: null, administrador: null };
+    }
+
     const { id, administrador } = await db.one(
       "SELECT id, administrador FROM dgeo.usuario WHERE login = $1 and ativo IS TRUE",
       [usuario]
     );
-    const token = jwt.sign({ id, administrador }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id, administrador }, JWT_SECRET, {
       expiresIn: "10h"
     });
 
-    let { error_plugin } = await verificaPlugins(plugins, qgis);
-    if (error_plugin) {
-      return { loginError: error_plugin, token: null, administrador: null };
+    let { error:error_qgis } = await verificaQGIS(plugins, qgis);
+    if (error_qgis) {
+      return { error: error_qgis, token: null, administrador: null };
     }
 
-    let { error } = await gravaLogin(id);
-    if (error) {
-      return { loginError: error, token: null, administrador: null };
+    let { error:error_plugin } = await verificaPlugins(plugins, qgis);
+    if (error_plugin) {
+      return { error: error_plugin, token: null, administrador: null };
     }
-    return { loginError: null, token, administrador };
+    
+    let { error:error_grava_login } = await gravaLogin(id);
+    if (error_grava_login) {
+      return { error: error_grava_login, token: null, administrador: null };
+    }
+    
+    return { error: null, token, administrador };
   } catch (error) {
     const err = new Error("Usuário não cadastrado no SAP ou inativo.");
     err.status = 401;
@@ -125,7 +145,7 @@ controller.login = async (usuario, senha, plugins, qgis) => {
     err.information = {};
     err.information.usuario = usuario;
     err.information.trace = serializeError(error)
-    return { loginError: err, token: null, administrador: null };
+    return { error: err, token: null, administrador: null };
   }
 };
 

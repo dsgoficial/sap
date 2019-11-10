@@ -1,5 +1,7 @@
 "use strict";
 
+let DATABASE_VERSION = '2.0.0';
+
 const fs = require("fs");
 const inquirer = require("inquirer");
 const chalk = require("chalk");
@@ -132,7 +134,7 @@ const createConfig = () => {
         );
 
         INSERT INTO public.versao (code, nome) VALUES
-        (1, '2.0.0');
+        (1, '$2');
 
         CREATE TABLE public.layer_styles(
           id serial NOT NULL PRIMARY KEY,
@@ -170,7 +172,7 @@ const createConfig = () => {
         GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA acompanhamento TO $1:name;
         GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA acompanhamento TO $1:name;
         `,
-          [answers.db_user]
+          [answers.db_user, DATABASE_VERSION]
         );
 
         /*
@@ -218,13 +220,15 @@ const createConfig = () => {
         console.log(chalk.blue("Banco de dados do SAP criado com sucesso!"));
       }
 
+      let secret = require('crypto').randomBytes(64).toString('hex')
       let env = `PORT=${answers.port}
 DB_SERVER=${answers.db_server}
 DB_PORT=${answers.db_port}
 DB_NAME=${answers.db_name}
 DB_USER=${answers.db_user}
 DB_PASSWORD=${answers.db_password}
-JWT_SECRET=tassofragoso`;
+JWT_SECRET=${secret}
+DATABASE_VERSION=${DATABASE_VERSION}`;
 
       let exists = fs.existsSync(".env");
       if (exists) {
