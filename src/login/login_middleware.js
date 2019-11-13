@@ -22,6 +22,11 @@ const verifyToken = function(req, res, next) {
       null
     );
   }
+  if (token.startsWith('Bearer ')) {
+    // Remove Bearer from string
+    token = token.slice(7, token.length);
+  }
+
   //verifica se o token é valido
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {

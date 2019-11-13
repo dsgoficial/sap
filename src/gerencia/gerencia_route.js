@@ -295,20 +295,19 @@ router.get("/atividade/:id", async (req, res, next) => {
 });
 
 router.get("/atividade/usuario/:id", async (req, res, next) => {
-  let { erro, dados } = await gerenciaCtrl.get_atividade_usuario(req.params.id);
+  let { erro, dados } = await gerenciaCtrl.get_atividade_usuario(req.params.id, req.query.proxima);
   if (erro) {
     return next(erro);
   }
 
-  let information = {
-    atividade_id: req.params.id
-  };
   if (dados) {
     return sendJsonAndLog(
       true,
       "Atividade retornada.",
       "gerencia_route",
-      information,
+      {
+        atividade_id: req.params.id
+      },
       res,
       200,
       dados

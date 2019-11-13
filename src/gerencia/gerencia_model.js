@@ -16,7 +16,6 @@ const estilos = Joi.object().keys({
       })
     )
     .required()
-    .min(1)
 });
 
 const menus = Joi.object().keys({
@@ -29,7 +28,6 @@ const menus = Joi.object().keys({
       })
     )
     .required()
-    .min(1)
 });
 
 const regras = Joi.object().keys({
@@ -51,7 +49,6 @@ const regras = Joi.object().keys({
       })
     )
     .required()
-    .min(1)
 });
 
 const qgis_models = Joi.object().keys({
@@ -64,7 +61,6 @@ const qgis_models = Joi.object().keys({
       })
     )
     .required()
-    .min(1)
 });
 
 const unidade_trabalho_disponivel = Joi.object().keys({

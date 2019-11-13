@@ -6,6 +6,9 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const helmet = require("helmet");
+const xss = require('xss-clean')
+const hpp = require('hpp');
+const rateLimit = require("express-rate-limit");
 
 const routes = require("./routes");
 const { sendJsonAndLog } = require("./logger");
@@ -14,29 +17,25 @@ const app = express();
 
 const { VERSION, DATABASE_VERSION } = require('./config');
 
-app.disable("x-powered-by");
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json()); //parsear POST em JSON
+app.use(xss()) //sanitize body input
+app.use(hpp())
 
 //CORS middleware
-app.use(
-  cors({
-    exposedHeaders: [
-      "Origin",
-      "X-Requested-With",
-      "Content-Type",
-      "Accept",
-      "Link",
-      "Location"
-    ]
-  })
-);
+app.use(cors());
 
 //Helmet Protection
 app.use(helmet());
-//Disables cache
+//Disables cache https://helmetjs.github.io/docs/nocache/
 app.use(helmet.noCache());
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 30 // limit each IP to 30 requests per windowMs
+});
+ 
+//  apply limit all requests
+app.use(limiter);
 
 //Lower case query parameters
 app.use((req, res, next) => {

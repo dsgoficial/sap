@@ -9,6 +9,16 @@ const { distribuicaoCtrl } = require("../distribuicao_atividades");
 
 const controller = {};
 
+const get_usuario_nome_by_id = async usuario_id => {
+  let usuario = await t.one(
+    `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    WHERE u.id = $1`,
+    [usuario_id]
+  );
+  return usuario.posto_nome;
+}
+
 controller.get_atividade = async atividade_id => {
   try {
     let atividade = await db.oneOrNone(
@@ -44,17 +54,34 @@ controller.get_atividade = async atividade_id => {
   }
 };
 
-controller.get_atividade_usuario = async usuario_id => {
+controller.get_atividade_usuario = async (usuario_id, proxima) => {
   try {
-    const { erro, prioridade } = await distribuicaoCtrl.calcula_fila(
-      usuario_id
-    );
-    if (erro) {
-      return { erro: erro, dados: null };
+    const atividade_id;
+
+    if(proxima){
+      const { erro, prioridade } = await distribuicaoCtrl.calcula_fila(
+        usuario_id
+      );
+      if (erro) {
+        return { erro: erro, dados: null };
+      }
+      atividade_id = prioridade.id;
+    } else {
+      let em_andamento = await db.oneOrNone(
+        `SELECT a.id
+        FROM macrocontrole.atividade AS a
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+        WHERE a.usuario_id = $1 and ut.disponivel IS TRUE and a.tipo_situacao_id = 2 LIMIT 1`,
+        [usuario_id]
+      );
+      if(!em_andamento){
+        return { erro: null, dados: null };
+      }
+      atividade_id = em_andamento.id
     }
 
     const { erro2, dados } = await distribuicaoCtrl.dados_producao(
-      prioridade.id
+      atividade_id
     );
     if (erro2) {
       return { erro: erro2, dados: null };
@@ -133,13 +160,8 @@ controller.grava_estilos = async (estilos, usuario_id) => {
   const data_gravacao = new Date();
   try {
     await db.tx(async t => {
-      let usuario = await t.one(
-        `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
-        INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-        WHERE u.id = $1`,
-        [usuario_id]
-      );
-      await t.none(`DELETE FROM dgeo.layer_styles`);
+      let usuario_posto_nome = get_usuario_nome_by_id(usuario_id)
+      await t.none(`TRUNCATE dgeo.layer_styles RESTART IDENTITY`);
 
       const table = new pgp.helpers.TableName({
         table: "layer_styles",
@@ -171,18 +193,15 @@ controller.grava_estilos = async (estilos, usuario_id) => {
           styleqml: d.styleqml,
           stylesld: stylesld,
           ui: ui,
-          owner: usuario.posto_nome,
+          owner: usuario_posto_nome,
           update_time: data_gravacao
         });
       });
 
       const query = pgp.helpers.insert(values, cs);
 
-      let result = await t.result(query);
+      await t.none(query);
 
-      if (!result.rowCount || result.rowCount == 0) {
-        throw new Error("Erro ao inserir estilo.");
-      }
     });
 
     return { error: null };
@@ -202,13 +221,9 @@ controller.grava_regras = async (regras, usuario_id) => {
   const data_gravacao = new Date();
   try {
     await db.tx(async t => {
-      let usuario = await t.one(
-        `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
-        INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-        WHERE u.id = $1`,
-        [usuario_id]
-      );
-      await t.none(`DELETE FROM dgeo.layer_rules`);
+      let usuario_posto_nome = get_usuario_nome_by_id(usuario_id)
+
+      await t.none(`TRUNCATE dgeo.layer_rules RESTART IDENTITY`);
 
       const table = new pgp.helpers.TableName({
         table: "layer_rules",
@@ -244,7 +259,7 @@ controller.grava_regras = async (regras, usuario_id) => {
           cor_rgb: d.cor_rgb,
           descricao: d.descricao,
           ordem: d.ordem,
-          owner: usuario.posto_nome,
+          owner: usuario_posto_nome,
           update_time: data_gravacao
         });
       });
@@ -275,13 +290,9 @@ controller.grava_modelos = async (modelos, usuario_id) => {
   const data_gravacao = new Date();
   try {
     await db.tx(async t => {
-      let usuario = await t.one(
-        `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
-        INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-        WHERE u.id = $1`,
-        [usuario_id]
-      );
-      await t.none(`DELETE FROM dgeo.layer_qgis_models`);
+      let usuario_posto_nome = get_usuario_nome_by_id(usuario_id)
+
+      await t.none(`TRUNCATE dgeo.layer_qgis_models RESTART IDENTITY`);
 
       const table = new pgp.helpers.TableName({
         table: "layer_qgis_models",
@@ -299,7 +310,7 @@ controller.grava_modelos = async (modelos, usuario_id) => {
           nome: d.nome,
           descricao: d.descricao,
           model_xml: d.model_xml,
-          owner: usuario.posto_nome,
+          owner: usuario_posto_nome,
           update_time: data_gravacao
         });
       });
@@ -330,13 +341,9 @@ controller.grava_menus = async (menus, usuario_id) => {
   const data_gravacao = new Date();
   try {
     await db.tx(async t => {
-      let usuario = await t.one(
-        `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
-        INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-        WHERE u.id = $1`,
-        [usuario_id]
-      );
-      await t.none(`DELETE FROM dgeo.layer_menus`);
+      let usuario_posto_nome = get_usuario_nome_by_id(usuario_id)
+
+      await t.none(`TRUNCATE dgeo.layer_menus RESTART IDENTITY`);
 
       const table = new pgp.helpers.TableName({
         table: "layer_menus",
@@ -354,7 +361,7 @@ controller.grava_menus = async (menus, usuario_id) => {
           nome_menu: d.nome_menu,
           definicao_menu: d.definicao_menu,
           ordem_menu: d.ordem_menu,
-          owner: usuario.posto_nome,
+          owner: usuario_posto_nome,
           update_time: data_gravacao
         });
       });
