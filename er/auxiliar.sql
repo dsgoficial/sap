@@ -24,7 +24,7 @@ THEN ((SELECT count(*) AS count_days_no_weekend
         WHERE  extract('ISODOW' FROM the_day) < 6) - 2 )*6*60
 ELSE 0
 END AS minutos_dias
-FROM macrocontrole.atividade WHERE tipo_situacao_id IN (4,6)
+FROM macrocontrole.atividade WHERE tipo_situacao_id IN (4,5)
 )
 UPDATE macrocontrole.atividade AS a
 SET tempo_execucao_estimativa = cte.minutos + cte.minutos_dias
@@ -37,7 +37,7 @@ WITH data_login AS (
 , datas AS (SELECT a.id, COUNT (DISTINCT data_login::date) as nr_dias FROM macrocontrole.atividade AS a
 INNER JOIN acompanhamento.login AS l ON l.usuario_id = a.usuario_id
 INNER JOIN data_login AS dl ON TRUE
-WHERE a.data_inicio::date > dl.data_min::date AND a.tipo_situacao_id IN (4,6)
+WHERE a.data_inicio::date > dl.data_min::date AND a.tipo_situacao_id IN (4,5)
 AND l.data_login >= a.data_inicio AND l.data_login <= a.data_fim
 GROUP BY a.id)
 , cte AS (
@@ -59,7 +59,7 @@ ELSE 0
 END AS minutos_dias
 FROM macrocontrole.atividade AS a
 INNER JOIN data_login AS dl ON TRUE
-INNER JOIN datas AS d ON d.id = a.id AND a.data_inicio::date > dl.data_min::date AND a.tipo_situacao_id IN (4,6)
+INNER JOIN datas AS d ON d.id = a.id AND a.data_inicio::date > dl.data_min::date AND a.tipo_situacao_id IN (4,5)
 )
 UPDATE macrocontrole.atividade AS a
 SET tempo_execucao_estimativa = cte.minutos + cte.minutos_dias

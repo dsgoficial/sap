@@ -1,10 +1,9 @@
-"use strict";
 
 const express = require("express");
 const Joi = require("joi");
 const path = require("path");
 
-const { sendJsonAndLog } = require("../logger");
+const { sendJsonAndLog } = require("../utils");
 
 const estatisticasCtrl = require("./estatisticas_ctrl");
 const estatisticasModel = require("./estatisticas_model");

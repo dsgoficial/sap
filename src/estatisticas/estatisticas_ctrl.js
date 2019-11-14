@@ -1,4 +1,3 @@
-"use strict";
 
 const pgp = require("pg-promise")();
 

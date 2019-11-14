@@ -115,7 +115,7 @@ CREATE TABLE simulacao.atividade(
 
 CREATE UNIQUE INDEX atividade_unique_index
 ON simulacao.atividade (etapa_id, unidade_trabalho_id) 
-WHERE tipo_situacao_id != 6;
+WHERE tipo_situacao_id in (1,2,3,4);
 
 CREATE TABLE simulacao.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,

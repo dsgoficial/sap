@@ -76,7 +76,7 @@ SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          WHERE ee.tipo_situacao_id != 6
+          WHERE ee.tipo_situacao_id in (1,2,3,4)
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
@@ -95,7 +95,7 @@ SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
         )
         ) AS sit
         GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
-        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
 ) AS ativ
 INNER JOIN macrocontrole.perfil_producao AS pp ON pp.id = ativ.perfil_producao_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
@@ -121,7 +121,7 @@ SELECT etapa_id, unidade_trabalho_id, subfase_id, lote_id
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          WHERE ee.tipo_situacao_id != 6
+          WHERE ee.tipo_situacao_id in (1,2,3,4)
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
@@ -140,7 +140,7 @@ SELECT etapa_id, unidade_trabalho_id, subfase_id, lote_id
         )
         ) AS sit
         GROUP BY etapa_id, unidade_trabalho_id, subfase_id, lote_id
-        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
 ) AS ativ
 INNER JOIN macrocontrole.etapa AS e ON e.id = ativ.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
@@ -212,14 +212,14 @@ SELECT a.id AS atividade_id, 'Unidade de trabalho não disponível. Atividade ' 
           (
             SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
             INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-            WHERE ee.tipo_situacao_id != 6
+            WHERE ee.tipo_situacao_id in (1,2,3,4)
           ) 
           AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
           AND se.ordem > ee_ant.ordem
           WHERE ee.tipo_situacao_id in (1,2,3)
         ) AS ativ
           GROUP BY id, etapa_id, unidade_trabalho_id, situacao
-          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
+          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
       ) AS a  
 INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
@@ -241,7 +241,7 @@ FROM (
   (
 	SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
 	INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-	WHERE ee.tipo_situacao_id != 6
+	WHERE ee.tipo_situacao_id in (1,2,3,4)
   ) 
   AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
   AND se.ordem > ee_ant.ordem
@@ -253,7 +253,7 @@ FROM (
   )
 ) AS ativ
 GROUP BY id
-HAVING (MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))) AND count(*)= 1
+HAVING (MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))) AND count(*)= 1
 ) AS a_id
 INNER JOIN macrocontrole.atividade AS a ON a.id = a_id.id
 INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
@@ -278,14 +278,14 @@ SELECT a.id AS atividade_id, 'Unidade de trabalho bloqueada devido a pré requis
           (
             SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
             INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-            WHERE ee.tipo_situacao_id != 6
+            WHERE ee.tipo_situacao_id in (1,2,3,4)
           ) 
           AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
           AND se.ordem > ee_ant.ordem
           WHERE ut.disponivel IS TRUE AND ee.tipo_situacao_id in (1)
         ) AS ativ
           GROUP BY id, etapa_id, unidade_trabalho_id
-          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
+          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
       ) AS a  
 INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
@@ -311,14 +311,14 @@ SELECT a.id AS atividade_id, 'Atividade não associada a perfil de produção ou
           (
             SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
             INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-            WHERE ee.tipo_situacao_id != 6
+            WHERE ee.tipo_situacao_id in (1,2,3,4)
           ) 
           AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
           AND se.ordem > ee_ant.ordem
           WHERE  ut.disponivel IS TRUE AND ee.tipo_situacao_id in (1)
         ) AS ativ
           GROUP BY id, etapa_id, unidade_trabalho_id
-          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
+          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
       ) AS a  
 INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
@@ -339,14 +339,14 @@ SELECT a.id AS atividade_id, 'Restrição de usuários iguais e usuário não at
           (
             SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
             INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-            WHERE ee.tipo_situacao_id != 6
+            WHERE ee.tipo_situacao_id in (1,2,3,4)
           ) 
           AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
           AND se.ordem > ee_ant.ordem
           WHERE  ut.disponivel IS TRUE AND ee.tipo_situacao_id in (1)
         ) AS ativ
           GROUP BY id, etapa_id, unidade_trabalho_id
-          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5))
+          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
       ) AS a
 INNER JOIN macrocontrole.restricao_etapa AS re ON re.etapa_posterior_id = a.etapa_id
 INNER JOIN macrocontrole.atividade AS atividade_anterior ON atividade_anterior.etapa_id = re.etapa_anterior_id AND atividade_anterior.unidade_trabalho_id = a.unidade_trabalho_id
@@ -457,7 +457,7 @@ $BODY$
         jointxt := jointxt || ' LEFT JOIN dgeo.usuario as u' || iterator || ' ON u' || iterator || '.id = ee' || iterator || '.usuario_id';
         jointxt := jointxt || ' LEFT JOIN dominio.tipo_posto_grad as tpg' || iterator || ' ON tpg' || iterator || '.code = u' || iterator || '.tipo_posto_grad_id';
         jointxt := jointxt || ' LEFT JOIN dominio.tipo_turno as tt' || iterator || ' ON tt' || iterator || '.code = u' || iterator || '.tipo_turno_id';
-        wheretxt := wheretxt || ' AND (ee' || iterator || '.tipo_situacao_id IS NULL OR ee' || iterator || '.tipo_situacao_id != 6)';
+        wheretxt := wheretxt || ' AND (ee' || iterator || '.tipo_situacao_id IS NULL OR ee' || iterator || '.tipo_situacao_id in (1,2,3,4))';
 
 
         rules_txt := rules_txt || '<rule symbol="' ||  (3*iterator - 3) || '" key="{' || uuid_generate_v4() ||'}" label="' || nome_fixed || ' não iniciada" filter="' || etapas_concluidas_txt || nome_fixed || '_situacao IN (''Não iniciada'') "/>';
@@ -635,7 +635,7 @@ $BODY$
           (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
           FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN
-          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id NOT IN (5,6)) AS a
+          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
           ON a.unidade_trabalho_id = ut.id
           WHERE ut.subfase_id = ' || r.id || '
           GROUP BY ut.id) AS ut' || iterator || '
@@ -764,7 +764,7 @@ $BODY$
           FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
           INNER JOIN
-          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id NOT IN (5,6)) AS a
+          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
           ON a.unidade_trabalho_id = ut.id
           WHERE s.fase_id = ' || r.id || '
           GROUP BY ut.id) AS ut' || iterator || '

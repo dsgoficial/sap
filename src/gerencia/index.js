@@ -1,4 +1,3 @@
-"use strict";
 
 module.exports = {
   gerenciaCtrl: require("./gerencia_ctrl"),

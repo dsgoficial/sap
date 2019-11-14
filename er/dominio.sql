@@ -159,8 +159,7 @@ INSERT INTO dominio.tipo_situacao (code, nome) VALUES
 (2, 'Em execução'),
 (3, 'Pausada'),
 (4, 'Finalizada'),
-(5, 'Não será executada'),
-(6, 'Não finalizada');
+(5, 'Não finalizada');
 
 CREATE TABLE dominio.tipo_configuracao(
 	code SMALLINT NOT NULL PRIMARY KEY,

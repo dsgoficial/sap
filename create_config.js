@@ -1,4 +1,3 @@
-"use strict";
 
 let DATABASE_VERSION = '2.0.0';
 

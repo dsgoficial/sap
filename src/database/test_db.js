@@ -1,4 +1,3 @@
-"use strict";
 
 const promise = require("bluebird");
 

@@ -1,9 +1,8 @@
-"use strict";
 
 const express = require("express");
 const Joi = require("joi");
 
-const { sendJsonAndLog } = require("../logger");
+const { sendJsonAndLog } = require("../utils");
 
 const gerenciaCtrl = require("./gerencia_ctrl");
 const gerenciaModel = require("./gerencia_model");

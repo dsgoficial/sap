@@ -1,8 +1,9 @@
-"use strict";
 
 const Joi = require("joi");
 
-const finaliza = Joi.object().keys({
+const models = {};
+
+models.finaliza = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
@@ -16,7 +17,7 @@ const finaliza = Joi.object().keys({
     .required()
 });
 
-const resposta_questionario = Joi.object().keys({
+models.resposta_questionario = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
@@ -38,7 +39,7 @@ const resposta_questionario = Joi.object().keys({
     .min(1)
 });
 
-const problema_atividade = Joi.object().keys({
+models.problema_atividade = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
@@ -50,6 +51,4 @@ const problema_atividade = Joi.object().keys({
   descricao: Joi.string().required()
 });
 
-module.exports.finaliza = finaliza;
-module.exports.resposta_questionario = resposta_questionario;
-module.exports.problema_atividade = problema_atividade;
+module.exports = models;

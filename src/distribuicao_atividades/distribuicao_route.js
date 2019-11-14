@@ -1,12 +1,13 @@
-"use strict";
+
+const path = require('path');
+const CONTEXT = path.basename(__filename);
 
 const express = require("express");
-const Joi = require("joi");
 
-const { sendJsonAndLog } = require("../logger");
+const { sendJsonAndLog, schemaValidation, asyncHandler } = require("../utils");
 
 const producaoCtrl = require("./distribuicao_ctrl");
-const producaoModel = require("./distribuicao_model");
+const producaoSchema = require("./distribuicao_schema");
 
 const router = express.Router();
 
@@ -79,44 +80,23 @@ const router = express.Router();
  * @apiUse MissingTokenError
  *
  */
-router.post("/finaliza", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, producaoModel.finaliza, {
-    stripUnknown: true
-  });
-  if (validationResult.error) {
-    const err = new Error("Finaliza Post validation error");
-    err.status = 400;
-    err.context = "distribuicao_route";
-    err.information = {};
-    err.information.body = req.body;
-    err.information.trace = validationResult.error;
-    return next(err);
-  }
-
-  let { finalizaError } = await producaoCtrl.finaliza(
+router.post("/finaliza", schemaValidation(producaoSchema.finaliza), asyncHandler( async (req, res, next) => {
+  await producaoCtrl.finaliza(
     req.body.usuario_id,
     req.body.atividade_id,
     req.body.sem_correcao
   );
-  if (finalizaError) {
-    return next(finalizaError);
-  }
 
-  let information = {
-    usuario_id: req.body.usuario_id,
-    atividade_id: req.body.atividade_id,
-    sem_correcao: req.body.sem_correcao
-  };
   return sendJsonAndLog(
     true,
-    "Atividade finalizada com sucesso.",
-    "distribuicao_route",
-    information,
+    "Atividade finalizada com sucesso",
+    CONTEXT,
+    req.body,
     res,
     200,
     null
   );
-});
+}));
 
 /**
  * @api {get} /distribuicao/verifica Retorna atividade em execução
@@ -151,39 +131,33 @@ router.post("/finaliza", async (req, res, next) => {
  * @apiUse MissingTokenError
  *
  */
-router.get("/verifica", async (req, res, next) => {
-  let { verificaError, dados } = await producaoCtrl.verifica(
+
+router.get("/verifica", asyncHandler( async (req, res, next) => {
+  let dados = await producaoCtrl.verifica(
     req.body.usuario_id
   );
-  if (verificaError) {
-    return next(verificaError);
-  }
 
-  let information = {
-    usuario_id: req.body.usuario_id
-  };
   if (dados) {
     return sendJsonAndLog(
       true,
-      "Atividade em execução retornada.",
-      "distribuicao_route",
-      information,
+      "Atividade em execução retornada",
+      CONTEXT,
+      req.body,
       res,
       200,
       dados
     );
-  } else {
-    return sendJsonAndLog(
-      true,
-      "Sem atividade em execução.",
-      "distribuicao_route",
-      information,
-      res,
-      200,
-      null
-    );
   }
-});
+  return sendJsonAndLog(
+    true,
+    "Sem atividade em execução",
+    CONTEXT,
+    req.body,
+    res,
+    200,
+    null
+  );
+}));
 
 /**
  * @api {post} /distribuicao/inicia Inicia uma nova atividade
@@ -300,7 +274,7 @@ router.post("/inicia", async (req, res, next) => {
 router.post("/resposta_questionario", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
-    producaoModel.resposta_questionario,
+    producaoSchema.resposta_questionario,
     { stripUnknown: true }
   );
   if (validationResult.error) {
@@ -384,7 +358,7 @@ router.post("/resposta_questionario", async (req, res, next) => {
 router.post("/problema_atividade", async (req, res, next) => {
   let validationResult = Joi.validate(
     req.body,
-    producaoModel.problema_atividade,
+    producaoSchema.problema_atividade,
     { stripUnknown: true }
   );
   if (validationResult.error) {

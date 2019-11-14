@@ -1,4 +1,3 @@
-"use strict";
 
 module.exports = {
   loginCtrl: require("./login_ctrl"),

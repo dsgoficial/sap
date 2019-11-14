@@ -1,8 +1,7 @@
-"use strict";
 
 const jwt = require("jsonwebtoken");
 
-const { sendJsonAndLog } = require("../logger");
+const { sendJsonAndLog } = require("../utils");
 
 const { JWT_SECRET } = require('./config');
 

@@ -1,4 +1,3 @@
-"use strict";
 
 module.exports = {
   estatisticasCtrl: require("./estatisticas_ctrl"),

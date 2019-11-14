@@ -1,4 +1,3 @@
-"use strict";
 
 const { db } = require("../database");
 
@@ -44,7 +43,7 @@ controller.geraMetadado = async uuid => {
       FROM macrocontrole.unidade_trabalho AS ut
       INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
       INNER JOIN
-      (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id NOT IN (5,6)) AS a
+      (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
       ON a.unidade_trabalho_id = ut.id
       GROUP BY ut.id, s.fase_id
     ) AS ut

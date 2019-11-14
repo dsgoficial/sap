@@ -1,4 +1,3 @@
-"use strict";
 
 module.exports = {
   microcontroleCtrl: require("./microcontrole_ctrl"),

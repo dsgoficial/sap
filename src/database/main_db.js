@@ -1,6 +1,5 @@
-"use strict";
 
-const { logger } = require("../logger");
+const { logger } = require("../utils");
 
 const promise = require("bluebird");
 

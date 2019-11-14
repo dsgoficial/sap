@@ -1,10 +1,9 @@
-"use strict";
 
 const express = require("express");
 
 const path = require("path");
 
-const { renderAndLog } = require("../logger");
+const { renderAndLog } = require("../utils");
 
 const metadadosCtrl = require("./metadados_ctrl");
 

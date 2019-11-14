@@ -387,10 +387,10 @@ CREATE INDEX atividade_etapa_id
     ON macrocontrole.atividade
     (etapa_id);
 
--- (etapa_id, unidade_trabalho_id) deve ser unico para tipo_situacao !=6
+-- (etapa_id, unidade_trabalho_id) deve ser unico para tipo_situacao !=5
 CREATE UNIQUE INDEX atividade_unique_index
 ON macrocontrole.atividade (etapa_id, unidade_trabalho_id) 
-WHERE tipo_situacao_id != 6;
+WHERE tipo_situacao_id in (1,2,3,4);
 
 -- Constraint
 CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase()

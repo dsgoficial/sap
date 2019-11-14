@@ -1,9 +1,8 @@
-"use strict";
 
 const { VERSION, PORT, DATABASE_VERSION } = require('./config');
 
 const app = require("./app");
-const { logger } = require("./logger");
+const { logger } = require("./utils");
 
 //Starts server
 app.listen(PORT, () => {

@@ -1,4 +1,3 @@
-"use strict";
 
 const { loginRoute, loginMiddleware, verifyAdmin } = require("./login");
 const { distribuicaoRoute } = require("./distribuicao_atividades");

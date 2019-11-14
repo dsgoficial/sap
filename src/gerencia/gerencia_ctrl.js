@@ -1,4 +1,3 @@
-"use strict";
 
 const pgp = require("pg-promise")();
 
@@ -489,7 +488,7 @@ controller.pausa_atividade = async unidade_trabalho_ids => {
       let updated_ids = await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      data_fim = $1, tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
+      data_fim = $1, tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
       WHERE id in (
         SELECT a.id FROM macrocontrole.atividade AS a
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
@@ -556,12 +555,12 @@ controller.reinicia_atividade = async unidade_trabalho_ids => {
     let updated_ids = await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      data_inicio = COALESCE(data_inicio, $1), data_fim = COALESCE(data_fim, $1), tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
+      data_inicio = COALESCE(data_inicio, $1), data_fim = COALESCE(data_fim, $1), tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
       WHERE id in (
         SELECT DISTINCT ON (ut.id) a.id FROM macrocontrole.atividade AS a
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
         INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-        WHERE ut.id in ($2:raw) AND a.tipo_situacao_id in(2,3)
+        WHERE ut.id in ($2:raw) AND a.tipo_situacao_id in (2,3)
         ORDER BY ut.id, e.ordem
         ) RETURNING id
       `,
@@ -622,14 +621,14 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
       let atividades_updates = await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      tipo_situacao_id = 6, data_inicio = COALESCE(data_inicio, $2), data_fim = COALESCE(data_fim, $2), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
+      tipo_situacao_id = 5, data_inicio = COALESCE(data_inicio, $2), data_fim = COALESCE(data_fim, $2), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
       WHERE id IN (
           SELECT a_ant.id
           FROM macrocontrole.atividade AS a
           INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
           INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-          WHERE a.id in ($1:raw) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,3,4,5)
+          WHERE a.id in ($1:raw) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,3,4)
       ) RETURNING id 
       `,
         [atividade_ids.join(","), data_fim]
@@ -684,12 +683,10 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
   try {
     const data_fim = new Date();
     await db.tx(async t => {
-      let atividades_updates;
       if (concluida) {
         await t.none(
           `
-          UPDATE macrocontrole.atividade SET
-          tipo_situacao_id = 5, data_inicio = NULL, data_fim = NULL, usuario_id = NULL, tempo_execucao_microcontrole = NULL, tempo_execucao_estimativa = NULL
+          DELETE FROM macrocontrole.atividade
           WHERE id IN (
               SELECT a_ant.id
               FROM macrocontrole.atividade AS a
@@ -701,10 +698,10 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
           `,
           [atividade_ids.join(",")]
         );
-        atividades_updates = await t.any(
+        await t.none(
           `
           UPDATE macrocontrole.atividade SET
-          tipo_situacao_id = 6, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
+          tipo_situacao_id = 5, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
           WHERE id IN (
               SELECT a_ant.id
               FROM macrocontrole.atividade AS a
@@ -712,15 +709,14 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
               INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
               INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
               WHERE a.id in ($1:raw) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (2)
-          ) RETURNING id
+          )
           `,
           [atividade_ids.join(","), data_fim]
         );
       } else {
         await t.none(
           `
-        UPDATE macrocontrole.atividade SET
-        tipo_situacao_id = 5, data_inicio = NULL, data_fim = NULL, usuario_id = NULL, tempo_execucao_microcontrole = NULL, tempo_execucao_estimativa = NULL
+        DELETE FROM macrocontrole.atividade
         WHERE id IN (
             SELECT a_ant.id
             FROM macrocontrole.atividade AS a
@@ -732,10 +728,10 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
         `,
           [atividade_ids.join(",")]
         );
-        atividades_updates = await t.any(
+        await t.none(
           `
         UPDATE macrocontrole.atividade SET
-        tipo_situacao_id = 6, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
+        tipo_situacao_id = 5, data_fim = $2, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
         WHERE id IN (
             SELECT a_ant.id
             FROM macrocontrole.atividade AS a
@@ -743,27 +739,9 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
             WHERE a.id in ($1:raw) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (2)
-        )  RETURNING id
+        )
         `,
           [atividade_ids.join(","), data_fim]
-        );
-      }
-      let ids = [];
-      atividades_updates.forEach(i => {
-        ids.push(i.id);
-      });
-      if (ids.length > 0) {
-        ids = ids.join(",");
-        await t.none(
-          `
-          INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id, observacao)
-          (
-            SELECT etapa_id, unidade_trabalho_id, 5 AS tipo_situacao_id, observacao
-            FROM macrocontrole.atividade
-            WHERE id in ($1:raw)
-          )
-          `,
-          [ids]
         );
       }
     });

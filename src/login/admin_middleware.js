@@ -1,6 +1,5 @@
-"use strict";
 
-const { sendJsonAndLog } = require("../logger");
+const { sendJsonAndLog } = require("../utils");
 const {serializeError} = require('serialize-error');
 
 //middleware para verificar se o usuário é administrador

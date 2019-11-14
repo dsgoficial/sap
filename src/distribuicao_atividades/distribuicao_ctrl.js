@@ -1,4 +1,3 @@
-"use strict";
 
 const { db } = require("../database");
 
@@ -21,7 +20,7 @@ controller.calcula_fila = async usuario => {
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          WHERE ee.tipo_situacao_id != 6
+          WHERE ee.tipo_situacao_id in (1,2,3,4)
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
@@ -42,7 +41,7 @@ controller.calcula_fila = async usuario => {
         )
         ) AS sit
         GROUP BY id, fp_prioridade
-        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
         ORDER BY fp_prioridade
         LIMIT 1`,
         [usuario]
@@ -66,7 +65,7 @@ controller.calcula_fila = async usuario => {
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          WHERE ee.tipo_situacao_id != 6
+          WHERE ee.tipo_situacao_id in (1,2,3,4)
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
@@ -87,7 +86,7 @@ controller.calcula_fila = async usuario => {
         )
         ) AS sit
         GROUP BY id, fpg_prioridade
-        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
         ORDER BY fpg_prioridade
         LIMIT 1`,
         [usuario]
@@ -109,7 +108,7 @@ controller.calcula_fila = async usuario => {
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          WHERE ee.tipo_situacao_id != 6
+          WHERE ee.tipo_situacao_id in (1,2,3,4)
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
@@ -128,7 +127,7 @@ controller.calcula_fila = async usuario => {
         )
         ) AS sit
         GROUP BY id, lo_prioridade, ut_prioridade
-        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
         ORDER BY lo_prioridade, ut_prioridade
         LIMIT 1`,
         [usuario]
@@ -153,7 +152,7 @@ controller.calcula_fila = async usuario => {
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          WHERE ee.tipo_situacao_id != 6
+          WHERE ee.tipo_situacao_id in (1,2,3,4)
         ) 
         AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
         AND se.ordem > ee_ant.ordem
@@ -193,7 +192,7 @@ controller.calcula_fila = async usuario => {
               (re.tipo_restricao_id = 1 AND a_re.usuario_id = $1) OR
               (re.tipo_restricao_id = 2 AND a_re.usuario_id != $1) OR 
               (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
-          ) AND a_re.tipo_situacao_id != 6  AND a.tipo_situacao_id = 1
+          ) AND a_re.tipo_situacao_id in (1,2,3,4)  AND a.tipo_situacao_id = 1
         )
         AND ee.id NOT IN
         (
@@ -211,7 +210,7 @@ controller.calcula_fila = async usuario => {
             (re.tipo_restricao_id = 1 AND ee_re.usuario_id = $1) OR
             (re.tipo_restricao_id = 2 AND ee_re.usuario_id != $1) OR 
             (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
-          ) AND ee_re.tipo_situacao_id != 6  AND ee.tipo_situacao_id = 1
+          ) AND ee_re.tipo_situacao_id in (1,2,3,4) AND ee.tipo_situacao_id = 1
         )
         AND ee.id NOT IN
         (
@@ -223,7 +222,7 @@ controller.calcula_fila = async usuario => {
         )
         ) AS sit
         GROUP BY id, lo_prioridade, pse_prioridade, ut_prioridade
-        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4,5)) 
+        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
         ORDER BY lo_prioridade, pse_prioridade, ut_prioridade
         LIMIT 1`,
         [usuario]
@@ -637,7 +636,7 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
     let result = await db.result(
       `UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 4, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
-      WHERE id = $2 and usuario_id = $3 and tipo_situacao_id != 6`,
+      WHERE id = $2 and usuario_id = $3 and tipo_situacao_id in (2)`,
       [data_fim, atividade_id, usuario_id]
     );
 
@@ -647,8 +646,7 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
 
     if (sem_correcao) {
       let result = await db.result(
-        `UPDATE macrocontrole.atividade SET
-        tipo_situacao_id = 5
+        `DELETE FROM macrocontrole.atividade 
         WHERE id in (
           with prox as (select e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
           from macrocontrole.atividade as a
@@ -790,7 +788,7 @@ controller.problema_atividade = async (
       await t.any(
         `
       UPDATE macrocontrole.atividade SET
-      data_fim = $1, tipo_situacao_id = 6, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
+      data_fim = $1, tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
       WHERE id = $2
       `,
         [data_fim, atividade_id]

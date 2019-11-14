@@ -1,4 +1,3 @@
-"use strict";
 
 const VERSION = '2.0.0';
 const MIN_DATABASE_VERSION = '2.0.0';

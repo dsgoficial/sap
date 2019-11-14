@@ -1,4 +1,3 @@
-"use strict";
 
 const { db } = require("../database");
 const {serializeError} = require('serialize-error');

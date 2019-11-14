@@ -1,4 +1,3 @@
-"use strict";
 
 const express = require("express");
 const path = require("path");
@@ -11,7 +10,7 @@ const hpp = require('hpp');
 const rateLimit = require("express-rate-limit");
 
 const routes = require("./routes");
-const { sendJsonAndLog } = require("./logger");
+const { sendJsonAndLog } = require("./utils");
 
 const app = express();
 

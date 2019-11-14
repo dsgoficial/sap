@@ -1,9 +1,8 @@
-"use strict";
 
 const express = require("express");
 const Joi = require("joi");
 
-const { sendJsonAndLog } = require("../logger");
+const { sendJsonAndLog } = require("../utils");
 
 const microcontroleCtrl = require("./microcontrole_ctrl");
 const microcontroleModel = require("./microcontrole_model");
