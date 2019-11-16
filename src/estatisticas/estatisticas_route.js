@@ -1,4 +1,3 @@
-
 const express = require("express");
 const Joi = require("joi");
 const path = require("path");
@@ -11,14 +10,14 @@ const estatisticasModel = require("./estatisticas_model");
 const router = express.Router();
 
 router.get("/acao/usuario/:id", async (req, res, next) => {
-  let { error, dados } = await estatisticasCtrl.get_acao_usuario(
+  const { error, dados } = await estatisticasCtrl.get_acao_usuario(
     req.params.id,
     req.query.dias
   );
   if (error) {
     return next(error);
   }
-  let information = {
+  const information = {
     usuario_id: req.params.id
   };
   return sendJsonAndLog(
@@ -33,7 +32,7 @@ router.get("/acao/usuario/:id", async (req, res, next) => {
 });
 
 router.get("/acao/em_execucao", async (req, res, next) => {
-  let { error, dados } = await estatisticasCtrl.get_acao_em_execucao();
+  const { error, dados } = await estatisticasCtrl.get_acao_em_execucao();
   if (error) {
     return next(error);
   }

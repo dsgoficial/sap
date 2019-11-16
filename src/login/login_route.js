@@ -1,4 +1,3 @@
-
 const express = require("express");
 const Joi = require("joi");
 
@@ -45,7 +44,9 @@ const router = express.Router();
  *     }
  */
 router.post("/", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, loginModel.login, { stripUnknown: true });
+  const validationResult = Joi.validate(req.body, loginModel.login, {
+    stripUnknown: true
+  });
   if (validationResult.error) {
     const err = new Error("Login Post validation error");
     err.status = 400;
@@ -56,7 +57,7 @@ router.post("/", async (req, res, next) => {
     return next(err);
   }
 
-  let { error, token, administrador } = await loginCtrl.login(
+  const { error, token, administrador } = await loginCtrl.login(
     req.body.usuario,
     req.body.senha,
     req.body.plugins,

@@ -1,12 +1,11 @@
-
 const jwt = require("jsonwebtoken");
 
 const { db, testdb } = require("../database");
-const {serializeError} = require('serialize-error');
+const { serializeError } = require("serialize-error");
 
 const semver = require("semver");
 
-const { JWT_SECRET } = require('./config');
+const { JWT_SECRET } = require("../config");
 
 const controller = {};
 
@@ -15,20 +14,27 @@ const verificaQGIS = async qgis => {
     const qgis_minimo = await db.oneOrNone(
       "SELECT versao_minima FROM dgeo.versao_qgis LIMIT 1"
     );
-    if(qgis_minimo){
+    if (qgis_minimo) {
       let qgis_wrong_version = true;
-      if(qgis && semver.gte(semver.coerce(qgis), semver.coerce(qgis_minimo.versao_minima))){
+      if (
+        qgis &&
+        semver.gte(
+          semver.coerce(qgis),
+          semver.coerce(qgis_minimo.versao_minima)
+        )
+      ) {
         qgis_wrong_version = false;
       }
       if (qgis_wrong_version) {
         const err = new Error(
-          "Versão incorreta do QGIS. A seguinte versão é necessária: " + qgis_minimo.versao_minima
+          "Versão incorreta do QGIS. A seguinte versão é necessária: " +
+            qgis_minimo.versao_minima
         );
         err.status = 401;
         err.context = "login_ctrl";
         err.information = { plugins };
         return { error: err };
-      } 
+      }
     }
     return { error: null };
   } catch (error) {
@@ -45,30 +51,37 @@ const verificaPlugins = async plugins => {
     const plugins_minimos = await db.any(
       "SELECT nome, versao_minima FROM dgeo.plugin"
     );
-    for (let i = 0; i < plugins_minimos.length; i++) {
+    for (const i = 0; i < plugins_minimos.length; i++) {
       let notFound = true;
-      if(plugins){
+      if (plugins) {
         plugins.forEach(p => {
-          if (p.nome === plugins_minimos[i].nome && semver.gte(semver.coerce(p.versao), semver.coerce(plugins_minimos[i].versao_minima))) {
+          if (
+            p.nome === plugins_minimos[i].nome &&
+            semver.gte(
+              semver.coerce(p.versao),
+              semver.coerce(plugins_minimos[i].versao_minima)
+            )
+          ) {
             notFound = false;
           }
         });
       }
 
       if (notFound) {
-        let listplugins = []
+        const listplugins = [];
         plugins_minimos.forEach(pm => {
-          listplugins.push(pm.nome + '-' + pm.versao_minima )
-        })
-        
+          listplugins.push(pm.nome + "-" + pm.versao_minima);
+        });
+
         const err = new Error(
-          "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " + listplugins.join(', ')
+          "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " +
+            listplugins.join(", ")
         );
         err.status = 401;
         err.context = "login_ctrl";
         err.information = { plugins };
         return { error: err };
-      } 
+      }
     }
 
     return { error: null };
@@ -121,21 +134,21 @@ controller.login = async (usuario, senha, plugins, qgis) => {
       expiresIn: "10h"
     });
 
-    let { error:error_qgis } = await verificaQGIS(plugins, qgis);
+    const { error: error_qgis } = await verificaQGIS(plugins, qgis);
     if (error_qgis) {
       return { error: error_qgis, token: null, administrador: null };
     }
 
-    let { error:error_plugin } = await verificaPlugins(plugins, qgis);
+    const { error: error_plugin } = await verificaPlugins(plugins, qgis);
     if (error_plugin) {
       return { error: error_plugin, token: null, administrador: null };
     }
-    
-    let { error:error_grava_login } = await gravaLogin(id);
+
+    const { error: error_grava_login } = await gravaLogin(id);
     if (error_grava_login) {
       return { error: error_grava_login, token: null, administrador: null };
     }
-    
+
     return { error: null, token, administrador };
   } catch (error) {
     const err = new Error("Usuário não cadastrado no SAP ou inativo.");
@@ -143,7 +156,7 @@ controller.login = async (usuario, senha, plugins, qgis) => {
     err.context = "login_ctrl";
     err.information = {};
     err.information.usuario = usuario;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err, token: null, administrador: null };
   }
 };

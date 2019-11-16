@@ -1,4 +1,3 @@
-
 const express = require("express");
 const Joi = require("joi");
 
@@ -105,7 +104,7 @@ const router = express.Router();
  *
  */
 router.post("/feicao", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, microcontroleModel.feicao, {
+  const validationResult = Joi.validate(req.body, microcontroleModel.feicao, {
     stripUnknown: true
   });
   if (validationResult.error) {
@@ -118,7 +117,7 @@ router.post("/feicao", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await microcontroleCtrl.armazenaFeicao(
+  const { error } = await microcontroleCtrl.armazenaFeicao(
     req.body.atividade_id,
     req.body.data,
     req.body.dados
@@ -127,7 +126,7 @@ router.post("/feicao", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_id: req.body.atividade_id
   };
   return sendJsonAndLog(
@@ -199,7 +198,7 @@ router.post("/feicao", async (req, res, next) => {
  *
  */
 router.post("/apontamento", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     microcontroleModel.apontamento,
     { stripUnknown: true }
@@ -214,7 +213,7 @@ router.post("/apontamento", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await microcontroleCtrl.armazenaApontamento(
+  const { error } = await microcontroleCtrl.armazenaApontamento(
     req.body.atividade_id,
     req.body.data,
     req.body.dados
@@ -223,7 +222,7 @@ router.post("/apontamento", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_id: req.body.atividade_id
   };
   return sendJsonAndLog(
@@ -295,7 +294,7 @@ router.post("/apontamento", async (req, res, next) => {
  *
  */
 router.post("/tela", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, microcontroleModel.tela, {
+  const validationResult = Joi.validate(req.body, microcontroleModel.tela, {
     stripUnknown: true
   });
   if (validationResult.error) {
@@ -308,7 +307,7 @@ router.post("/tela", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await microcontroleCtrl.armazenaTela(
+  const { error } = await microcontroleCtrl.armazenaTela(
     req.body.atividade_id,
     req.body.dados
   );
@@ -316,7 +315,7 @@ router.post("/tela", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_id: req.body.atividade_id
   };
   return sendJsonAndLog(
@@ -331,7 +330,7 @@ router.post("/tela", async (req, res, next) => {
 });
 
 router.post("/acao", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, microcontroleModel.acao, {
+  const validationResult = Joi.validate(req.body, microcontroleModel.acao, {
     stripUnknown: true
   });
   if (validationResult.error) {
@@ -344,14 +343,12 @@ router.post("/acao", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await microcontroleCtrl.armazenaAcao(
-    req.body.atividade_id
-  );
+  const { error } = await microcontroleCtrl.armazenaAcao(req.body.atividade_id);
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_id: req.body.atividade_id
   };
   return sendJsonAndLog(

@@ -1,16 +1,16 @@
+"use strict";
 
 const promise = require("bluebird");
 
 const initOptions = {
-  // Use a custom promise library, instead of the default ES6 Promise:
   promiseLib: promise
 };
 
 const pgp = require("pg-promise")(initOptions);
 
-const { DB_SERVER, DB_PORT, DB_NAME } = require('./config');
+const { DB_SERVER, DB_PORT, DB_NAME } = require("../config");
 
-const testeddbs = {};
+const testeDBs = {};
 
 const testdb = async (usuario, senha) => {
   const con =
@@ -25,13 +25,13 @@ const testdb = async (usuario, senha) => {
     "/" +
     DB_NAME;
 
-  if (!(con in testeddbs)) {
-    testeddbs[con] = pgp(con);
+  if (!(con in testeDBs)) {
+    testeDBs[con] = pgp(con);
   }
 
   let result;
 
-  await testeddbs[con]
+  await testeDBs[con]
     .connect()
     .then(function(obj) {
       obj.done(); // success, release connection;

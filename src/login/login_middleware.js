@@ -1,53 +1,39 @@
+"use strict";
 
 const jwt = require("jsonwebtoken");
 
-const { sendJsonAndLog } = require("../utils");
+const { JWT_SECRET } = require("../config");
 
-const { JWT_SECRET } = require('./config');
+const { AppError } = require("../utils");
 
 //middleware para verificar o JWT
-const verifyToken = function(req, res, next) {
-  //verifica o header authorization para pegar o token
-  const token = req.headers["authorization"];
-  //decode token
-  if (token === null) {
-    return sendJsonAndLog(
-      false,
-      "Nenhum token fornecido.",
-      "login_middleware",
-      { url: req.protocol + "://" + req.get("host") + req.originalUrl },
-      res,
-      401,
-      null
-    );
-  }
-  if (token.startsWith('Bearer ')) {
-    // Remove Bearer from string
-    token = token.slice(7, token.length);
-  }
-
-  //verifica se o token é valido
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return sendJsonAndLog(
-        false,
-        "Falha ao autenticar token.",
-        "login_middleware",
-        {
-          url: req.protocol + "://" + req.get("host") + req.originalUrl,
-          token: token
-        },
-        res,
-        403,
-        null
-      );
+const verifyToken = async (req, res, next) => {
+  try {
+    //verifica o header authorization para pegar o token
+    const token = req.headers["authorization"];
+    //decode token
+    if (!token) {
+      return res.sendJsonAndLog(false, "Nenhum token fornecido.", 401);
     }
-    // se tudo estiver ok segue para a próxima rota com o atributo id e informa se é administrador ou não
-    req.body.usuario_id = decoded.id;
-    next();
+    if (token.startsWith("Bearer ")) {
+      // Remove Bearer from string
+      token = token.slice(7, token.length);
+    }
 
-  });
-
+    //verifica se o token é valido
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.sendJsonAndLog(false, "Falha ao autenticar token.", 403, {
+          token: token
+        });
+      }
+      // se tudo estiver ok segue para a próxima rota com o atributo id
+      req.body.usuario_id = decoded.id;
+      next();
+    });
+  } catch (error) {
+    next(new AppError("Erro ao verificar token", 500, null, error));
+  }
 };
 
 module.exports = verifyToken;

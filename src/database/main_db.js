@@ -1,16 +1,22 @@
+"use strict";
 
 const { logger } = require("../utils");
 
 const promise = require("bluebird");
 
 const initOptions = {
-  // Use a custom promise library, instead of the default ES6 Promise:
   promiseLib: promise
 };
 
 const pgp = require("pg-promise")(initOptions);
 
-const { DB_USER, DB_PASSWORD, DB_SERVER, DB_PORT, DB_NAME } = require('./config');
+const {
+  DB_USER,
+  DB_PASSWORD,
+  DB_SERVER,
+  DB_PORT,
+  DB_NAME
+} = require("../config");
 
 const cn = {
   host: DB_SERVER,
@@ -22,8 +28,7 @@ const cn = {
 
 const db = pgp(cn);
 
-db
-  .connect()
+db.connect()
   .then(function(obj) {
     obj.done(); // success, release connection;
   })
@@ -31,7 +36,7 @@ db
     logger.info("Failed database connection", {
       context: "main_db",
       information: {
-        connectionString: connectionStringMacro
+        cn
       }
     });
   });

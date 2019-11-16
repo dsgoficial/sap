@@ -1,5 +1,4 @@
-
-let DATABASE_VERSION = '2.0.0';
+"use strict";
 
 const fs = require("fs");
 const inquirer = require("inquirer");
@@ -14,38 +13,32 @@ const initOptions = {
 
 const pgp = require("pg-promise")(initOptions);
 
-const sql0 = fs.readFileSync(path.resolve("./er/dominio.sql"), "utf-8").trim();
-const sql1 = fs.readFileSync(path.resolve("./er/dgeo.sql"), "utf-8").trim();
-const sql2 = fs
-  .readFileSync(path.resolve("./er/macrocontrole.sql"), "utf-8")
-  .trim();
-const sql3 = fs
-  .readFileSync(path.resolve("./er/acompanhamento.sql"), "utf-8")
-  .trim();
-/*
-const sql4 = fs
-  .readFileSync(path.resolve("./er/microcontrole.sql"), "utf-8")
-  .trim();
+const readSqlFile = file => {
+  const fullPath = path.join(__dirname, file);
+  return new pgp.QueryFile(fullPath, { minify: true });
+};
 
-const sql5 = fs
-  .readFileSync(path.resolve("./er/avaliacao.sql"), "utf-8")
-  .trim();
+const sql0 = readSqlFile("./er/versao.sql");
+const sql1 = readSqlFile("./er/dominio.sql");
+const sql2 = readSqlFile("./er/dgeo.sql");
+const sql3 = readSqlFile("./er/macrocontrole.sql");
+const sql4 = readSqlFile("./er/acompanhamento.sql");
 
-const sql6 = fs.readFileSync(path.resolve("./er/metadado.sql"), "utf-8").trim();
-
-const sql7 = fs
-  .readFileSync(path.resolve("./er/simulacao.sql"), "utf-8")
-  .trim();
-
-const sql8 = fs
-  .readFileSync(path.resolve("./er/permissao.sql"), "utf-8")
-  .trim();
-*/
 const createConfig = () => {
   console.log(chalk.blue("Sistema de Apoio a Produção"));
   console.log(chalk.blue("Criação do arquivo de configuração"));
 
-  let questions = [
+  const exists = fs.existsSync("config.env");
+  if (exists) {
+    console.log(
+      chalk.red(
+        "Arquivo config.env já existe, apague antes de iniciar a configuração."
+      )
+    );
+    process.exit(0);
+  }
+
+  const questions = [
     {
       type: "input",
       name: "db_server",
@@ -119,38 +112,10 @@ const createConfig = () => {
         await db.none(sql1);
         await db.none(sql2);
         await db.none(sql3);
-        //await db.none(sql4);
-        //await db.none(sql5);
-        //await db.none(sql6);
-        //await db.none(sql7);
-        //await db.none(sql8);
+        await db.none(sql4);
 
         await db.none(
           `
-        CREATE TABLE public.versao(
-          code SMALLINT NOT NULL PRIMARY KEY,
-          nome VARCHAR(255) NOT NULL
-        );
-
-        INSERT INTO public.versao (code, nome) VALUES
-        (1, '$2');
-
-        CREATE TABLE public.layer_styles(
-          id serial NOT NULL PRIMARY KEY,
-          f_table_catalog varchar(255),
-          f_table_schema varchar(255),
-          f_table_name varchar(255),
-          f_geometry_column varchar(255),
-          stylename varchar(255),
-          styleqml text,
-          stylesld text,
-          useasdefault boolean,
-          description text,
-          owner varchar(255),
-          ui text,
-          update_time timestamp without time zone DEFAULT now()
-        );
-
         GRANT USAGE ON schema public TO $1:name;
         GRANT SELECT ON ALL TABLES IN SCHEMA public TO $1:name;
 
@@ -171,73 +136,26 @@ const createConfig = () => {
         GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA acompanhamento TO $1:name;
         GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA acompanhamento TO $1:name;
         `,
-          [answers.db_user, DATABASE_VERSION]
-        );
-
-        /*
-        await db.none(
-          `
-        CREATE TABLE public.versao(
-          code SMALLINT NOT NULL PRIMARY KEY,
-          nome VARCHAR(255) NOT NULL,
-        );
-
-        INSERT INTO public.versao (code, nome) VALUES
-        (1, '2.0.0');
-
-        GRANT ALL ON SCHEMA dgeo TO $1:name;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA dgeo TO $1:name;
-
-        GRANT ALL ON SCHEMA macrocontrole TO $1:name;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
-
-        GRANT ALL ON SCHEMA microcontrole TO $1:name;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA microcontrole TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA microcontrole TO $1:name;
-
-        GRANT ALL ON schema acompanhamento TO public;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA acompanhamento TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA acompanhamento TO $1:name;
-
-        GRANT ALL ON schema avaliacao TO public;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA avaliacao TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA avaliacao TO $1:name;
-
-        GRANT ALL ON schema metadado TO public;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA metadado TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA metadado TO $1:name;
-
-        GRANT ALL ON schema simulacao TO public;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA simulacao TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA simulacao TO $1:name;
-        `,
           [answers.db_user]
         );
-        */
         console.log(chalk.blue("Banco de dados do SAP criado com sucesso!"));
       }
 
-      let secret = require('crypto').randomBytes(64).toString('hex')
-      let env = `PORT=${answers.port}
+      const secret = require("crypto")
+        .randomBytes(64)
+        .toString("hex");
+
+      const env = `PORT=${answers.port}
 DB_SERVER=${answers.db_server}
 DB_PORT=${answers.db_port}
 DB_NAME=${answers.db_name}
 DB_USER=${answers.db_user}
 DB_PASSWORD=${answers.db_password}
-JWT_SECRET=${secret}
-DATABASE_VERSION=${DATABASE_VERSION}`;
+JWT_SECRET=${secret}`;
 
-      let exists = fs.existsSync(".env");
-      if (exists) {
-        throw Error(
-          "Arquivo .env já existe, apague antes de iniciar a configuração."
-        );
-      }
-      fs.writeFileSync(".env", env);
+      fs.writeFileSync("config.env", env);
       console.log(
-        chalk.blue("Arquivo de configuração (.env) criado com sucesso!")
+        chalk.blue("Arquivo de configuração (config.env) criado com sucesso!")
       );
     } catch (error) {
       if (

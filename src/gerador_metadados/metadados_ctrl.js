@@ -1,4 +1,3 @@
-
 const { db } = require("../database");
 
 const controller = {};
@@ -14,7 +13,6 @@ xmlTemplate["6"] = "template_mdt.xml";
 xmlTemplate["7"] = "template_carta_tematica.xml";
 
 controller.geraMetadado = async uuid => {
-  
   const produto = await db.oneOrNone(
     `SELECT p.nome, p.mi, p.inom, p.escala, p.geometry, lp.tipo_produto_id,
     proj.nome AS projeto, ip.resumo, ip.proposito, ip.creditos, ip.informacoes_complementares,
@@ -28,7 +26,7 @@ controller.geraMetadado = async uuid => {
     [uuid]
   );
   //descobrir se o produto existe
-  if(!produto){
+  if (!produto) {
     //throw error
   }
   const producao = await db.any(
@@ -53,9 +51,10 @@ controller.geraMetadado = async uuid => {
     [uuid]
   );
   //descobrir se o produto está finalizado
-  let finalizado = producao.every(v => {
-    return v.data_fim })
-  if(!finalizado){
+  const finalizado = producao.every(v => {
+    return v.data_fim;
+  });
+  if (!finalizado) {
     //throw error
   }
 
@@ -68,9 +67,9 @@ controller.geraMetadado = async uuid => {
     [uuid]
   );
 
-  let template = xmlTemplate[produto.tipo_produto_id];
+  const template = xmlTemplate[produto.tipo_produto_id];
 
-  let dados = produto;
+  const dados = produto;
   const d = new Date();
   dados.data_metadado = d.toISOString().split("T")[0];
   dados.palavras_chave = palavras_chave;

@@ -1,13 +1,10 @@
-
-const pgp = require("pg-promise")();
-
 const { db } = require("../database");
 const { serializeError } = require("serialize-error");
 
 const controller = {};
 
 const fix_activity = (no_activity, min_max_points) => {
-  let no_activity_fixed = {};
+  const no_activity_fixed = {};
   no_activity.forEach(na => {
     if (!(na.dia in no_activity_fixed)) {
       no_activity_fixed[na.dia] = [];
@@ -18,16 +15,16 @@ const fix_activity = (no_activity, min_max_points) => {
     });
   });
 
-  let activity_fixed = {};
-  for (let dia in no_activity_fixed) {
-    for (let i = 0; i < no_activity_fixed[dia].length; i++) {
+  const activity_fixed = {};
+  for (const dia in no_activity_fixed) {
+    for (const i = 0; i < no_activity_fixed[dia].length; i++) {
       if (!(dia in activity_fixed)) {
         activity_fixed[dia] = {};
         activity_fixed[dia]["data"] = [];
         min_max_points.forEach(mm => {
           if (mm.dia == dia) {
             activity_fixed[dia]["measure"] = mm.usuario + " - " + mm.dia;
-            let aux = [];
+            const aux = [];
             aux.push(mm.min_data);
             aux.push(1);
             aux.push(no_activity_fixed[dia][i].previous_data);
@@ -35,13 +32,13 @@ const fix_activity = (no_activity, min_max_points) => {
           }
         });
       }
-      let aux = [];
+      const aux = [];
       aux.push(no_activity_fixed[dia][i].previous_data);
       aux.push(0);
       aux.push(no_activity_fixed[dia][i].data);
       activity_fixed[dia]["data"].push(aux);
       if (i < no_activity_fixed[dia].length - 1) {
-        let aux = [];
+        const aux = [];
         aux.push(no_activity_fixed[dia][i].data);
         aux.push(1);
         aux.push(no_activity_fixed[dia][i + 1].previous_data);
@@ -51,7 +48,7 @@ const fix_activity = (no_activity, min_max_points) => {
         min_max_points.forEach(mm => {
           if (mm.dia == dia) {
             if (no_activity_fixed[dia][i].data != mm.max_data) {
-              let aux = [];
+              const aux = [];
               aux.push(no_activity_fixed[dia][i].data);
               aux.push(1);
               aux.push(mm.max_data);
@@ -66,19 +63,19 @@ const fix_activity = (no_activity, min_max_points) => {
 };
 
 const activity_statistics = activity_fixed => {
-  for (let dia in activity_fixed) {
-    let parts = {};
+  for (const dia in activity_fixed) {
+    const parts = {};
     parts["0"] = [];
     parts["1"] = [];
     activity_fixed[dia]["data"].forEach(d => {
-      let i = new Date(d[0]);
-      let f = new Date(d[2]);
-      let diff = Math.ceil(Math.abs(f.getTime() - i.getTime()) / (1000 * 60));
+      const i = new Date(d[0]);
+      const f = new Date(d[2]);
+      const diff = Math.ceil(Math.abs(f.getTime() - i.getTime()) / (1000 * 60));
       parts[d[1]].push(diff);
     });
     activity_fixed[dia]["statistics"] = {};
-    let active = parts["1"].reduce((a, b) => a + b, 0);
-    let not_active = parts["0"].reduce((a, b) => a + b, 0);
+    const active = parts["1"].reduce((a, b) => a + b, 0);
+    const not_active = parts["0"].reduce((a, b) => a + b, 0);
     activity_fixed[dia]["statistics"]["tempo_total"] = active + not_active;
     activity_fixed[dia]["statistics"]["aproveitamento"] =
       (100 * active) / (active + not_active);
@@ -100,7 +97,7 @@ const activity_statistics = activity_fixed => {
 
 controller.get_acao_usuario = async (usuario_id, days) => {
   try {
-    let no_activity = await db.any(
+    const no_activity = await db.any(
       `
       WITH datas AS (
         SELECT ma.data
@@ -121,7 +118,7 @@ controller.get_acao_usuario = async (usuario_id, days) => {
       `,
       [usuario_id, days]
     );
-    let min_max_points = await db.any(
+    const min_max_points = await db.any(
       `
       SELECT to_char(ma.data::date, 'YYYY-MM-DD') AS dia, to_char(min(ma.data), 'YYYY-MM-DD HH24:MI:00') as min_data, to_char(max(ma.data), 'YYYY-MM-DD HH24:MI:00') as max_data, tpg.nome_abrev || ' ' || u.nome_guerra as usuario
       FROM microcontrole.monitoramento_acao AS ma
@@ -134,7 +131,7 @@ controller.get_acao_usuario = async (usuario_id, days) => {
       `,
       [usuario_id, days]
     );
-    let activity_fixed = fix_activity(no_activity, min_max_points);
+    const activity_fixed = fix_activity(no_activity, min_max_points);
     activity_fixed = activity_statistics(activity_fixed);
 
     return { error: null, dados: activity_fixed };
@@ -154,7 +151,7 @@ controller.get_acao_usuario = async (usuario_id, days) => {
 
 controller.get_acao_em_execucao = async () => {
   try {
-    let no_activity = await db.any(
+    const no_activity = await db.any(
       `
       WITH datas AS (
         SELECT a.usuario_id, ma.data
@@ -174,7 +171,7 @@ controller.get_acao_em_execucao = async () => {
         ORDER BY usuario_id, data::date, previous_data;
       `
     );
-    let min_max_points = await db.any(
+    const min_max_points = await db.any(
       `
       SELECT u.id AS usuario_id, to_char(ma.data::date, 'YYYY-MM-DD') AS dia, to_char(min(ma.data), 'YYYY-MM-DD HH24:MI:00') as min_data, to_char(max(ma.data), 'YYYY-MM-DD HH24:MI:00') as max_data, tpg.nome_abrev || ' ' || u.nome_guerra as usuario
       FROM microcontrole.monitoramento_acao AS ma
@@ -186,7 +183,7 @@ controller.get_acao_em_execucao = async () => {
       ORDER BY data::date
       `
     );
-    let activity_fixed = fix_activity(no_activity, min_max_points);
+    const activity_fixed = fix_activity(no_activity, min_max_points);
     activity_fixed = activity_statistics(activity_fixed);
 
     return { error: null, dados: activity_fixed };

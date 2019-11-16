@@ -1,19 +1,16 @@
-
 const { db } = require("../database");
-const {serializeError} = require('serialize-error');
+const { serializeError } = require("serialize-error");
 
 const controller = {};
 
 controller.armazenaFeicao = async (atividade_id, data, dados) => {
   try {
-    const table = new pgp.helpers.TableName(
-      {
-        table: "monitoramento_feicao",
-        schema: "microcontrole"
-      }
-      );
+    const table = new db.helpers.TableName({
+      table: "monitoramento_feicao",
+      schema: "microcontrole"
+    });
 
-    const cs = new pgp.helpers.ColumnSet(
+    const cs = new db.helpers.ColumnSet(
       [
         "tipo_operacao_id",
         "camada_id",
@@ -39,7 +36,7 @@ controller.armazenaFeicao = async (atividade_id, data, dados) => {
       });
     });
 
-    const query = pgp.helpers.insert(values, cs);
+    const query = db.helpers.insert(values, cs);
 
     db.none(query);
 
@@ -54,21 +51,19 @@ controller.armazenaFeicao = async (atividade_id, data, dados) => {
     err.information.atividade_id = atividade_id;
     err.information.data = data;
     err.information.dados = dados;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
 
 controller.armazenaApontamento = async (atividade_id, data, dados) => {
   try {
-    const table = new pgp.helpers.TableName(
-      {
-        table: "monitoramento_apontamento",
-        schema: "microcontrole"
-      }
-      );
+    const table = new db.helpers.TableName({
+      table: "monitoramento_apontamento",
+      schema: "microcontrole"
+    });
 
-    const cs = new pgp.helpers.ColumnSet(
+    const cs = new db.helpers.ColumnSet(
       ["quantidade", "categoria", "data", "atividade_id"],
       { table }
     );
@@ -83,7 +78,7 @@ controller.armazenaApontamento = async (atividade_id, data, dados) => {
       });
     });
 
-    const query = pgp.helpers.insert(values, cs);
+    const query = db.helpers.insert(values, cs);
 
     db.none(query);
 
@@ -98,21 +93,19 @@ controller.armazenaApontamento = async (atividade_id, data, dados) => {
     err.information.atividade_id = atividade_id;
     err.information.data = data;
     err.information.dados = dados;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
 
 controller.armazenaTela = async (atividade_id, dados) => {
   try {
-    const table = new pgp.helpers.TableName(
-      {
-        table: "monitoramento_tela",
-        schema: "microcontrole"
-      }
-      );
+    const table = new db.helpers.TableName({
+      table: "monitoramento_tela",
+      schema: "microcontrole"
+    });
 
-    const cs = new pgp.helpers.ColumnSet(["data", "atividade_id", "geom"], {
+    const cs = new db.helpers.ColumnSet(["data", "atividade_id", "geom"], {
       table
     });
 
@@ -120,7 +113,7 @@ controller.armazenaTela = async (atividade_id, dados) => {
 
     dados.foreach(d => {
       // prettier-ignore
-      let geom = `ST_GeomFromEWKT('SRID=4674;POLYGON(${d.x_min} ${d.y_min},${d.x_min} ${d.y_max},${d.x_max} ${d.y_max}, ${d.x_max} ${d.y_min}, ${d.x_min} ${d.y_min})')`;
+      const geom = `ST_GeomFromEWKT('SRID=4674;POLYGON(${d.x_min} ${d.y_min},${d.x_min} ${d.y_max},${d.x_max} ${d.y_max}, ${d.x_max} ${d.y_min}, ${d.x_min} ${d.y_min})')`;
       values.push({
         geom: geom,
         data: d.data,
@@ -128,7 +121,7 @@ controller.armazenaTela = async (atividade_id, dados) => {
       });
     });
 
-    const query = pgp.helpers.insert(values, cs);
+    const query = db.helpers.insert(values, cs);
 
     db.none(query);
 
@@ -142,12 +135,12 @@ controller.armazenaTela = async (atividade_id, dados) => {
     err.information = {};
     err.information.atividade_id = atividade_id;
     err.information.dados = dados;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
 
-controller.armazenaAcao = async (atividade_id) => {
+controller.armazenaAcao = async atividade_id => {
   try {
     await db.any(
       `
@@ -162,7 +155,7 @@ controller.armazenaAcao = async (atividade_id) => {
     err.context = "microcontrole_ctrl";
     err.information = {};
     err.information.atividade_id = atividade_id;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };

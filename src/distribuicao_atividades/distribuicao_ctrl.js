@@ -1,13 +1,16 @@
+"use strict";
+
+const path = require("path");
+const CONTEXT = path.basename(__filename);
 
 const { db } = require("../database");
 
 const controller = {};
-const {serializeError} = require('serialize-error');
 
-controller.calcula_fila = async usuario => {
+controller.calcula_fila = async usuario_id => {
   return db
     .task(async t => {
-      let fila_prioritaria = await t.oneOrNone(
+      const fila_prioritaria = await t.oneOrNone(
         `SELECT id
         FROM (
         SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fp.prioridade AS fp_prioridade
@@ -44,14 +47,14 @@ controller.calcula_fila = async usuario => {
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
         ORDER BY fp_prioridade
         LIMIT 1`,
-        [usuario]
+        [usuario_id]
       );
 
       if (fila_prioritaria != null) {
         return fila_prioritaria;
       }
 
-      let fila_prioritaria_grupo = await t.oneOrNone(
+      const fila_prioritaria_grupo = await t.oneOrNone(
         `SELECT id
         FROM (
         SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, fpg.prioridade AS fpg_prioridade
@@ -89,14 +92,14 @@ controller.calcula_fila = async usuario => {
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
         ORDER BY fpg_prioridade
         LIMIT 1`,
-        [usuario]
+        [usuario_id]
       );
 
       if (fila_prioritaria_grupo != null) {
         return fila_prioritaria_grupo;
       }
 
-      let cartas_pausadas = await t.oneOrNone(
+      const cartas_pausadas = await t.oneOrNone(
         `SELECT id
         FROM (
         SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, lo.prioridade AS lo_prioridade, ut.prioridade AS ut_prioridade
@@ -130,14 +133,14 @@ controller.calcula_fila = async usuario => {
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
         ORDER BY lo_prioridade, ut_prioridade
         LIMIT 1`,
-        [usuario]
+        [usuario_id]
       );
 
       if (cartas_pausadas != null) {
         return cartas_pausadas;
       }
 
-      let prioridade_operador = await t.oneOrNone(
+      const prioridade_operador = await t.oneOrNone(
         `SELECT id
         FROM (
         SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, lo.prioridade AS lo_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
@@ -225,7 +228,7 @@ controller.calcula_fila = async usuario => {
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
         ORDER BY lo_prioridade, pse_prioridade, ut_prioridade
         LIMIT 1`,
-        [usuario]
+        [usuario_id]
       );
 
       if (prioridade_operador) {
@@ -235,23 +238,23 @@ controller.calcula_fila = async usuario => {
       return null;
     })
     .then(prioridade => {
-      return { erro: null, prioridade: prioridade };
+      return prioridade;
     })
     .catch(error => {
-      const err = new Error("Falha durante calculo da fila.");
-      err.status = 500;
-      err.context = "distribuicao_ctrl";
-      err.information = {};
-      err.information.usuario_id = usuario;
-      err.information.trace = serializeError(error)
-      return { erro: err, prioridade: null };
+      throw new AppError(
+        "Falha durante calculo da fila",
+        500,
+        { usuario_id },
+        error,
+        CONTEXT
+      );
     });
 };
 
 controller.dados_producao = async atividade_id => {
   return db
     .task(async t => {
-      let dadosut = await t.one(
+      const dadosut = await t.one(
         `SELECT ee.unidade_trabalho_id, ee.etapa_id, u.id as usuario_id, u.nome_guerra, s.id as subfase_id, s.nome as subfase_nome, ut.epsg, 
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom,
         ut.nome as unidade_trabalho_nome, bd.nome AS nome_bd, bd.servidor, bd.porta, e.code as etapa_code, e.nome as etapa_nome, ee.observacao as observacao_atividade,
@@ -326,7 +329,7 @@ controller.dados_producao = async atividade_id => {
         );
       }
 
-      let estilos = await t.any(
+      const estilos = await t.any(
         `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
         INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
         INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
@@ -335,7 +338,7 @@ controller.dados_producao = async atividade_id => {
         [dadosut.subfase_id]
       );
 
-      let regras = await t.any(
+      const regras = await t.any(
         `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
         INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra = pr.nome
         INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
@@ -344,17 +347,17 @@ controller.dados_producao = async atividade_id => {
         [dadosut.subfase_id]
       );
 
-      let fme = await t.any(
+      const fme = await t.any(
         "SELECT servidor, porta, rotina, gera_falso_positivo FROM macrocontrole.perfil_fme WHERE subfase_id = $1",
         [dadosut.subfase_id]
       );
 
-      let configuracao = await t.any(
+      const configuracao = await t.any(
         "SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $1",
         [dadosut.subfase_id]
       );
 
-      let monitoramento = await t.any(
+      const monitoramento = await t.any(
         `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
         FROM macrocontrole.perfil_monitoramento AS pm
         INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
@@ -362,7 +365,7 @@ controller.dados_producao = async atividade_id => {
         [dadosut.subfase_id]
       );
 
-      let insumos = await t.any(
+      const insumos = await t.any(
         `SELECT i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
         FROM macrocontrole.insumo AS i
         INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
@@ -370,7 +373,7 @@ controller.dados_producao = async atividade_id => {
         [dadosut.unidade_trabalho_id]
       );
 
-      let models_qgis = await t.any(
+      const models_qgis = await t.any(
         `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo
         FROM macrocontrole.perfil_model_qgis AS pmq
         INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.nome = lqm.nome
@@ -429,7 +432,7 @@ controller.dados_producao = async atividade_id => {
       info.atividade.camadas = [];
 
       camadas.forEach(r => {
-        let aux = { nome: r.nome, schema: r.schema };
+        const aux = { nome: r.nome, schema: r.schema };
         if (r.alias) {
           aux.alias = r.alias;
         }
@@ -448,7 +451,7 @@ controller.dados_producao = async atividade_id => {
           aux.atributo_justificativa_apontamento =
             r.atributo_justificativa_apontamento;
         }
-        let aux_att = [];
+        const aux_att = [];
         atributos.forEach(a => {
           if (a.camada === r.nome && a.schema === r.schema) {
             aux_att.push({ nome: a.nome, alias: a.alias });
@@ -477,7 +480,7 @@ controller.dados_producao = async atividade_id => {
         });
       });
 
-      let perfil_linhagem = await t.oneOrNone(
+      const perfil_linhagem = await t.oneOrNone(
         "SELECT tipo_exibicao_id FROM macrocontrole.perfil_linhagem WHERE subfase_id = $1 LIMIT 1",
         [dadosut.subfase_id]
       );
@@ -534,7 +537,7 @@ controller.dados_producao = async atividade_id => {
 
       info.atividade.linhagem = linhagem;
 
-      let requisitos = await t.any(
+      const requisitos = await t.any(
         `SELECT r.descricao
         FROM macrocontrole.requisito_finalizacao AS r
         WHERE r.subfase_id = $1 ORDER BY r.ordem`,
@@ -544,7 +547,7 @@ controller.dados_producao = async atividade_id => {
       requisitos.forEach(r => info.atividade.requisitos.push(r.descricao));
 
       /*
-      let questionario = await t.any(
+      const questionario = await t.any(
         `SELECT q.nome nome_questionario, p.id AS pergunta_id, p.texto AS pergunta,
         o.id AS opcao_id, o.texto AS opcao
         FROM avaliacao.questionario AS q
@@ -556,7 +559,7 @@ controller.dados_producao = async atividade_id => {
       );
       info.atividade.questionario = {};
       info.atividade.questionario.perguntas = [];
-      let perguntas = {};
+      const perguntas = {};
       questionario.forEach(i => {
         info.atividade.questionario.nome = i.nome_questionario;
 
@@ -574,7 +577,7 @@ controller.dados_producao = async atividade_id => {
         });
       });
 
-      for (let key in perguntas) {
+      for (const key in perguntas) {
         info.atividade.questionario.perguntas.push(perguntas[key]);
       }
       */
@@ -590,14 +593,14 @@ controller.dados_producao = async atividade_id => {
       err.context = "distribuicao_ctrl";
       err.information = {};
       err.information.atividade_id = atividade_id;
-      err.information.trace = serializeError(error)
+      err.information.trace = serializeError(error);
       return { erro: err, dados: null };
     });
 };
 
 controller.verifica = async usuario_id => {
   try {
-    let em_andamento = await db.oneOrNone(
+    const em_andamento = await db.oneOrNone(
       `SELECT a.id
       FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
@@ -625,7 +628,7 @@ controller.verifica = async usuario_id => {
     err.context = "distribuicao_ctrl";
     err.information = {};
     err.information.usuario_id = usuario_id;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { verificaError: err, dados: null };
   }
 };
@@ -633,7 +636,7 @@ controller.verifica = async usuario_id => {
 controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
   const data_fim = new Date();
   try {
-    let result = await db.result(
+    const result = await db.result(
       `UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 4, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($2), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($2)
       WHERE id = $2 and usuario_id = $3 and tipo_situacao_id in (2)`,
@@ -645,7 +648,7 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
     }
 
     if (sem_correcao) {
-      let result = await db.result(
+      const result = await db.result(
         `DELETE FROM macrocontrole.atividade 
         WHERE id in (
           with prox as (select e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
@@ -666,8 +669,6 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
         throw new Error("Erro ao bloquear correção.");
       }
     }
-
-    return { finalizaError: null };
   } catch (error) {
     const err = new Error("Falha durante tentativa de finalização.");
     err.status = 500;
@@ -675,7 +676,7 @@ controller.finaliza = async (usuario_id, atividade_id, sem_correcao) => {
     err.information = {};
     err.information.atividade_id = atividade_id;
     err.information.sem_correcao = sem_correcao;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { finalizaError: err };
   }
 };
@@ -709,7 +710,7 @@ controller.inicia = async usuario_id => {
           SELECT id from macrocontrole.atividade WHERE id = $1)`,
         [prioridade.id]
       );
-      let result = await t.result(
+      const result = await t.result(
         `UPDATE macrocontrole.atividade SET
           data_inicio = $1, tipo_situacao_id = 2, usuario_id = $3
           WHERE id = $2 and tipo_situacao_id IN (1,3)`,
@@ -735,7 +736,7 @@ controller.inicia = async usuario_id => {
       err.context = "distribuicao_ctrl";
       err.information = {};
       err.information.usuario_id = usuario_id;
-      err.information.trace = serializeError(error)
+      err.information.trace = serializeError(error);
       return { iniciaError, dados: null };
     });
 };
@@ -744,13 +745,13 @@ controller.responde_questionario = async (atividade_id, respostas) => {
   const data_questionario = new Date();
   try {
     await db.tx(async t => {
-      let resposta_questionario = await t.one(
+      const resposta_questionario = await t.one(
         `
       INSERT INTO avaliacao.resposta_questionario(data, atividade_id) VALUES($1,$2) RETURNING id
       `,
         [data_questionario, atividade_id]
       );
-      let queries = [];
+      const queries = [];
       respostas.forEach(r => {
         queries.push(
           t.none(
@@ -772,7 +773,7 @@ controller.responde_questionario = async (atividade_id, respostas) => {
     err.information.usuario_id = usuario_id;
     err.information.atividade_id = atividade_id;
     err.information.respostas = respostas;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
@@ -793,12 +794,12 @@ controller.problema_atividade = async (
       `,
         [data_fim, atividade_id]
       );
-      let atividade = await t.one(
+      const atividade = await t.one(
         `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id = $1`,
         [atividade_id]
       );
 
-      let new_id = await t.one(
+      const new_id = await t.one(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
       VALUES($1,$2,$3,3) RETURNING id
@@ -834,18 +835,18 @@ controller.problema_atividade = async (
     err.information.atividade_id = atividade_id;
     err.information.tipo_problema_id = tipo_problema_id;
     err.information.descricao = descricao;
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err };
   }
 };
 
 controller.get_tipo_problema = async () => {
   try {
-    let tipo_problema = await db.any(
+    const tipo_problema = await db.any(
       `SELECT code, nome
       FROM dominio.tipo_problema`
     );
-    let dados = [];
+    const dados = [];
     tipo_problema.forEach(p => {
       dados.push({ tipo_problema_id: p.code, tipo_problema: p.nome });
     });
@@ -855,7 +856,7 @@ controller.get_tipo_problema = async () => {
     err.status = 500;
     err.context = "distribuicao_ctrl";
     err.information = {};
-    err.information.trace = serializeError(error)
+    err.information.trace = serializeError(error);
     return { error: err, dados: null };
   }
 };

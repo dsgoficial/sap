@@ -1,17 +1,26 @@
+"use strict";
 
-const { VERSION, PORT, DATABASE_VERSION } = require('./config');
+const { errorHandler } = require("./utils");
+const { databaseVersion } = require("./database");
+
+const { VERSION, PORT } = require("./config");
 
 const app = require("./app");
 const { logger } = require("./utils");
 
-//Starts server
-app.listen(PORT, () => {
-  logger.info("Server start", {
-    context: "index",
-    information: {
-      version: VERSION,
-      database_version: DATABASE_VERSION,
-      port: PORT
-    }
-  });
-});
+databaseVersion
+  .validate()
+  .then(DATABASE_VERSION => {
+    //Starts server
+    app.listen(PORT, () => {
+      logger.info("Server start", {
+        context: "index",
+        information: {
+          version: VERSION,
+          database_version: DATABASE_VERSION,
+          port: PORT
+        }
+      });
+    });
+  })
+  .catch(errorHandler);

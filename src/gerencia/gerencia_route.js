@@ -1,4 +1,3 @@
-
 const express = require("express");
 const Joi = require("joi");
 
@@ -10,12 +9,12 @@ const gerenciaModel = require("./gerencia_model");
 const router = express.Router();
 
 router.get("/estilos", async (req, res, next) => {
-  let { error, dados } = await gerenciaCtrl.get_estilos();
+  const { error, dados } = await gerenciaCtrl.get_estilos();
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id
   };
   return sendJsonAndLog(
@@ -30,12 +29,12 @@ router.get("/estilos", async (req, res, next) => {
 });
 
 router.get("/regras", async (req, res, next) => {
-  let { error, dados } = await gerenciaCtrl.get_regras();
+  const { error, dados } = await gerenciaCtrl.get_regras();
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id
   };
   return sendJsonAndLog(
@@ -50,12 +49,12 @@ router.get("/regras", async (req, res, next) => {
 });
 
 router.get("/modelos", async (req, res, next) => {
-  let { error, dados } = await gerenciaCtrl.get_modelos();
+  const { error, dados } = await gerenciaCtrl.get_modelos();
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id
   };
   return sendJsonAndLog(
@@ -70,12 +69,12 @@ router.get("/modelos", async (req, res, next) => {
 });
 
 router.get("/menus", async (req, res, next) => {
-  let { error, dados } = await gerenciaCtrl.get_menus();
+  const { error, dados } = await gerenciaCtrl.get_menus();
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id
   };
   return sendJsonAndLog(
@@ -90,7 +89,7 @@ router.get("/menus", async (req, res, next) => {
 });
 
 router.post("/estilos", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, gerenciaModel.estilos, {
+  const validationResult = Joi.validate(req.body, gerenciaModel.estilos, {
     stripUnknown: true
   });
   if (validationResult.error) {
@@ -103,7 +102,7 @@ router.post("/estilos", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.grava_estilos(
+  const { error } = await gerenciaCtrl.grava_estilos(
     req.body.estilos,
     req.body.usuario_id
   );
@@ -111,7 +110,7 @@ router.post("/estilos", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id,
     estilos: req.body.estilos
   };
@@ -127,7 +126,7 @@ router.post("/estilos", async (req, res, next) => {
 });
 
 router.post("/regras", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, gerenciaModel.regras, {
+  const validationResult = Joi.validate(req.body, gerenciaModel.regras, {
     stripUnknown: true
   });
   if (validationResult.error) {
@@ -140,7 +139,7 @@ router.post("/regras", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.grava_regras(
+  const { error } = await gerenciaCtrl.grava_regras(
     req.body.regras,
     req.body.usuario_id
   );
@@ -148,7 +147,7 @@ router.post("/regras", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id,
     regras: req.body.regras
   };
@@ -164,7 +163,7 @@ router.post("/regras", async (req, res, next) => {
 });
 
 router.post("/menus", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, gerenciaModel.menus, {
+  const validationResult = Joi.validate(req.body, gerenciaModel.menus, {
     stripUnknown: true
   });
   if (validationResult.error) {
@@ -177,7 +176,7 @@ router.post("/menus", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.grava_menus(
+  const { error } = await gerenciaCtrl.grava_menus(
     req.body.menus,
     req.body.usuario_id
   );
@@ -185,7 +184,7 @@ router.post("/menus", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id,
     menus: req.body.menus
   };
@@ -201,7 +200,7 @@ router.post("/menus", async (req, res, next) => {
 });
 
 router.post("/modelos", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, gerenciaModel.qgis_models, {
+  const validationResult = Joi.validate(req.body, gerenciaModel.qgis_models, {
     stripUnknown: true
   });
   if (validationResult.error) {
@@ -214,7 +213,7 @@ router.post("/modelos", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.grava_modelos(
+  const { error } = await gerenciaCtrl.grava_modelos(
     req.body.modelos,
     req.body.usuario_id
   );
@@ -222,7 +221,7 @@ router.post("/modelos", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id,
     menus: req.body.modelos
   };
@@ -262,12 +261,12 @@ router.post("/modelos", async (req, res, next) => {
  *
  */
 router.get("/atividade/:id", async (req, res, next) => {
-  let { error, dados } = await gerenciaCtrl.get_atividade(req.params.id);
+  const { error, dados } = await gerenciaCtrl.get_atividade(req.params.id);
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_id: req.params.id
   };
   if (dados) {
@@ -294,7 +293,10 @@ router.get("/atividade/:id", async (req, res, next) => {
 });
 
 router.get("/atividade/usuario/:id", async (req, res, next) => {
-  let { erro, dados } = await gerenciaCtrl.get_atividade_usuario(req.params.id, req.query.proxima);
+  const { erro, dados } = await gerenciaCtrl.get_atividade_usuario(
+    req.params.id,
+    req.query.proxima
+  );
   if (erro) {
     return next(erro);
   }
@@ -325,12 +327,12 @@ router.get("/atividade/usuario/:id", async (req, res, next) => {
 });
 
 router.get("/banco_dados", async (req, res, next) => {
-  let { error, dados } = await gerenciaCtrl.get_banco_dados();
+  const { error, dados } = await gerenciaCtrl.get_banco_dados();
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id
   };
   return sendJsonAndLog(
@@ -345,12 +347,12 @@ router.get("/banco_dados", async (req, res, next) => {
 });
 
 router.get("/usuario", async (req, res, next) => {
-  let { error, dados } = await gerenciaCtrl.get_usuario();
+  const { error, dados } = await gerenciaCtrl.get_usuario();
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id
   };
   return sendJsonAndLog(
@@ -365,12 +367,12 @@ router.get("/usuario", async (req, res, next) => {
 });
 
 router.get("/perfil_producao", async (req, res, next) => {
-  let { error, dados } = await gerenciaCtrl.get_perfil_producao();
+  const { error, dados } = await gerenciaCtrl.get_perfil_producao();
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     usuario_id: req.body.usuario_id
   };
   return sendJsonAndLog(
@@ -385,7 +387,7 @@ router.get("/perfil_producao", async (req, res, next) => {
 });
 
 router.post("/unidade_trabalho/disponivel", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     gerenciaModel.unidade_trabalho_disponivel,
     {
@@ -402,7 +404,7 @@ router.post("/unidade_trabalho/disponivel", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.unidade_trabalho_disponivel(
+  const { error } = await gerenciaCtrl.unidade_trabalho_disponivel(
     req.body.unidade_trabalho_ids,
     req.body.disponivel
   );
@@ -410,7 +412,7 @@ router.post("/unidade_trabalho/disponivel", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     unidade_trabalho_ids: req.body.unidade_trabalho_ids,
     disponivel: req.body.disponivel
   };
@@ -426,7 +428,7 @@ router.post("/unidade_trabalho/disponivel", async (req, res, next) => {
 });
 
 router.post("/atividade/pausar", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     gerenciaModel.atividade_pausar,
     {
@@ -443,14 +445,14 @@ router.post("/atividade/pausar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.pausa_atividade(
+  const { error } = await gerenciaCtrl.pausa_atividade(
     req.body.unidade_trabalho_ids
   );
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     unidade_trabalho_ids: req.body.unidade_trabalho_ids
   };
   return sendJsonAndLog(
@@ -465,7 +467,7 @@ router.post("/atividade/pausar", async (req, res, next) => {
 });
 
 router.post("/atividade/reiniciar", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     gerenciaModel.atividade_reiniciar,
     {
@@ -482,14 +484,14 @@ router.post("/atividade/reiniciar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.reinicia_atividade(
+  const { error } = await gerenciaCtrl.reinicia_atividade(
     req.body.unidade_trabalho_ids
   );
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     unidade_trabalho_ids: req.body.unidade_trabalho_ids
   };
   return sendJsonAndLog(
@@ -504,7 +506,7 @@ router.post("/atividade/reiniciar", async (req, res, next) => {
 });
 
 router.post("/atividade/voltar", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     gerenciaModel.atividade_voltar,
     {
@@ -521,7 +523,7 @@ router.post("/atividade/voltar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.volta_atividade(
+  const { error } = await gerenciaCtrl.volta_atividade(
     req.body.atividade_ids,
     req.body.manter_usuarios
   );
@@ -529,7 +531,7 @@ router.post("/atividade/voltar", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_ids: req.body.atividade_ids,
     manter_usuarios: req.body.manter_usuarios
   };
@@ -545,7 +547,7 @@ router.post("/atividade/voltar", async (req, res, next) => {
 });
 
 router.post("/atividade/avancar", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     gerenciaModel.atividade_avancar,
     {
@@ -562,7 +564,7 @@ router.post("/atividade/avancar", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.avanca_atividade(
+  const { error } = await gerenciaCtrl.avanca_atividade(
     req.body.atividade_ids,
     req.body.concluida
   );
@@ -570,7 +572,7 @@ router.post("/atividade/avancar", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_ids: req.body.atividade_ids,
     concluida: req.body.concluida
   };
@@ -586,7 +588,7 @@ router.post("/atividade/avancar", async (req, res, next) => {
 });
 
 router.post("/atividade/criar_revisao", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     gerenciaModel.atividade_criar_revisao,
     {
@@ -603,14 +605,14 @@ router.post("/atividade/criar_revisao", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.cria_revisao(
+  const { error } = await gerenciaCtrl.cria_revisao(
     req.body.unidade_trabalho_ids
   );
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     unidade_trabalho_ids: req.body.unidade_trabalho_ids
   };
   return sendJsonAndLog(
@@ -625,7 +627,7 @@ router.post("/atividade/criar_revisao", async (req, res, next) => {
 });
 
 router.post("/atividade/criar_revcorr", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     gerenciaModel.atividade_criar_revcorr,
     {
@@ -642,14 +644,14 @@ router.post("/atividade/criar_revcorr", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.cria_revcorr(
+  const { error } = await gerenciaCtrl.cria_revcorr(
     req.body.unidade_trabalho_ids
   );
   if (error) {
     return next(error);
   }
 
-  let information = {
+  const information = {
     unidade_trabalho_ids: req.body.unidade_trabalho_ids
   };
   return sendJsonAndLog(
@@ -664,7 +666,7 @@ router.post("/atividade/criar_revcorr", async (req, res, next) => {
 });
 
 router.post("/fila_prioritaria", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     gerenciaModel.fila_prioritaria,
     {
@@ -681,7 +683,7 @@ router.post("/fila_prioritaria", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.cria_fila_prioritaria(
+  const { error } = await gerenciaCtrl.cria_fila_prioritaria(
     req.body.atividade_ids,
     req.body.usuario_prioridade_id,
     req.body.prioridade
@@ -690,7 +692,7 @@ router.post("/fila_prioritaria", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_ids: req.body.atividade_ids,
     usuario_prioridade_id: req.body.usuario_prioridade_id,
     prioridade: req.body.prioridade
@@ -707,7 +709,7 @@ router.post("/fila_prioritaria", async (req, res, next) => {
 });
 
 router.post("/fila_prioritaria_grupo", async (req, res, next) => {
-  let validationResult = Joi.validate(
+  const validationResult = Joi.validate(
     req.body,
     gerenciaModel.fila_prioritaria_grupo,
     {
@@ -724,7 +726,7 @@ router.post("/fila_prioritaria_grupo", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.cria_fila_prioritaria_grupo(
+  const { error } = await gerenciaCtrl.cria_fila_prioritaria_grupo(
     req.body.atividade_ids,
     req.body.perfil_producao_id,
     req.body.prioridade
@@ -733,7 +735,7 @@ router.post("/fila_prioritaria_grupo", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_ids: req.body.atividade_ids,
     perfil_producao_id: req.body.perfil_producao_id,
     prioridade: req.body.prioridade
@@ -750,7 +752,7 @@ router.post("/fila_prioritaria_grupo", async (req, res, next) => {
 });
 
 router.post("/observacao", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, gerenciaModel.observacao, {
+  const validationResult = Joi.validate(req.body, gerenciaModel.observacao, {
     stripUnknown: true
   });
   if (validationResult.error) {
@@ -763,7 +765,7 @@ router.post("/observacao", async (req, res, next) => {
     return next(err);
   }
 
-  let { error } = await gerenciaCtrl.cria_observacao(
+  const { error } = await gerenciaCtrl.cria_observacao(
     req.body.atividade_ids,
     req.body.observacao_atividade,
     req.body.observacao_etapa,
@@ -774,7 +776,7 @@ router.post("/observacao", async (req, res, next) => {
     return next(error);
   }
 
-  let information = {
+  const information = {
     atividade_ids: req.body.atividade_ids,
     observacao_atividade: req.body.observacao_atividade,
     observacao_etapa: req.body.observacao_etapa,

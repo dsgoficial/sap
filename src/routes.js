@@ -1,10 +1,10 @@
+"use strict";
 
 const { loginRoute, loginMiddleware, verifyAdmin } = require("./login");
 const { distribuicaoRoute } = require("./distribuicao_atividades");
 const { gerenciaRoute } = require("./gerencia");
 const { microcontroleRoute } = require("./microcontrole");
 const { estatisticasRoute } = require("./estatisticas");
-//const { metadadosRoute } = require("./gerador_metadados");
 
 const routes = app => {
   app.use("/login", loginRoute);
@@ -22,7 +22,5 @@ const routes = app => {
   app.use(verifyAdmin);
 
   app.use("/gerencia", gerenciaRoute);
-
-  //app.use("/metadados", metadadosRoute);
 };
 module.exports = routes;

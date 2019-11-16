@@ -1,33 +1,39 @@
+"use strict";
 
-const logger = require("./utils");
+const logger = require("./logger");
 
-const { VERSION } = require('./config');
+const { VERSION } = require("../config");
 
-const sendJsonAndLog = (
-  sucess,
-  message,
-  context,
-  information,
-  res,
-  status = 200,
-  dados = null
-) => {
-  logger.info(message, {
-    context: context,
-    information: information,
-    status: status
-  });
-  let jsonData = {
-    version: VERSION,
-    sucess: sucess,
-    message: message
+const sendJsonAndLog = (req, res, next) => {
+  res.sendJsonAndLog = (
+    sucess,
+    message,
+    status,
+    dados = null,
+    context = null
+  ) => {
+    const url = req.protocol + "://" + req.get("host") + req.originalUrl;
+
+    logger.info(message, {
+      url: url,
+      context: context,
+      information: req.body,
+      status: status
+    });
+    const jsonData = {
+      version: VERSION,
+      sucess: sucess,
+      message: message
+    };
+
+    if (dados) {
+      jsonData.dados = dados;
+    }
+
+    return res.status(status).json(jsonData);
   };
 
-  if (dados) {
-    jsonData.dados = dados
-  }
-
-  return res.status(status).json(jsonData);
+  next();
 };
 
 module.exports = sendJsonAndLog;

@@ -1,5 +1,4 @@
-
-const pgp = require("pg-promise")();
+"use strict";
 
 const { db } = require("../database");
 const { serializeError } = require("serialize-error");
@@ -9,18 +8,18 @@ const { distribuicaoCtrl } = require("../distribuicao_atividades");
 const controller = {};
 
 const get_usuario_nome_by_id = async usuario_id => {
-  let usuario = await t.one(
+  const usuario = await t.one(
     `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
     WHERE u.id = $1`,
     [usuario_id]
   );
   return usuario.posto_nome;
-}
+};
 
 controller.get_atividade = async atividade_id => {
   try {
-    let atividade = await db.oneOrNone(
+    const atividade = await db.oneOrNone(
       `SELECT a.etapa_id, a.unidade_trabalho_id
       FROM macrocontrole.atividade AS a
       WHERE a.id = $1 LIMIT 1`,
@@ -55,9 +54,9 @@ controller.get_atividade = async atividade_id => {
 
 controller.get_atividade_usuario = async (usuario_id, proxima) => {
   try {
-    const atividade_id;
+    let atividade_id;
 
-    if(proxima){
+    if (proxima) {
       const { erro, prioridade } = await distribuicaoCtrl.calcula_fila(
         usuario_id
       );
@@ -66,17 +65,17 @@ controller.get_atividade_usuario = async (usuario_id, proxima) => {
       }
       atividade_id = prioridade.id;
     } else {
-      let em_andamento = await db.oneOrNone(
+      const em_andamento = await db.oneOrNone(
         `SELECT a.id
         FROM macrocontrole.atividade AS a
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
         WHERE a.usuario_id = $1 and ut.disponivel IS TRUE and a.tipo_situacao_id = 2 LIMIT 1`,
         [usuario_id]
       );
-      if(!em_andamento){
+      if (!em_andamento) {
         return { erro: null, dados: null };
       }
-      atividade_id = em_andamento.id
+      atividade_id = em_andamento.id;
     }
 
     const { erro2, dados } = await distribuicaoCtrl.dados_producao(
@@ -101,7 +100,7 @@ controller.get_atividade_usuario = async (usuario_id, proxima) => {
 
 controller.get_estilos = async () => {
   try {
-    let dados = await db.any(`SELECT * FROM dgeo.layer_styles`);
+    const dados = await db.any(`SELECT * FROM dgeo.layer_styles`);
     return { error: null, dados: dados };
   } catch (error) {
     const err = new Error("Falha durante tentativa de retornar estilos.");
@@ -115,7 +114,7 @@ controller.get_estilos = async () => {
 
 controller.get_regras = async () => {
   try {
-    let dados = await db.any(`SELECT * FROM dgeo.layer_rules`);
+    const dados = await db.any(`SELECT * FROM dgeo.layer_rules`);
     return { error: null, dados: dados };
   } catch (error) {
     const err = new Error("Falha durante tentativa de retornar regras.");
@@ -129,7 +128,7 @@ controller.get_regras = async () => {
 
 controller.get_modelos = async () => {
   try {
-    let dados = await db.any(`SELECT * FROM dgeo.layer_qgis_models`);
+    const dados = await db.any(`SELECT * FROM dgeo.layer_qgis_models`);
     return { error: null, dados: dados };
   } catch (error) {
     const err = new Error("Falha durante tentativa de retornar modelos.");
@@ -143,7 +142,7 @@ controller.get_modelos = async () => {
 
 controller.get_menus = async () => {
   try {
-    let dados = await db.any(`SELECT * FROM dgeo.layer_menus`);
+    const dados = await db.any(`SELECT * FROM dgeo.layer_menus`);
     return { error: null, dados: dados };
   } catch (error) {
     const err = new Error("Falha durante tentativa de retornar menus.");
@@ -159,15 +158,15 @@ controller.grava_estilos = async (estilos, usuario_id) => {
   const data_gravacao = new Date();
   try {
     await db.tx(async t => {
-      let usuario_posto_nome = get_usuario_nome_by_id(usuario_id)
+      const usuario_posto_nome = get_usuario_nome_by_id(usuario_id);
       await t.none(`TRUNCATE dgeo.layer_styles RESTART IDENTITY`);
 
-      const table = new pgp.helpers.TableName({
+      const table = new db.helpers.TableName({
         table: "layer_styles",
         schema: "dgeo"
       });
 
-      const cs = new pgp.helpers.ColumnSet(
+      const cs = new db.helpers.ColumnSet(
         [
           "f_table_schema",
           "f_table_name",
@@ -197,10 +196,9 @@ controller.grava_estilos = async (estilos, usuario_id) => {
         });
       });
 
-      const query = pgp.helpers.insert(values, cs);
+      const query = db.helpers.insert(values, cs);
 
       await t.none(query);
-
     });
 
     return { error: null };
@@ -220,16 +218,16 @@ controller.grava_regras = async (regras, usuario_id) => {
   const data_gravacao = new Date();
   try {
     await db.tx(async t => {
-      let usuario_posto_nome = get_usuario_nome_by_id(usuario_id)
+      const usuario_posto_nome = get_usuario_nome_by_id(usuario_id);
 
       await t.none(`TRUNCATE dgeo.layer_rules RESTART IDENTITY`);
 
-      const table = new pgp.helpers.TableName({
+      const table = new db.helpers.TableName({
         table: "layer_rules",
         schema: "dgeo"
       });
 
-      const cs = new pgp.helpers.ColumnSet(
+      const cs = new db.helpers.ColumnSet(
         [
           "grupo_regra",
           "tipo_regra",
@@ -263,9 +261,9 @@ controller.grava_regras = async (regras, usuario_id) => {
         });
       });
 
-      const query = pgp.helpers.insert(values, cs);
+      const query = db.helpers.insert(values, cs);
 
-      let result = await t.result(query);
+      const result = await t.result(query);
 
       if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir regra.");
@@ -289,16 +287,16 @@ controller.grava_modelos = async (modelos, usuario_id) => {
   const data_gravacao = new Date();
   try {
     await db.tx(async t => {
-      let usuario_posto_nome = get_usuario_nome_by_id(usuario_id)
+      const usuario_posto_nome = get_usuario_nome_by_id(usuario_id);
 
       await t.none(`TRUNCATE dgeo.layer_qgis_models RESTART IDENTITY`);
 
-      const table = new pgp.helpers.TableName({
+      const table = new db.helpers.TableName({
         table: "layer_qgis_models",
         schema: "dgeo"
       });
 
-      const cs = new pgp.helpers.ColumnSet(
+      const cs = new db.helpers.ColumnSet(
         ["nome", "descricao", "model_xml", "owner", "update_time"],
         { table }
       );
@@ -314,9 +312,9 @@ controller.grava_modelos = async (modelos, usuario_id) => {
         });
       });
 
-      const query = pgp.helpers.insert(values, cs);
+      const query = db.helpers.insert(values, cs);
 
-      let result = await t.result(query);
+      const result = await t.result(query);
 
       if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir modelo.");
@@ -340,16 +338,16 @@ controller.grava_menus = async (menus, usuario_id) => {
   const data_gravacao = new Date();
   try {
     await db.tx(async t => {
-      let usuario_posto_nome = get_usuario_nome_by_id(usuario_id)
+      const usuario_posto_nome = get_usuario_nome_by_id(usuario_id);
 
       await t.none(`TRUNCATE dgeo.layer_menus RESTART IDENTITY`);
 
-      const table = new pgp.helpers.TableName({
+      const table = new db.helpers.TableName({
         table: "layer_menus",
         schema: "dgeo"
       });
 
-      const cs = new pgp.helpers.ColumnSet(
+      const cs = new db.helpers.ColumnSet(
         ["nome_menu", "definicao_menu", "ordem_menu", "owner", "update_time"],
         { table }
       );
@@ -365,9 +363,9 @@ controller.grava_menus = async (menus, usuario_id) => {
         });
       });
 
-      const query = pgp.helpers.insert(values, cs);
+      const query = db.helpers.insert(values, cs);
 
-      let result = await t.result(query);
+      const result = await t.result(query);
 
       if (!result.rowCount || result.rowCount == 0) {
         throw new Error("Erro ao inserir/atualizar menu.");
@@ -389,7 +387,7 @@ controller.grava_menus = async (menus, usuario_id) => {
 
 controller.get_banco_dados = async () => {
   try {
-    let banco_dados = await db.any(
+    const banco_dados = await db.any(
       `SELECT nome, servidor, porta FROM macrocontrole.banco_dados`
     );
     return { error: null, dados: banco_dados };
@@ -407,7 +405,7 @@ controller.get_banco_dados = async () => {
 
 controller.get_usuario = async () => {
   try {
-    let usuarios = await db.any(
+    const usuarios = await db.any(
       `SELECT u.id, tpg.nome_abrev || ' ' || u.nome_guerra AS nome
       FROM dgeo.usuario AS u INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id WHERE u.ativo IS TRUE`
     );
@@ -424,7 +422,7 @@ controller.get_usuario = async () => {
 
 controller.get_perfil_producao = async () => {
   try {
-    let perfil_producao = await db.any(
+    const perfil_producao = await db.any(
       `SELECT id, nome FROM macrocontrole.perfil_producao`
     );
     return { error: null, dados: perfil_producao };
@@ -445,12 +443,12 @@ controller.unidade_trabalho_disponivel = async (
   disponivel
 ) => {
   try {
-    const table = new pgp.helpers.TableName({
+    const table = new db.helpers.TableName({
       table: "unidade_trabalho",
       schema: "macrocontrole"
     });
 
-    const cs = new pgp.helpers.ColumnSet(["?id", "disponivel"], { table });
+    const cs = new db.helpers.ColumnSet(["?id", "disponivel"], { table });
 
     const values = [];
     unidade_trabalho_ids.forEach(d => {
@@ -461,7 +459,7 @@ controller.unidade_trabalho_disponivel = async (
     });
 
     const query =
-      pgp.helpers.update(values, cs, null, {
+      db.helpers.update(values, cs, null, {
         tableAlias: "X",
         valueAlias: "Y"
       }) + "WHERE Y.id = X.id";
@@ -485,7 +483,7 @@ controller.pausa_atividade = async unidade_trabalho_ids => {
   try {
     const data_fim = new Date();
     await db.tx(async t => {
-      let updated_ids = await t.any(
+      const updated_ids = await t.any(
         `
       UPDATE macrocontrole.atividade SET
       data_fim = $1, tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
@@ -498,21 +496,21 @@ controller.pausa_atividade = async unidade_trabalho_ids => {
         [data_fim, unidade_trabalho_ids.join(",")]
       );
       if (updated_ids.length > 0) {
-        let updated_ids_fixed = []
+        const updated_ids_fixed = [];
         updated_ids.forEach(u => {
-          updated_ids_fixed.push(u.id)
-        })
-        let atividades = await t.any(
+          updated_ids_fixed.push(u.id);
+        });
+        const atividades = await t.any(
           `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
           [updated_ids_fixed.join(",")]
         );
 
-        const table = new pgp.helpers.TableName({
+        const table = new db.helpers.TableName({
           table: "atividade",
           schema: "macrocontrole"
         });
 
-        const cs = new pgp.helpers.ColumnSet(
+        const cs = new db.helpers.ColumnSet(
           ["etapa_id", "unidade_trabalho_id", "usuario_id", "tipo_situacao_id"],
           { table }
         );
@@ -527,9 +525,9 @@ controller.pausa_atividade = async unidade_trabalho_ids => {
           });
         });
 
-        const query = pgp.helpers.insert(values, cs);
+        const query = db.helpers.insert(values, cs);
 
-        let result = await t.result(query);
+        const result = await t.result(query);
 
         if (!result.rowCount || result.rowCount == 0) {
           throw new Error("Erro ao inserir atividades.");
@@ -551,8 +549,8 @@ controller.pausa_atividade = async unidade_trabalho_ids => {
 controller.reinicia_atividade = async unidade_trabalho_ids => {
   try {
     const data_fim = new Date();
-   await db.tx(async t => {
-    let updated_ids = await t.any(
+    await db.tx(async t => {
+      const updated_ids = await t.any(
         `
       UPDATE macrocontrole.atividade SET
       data_inicio = COALESCE(data_inicio, $1), data_fim = COALESCE(data_fim, $1), tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
@@ -567,19 +565,19 @@ controller.reinicia_atividade = async unidade_trabalho_ids => {
         [data_fim, unidade_trabalho_ids.join(",")]
       );
       if (updated_ids.length > 0) {
-        let updated_ids_fixed = []
+        const updated_ids_fixed = [];
         updated_ids.forEach(u => {
-          updated_ids_fixed.push(u.id)
-        })
-        let atividades = await t.any(
+          updated_ids_fixed.push(u.id);
+        });
+        const atividades = await t.any(
           `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
           [updated_ids_fixed.join(",")]
         );
-        const table = new pgp.helpers.TableName({
+        const table = new db.helpers.TableName({
           table: "atividade",
           schema: "macrocontrole"
         });
-        const cs = new pgp.helpers.ColumnSet(
+        const cs = new db.helpers.ColumnSet(
           ["etapa_id", "unidade_trabalho_id", "tipo_situacao_id"],
           { table }
         );
@@ -593,9 +591,9 @@ controller.reinicia_atividade = async unidade_trabalho_ids => {
           });
         });
 
-        const query = pgp.helpers.insert(values, cs);
+        const query = db.helpers.insert(values, cs);
 
-        let result = await t.result(query);
+        const result = await t.result(query);
 
         if (!result.rowCount || result.rowCount == 0) {
           throw new Error("Erro ao inserir atividades.");
@@ -618,7 +616,7 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
   try {
     const data_fim = new Date();
     await db.tx(async t => {
-      let atividades_updates = await t.any(
+      const atividades_updates = await t.any(
         `
       UPDATE macrocontrole.atividade SET
       tipo_situacao_id = 5, data_inicio = COALESCE(data_inicio, $2), data_fim = COALESCE(data_fim, $2), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
@@ -633,7 +631,7 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
       `,
         [atividade_ids.join(","), data_fim]
       );
-      let ids = [];
+      const ids = [];
       atividades_updates.forEach(i => {
         ids.push(i.id);
       });
@@ -762,7 +760,7 @@ controller.cria_revisao = async unidade_trabalho_ids => {
   try {
     await db.tx(async t => {
       for (const unidade_trabalho_id of unidade_trabalho_ids) {
-        let atividade = await t.one(
+        const atividade = await t.one(
           `SELECT ut.subfase_id, max(e.ordem) AS ordem 
           FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
@@ -770,7 +768,7 @@ controller.cria_revisao = async unidade_trabalho_ids => {
           GROUP BY ut.subfase_id`,
           [unidade_trabalho_id]
         );
-        let etapa_rev = await t.oneOrNone(
+        const etapa_rev = await t.oneOrNone(
           `SELECT e.id FROM macrocontrole.unidade_trabalho_id AS ut
           INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
           LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.etapa_id = e.id
@@ -779,7 +777,7 @@ controller.cria_revisao = async unidade_trabalho_ids => {
           LIMIT 1`,
           [unidade_trabalho_id]
         );
-        let etapa_corr = await t.oneOrNone(
+        const etapa_corr = await t.oneOrNone(
           `SELECT e.id FROM macrocontrole.unidade_trabalho_id AS ut
           INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
           LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.etapa_id = e.id
@@ -827,7 +825,7 @@ controller.cria_revcorr = async unidade_trabalho_ids => {
   try {
     await db.tx(async t => {
       for (const unidade_trabalho_id of unidade_trabalho_ids) {
-        let atividade = await t.one(
+        const atividade = await t.one(
           `SELECT ut.subfase_id, max(e.ordem) AS ordem 
           FROM macrocontrole.unidade_trabalho AS ut
           INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
@@ -835,7 +833,7 @@ controller.cria_revcorr = async unidade_trabalho_ids => {
           GROUP BY ut.subfase_id`,
           [unidade_trabalho_id]
         );
-        let etapa_revcorr = await t.oneOrNone(
+        const etapa_revcorr = await t.oneOrNone(
           `SELECT e.id FROM macrocontrole.unidade_trabalho_id AS ut
           INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
           LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.etapa_id = e.id
@@ -1002,6 +1000,49 @@ controller.cria_observacao = async (
     err.information.observacao_unidade_trabalho = observacao_unidade_trabalho;
     err.information.trace = serializeError(error);
     return { error: err };
+  }
+};
+
+controller.createProject = () => {
+  console.log(chalk.blue("Criando arquivo de projeto"));
+
+  try {
+    const proj = fs
+      .readFileSync(
+        path.resolve("./templates/sap_config_template.qgs"),
+        "utf-8"
+      )
+      .replace(/{{DATABASE}}/g, process.env.DB_NAME)
+      .replace(/{{HOST}}/g, process.env.DB_SERVER)
+      .replace(/{{PORT}}/g, process.env.DB_PORT)
+      .replace(/{{USER}}/g, process.env.DB_USER)
+      .replace(/{{PASSWORD}}/g, process.env.DB_PASSWORD);
+
+    const exists = fs.existsSync("sap_config.qgs");
+    if (exists) {
+      throw Error(
+        "Arquivo sap_config.qgs já existe, apague antes de iniciar a criação de projeto."
+      );
+    }
+    fs.writeFileSync("sap_config.qgs", proj);
+    console.log(
+      chalk.blue("Arquivo de projeto (sap_config.qgs) criado com sucesso!")
+    );
+  } catch (error) {
+    if (
+      error.message ===
+      "Arquivo sap_config.qgs já existe, apague antes de iniciar a criação de projeto."
+    ) {
+      console.log(
+        chalk.red(
+          "Arquivo sap_config.qgs já existe, apague antes de iniciar a criação de projeto."
+        )
+      );
+    } else {
+      console.log(chalk.red(error.message));
+      console.log("-------------------------------------------------");
+      console.log(chalk.red(error));
+    }
   }
 };
 
