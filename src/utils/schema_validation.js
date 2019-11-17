@@ -1,6 +1,6 @@
 "use strict";
 
-const { AppError } = require(".");
+const AppError = require("./app_error");
 
 const middleware = schema => {
   return (req, res, next) => {
@@ -14,7 +14,7 @@ const middleware = schema => {
     const { details } = error;
     const message = details.map(i => i.message).join(",");
 
-    const err = new AppError("Validation error", 400, req.body, message);
+    const err = new AppError("Validation error", 400, message);
     return next(err);
   };
 };

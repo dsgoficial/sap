@@ -5,18 +5,11 @@ const logger = require("./logger");
 const { VERSION } = require("../config");
 
 const sendJsonAndLog = (req, res, next) => {
-  res.sendJsonAndLog = (
-    sucess,
-    message,
-    status,
-    dados = null,
-    context = null
-  ) => {
+  res.sendJsonAndLog = (sucess, message, status, dados = null) => {
     const url = req.protocol + "://" + req.get("host") + req.originalUrl;
 
     logger.info(message, {
       url: url,
-      context: context,
       information: req.body,
       status: status
     });

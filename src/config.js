@@ -7,6 +7,7 @@ dotenv.config({
 });
 
 const VERSION = "2.0.0";
+const MIN_DATABASE_VERSION = "2.0.0";
 
 module.exports = {
   PORT: process.env.PORT,
@@ -16,5 +17,6 @@ module.exports = {
   DB_USER: process.env.DB_USER,
   DB_PASSWORD: process.env.DB_PASSWORD,
   JWT_SECRET: process.env.JWT_SECRET,
-  VERSION: VERSION
+  VERSION,
+  MIN_DATABASE_VERSION
 };

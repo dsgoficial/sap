@@ -57,13 +57,8 @@ controller.get_atividade_usuario = async (usuario_id, proxima) => {
     let atividade_id;
 
     if (proxima) {
-      const { erro, prioridade } = await distribuicaoCtrl.calcula_fila(
-        usuario_id
-      );
-      if (erro) {
-        return { erro: erro, dados: null };
-      }
-      atividade_id = prioridade.id;
+      const prioridade = await distribuicaoCtrl.calculaFila(usuario_id);
+      atividade_id = prioridade;
     } else {
       const em_andamento = await db.oneOrNone(
         `SELECT a.id

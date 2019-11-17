@@ -1,3 +1,4 @@
+"use strict";
 
 const Joi = require("joi");
 
@@ -10,14 +11,10 @@ models.finaliza = Joi.object().keys({
     .required(),
   sem_correcao: Joi.boolean()
     .strict()
-    .required(),
-  usuario_id: Joi.number()
-    .integer()
-    .strict()
     .required()
 });
 
-models.resposta_questionario = Joi.object().keys({
+models.respostaQuestionario = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
@@ -39,7 +36,7 @@ models.resposta_questionario = Joi.object().keys({
     .min(1)
 });
 
-models.problema_atividade = Joi.object().keys({
+models.problemaAtividade = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()

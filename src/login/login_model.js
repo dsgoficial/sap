@@ -1,3 +1,4 @@
+"use strict";
 
 const Joi = require("joi");
 
@@ -7,8 +8,7 @@ const login = Joi.object().keys({
   plugins: Joi.array().items(
     Joi.object({
       nome: Joi.string().required(),
-      versao: Joi.string()
-        .required()
+      versao: Joi.string().required()
     })
   ),
   qgis: Joi.string()

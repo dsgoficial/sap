@@ -14,7 +14,7 @@ router.post(
   schemaValidation(producaoSchema.finaliza),
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.finaliza(
-      req.body.usuario_id,
+      req.body.usuarioId,
       req.body.atividade_id,
       req.body.sem_correcao
     );
@@ -28,7 +28,7 @@ router.post(
 router.get(
   "/verifica",
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.verifica(req.body.usuario_id);
+    const dados = await producaoCtrl.verifica(req.body.usuarioId);
 
     const msg = dados
       ? "Atividade em execução retornada"
@@ -41,7 +41,7 @@ router.get(
 router.post(
   "/inicia",
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.inicia(req.body.usuario_id);
+    const dados = await producaoCtrl.inicia(req.body.usuarioId);
 
     const msg = dados
       ? "Atividade iniciada"
@@ -53,9 +53,9 @@ router.post(
 
 router.post(
   "/resposta_questionario",
-  schemaValidation(producaoSchema.resposta_questionario),
+  schemaValidation(producaoSchema.respostaQuestionario),
   asyncHandler(async (req, res, next) => {
-    await producaoCtrl.responde_questionario(
+    await producaoCtrl.respondeQuestionario(
       req.body.atividade_id,
       req.body.respostas
     );
@@ -67,9 +67,9 @@ router.post(
 
 router.post(
   "/problema_atividade",
-  schemaValidation(producaoSchema.problema_atividade),
+  schemaValidation(producaoSchema.problemaAtividade),
   asyncHandler(async (req, res, next) => {
-    await producaoCtrl.problema_atividade(
+    await producaoCtrl.problemaAtividade(
       req.body.atividade_id,
       req.body.tipo_problema_id,
       req.body.descricao
@@ -83,7 +83,7 @@ router.post(
 router.get(
   "/tipo_problema",
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.get_tipo_problema();
+    const dados = await producaoCtrl.getTipoProblema();
 
     const msg = "Tipos de problema retornado";
 
