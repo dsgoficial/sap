@@ -1,48 +1,25 @@
 "use strict";
 
 const express = require("express");
-const Joi = require("joi");
 
-const { sendJsonAndLog } = require("../utils");
+const { schemaValidation, asyncHandler } = require("../utils");
 
 const loginCtrl = require("./login_ctrl");
-const loginModel = require("./login_model");
+const loginSchema = require("./login_schema");
 
 const router = express.Router();
 
-router.post("/", async (req, res, next) => {
-  const validationResult = Joi.validate(req.body, loginModel.login, {
-    stripUnknown: true
-  });
-  if (validationResult.error) {
-    const err = new Error("Login Post validation error");
-    err.status = 400;
-    err.context = "login_route";
-    err.information = {};
-    err.information.body = req.body;
-    err.information.trace = validationResult.error;
-    return next(err);
-  }
+router.post("/", schemaValidation({body: loginSchema.login}), asyncHandler(async (req, res, next) => {
 
-  const { error, token, administrador } = await loginCtrl.login(
+  const { token, administrador } = await loginCtrl.login(
     req.body.usuario,
     req.body.senha,
     req.body.plugins,
     req.body.qgis
   );
-  if (error) {
-    return next(error);
-  }
 
-  return sendJsonAndLog(
-    true,
-    "Authentication success",
-    "login_route",
-    null,
-    res,
-    200,
-    { token, administrador }
-  );
-});
+  return res.sendJsonAndLog(true, "Usuário autenticado com sucesso", 200, { token, administrador });
+
+}));
 
 module.exports = router;

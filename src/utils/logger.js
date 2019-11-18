@@ -2,7 +2,6 @@
 
 const { createLogger, format, transports } = require("winston");
 const DailyRotateFile = require("winston-daily-rotate-file");
-const MESSAGE = Symbol.for("message");
 
 const fs = require("fs");
 const path = require("path");
@@ -12,24 +11,26 @@ if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
 }
 
-const jsonFormatter = logEntry => {
-  const base = { timestamp: new Date() };
-  const json = Object.assign(base, logEntry);
-  logEntry[MESSAGE] = JSON.stringify(json);
-  return logEntry;
-};
-
 const rotateTransport = new DailyRotateFile({
+  format: format.combine(
+    format.timestamp(),
+    format.json()
+  ),
   filename: path.join(logDir, "/%DATE%-application.log"),
   datePattern: "YYYY-MM-DD",
   maxSize: "20m",
   maxFiles: "14d"
 });
 
-const consoleTransport = new transports.Console({});
+const consoleTransport = new transports.Console({
+  format: format.combine(
+    format.colorize(),
+    format.timestamp(),
+    format.simple()
+  )
+});
 
 const logger = createLogger({
-  format: format(jsonFormatter)(),
   transports: [consoleTransport, rotateTransport]
 });
 

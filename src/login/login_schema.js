@@ -2,7 +2,9 @@
 
 const Joi = require("joi");
 
-const login = Joi.object().keys({
+const models = {};
+
+models.login = Joi.object().keys({
   usuario: Joi.string().required(),
   senha: Joi.string().required(),
   plugins: Joi.array().items(
@@ -14,4 +16,4 @@ const login = Joi.object().keys({
   qgis: Joi.string()
 });
 
-module.exports.login = login;
+module.exports = models;

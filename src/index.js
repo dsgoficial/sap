@@ -14,7 +14,7 @@ databaseVersion
     //Starts server
     app.listen(PORT, () => {
       logger.info("Server start", {
-        context: "index",
+        success: true,
         information: {
           version: VERSION,
           database_version: DATABASE_VERSION,

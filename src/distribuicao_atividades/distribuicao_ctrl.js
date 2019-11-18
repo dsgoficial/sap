@@ -48,7 +48,7 @@ controller.calculaFila = async usuarioId => {
       [usuarioId]
     );
 
-    if (fila_prioritaria != null) {
+    if (fila_prioritaria) {
       return fila_prioritaria.id;
     }
 
@@ -93,7 +93,7 @@ controller.calculaFila = async usuarioId => {
       [usuarioId]
     );
 
-    if (fila_prioritaria_grupo != null) {
+    if (fila_prioritaria_grupo) {
       return fila_prioritaria_grupo.id;
     }
 
@@ -134,7 +134,7 @@ controller.calculaFila = async usuarioId => {
       [usuarioId]
     );
 
-    if (cartas_pausadas != null) {
+    if (cartas_pausadas) {
       return cartas_pausadas.id;
     }
 
@@ -258,12 +258,35 @@ controller.dadosProducao = async atividadeId => {
 
     const info = {};
     info.usuario_id = dadosut.usuarioId;
-    info.usuario = dadosut.nome_guerra;
+    info.usuario_nome = dadosut.nome_guerra;
+
     info.atividade = {};
+    info.atividade.id = atividadeId;
+    info.atividade.epsg = dadosut.epsg;
+    info.atividade.observacao_atividade = dadosut.observacao_atividade;
+    info.atividade.observacao_etapa = dadosut.observacao_etapa;
+    info.atividade.observacao_subfase = dadosut.observacao_subfase;
+    info.atividade.observacao_unidade_trabalho =
+      dadosut.observacao_unidade_trabalho;
+    info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
+    info.atividade.geom = dadosut.unidade_trabalho_geom;
+    info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
+    info.atividade.etapa_id = dadosut.etapa_id;
+    info.atividade.tipo_etapa_id = dadosut.etapa_code;
+    info.atividade.nome =
+      dadosut.subfase_nome +
+      " - " +
+      dadosut.etapa_nome +
+      " - " +
+      dadosut.unidade_trabalho_nome;
+    info.atividade.banco_dados = {
+      nome: dadosut.nome_bd,
+      servidor: dadosut.servidor,
+      porta: dadosut.porta
+    };
 
     let camadas;
     let atributos;
-    let menus;
 
     if (dadosut.etapa_code == 1 || dadosut.etapa_code == 4) {
       camadas = await t.any(
@@ -299,122 +322,6 @@ controller.dadosProducao = async atividadeId => {
       );
     }
 
-    if (dadosut.etapa_code == 2) {
-      menus = await t.any(
-        `SELECT mp.nome, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
-          INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
-          WHERE subfase_id = $1`,
-        [dadosut.subfase_id]
-      );
-    } else {
-      menus = await t.any(
-        `SELECT mp.nome, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
-          INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
-          WHERE subfase_id = $1 and not menu_revisao`,
-        [dadosut.subfase_id]
-      );
-    }
-
-    const estilos = await t.any(
-      `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
-        INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
-        INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
-        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
-        WHERE pe.subfase_id = $1 AND pc.subfase_id = $1`,
-      [dadosut.subfase_id]
-    );
-
-    const regras = await t.any(
-      `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
-        INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra = pr.nome
-        INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
-        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
-        WHERE pr.subfase_id = $1 AND pc.subfase_id = $1`,
-      [dadosut.subfase_id]
-    );
-
-    const fme = await t.any(
-      "SELECT servidor, porta, rotina, gera_falso_positivo FROM macrocontrole.perfil_fme WHERE subfase_id = $1",
-      [dadosut.subfase_id]
-    );
-
-    const configuracao = await t.any(
-      "SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $1",
-      [dadosut.subfase_id]
-    );
-
-    const monitoramento = await t.any(
-      `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
-        FROM macrocontrole.perfil_monitoramento AS pm
-        INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
-        WHERE subfase_id = $1`,
-      [dadosut.subfase_id]
-    );
-
-    const insumos = await t.any(
-      `SELECT i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
-        FROM macrocontrole.insumo AS i
-        INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
-        WHERE iut.unidade_trabalho_id = $1`,
-      [dadosut.unidade_trabalho_id]
-    );
-
-    const models_qgis = await t.any(
-      `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo
-        FROM macrocontrole.perfil_model_qgis AS pmq
-        INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.nome = lqm.nome
-        WHERE pmq.subfase_id = $1`,
-      [dadosut.subfase_id]
-    );
-    info.atividade.models_qgis = [];
-    models_qgis.forEach(r => {
-      info.atividade.models_qgis.push({
-        nome: r.nome,
-        descricao: r.descricao,
-        model_xml: r.model_xml,
-        gera_falso_positivo: r.gera_falso_positivo
-      });
-    });
-
-    info.atividade.id = atividadeId;
-    info.atividade.epsg = dadosut.epsg;
-    info.atividade.observacao_atividade = dadosut.observacao_atividade;
-    info.atividade.observacao_etapa = dadosut.observacao_etapa;
-    info.atividade.observacao_subfase = dadosut.observacao_subfase;
-    info.atividade.observacao_unidade_trabalho =
-      dadosut.observacao_unidade_trabalho;
-    info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
-    info.atividade.geom = dadosut.unidade_trabalho_geom;
-    info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
-    info.atividade.etapa_id = dadosut.etapa_id;
-    info.atividade.tipo_etapa_id = dadosut.etapa_code;
-    info.atividade.nome =
-      dadosut.subfase_nome +
-      " - " +
-      dadosut.etapa_nome +
-      " - " +
-      dadosut.unidade_trabalho_nome;
-    info.atividade.banco_dados = {
-      nome: dadosut.nome_bd,
-      servidor: dadosut.servidor,
-      porta: dadosut.porta
-    };
-
-    info.atividade.fme = [];
-    fme.forEach(f => {
-      info.atividade.fme.push({
-        rotina: f.rotina,
-        servidor: f.servidor,
-        porta: f.porta,
-        gera_falso_positivo: f.gera_falso_positivo
-      });
-    });
-
-    info.atividade.estilos = estilos;
-    info.atividade.regras = regras;
-    info.atividade.menus = menus;
-    info.atividade.configuracoes = configuracao;
-
     info.atividade.camadas = [];
 
     camadas.forEach(r => {
@@ -449,10 +356,90 @@ controller.dadosProducao = async atividadeId => {
       info.atividade.camadas.push(aux);
     });
 
+    let menus;
+
+    if (dadosut.etapa_code == 2) {
+      menus = await t.any(
+        `SELECT mp.nome, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
+          INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
+          WHERE subfase_id = $1`,
+        [dadosut.subfase_id]
+      );
+    } else {
+      menus = await t.any(
+        `SELECT mp.nome, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
+          INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
+          WHERE subfase_id = $1 and not menu_revisao`,
+        [dadosut.subfase_id]
+      );
+    }
+
+    info.atividade.menus = menus;
+
+    const estilos = await t.any(
+      `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
+        INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
+        INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
+        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
+        WHERE pe.subfase_id = $1 AND pc.subfase_id = $1`,
+      [dadosut.subfase_id]
+    );
+    
+    info.atividade.estilos = estilos;
+
+    const regras = await t.any(
+      `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
+        INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra = pr.nome
+        INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
+        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
+        WHERE pr.subfase_id = $1 AND pc.subfase_id = $1`,
+      [dadosut.subfase_id]
+    );
+
+    info.atividade.regras = regras;
+    
+    const fme = await t.any(
+      "SELECT servidor, porta, rotina, gera_falso_positivo FROM macrocontrole.perfil_fme WHERE subfase_id = $1",
+      [dadosut.subfase_id]
+    );
+
+    info.atividade.fme = [];
+    fme.forEach(f => {
+      info.atividade.fme.push({
+        rotina: f.rotina,
+        servidor: f.servidor,
+        porta: f.porta,
+        gera_falso_positivo: f.gera_falso_positivo
+      });
+    });
+
+    const configuracao = await t.any(
+      "SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $1",
+      [dadosut.subfase_id]
+    );
+
+    info.atividade.configuracoes = configuracao;
+
+    const monitoramento = await t.any(
+      `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
+        FROM macrocontrole.perfil_monitoramento AS pm
+        INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
+        WHERE subfase_id = $1`,
+      [dadosut.subfase_id]
+    );
+
     info.atividade.monitoramento = {
       id: monitoramento.tipo_monitoramento_id,
       tipo_monitoramento: monitoramento.tipo_monitoramento
     };
+
+    const insumos = await t.any(
+      `SELECT i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
+        FROM macrocontrole.insumo AS i
+        INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
+        WHERE iut.unidade_trabalho_id = $1`,
+      [dadosut.unidade_trabalho_id]
+    );
 
     info.atividade.insumos = [];
 
@@ -463,6 +450,23 @@ controller.dadosProducao = async atividadeId => {
         epsg: i.epsg,
         tipo_insumo_id: i.tipo_insumo_id,
         caminho_padrao: i.caminho_padrao
+      });
+    });
+
+    const models_qgis = await t.any(
+      `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo
+        FROM macrocontrole.perfil_model_qgis AS pmq
+        INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.nome = lqm.nome
+        WHERE pmq.subfase_id = $1`,
+      [dadosut.subfase_id]
+    );
+    info.atividade.models_qgis = [];
+    models_qgis.forEach(r => {
+      info.atividade.models_qgis.push({
+        nome: r.nome,
+        descricao: r.descricao,
+        model_xml: r.model_xml,
+        gera_falso_positivo: r.gera_falso_positivo
       });
     });
 
@@ -532,41 +536,40 @@ controller.dadosProducao = async atividadeId => {
     info.atividade.requisitos = [];
     requisitos.forEach(r => info.atividade.requisitos.push(r.descricao));
 
-    /*
-      const questionario = await t.any(
-        `SELECT q.nome nome_questionario, p.id AS pergunta_id, p.texto AS pergunta,
-        o.id AS opcao_id, o.texto AS opcao
-        FROM avaliacao.questionario AS q
-        INNER JOIN avaliacao.pergunta AS p ON p.questionario_id = q.id
-        INNER JOIN avaliacao.opcao AS o ON o.pergunta_id = p.id
-        WHERE q.etapa_id = $1 
-        ORDER BY p.ordem, o.ordem`,
-        [etapa]
-      );
-      info.atividade.questionario = {};
-      info.atividade.questionario.perguntas = [];
-      const perguntas = {};
-      questionario.forEach(i => {
-        info.atividade.questionario.nome = i.nome_questionario;
+    const questionario = await t.any(
+      `SELECT q.nome nome_questionario, p.id AS pergunta_id, p.texto AS pergunta,
+      o.id AS opcao_id, o.texto AS opcao
+      FROM avaliacao.questionario AS q
+      INNER JOIN avaliacao.pergunta AS p ON p.questionario_id = q.id
+      INNER JOIN avaliacao.opcao AS o ON o.pergunta_id = p.id
+      WHERE q.etapa_id = $1 
+      ORDER BY p.ordem, o.ordem`,
+      [etapa]
+    );
 
-        if (!(i.pergunta_id in perguntas)) {
-          perguntas[i.pergunta_id] = {
-            pergunta_id: i.pergunta_id,
-            pergunta: i.pergunta
-          };
-          perguntas[i.pergunta_id].opcoes = [];
-        }
+    info.atividade.questionario = {};
+    info.atividade.questionario.perguntas = [];
+    const perguntas = {};
+    questionario.forEach(i => {
+      info.atividade.questionario.nome = i.nome_questionario;
 
-        perguntas[i.pergunta_id].opcoes.push({
-          opcao_id: i.opcao_id,
-          opcao: i.opcao
-        });
-      });
-
-      for (const key in perguntas) {
-        info.atividade.questionario.perguntas.push(perguntas[key]);
+      if (!(i.pergunta_id in perguntas)) {
+        perguntas[i.pergunta_id] = {
+          pergunta_id: i.pergunta_id,
+          pergunta: i.pergunta
+        };
+        perguntas[i.pergunta_id].opcoes = [];
       }
-      */
+
+      perguntas[i.pergunta_id].opcoes.push({
+        opcao_id: i.opcao_id,
+        opcao: i.opcao
+      });
+    });
+
+    for (const key in perguntas) {
+      info.atividade.questionario.perguntas.push(perguntas[key]);
+    }
 
     return info;
   });
@@ -579,7 +582,7 @@ controller.verifica = async usuarioId => {
     `SELECT a.id
       FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-      WHERE a.usuario_id = ${usuarioId} AND ut.disponivel IS TRUE AND a.tipo_situacao_id = 2
+      WHERE a.usuario_id = $<usuarioId> AND ut.disponivel IS TRUE AND a.tipo_situacao_id = 2
       LIMIT 1`,
     { usuarioId }
   );
@@ -587,7 +590,7 @@ controller.verifica = async usuarioId => {
     await db.none(
       `UPDATE macrocontrole.atividade SET
        tipo_situacao_id = 3 
-       WHERE tipo_situacao_id = 2 AND usuario_id = ${usuarioId} AND id != ${emAndamentoId}`,
+       WHERE tipo_situacao_id = 2 AND usuario_id = $<usuarioId> AND id != $<emAndamentoId>`,
       { usuarioId, emAndamentoId: emAndamento.id }
     );
     const dados = await controller.dados_producao(em_andamento.id);
@@ -601,8 +604,8 @@ controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
   const dataFim = new Date();
   const result = await db.result(
     `UPDATE macrocontrole.atividade SET
-      data_fim = ${dataFim}, tipo_situacao_id = 4, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(${atividadeId}), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(${atividadeId})
-      WHERE id = ${atividadeId} AND usuario_id = ${usuarioId} AND tipo_situacao_id in (2)`,
+      data_fim = $<dataFim>, tipo_situacao_id = 4, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($<atividadeId>), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($<atividadeId>)
+      WHERE id = $<atividadeId> AND usuario_id = $<usuarioId> AND tipo_situacao_id in (2)`,
     { dataFim, atividadeId, usuarioId }
   );
 
@@ -620,12 +623,12 @@ controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
           from macrocontrole.atividade as a
           inner join macrocontrole.etapa as erev on erev.id = a.etapa_id
           inner join macrocontrole.etapa as e on e.subfase_id = erev.subfase_id
-          where erev.tipo_etapa_id = 2 and a.id = ${atividadeId})
+          where erev.tipo_etapa_id = 2 and a.id = $<atividadeId>)
           select a.id
           from macrocontrole.atividade as a
           inner join macrocontrole.atividade as arev on arev.unidade_trabalho_id = a.unidade_trabalho_id
           inner join prox as p on p.prox_id = a.etapa_id and p.id = arev.etapa_id
-          where arev.id=${atividadeId}
+          where arev.id=$<atividadeId>
         )`,
       { atividadeId }
     );
@@ -646,25 +649,25 @@ controller.inicia = async usuarioId => {
     await t.none(
       `UPDATE macrocontrole.atividade SET
           tipo_situacao_id = 3 
-          WHERE tipo_situacao_id = 2 and usuario_id = ${usuarioId}`,
+          WHERE tipo_situacao_id = 2 and usuario_id = $<usuarioId>`,
       { usuarioId }
     );
     await t.none(
       `DELETE FROM macrocontrole.fila_prioritaria
           WHERE atividade_id IN (
-          SELECT id from macrocontrole.atividade WHERE id = ${prioridade})`,
+          SELECT id from macrocontrole.atividade WHERE id = $<prioridade>)`,
       { prioridade }
     );
     await t.none(
       `DELETE FROM macrocontrole.fila_prioritaria_grupo
           WHERE atividade_id IN (
-          SELECT id from macrocontrole.atividade WHERE id = ${prioridade})`,
+          SELECT id from macrocontrole.atividade WHERE id = $<prioridade>)`,
       { prioridade }
     );
     const result = await t.result(
       `UPDATE macrocontrole.atividade SET
-          data_inicio = ${dataInicio}, tipo_situacao_id = 2, usuario_id = ${usuarioId}
-          WHERE id = ${prioridade} and tipo_situacao_id IN (1,3)`,
+          data_inicio = $<dataInicio>, tipo_situacao_id = 2, usuario_id = $<usuarioId>
+          WHERE id = $<prioridade> and tipo_situacao_id IN (1,3)`,
       { dataInicio, prioridade, usuarioId }
     );
 
@@ -683,7 +686,7 @@ controller.respondeQuestionario = async (atividadeId, respostas) => {
   await db.tx(async t => {
     const respostaQuestionario = await t.one(
       `
-      INSERT INTO avaliacao.resposta_questionario(data, atividade_id) VALUES(${dataQuestionario},${atividadeId}) RETURNING id
+      INSERT INTO avaliacao.resposta_questionario(data, atividade_id) VALUES($<dataQuestionario>,$<atividadeId>) RETURNING id
       `,
       { dataQuestionario, atividadeId }
     );
@@ -693,7 +696,7 @@ controller.respondeQuestionario = async (atividadeId, respostas) => {
         t.none(
           `
           INSERT INTO avaliacao.resposta(pergunta_id, opcao_id, resposta_questionario_id) 
-          VALUES (${perguntaId},${opcaoId},${respostaQuestionarioId})
+          VALUES ($<perguntaId>,$<opcaoId>,$<respostaQuestionarioId>)
           `,
           {
             perguntaId: r.pergunta_id,
@@ -717,20 +720,20 @@ controller.problemaAtividade = async (
     await t.any(
       `
       UPDATE macrocontrole.atividade SET
-      data_fim = ${dataFim}, tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(${atividadeId}), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(${atividadeId})
-      WHERE id = ${atividadeId}
+      data_fim = $<dataFim>, tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($<atividadeId>), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($<atividadeId>)
+      WHERE id = $<atividadeId>
       `,
       { dataFim, atividadeId }
     );
     const atividade = await t.one(
-      `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id = ${atividadeId}`,
+      `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id = $<atividadeId>`,
       { atividadeId }
     );
 
     const newId = await t.one(
       `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
-      VALUES(${etapaId},${unidadeTrabalhoId},${usuarioId},3) RETURNING id
+      VALUES($<etapaId>,$<unidadeTrabalhoId>,$<usuarioId>,3) RETURNING id
       `,
       {
         etapaId: atividade.etapa_id,
@@ -741,7 +744,7 @@ controller.problemaAtividade = async (
     await t.any(
       `
       INSERT INTO macrocontrole.problema_atividade(atividade_id, unidade_trabalho_id, tipo_problema_id, descricao, resolvido)
-      VALUES(${id},${unidadeTrabalhoId},${tipoProblemaId},${descricao},FALSE)
+      VALUES($<id>,$<unidadeTrabalhoId>,$<tipoProblemaId>,$<descricao>,FALSE)
       `,
       {
         id: newId.id,
@@ -754,7 +757,7 @@ controller.problemaAtividade = async (
       `
         UPDATE macrocontrole.unidade_trabalho SET
         disponivel = FALSE
-        WHERE id = ${unidadeTrabalhoId}
+        WHERE id = $<unidadeTrabalhoId>
         `,
       { unidadeTrabalhoId: atividade.unidade_trabalho_id }
     );

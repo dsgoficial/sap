@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.post(
   "/finaliza",
-  schemaValidation(producaoSchema.finaliza),
+  schemaValidation({body: producaoSchema.finaliza}),
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.finaliza(
       req.body.usuarioId,
@@ -53,7 +53,7 @@ router.post(
 
 router.post(
   "/resposta_questionario",
-  schemaValidation(producaoSchema.respostaQuestionario),
+  schemaValidation({body: producaoSchema.respostaQuestionario}),
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.respondeQuestionario(
       req.body.atividade_id,
@@ -67,7 +67,7 @@ router.post(
 
 router.post(
   "/problema_atividade",
-  schemaValidation(producaoSchema.problemaAtividade),
+  schemaValidation({body: producaoSchema.problemaAtividade}),
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.problemaAtividade(
       req.body.atividade_id,

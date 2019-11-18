@@ -2,7 +2,7 @@
 
 const fs = require("fs");
 const inquirer = require("inquirer");
-const chalk = require("chalk");
+const colors = require("colors"); //colors for console
 const pgtools = require("pgtools");
 const path = require("path");
 const promise = require("bluebird");
@@ -25,15 +25,13 @@ const sql3 = readSqlFile("./er/macrocontrole.sql");
 const sql4 = readSqlFile("./er/acompanhamento.sql");
 
 const createConfig = () => {
-  console.log(chalk.blue("Sistema de Apoio a Produção"));
-  console.log(chalk.blue("Criação do arquivo de configuração"));
+  console.log("Sistema de Apoio a Produção".blue);
+  console.log("Criação do arquivo de configuração".blue);
 
   const exists = fs.existsSync("config.env");
   if (exists) {
     console.log(
-      chalk.red(
-        "Arquivo config.env já existe, apague antes de iniciar a configuração."
-      )
+        "Arquivo config.env já existe, apague antes de iniciar a configuração.".red
     );
     process.exit(0);
   }
@@ -41,30 +39,30 @@ const createConfig = () => {
   const questions = [
     {
       type: "input",
-      name: "db_server",
+      name: "dbServer",
       message: "Qual o endereço de IP do servidor do banco de dados PostgreSQL?"
     },
     {
       type: "input",
-      name: "db_port",
+      name: "dbPort",
       message: "Qual a porta do servidor do banco de dados PostgreSQL?",
       default: 5432
     },
     {
       type: "input",
-      name: "db_user",
+      name: "dbUser",
       message:
         "Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?",
       default: "controle_app"
     },
     {
       type: "password",
-      name: "db_password",
+      name: "dbPassword",
       message: "Qual a senha do usuário do PostgreSQL para interação com o SAP?"
     },
     {
       type: "input",
-      name: "db_name",
+      name: "dbName",
       message: "Qual o nome do banco de dados do SAP?",
       default: "sap"
     },
@@ -76,7 +74,7 @@ const createConfig = () => {
     },
     {
       type: "confirm",
-      name: "db_create",
+      name: "dbCreate",
       message: "Deseja criar o banco de dados do SAP?",
       default: true
     }
@@ -84,27 +82,27 @@ const createConfig = () => {
 
   inquirer.prompt(questions).then(async answers => {
     const config = {
-      user: answers.db_user,
-      password: answers.db_password,
-      port: answers.db_port,
-      host: answers.db_server
+      user: answers.dbUser,
+      password: answers.dbPassword,
+      port: answers.dbPort,
+      host: answers.dbServer
     };
 
     try {
-      if (answers.db_create) {
-        await pgtools.createdb(config, answers.db_name);
+      if (answers.dbCreate) {
+        await pgtools.createdb(config, answers.dbName);
 
         const connectionString =
           "postgres://" +
-          answers.db_user +
+          answers.dbUser +
           ":" +
-          answers.db_password +
+          answers.dbPassword +
           "@" +
-          answers.db_server +
+          answers.dbServer +
           ":" +
-          answers.db_port +
+          answers.dbPort +
           "/" +
-          answers.db_name;
+          answers.dbName;
 
         const db = pgp(connectionString);
 
@@ -136,9 +134,9 @@ const createConfig = () => {
         GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA acompanhamento TO $1:name;
         GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA acompanhamento TO $1:name;
         `,
-          [answers.db_user]
+          [answers.dbUser]
         );
-        console.log(chalk.blue("Banco de dados do SAP criado com sucesso!"));
+        console.log("Banco de dados do SAP criado com sucesso!".blue);
       }
 
       const secret = require("crypto")
@@ -146,16 +144,16 @@ const createConfig = () => {
         .toString("hex");
 
       const env = `PORT=${answers.port}
-DB_SERVER=${answers.db_server}
-DB_PORT=${answers.db_port}
-DB_NAME=${answers.db_name}
-DB_USER=${answers.db_user}
-DB_PASSWORD=${answers.db_password}
+dbServer=${answers.dbServer}
+dbPort=${answers.dbPort}
+dbName=${answers.dbName}
+dbUser=${answers.dbUser}
+dbPassword=${answers.dbPassword}
 JWT_SECRET=${secret}`;
 
       fs.writeFileSync("config.env", env);
       console.log(
-        chalk.blue("Arquivo de configuração (config.env) criado com sucesso!")
+        "Arquivo de configuração (config.env) criado com sucesso!".blue
       );
     } catch (error) {
       if (
@@ -163,57 +161,35 @@ JWT_SECRET=${secret}`;
         "Postgres error. Cause: permission denied to create database"
       ) {
         console.log(
-          chalk.red(
-            "O usuário informado não é superusuário. Sem permissão para criar bancos de dados."
-          )
+          "O usuário informado não é superusuário. Sem permissão para criar bancos de dados.".red
         );
       } else if (
         error.message === 'permission denied to create extension "postgis"'
       ) {
         console.log(
-          chalk.red(
-            "O usuário informado não é superusuário. Sem permissão para criar a extensão 'postgis'."
-          )
+            "O usuário informado não é superusuário. Sem permissão para criar a extensão 'postgis'.".red
         );
         console.log(
-          chalk.red(
-            "Delete o banco de dados criado antes de executar a configuração novamente."
-          )
+            "Delete o banco de dados criado antes de executar a configuração novamente.".red
         );
       } else if (
         error.message ===
         'Attempted to create a duplicate database. Cause: database "' +
-          answers.db_name +
+          answers.dbName +
           '" already exists'
       ) {
-        console.log(chalk.red("O banco " + answers.db_name + " já existe."));
+        console.log(`O banco ${answers.dbName} já existe.`.red);
       } else if (
         error.message ===
-        'password authentication failed for user "' + answers.db_user + '"'
+        'password authentication failed for user "' + answers.dbUser + '"'
       ) {
         console.log(
-          chalk.red("Senha inválida para o usuário " + answers.db_user)
+          `Senha inválida para o usuário ${answers.dbUser}`.red
         );
-      } else if (
-        error.message ===
-        "Arquivo .env já existe, apague antes de iniciar a configuração."
-      ) {
-        console.log(
-          chalk.red(
-            "Arquivo .env já existe, apague antes de iniciar a configuração."
-          )
-        );
-        if (answers.db_create) {
-          console.log(
-            chalk.red(
-              "Delete o banco de dados criado antes de executar a configuração novamente."
-            )
-          );
-        }
       } else {
-        console.log(chalk.red(error.message));
+        console.log(error.message.red);
         console.log("-------------------------------------------------");
-        console.log(chalk.red(error));
+        console.log(error.red);
       }
     }
   });

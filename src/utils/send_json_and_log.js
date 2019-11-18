@@ -4,24 +4,22 @@ const logger = require("./logger");
 
 const { VERSION } = require("../config");
 
-const sendJsonAndLog = (req, res, next) => {
+const sendJsonAndLogMiddleware = (req, res, next) => {
   res.sendJsonAndLog = (sucess, message, status, dados = null) => {
     const url = req.protocol + "://" + req.get("host") + req.originalUrl;
 
     logger.info(message, {
-      url: url,
+      url,
       information: req.body,
-      status: status
+      status,
+      sucess
     });
     const jsonData = {
       version: VERSION,
       sucess: sucess,
-      message: message
+      message: message,
+      dados
     };
-
-    if (dados) {
-      jsonData.dados = dados;
-    }
 
     return res.status(status).json(jsonData);
   };
@@ -29,4 +27,4 @@ const sendJsonAndLog = (req, res, next) => {
   next();
 };
 
-module.exports = sendJsonAndLog;
+module.exports = sendJsonAndLogMiddleware;

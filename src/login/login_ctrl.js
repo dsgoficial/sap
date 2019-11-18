@@ -3,44 +3,38 @@
 const jwt = require("jsonwebtoken");
 
 const { db, testdb } = require("../database");
-const { serializeError } = require("serialize-error");
 
 const semver = require("semver");
 
 const { JWT_SECRET } = require("../config");
 
+const { AppError } = require("../utils");
+
 const controller = {};
 
 const verificaQGIS = async qgis => {
   const qgis_minimo = await db.oneOrNone(
-    "SELECT versao_minima FROM dgeo.versao_qgis LIMIT 1"
+    `SELECT versao_minima FROM dgeo.versao_qgis LIMIT 1`
   );
-  if (qgis_minimo) {
-    let qgis_wrong_version = true;
-    if (
-      qgis &&
-      semver.gte(semver.coerce(qgis), semver.coerce(qgis_minimo.versao_minima))
-    ) {
-      qgis_wrong_version = false;
-    }
-    if (qgis_wrong_version) {
-      const err = new Error(
-        "Versão incorreta do QGIS. A seguinte versão é necessária: " +
-          qgis_minimo.versao_minima
-      );
-      err.status = 401;
-      err.context = "login_ctrl";
-      err.information = { plugins };
-      return { error: err };
-    }
+  if(!qgis_minimo){
+    return null
   }
-  return { error: null };
+  let qgis_version_ok = qgis &&
+  semver.gte(semver.coerce(qgis), semver.coerce(qgis_minimo.versao_minima));
+
+  if (!qgis_version_ok) {
+    throw new AppError("Versão incorreta do QGIS. A seguinte versão é necessária: " +
+    qgis_minimo.versao_minima, 401);
+  }
 };
 
 const verificaPlugins = async plugins => {
   const plugins_minimos = await db.any(
-    "SELECT nome, versao_minima FROM dgeo.plugin"
+    `SELECT nome, versao_minima FROM dgeo.plugin`
   );
+  if(!plugins_minimos){
+    return null;
+  }
   for (const i = 0; i < plugins_minimos.length; i++) {
     let notFound = true;
     if (plugins) {
@@ -62,67 +56,58 @@ const verificaPlugins = async plugins => {
       plugins_minimos.forEach(pm => {
         listplugins.push(pm.nome + "-" + pm.versao_minima);
       });
-
-      const err = new Error(
-        "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " +
-          listplugins.join(", ")
-      );
-      err.status = 401;
-      err.context = "login_ctrl";
-      err.information = { plugins };
-      return { error: err };
+      throw new AppError("Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " +
+      listplugins.join(", "));
     }
   }
-
-  return { error: null };
 };
 
 const gravaLogin = async usuario_id => {
   await db.any(
     `
-      INSERT INTO acompanhamento.login(usuario_id, data_login) VALUES($1, now())
+      INSERT INTO acompanhamento.login(usuario_id, data_login) VALUES($<usuario_id>, now())
       `,
-    [usuario_id]
+    {usuario_id}
   );
-  return { error: null };
+};
+
+const signJWT = (data, secret) => {
+  return new Promise((resolve, reject) => {
+    jwt.sign(data, secret, {
+      expiresIn: "10h"
+    }, (err, token) => {
+      if(err){
+        reject(new AppError("Erro durante a assinatura do token", null, err))
+      }
+      resolve(token)
+    });
+  })
 };
 
 controller.login = async (usuario, senha, plugins, qgis) => {
   const verifycon = await testdb(usuario, senha);
   if (!verifycon) {
-    //throw error
-    const err = new Error("Usuário ou senha inválida.");
-    err.status = 401;
-    err.context = "login_ctrl";
-    err.information = {};
-    err.information.usuario = usuario;
-    return { error: err, token: null, administrador: null };
+    throw new AppError("Usuário ou senha inválida", 401);
   }
 
-  const {
-    id,
-    administrador
-  } = await db.oneOrNone(
-    "SELECT id, administrador FROM dgeo.usuario WHERE login = $1 and ativo IS TRUE",
-    [usuario]
+  const usuarioDb = await db.oneOrNone(
+    `SELECT id, administrador FROM dgeo.usuario WHERE login = $<usuario> and ativo IS TRUE`,
+    {usuario}
   );
-  //Check if user exists then throw error
+  if(!usuarioDb){
+    throw new AppError("Usuário ou senha inválida", 401);
+  }
+  const {id, administrador} = usuarioDb;
 
-  await verificaQGIS(plugins, qgis);
+  await verificaQGIS(qgis);
 
-  await verificaPlugins(plugins, qgis);
+  await verificaPlugins(plugins);
 
-  jwt.sign({ id, administrador }, JWT_SECRET, {
-    expiresIn: "10h"
-  }, (err, token) => {
-    if(err){
-      //throw error
-    }
+  const token = await signJWT({ id, administrador }, JWT_SECRET);
 
-    await gravaLogin(id);
+  await gravaLogin(id);
 
-    return { token, administrador };
-  });
+  return { token, administrador };
 };
 
 module.exports = controller;

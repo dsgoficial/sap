@@ -5,17 +5,20 @@ const { serializeError } = require("serialize-error");
 const logger = require("./logger");
 
 const errorHandler = (err, req = null, res = null, next = null) => {
-  const status = err.status || 500;
-  const nome = err.nome || err.message || null;
-  const dados = err.dados || serializeError(err);
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Erro no servidor';
+  const errorTrace = err.errorTrace || serializeError(err) || null;
 
-  if (res) {
-    return res.sendJsonAndLog(false, nome, status, dados);
+  if (res && res.sendJsonAndLog) {
+    return res.sendJsonAndLog(false, message, statusCode);
   }
 
-  return logger.error(nome, {
-    information: dados,
-    status: status
+  logger.error(message, {
+    information: errorTrace,
+    statusCode: statusCode,
+    sucess: false
   });
+  //exit node with error
+  process.exit(1);
 };
 module.exports = errorHandler;

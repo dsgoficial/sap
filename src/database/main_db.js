@@ -1,6 +1,6 @@
 "use strict";
 
-const { logger } = require("../utils");
+const { errorHandler } = require("../utils");
 
 const promise = require("bluebird");
 
@@ -32,13 +32,6 @@ db.connect()
   .then(function(obj) {
     obj.done(); // success, release connection;
   })
-  .catch(function(error) {
-    logger.info("Failed database connection", {
-      context: "main_db",
-      information: {
-        cn
-      }
-    });
-  });
+  .catch(errorHandler);
 
 module.exports = db;

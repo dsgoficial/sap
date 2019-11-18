@@ -2,20 +2,32 @@
 
 const AppError = require("./app_error");
 
-const middleware = schema => {
+const validationError = error => {
+  const { details } = error;
+  const message = details.map(i => i.message).join(",");
+
+  return new AppError(`Erro de validação dos ${context}. Mensagem de erro: ${message}`, 400, message);
+}
+
+const middleware = ({body: bodySchema, params: paramsSchema}) => {
   return (req, res, next) => {
-    const { error } = schema.validate(req.body, {
-      stripUnknown: true
-    });
-
-    if (error == null) {
-      return next();
+    if(paramsSchema){
+      const { error } = paramsSchema.validate(req.params, {
+        stripUnknown: true, abortEarly: false
+      });
+      if(error){
+        return next(validationError(error, 'Parâmetros'));
+      }
     }
-    const { details } = error;
-    const message = details.map(i => i.message).join(",");
-
-    const err = new AppError("Validation error", 400, message);
-    return next(err);
+    if(bodySchema){
+      const { error } = bodySchema.validate(req.body, {
+        abortEarly: false
+      });
+      if(error){
+        return next(validationError(error, 'Dados'));
+      }
+    }
+    return next();
   };
 };
 

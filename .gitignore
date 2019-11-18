@@ -94,6 +94,7 @@ $RECYCLE.BIN/
 # APIDOC
 src/apidoc
 logs
+log
 .vscode
 
 sap_config.qgs

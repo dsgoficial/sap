@@ -12,7 +12,7 @@
     "npm": ">=5.4.2"
   },
   "scripts": {
-    "apidoc": "./node_modules/.bin/apidoc -i src/ -o src/apidoc",
+    "docs": "./node_modules/.bin/apidoc -i src/ -o src/apidoc",
     "dev": "nodemon src/index.js",
     "production": "pm2 start src/index.js --name sap",
     "config": "node create_config.js"
@@ -31,7 +31,7 @@
     "apidoc": "^0.18.0",
     "bluebird": "^3.7.1",
     "body-parser": "^1.19.0",
-    "chalk": "^3.0.0",
+    "colors": "^1.4.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",

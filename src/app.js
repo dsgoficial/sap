@@ -9,12 +9,10 @@ const xss = require("xss-clean");
 const hpp = require("hpp");
 const rateLimit = require("express-rate-limit");
 
-const { VERSION } = require("./config");
-
 const {
   AppError,
   errorHandler,
-  sendJsonAndLog,
+  sendJsonAndLogMiddleware,
   asyncHandler
 } = require("./utils");
 
@@ -45,7 +43,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 //Add sendJsonAndLog to res object
-app.use(sendJsonAndLog);
+app.use(sendJsonAndLogMiddleware);
 
 //prevent browser from request favicon
 app.get("/favicon.ico", function(req, res) {
@@ -57,30 +55,25 @@ app.get(
   "/",
   asyncHandler(async (req, res, next) => {
     const dbVersion = await databaseVersion.get();
-    res.status(200).json({
-      version: VERSION,
-      database_version: dbVersion,
-      sucess: true,
-      message: "Sistema de Apoio a produção operacional"
+    return res.sendJsonAndLog(true, "Sistema de Apoio a produção operacional", 200, {
+      database_version: dbVersion
     });
   })
 );
 
 //Serve APIDoc
-app.use("/apidoc", express.static(path.join(__dirname, "apidoc")));
+app.use("/docs", express.static(path.join(__dirname, "apidoc")));
 
 //All routes used by the App
 routes(app);
 
 //Handle missing URL
 app.use((req, res, next) => {
-  const err = new AppError("Não encontrado", 404);
+  const err = new AppError("URL não encontrada", 404);
   return next(err);
 });
 
 //Error handling
-app.use((err, req, res, next) => {
-  errorHandler(err, req, res, next);
-});
+app.use(errorHandler);
 
 module.exports = app;

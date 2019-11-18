@@ -485,10 +485,10 @@ controller.pausa_atividade = async unidade_trabalho_ids => {
       WHERE id in (
         SELECT a.id FROM macrocontrole.atividade AS a
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
-        WHERE ut.id in ($2:raw) AND a.tipo_situacao_id = 2
+        WHERE ut.id in ($2:csv) AND a.tipo_situacao_id = 2
         ) RETURNING id
       `,
-        [data_fim, unidade_trabalho_ids.join(",")]
+        [data_fim, unidade_trabalho_ids]
       );
       if (updated_ids.length > 0) {
         const updated_ids_fixed = [];
@@ -496,8 +496,8 @@ controller.pausa_atividade = async unidade_trabalho_ids => {
           updated_ids_fixed.push(u.id);
         });
         const atividades = await t.any(
-          `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
-          [updated_ids_fixed.join(",")]
+          `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id in ($1:csv)`,
+          [updated_ids_fixed]
         );
 
         const table = new db.helpers.TableName({
@@ -553,11 +553,11 @@ controller.reinicia_atividade = async unidade_trabalho_ids => {
         SELECT DISTINCT ON (ut.id) a.id FROM macrocontrole.atividade AS a
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
         INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-        WHERE ut.id in ($2:raw) AND a.tipo_situacao_id in (2,3)
+        WHERE ut.id in ($2:csv) AND a.tipo_situacao_id in (2,3)
         ORDER BY ut.id, e.ordem
         ) RETURNING id
       `,
-        [data_fim, unidade_trabalho_ids.join(",")]
+        [data_fim, unidade_trabalho_ids]
       );
       if (updated_ids.length > 0) {
         const updated_ids_fixed = [];
@@ -565,8 +565,8 @@ controller.reinicia_atividade = async unidade_trabalho_ids => {
           updated_ids_fixed.push(u.id);
         });
         const atividades = await t.any(
-          `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($1:raw)`,
-          [updated_ids_fixed.join(",")]
+          `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($1:csv)`,
+          [updated_ids_fixed]
         );
         const table = new db.helpers.TableName({
           table: "atividade",
@@ -621,17 +621,16 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
           INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
           INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
           INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-          WHERE a.id in ($1:raw) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,3,4)
+          WHERE a.id in ($1:csv) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,3,4)
       ) RETURNING id 
       `,
-        [atividade_ids.join(","), data_fim]
+        [atividade_ids, data_fim]
       );
       const ids = [];
       atividades_updates.forEach(i => {
         ids.push(i.id);
       });
       if (ids.length > 0) {
-        ids = ids.join(",");
         if (manter_usuarios) {
           await t.none(
             `
@@ -639,7 +638,7 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
           (
             SELECT etapa_id, unidade_trabalho_id, usuario_id, 3 AS tipo_situacao_id, observacao
             FROM macrocontrole.atividade
-            WHERE id in ($1:raw)
+            WHERE id in ($1:csv)
           )
           `,
             [ids]
@@ -651,7 +650,7 @@ controller.volta_atividade = async (atividade_ids, manter_usuarios) => {
             (
               SELECT etapa_id, unidade_trabalho_id, 1 AS tipo_situacao_id, observacao
               FROM macrocontrole.atividade
-              WHERE id in ($1:raw)
+              WHERE id in ($1:csv)
             )
             `,
             [ids]
@@ -686,10 +685,10 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
               INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
               INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
               INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-              WHERE a.id in ($1:raw) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (1,3)
+              WHERE a.id in ($1:csv) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (1,3)
           )
           `,
-          [atividade_ids.join(",")]
+          [atividade_ids]
         );
         await t.none(
           `
@@ -701,10 +700,10 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
               INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
               INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
               INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-              WHERE a.id in ($1:raw) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (2)
+              WHERE a.id in ($1:csv) AND e_ant.ordem <= e.ordem AND a_ant.tipo_situacao_id IN (2)
           )
           `,
-          [atividade_ids.join(","), data_fim]
+          [atividade_ids, data_fim]
         );
       } else {
         await t.none(
@@ -716,10 +715,10 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
             INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-            WHERE a.id in ($1:raw) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (1,3)
+            WHERE a.id in ($1:csv) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (1,3)
         )
         `,
-          [atividade_ids.join(",")]
+          [atividade_ids]
         );
         await t.none(
           `
@@ -731,10 +730,10 @@ controller.avanca_atividade = async (atividade_ids, concluida) => {
             INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-            WHERE a.id in ($1:raw) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (2)
+            WHERE a.id in ($1:csv) AND e_ant.ordem < e.ordem AND a_ant.tipo_situacao_id IN (2)
         )
         `,
-          [atividade_ids.join(","), data_fim]
+          [atividade_ids, data_fim]
         );
       }
     });
@@ -882,10 +881,10 @@ controller.cria_fila_prioritaria = async (
       (
         SELECT id, $2 as usuario_id, row_number() over(order by id) + $3-1 as prioridade
         FROM macrocontrole.atividade
-        WHERE id in ($1:raw)
+        WHERE id in ($1:csv)
       )
       `,
-      [atividade_ids.join(","), usuario_prioridade_id, prioridade]
+      [atividade_ids, usuario_prioridade_id, prioridade]
     );
     return { error: null };
   } catch (error) {
@@ -913,10 +912,10 @@ controller.cria_fila_prioritaria_grupo = async (
       (
         SELECT id, $2 as perfil_producao_id, row_number() over(order by id) + $3-1 as prioridade
         FROM macrocontrole.atividade
-        WHERE id in ($1:raw)
+        WHERE id in ($1:csv)
       )
       `,
-      [atividade_ids.join(","), perfil_producao_id, prioridade]
+      [atividade_ids, perfil_producao_id, prioridade]
     );
     return { error: null };
   } catch (error) {
@@ -944,9 +943,9 @@ controller.cria_observacao = async (
       await t.any(
         `
         UPDATE macrocontrole.atividade SET
-        observacao = $2 WHERE id in ($1:raw)
+        observacao = $2 WHERE id in ($1:csv)
         `,
-        [atividade_ids.join(","), observacao_atividade]
+        [atividade_ids, observacao_atividade]
       );
 
       await t.any(
@@ -954,10 +953,10 @@ controller.cria_observacao = async (
         UPDATE macrocontrole.etapa SET
         observacao = $2 WHERE id in (
           SELECT DISTINCT e.id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:raw)
+          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:csv)
         )
         `,
-        [atividade_ids.join(","), observacao_etapa]
+        [atividade_ids, observacao_etapa]
       );
 
       await t.any(
@@ -965,10 +964,10 @@ controller.cria_observacao = async (
         UPDATE macrocontrole.subfase SET
         observacao = $2 WHERE id in (
           SELECT DISTINCT e.subfase_id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:raw)
+          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:csv)
         )
         `,
-        [atividade_ids.join(","), observacao_subfase]
+        [atividade_ids, observacao_subfase]
       );
 
       await t.any(
@@ -976,10 +975,10 @@ controller.cria_observacao = async (
         UPDATE macrocontrole.unidade_trabalho SET
         observacao = $2 WHERE id in (
           SELECT DISTINCT a.unidade_trabalho_id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:raw)
+          INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($1:csv)
         )
         `,
-        [atividade_ids.join(","), observacao_unidade_trabalho]
+        [atividade_ids, observacao_unidade_trabalho]
       );
     });
     return { error: null };
