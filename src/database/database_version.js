@@ -9,9 +9,7 @@ const { MIN_DATABASE_VERSION } = require("../config");
 const { AppError } = require("../utils");
 
 const get = async () => {
-  const databaseVersion = await db.oneOrNone(
-    `SELECT nome FROM public.versao`
-  );
+  const databaseVersion = await db.oneOrNone(`SELECT nome FROM public.versao`);
 
   if (!databaseVersion) {
     throw AppError(
