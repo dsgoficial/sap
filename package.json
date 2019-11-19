@@ -12,10 +12,10 @@
     "npm": ">=5.4.2"
   },
   "scripts": {
-    "docs": "./node_modules/.bin/apidoc -i src/ -o src/apidoc",
     "dev": "nodemon src/index.js",
     "production": "pm2 start src/index.js --name sap",
-    "config": "node create_config.js"
+    "config": "node create_config.js",
+    "generate-docs": "./node_modules/.bin/jsdoc -c ./jsdoc/jsdoc_config.js ./jsdoc/README.md -t ./jsdoc/templates/custom"
   },
   "keywords": [
     "Controle de Produção",
@@ -28,7 +28,6 @@
     "url": "https://github.com/1cgeo/sap/issues"
   },
   "dependencies": {
-    "apidoc": "^0.18.0",
     "bluebird": "^3.7.1",
     "body-parser": "^1.19.0",
     "colors": "^1.4.0",
@@ -40,6 +39,7 @@
     "hpp": "^0.2.2",
     "inquirer": "^7.0.0",
     "joi": "^14.3.1",
+    "jsdoc": "^3.6.3",
     "jsonwebtoken": "^8.5.1",
     "nodemon": "^1.19.4",
     "pg-promise": "^10.2.1",
@@ -47,15 +47,10 @@
     "pm2": "^4.1.2",
     "semver": "^6.3.0",
     "serialize-error": "^5.0.0",
-    "uuid": "^3.3.3",
+    "swagger-jsdoc": "^3.4.0",
+    "swagger-ui-express": "^4.1.2",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^4.2.1",
     "xss-clean": "^0.1.1"
-  },
-  "apidoc": {
-    "name": "API SAP",
-    "version": "2.0.0",
-    "title": "API SAP",
-    "description": "Comunicação com a API REST do SAP"
   }
 }

@@ -8,12 +8,18 @@ const helmet = require("helmet");
 const xss = require("xss-clean");
 const hpp = require("hpp");
 const rateLimit = require("express-rate-limit");
+const swaggerUi = require("swagger-ui-express");
+const swaggerJSDoc = require("swagger-jsdoc");
+
+const swaggerOptions = require("./swagger_options");
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
 
 const {
   AppError,
   errorHandler,
   sendJsonAndLogMiddleware,
-  asyncHandler
+  asyncHandler,
+  httpCode
 } = require("./utils");
 
 const { databaseVersion } = require("./database");
@@ -47,7 +53,7 @@ app.use(sendJsonAndLogMiddleware);
 
 //prevent browser from request favicon
 app.get("/favicon.ico", function(req, res) {
-  res.status(204);
+  res.status(httpCode.NoContent);
 });
 
 //informa que o serviço de dados do SAP está operacional
@@ -55,21 +61,29 @@ app.get(
   "/",
   asyncHandler(async (req, res, next) => {
     const dbVersion = await databaseVersion.get();
-    return res.sendJsonAndLog(true, "Sistema de Apoio a produção operacional", 200, {
-      database_version: dbVersion
-    });
+    return res.sendJsonAndLog(
+      true,
+      "Sistema de Apoio a produção operacional",
+      httpCode.OK,
+      {
+        database_version: dbVersion
+      }
+    );
   })
 );
 
-//Serve APIDoc
-app.use("/docs", express.static(path.join(__dirname, "apidoc")));
+//Serve SwaggerDoc
+app.use("/api_docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+//Serve JSDocs
+app.use("/js_docs", express.static(path.join(__dirname, "js_docs")));
 
 //All routes used by the App
 routes(app);
 
 //Handle missing URL
 app.use((req, res, next) => {
-  const err = new AppError("URL não encontrada", 404);
+  const err = new AppError("URL não encontrada", httpCode.NotFound);
   return next(err);
 });
 

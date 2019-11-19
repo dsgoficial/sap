@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Sistema de Apoio a Produção</title>
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+    <link type="text/css" rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#createPS">createPS</a></li><li><a href="global.html#fp">fp</a></li><li><a href="global.html#readSqlFile">readSqlFile</a></li></ul>
+</nav>
+
+<div id="main">
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+const path = require("path");
+const { createPS } = require("../../database");
+
+/**
+ * Returns the full path of a file
+ * @param {string} p - file path
+ * @returns {string} Full path of a file
+ */
+const fp = p => {
+  return path.join(__dirname, p);
+};
+
+module.exports = {
+  calculaFilaPrioritaria: createPS(fp("calcula_fila_prioritaria.sql")),
+  calculaFilaPrioritariaGrupo: createPS(
+    fp("calcula_fila_prioritaria_grupo.sql")
+  ),
+  calculaFilaPausada: createPS(fp("calcula_fila_pausada.sql")),
+  calculaFila: createPS(fp("calcula_fila.sql")),
+  retornaDadosProducao: createPS(fp("retorna_dados_producao.sql"))
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

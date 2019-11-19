@@ -1,0 +1,136 @@
+body {
+    margin: 0;
+}
+
+html {
+    font-size: 16px;
+}
+
+html, body, section {
+    background-color: #F0F0F0;
+}
+
+.prettyprint {
+    width: auto;
+}
+
+h4.name {
+    border-radius: 7px;
+    padding: 4px 10px;
+    background-color: rgb(16, 71, 70);
+    color: rgb(136, 191, 190);
+    font-size: 24px;
+}
+
+section {
+    border-bottom: none;
+    padding-left: 40px;
+}
+
+div#main {
+    margin-left: 260px;
+    float: none;
+    /*    max-width: 1650px;*/
+}
+
+code {
+    border-radius: 3px;
+    padding: 2px 4px;
+    background-color: grey;
+    color: white !important;
+}
+
+.prettyprint code {
+    border-radius: 7px;
+    padding: 10px 12px;
+}
+
+code span {
+    line-height: 20px;
+}
+
+nav {
+    background-color: #222;
+    padding: 10px 20px 20px 20px;
+    width: auto;
+    top: 0;
+    bottom: 0;
+    position: fixed;
+    font-size: 18px;
+    margin-top: 0px;
+    line-height: 24px;
+    float: none;
+    overflow-y: auto;
+}
+
+nav h2 a,
+nav h2 a:visited,
+nav div.home-link a,
+nav div.home-link a:visited {
+    width: 100%;
+    color: Gold;
+}
+
+nav ul li a,
+nav ul li a:visited {
+    color: #EEE;
+    font-size: 17px;
+}
+
+nav ul li a:hover {
+    color: #CC0;
+}
+
+nav h3 {
+    color: LightGreen;
+    font-size: 18px;
+}
+
+nav h2 {
+    font-size: 20px;
+}
+
+.nav li a {
+    color: white !important;
+}
+
+.home-link {
+    padding-top: 20px;
+}
+
+.home-link a {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+table.params th:first-child,
+table.props th:first-child {
+    border-top-left-radius: 5px;
+}
+
+table.params th:last-child,
+table.props th:last-child {
+    border-top-right-radius: 5px;
+}
+
+table.params th,
+table.props th {
+    border: none;
+    border-right: 1px solid #F5F5F5;
+}
+
+table.params th,
+table.props th {
+    font-family: 'Verdana';
+    font-weight: normal;
+}
+
+table.params th {
+    background-color: SteelBlue;
+    color: White;
+}
+
+table.props th {
+    background-color: DarkCyan;
+    color: White;
+}

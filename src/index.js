@@ -1,26 +1,7 @@
-"use strict";
+var version = process.versions.node.split(".");
 
-const { errorHandler } = require("./utils");
-const { databaseVersion } = require("./database");
+if (version[0] < 8 || (version[0] === 8 && version[1] < 7)) {
+  throw new Error("Versão mínima do Node.js suportada pelo SAP é 8.7");
+}
 
-const { VERSION, PORT } = require("./config");
-
-const app = require("./app");
-const { logger } = require("./utils");
-
-databaseVersion
-  .validate()
-  .then(DATABASE_VERSION => {
-    //Starts server
-    app.listen(PORT, () => {
-      logger.info("Server start", {
-        success: true,
-        information: {
-          version: VERSION,
-          database_version: DATABASE_VERSION,
-          port: PORT
-        }
-      });
-    });
-  })
-  .catch(errorHandler);
+module.exports = require("./main");

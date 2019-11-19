@@ -6,5 +6,6 @@ module.exports = {
   schemaValidation: require("./schema_validation"),
   asyncHandler: require("./async_handler"),
   errorHandler: require("./error_handler"),
-  AppError: require("./app_error")
+  AppError: require("./app_error"),
+  httpCode: require("./http_code")
 };

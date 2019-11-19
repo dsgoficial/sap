@@ -2,13 +2,15 @@
 
 const { serializeError } = require("serialize-error");
 
-class AppError extends Error {
-  constructor(message, status = 500, errorTrace = null) {
-    super(message);
-    this.statusCode = statusCode;
-    this.errorTrace = (errorTrace instanceof Error) ? serializeError(errorTrace): errorTrace;
-  }
+const httpCode = require("./http_code");
 
+class AppError extends Error {
+  constructor(message, status = httpCode.InternalError, errorTrace = null) {
+    super(message);
+    this.statusCode = status;
+    this.errorTrace =
+      errorTrace instanceof Error ? serializeError(errorTrace) : errorTrace;
+  }
 }
 
-module.exports = AppError
+module.exports = AppError;

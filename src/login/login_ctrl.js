@@ -1,49 +1,52 @@
 "use strict";
 
 const jwt = require("jsonwebtoken");
+const semver = require("semver");
 
 const { db, testdb } = require("../database");
 
-const semver = require("semver");
-
 const { JWT_SECRET } = require("../config");
 
-const { AppError } = require("../utils");
+const { AppError, httpCode } = require("../utils");
 
 const controller = {};
 
 const verificaQGIS = async qgis => {
-  const qgis_minimo = await db.oneOrNone(
+  const qgisMinimo = await db.oneOrNone(
     `SELECT versao_minima FROM dgeo.versao_qgis LIMIT 1`
   );
-  if(!qgis_minimo){
-    return null
+  if (!qgisMinimo) {
+    return;
   }
-  let qgis_version_ok = qgis &&
-  semver.gte(semver.coerce(qgis), semver.coerce(qgis_minimo.versao_minima));
+  let qgisVersionOk =
+    qgis &&
+    semver.gte(semver.coerce(qgis), semver.coerce(qgisMinimo.versao_minima));
 
-  if (!qgis_version_ok) {
-    throw new AppError("Versão incorreta do QGIS. A seguinte versão é necessária: " +
-    qgis_minimo.versao_minima, 401);
+  if (!qgisVersionOk) {
+    throw new AppError(
+      "Versão incorreta do QGIS. A seguinte versão é necessária: " +
+        qgisMinimo.versao_minima,
+      httpCode.BadRequest
+    );
   }
 };
 
 const verificaPlugins = async plugins => {
-  const plugins_minimos = await db.any(
+  const pluginsMinimos = await db.any(
     `SELECT nome, versao_minima FROM dgeo.plugin`
   );
-  if(!plugins_minimos){
-    return null;
+  if (!pluginsMinimos) {
+    return;
   }
-  for (const i = 0; i < plugins_minimos.length; i++) {
+  for (const i = 0; i < pluginsMinimos.length; i++) {
     let notFound = true;
     if (plugins) {
       plugins.forEach(p => {
         if (
-          p.nome === plugins_minimos[i].nome &&
+          p.nome === pluginsMinimos[i].nome &&
           semver.gte(
             semver.coerce(p.versao),
-            semver.coerce(plugins_minimos[i].versao_minima)
+            semver.coerce(pluginsMinimos[i].versao_minima)
           )
         ) {
           notFound = false;
@@ -53,51 +56,59 @@ const verificaPlugins = async plugins => {
 
     if (notFound) {
       const listplugins = [];
-      plugins_minimos.forEach(pm => {
+      pluginsMinimos.forEach(pm => {
         listplugins.push(pm.nome + "-" + pm.versao_minima);
       });
-      throw new AppError("Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " +
-      listplugins.join(", "));
+      throw new AppError(
+        "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " +
+          listplugins.join(", "),
+        httpCode.BadRequest
+      );
     }
   }
 };
 
-const gravaLogin = async usuario_id => {
+const gravaLogin = async usuarioId => {
   await db.any(
     `
       INSERT INTO acompanhamento.login(usuario_id, data_login) VALUES($<usuario_id>, now())
       `,
-    {usuario_id}
+    { usuarioId }
   );
 };
 
 const signJWT = (data, secret) => {
   return new Promise((resolve, reject) => {
-    jwt.sign(data, secret, {
-      expiresIn: "10h"
-    }, (err, token) => {
-      if(err){
-        reject(new AppError("Erro durante a assinatura do token", null, err))
+    jwt.sign(
+      data,
+      secret,
+      {
+        expiresIn: "10h"
+      },
+      (err, token) => {
+        if (err) {
+          reject(new AppError("Erro durante a assinatura do token", null, err));
+        }
+        resolve(token);
       }
-      resolve(token)
-    });
-  })
+    );
+  });
 };
 
 controller.login = async (usuario, senha, plugins, qgis) => {
   const verifycon = await testdb(usuario, senha);
   if (!verifycon) {
-    throw new AppError("Usuário ou senha inválida", 401);
+    throw new AppError("Usuário ou senha inválida", httpCode.Unauthorized);
   }
 
   const usuarioDb = await db.oneOrNone(
     `SELECT id, administrador FROM dgeo.usuario WHERE login = $<usuario> and ativo IS TRUE`,
-    {usuario}
+    { usuario }
   );
-  if(!usuarioDb){
-    throw new AppError("Usuário ou senha inválida", 401);
+  if (!usuarioDb) {
+    throw new AppError("Usuário ou senha inválida", httpCode.Unauthorized);
   }
-  const {id, administrador} = usuarioDb;
+  const { id, administrador } = usuarioDb;
 
   await verificaQGIS(qgis);
 
