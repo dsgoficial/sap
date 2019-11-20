@@ -1,7 +1,10 @@
+"use strict";
 
 const Joi = require("joi");
 
-const feicao = Joi.object().keys({
+const models = {};
+
+models.feicao = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
@@ -35,7 +38,7 @@ const feicao = Joi.object().keys({
     .min(1)
 });
 
-const apontamento = Joi.object().keys({
+models.apontamento = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
@@ -55,7 +58,7 @@ const apontamento = Joi.object().keys({
     .min(1)
 });
 
-const tela = Joi.object().keys({
+models.tela = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
@@ -82,14 +85,11 @@ const tela = Joi.object().keys({
     .min(1)
 });
 
-const acao = Joi.object().keys({
+models.acao = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
     .required()
 });
 
-module.exports.feicao = feicao;
-module.exports.apontamento = apontamento;
-module.exports.tela = tela;
-module.exports.acao = acao;
+module.exports = models;

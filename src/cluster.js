@@ -17,7 +17,7 @@ const setupWorkerProcesses = () => {
       });
     }
     cluster.on("online", function(worker) {
-      console.log(`Worker ${worker.process.pid} iniciado`.green);
+      console.log(`Worker ${worker.process.pid} iniciado`.blue);
     });
     cluster.on("exit", function(worker, code, signal) {
       console.log(

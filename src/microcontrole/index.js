@@ -1,6 +1,7 @@
+"use strict";
 
 module.exports = {
   microcontroleCtrl: require("./microcontrole_ctrl"),
-  microcontroleModel: require("./microcontrole_model"),
+  microcontroleSchema: require("./microcontrole_schema"),
   microcontroleRoute: require("./microcontrole_route")
 };

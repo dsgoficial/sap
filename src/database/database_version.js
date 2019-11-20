@@ -8,33 +8,36 @@ const { MIN_DATABASE_VERSION } = require("../config");
 
 const { AppError } = require("../utils");
 
-const get = async () => {
-  const databaseVersion = await db.oneOrNone(`SELECT nome FROM public.versao`);
+let dbVersion = {}
 
-  if (!databaseVersion) {
-    throw AppError(
-      `O banco de dados não não é compatível com a versão do SAP.`
-    );
-  }
-
-  return databaseVersion.nome;
-};
-
-const validate = async () => {
-  const database_version = await get();
-
+const validate = dbv => {
   if (
     semver.lt(
-      semver.coerce(database_version),
+      semver.coerce(dbv),
       semver.coerce(MIN_DATABASE_VERSION)
     )
   ) {
-    throw AppError(
+    throw new AppError(
       `Versão do banco de dados (${database_version}) não compatível com a versão do SAP. A versão deve ser superior a ${MIN_DATABASE_VERSION}.`
     );
   }
-
-  return database_version;
 };
 
-module.exports = { validate, get };
+/**
+ * Carrega assincronamente o nome da versão do banco de dados
+ */
+dbVersion.load = async () => {
+  if(!("nome" in dbVersion)){
+    const dbv = await db.oneOrNone(`SELECT nome FROM public.versao`);
+
+    if (!dbv) {
+      throw new AppError(
+        `O banco de dados não não é compatível com a versão do SAP.`
+      );
+    }
+    validate(dbv.nome)
+    dbVersion.nome = dbv.nome
+  }
+};
+
+module.exports = dbVersion;

@@ -1,9 +1,12 @@
+"use strict";
+
 const { db } = require("../database");
-const { serializeError } = require("serialize-error");
+
+const { AppError, httpCode } = require("../utils");
 
 const controller = {};
 
-const fix_activity = (no_activity, min_max_points) => {
+const fixActivity = (no_activity, min_max_points) => {
   const no_activity_fixed = {};
   no_activity.forEach(na => {
     if (!(na.dia in no_activity_fixed)) {
@@ -62,7 +65,7 @@ const fix_activity = (no_activity, min_max_points) => {
   return activity_fixed;
 };
 
-const activity_statistics = activity_fixed => {
+const activityStatistics = activity_fixed => {
   for (const dia in activity_fixed) {
     const parts = {};
     parts["0"] = [];
@@ -95,8 +98,7 @@ const activity_statistics = activity_fixed => {
   return activity_fixed;
 };
 
-controller.get_acao_usuario = async (usuario_id, days) => {
-  try {
+controller.getAcaoUsuario = async (usuario_id, days) => {
     const no_activity = await db.any(
       `
       WITH datas AS (
@@ -131,26 +133,14 @@ controller.get_acao_usuario = async (usuario_id, days) => {
       `,
       [usuario_id, days]
     );
-    const activity_fixed = fix_activity(no_activity, min_max_points);
-    activity_fixed = activity_statistics(activity_fixed);
+    const activity_fixed = fixActivity(no_activity, min_max_points);
+    activity_fixed = activityStatistics(activity_fixed);
 
-    return { error: null, dados: activity_fixed };
-  } catch (error) {
-    const err = new Error(
-      "Falha durante retorno dos dados de ação do usuário."
-    );
-    err.status = 500;
-    err.context = "estatisticas_ctrl";
-    err.information = {};
-    err.information.usuario_id = usuario_id;
-    err.information.days = days;
-    err.information.trace = serializeError(error);
-    return { error: err, dados: null };
-  }
+    return activity_fixed;
+
 };
 
-controller.get_acao_em_execucao = async () => {
-  try {
+controller.getAcaoEmExecucao = async () => {
     const no_activity = await db.any(
       `
       WITH datas AS (
@@ -183,19 +173,9 @@ controller.get_acao_em_execucao = async () => {
       ORDER BY data::date
       `
     );
-    const activity_fixed = fix_activity(no_activity, min_max_points);
-    activity_fixed = activity_statistics(activity_fixed);
+    const activity_fixed = fixActivity(no_activity, min_max_points);
+    activity_fixed = activityStatistics(activity_fixed);
 
-    return { error: null, dados: activity_fixed };
-  } catch (error) {
-    const err = new Error(
-      "Falha durante retorno dos dados de ação do usuário."
-    );
-    err.status = 500;
-    err.context = "estatisticas_ctrl";
-    err.information = {};
-    err.information.trace = serializeError(error);
-    return { error: err, dados: null };
-  }
+    return activity_fixed;
 };
 module.exports = controller;

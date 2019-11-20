@@ -1,163 +1,108 @@
+"use strict";
+
 const { db } = require("../database");
-const { serializeError } = require("serialize-error");
+
+const { AppError, httpCode } = require("../utils");
 
 const controller = {};
 
-controller.armazenaFeicao = async (atividade_id, data, dados) => {
-  try {
-    const table = new db.helpers.TableName({
-      table: "monitoramento_feicao",
-      schema: "microcontrole"
+controller.armazenaFeicao = async (atividadeId, data, dados) => {
+  const table = new db.helpers.TableName({
+    table: "monitoramento_feicao",
+    schema: "microcontrole"
+  });
+
+  const cs = new db.helpers.ColumnSet(
+    [
+      "tipo_operacao_id",
+      "camada_id",
+      "quantidade",
+      "comprimento",
+      "vertices",
+      "data",
+      "atividade_id"
+    ],
+    { table }
+  );
+
+  const values = [];
+  dados.foreach(d => {
+    values.push({
+      tipo_operacao_id: d.operacao,
+      camada_id: d.camada_id,
+      quantidade: d.quantidade,
+      comprimento: d.comprimento,
+      vertices: d.vertices,
+      data: data,
+      atividade_id: atividadeId
     });
+  });
 
-    const cs = new db.helpers.ColumnSet(
-      [
-        "tipo_operacao_id",
-        "camada_id",
-        "quantidade",
-        "comprimento",
-        "vertices",
-        "data",
-        "atividade_id"
-      ],
-      { table }
-    );
+  const query = db.helpers.insert(values, cs);
 
-    const values = [];
-    dados.foreach(d => {
-      values.push({
-        tipo_operacao_id: d.operacao,
-        camada_id: d.camada_id,
-        quantidade: d.quantidade,
-        comprimento: d.comprimento,
-        vertices: d.vertices,
-        data: data,
-        atividade_id: atividade_id
-      });
-    });
-
-    const query = db.helpers.insert(values, cs);
-
-    db.none(query);
-
-    return { error: null };
-  } catch (error) {
-    const err = new Error(
-      "Falha durante tentativa de inserção do sumário de feições."
-    );
-    err.status = 500;
-    err.context = "microcontrole_ctrl";
-    err.information = {};
-    err.information.atividade_id = atividade_id;
-    err.information.data = data;
-    err.information.dados = dados;
-    err.information.trace = serializeError(error);
-    return { error: err };
-  }
+  db.none(query);
 };
 
-controller.armazenaApontamento = async (atividade_id, data, dados) => {
-  try {
-    const table = new db.helpers.TableName({
-      table: "monitoramento_apontamento",
-      schema: "microcontrole"
+controller.armazenaApontamento = async (atividadeId, data, dados) => {
+  const table = new db.helpers.TableName({
+    table: "monitoramento_apontamento",
+    schema: "microcontrole"
+  });
+
+  const cs = new db.helpers.ColumnSet(
+    ["quantidade", "categoria", "data", "atividade_id"],
+    { table }
+  );
+
+  const values = [];
+  dados.foreach(d => {
+    values.push({
+      quantidade: d.quantidade,
+      categoria: d.categoria,
+      data: data,
+      atividade_id: atividadeId
     });
+  });
 
-    const cs = new db.helpers.ColumnSet(
-      ["quantidade", "categoria", "data", "atividade_id"],
-      { table }
-    );
+  const query = db.helpers.insert(values, cs);
 
-    const values = [];
-    dados.foreach(d => {
-      values.push({
-        quantidade: d.quantidade,
-        categoria: d.categoria,
-        data: data,
-        atividade_id: atividade_id
-      });
-    });
-
-    const query = db.helpers.insert(values, cs);
-
-    db.none(query);
-
-    return { error: null };
-  } catch (error) {
-    const err = new Error(
-      "Falha durante tentativa de inserção do sumário de apontamentos."
-    );
-    err.status = 500;
-    err.context = "microcontrole_ctrl";
-    err.information = {};
-    err.information.atividade_id = atividade_id;
-    err.information.data = data;
-    err.information.dados = dados;
-    err.information.trace = serializeError(error);
-    return { error: err };
-  }
+  db.none(query);
 };
 
-controller.armazenaTela = async (atividade_id, dados) => {
-  try {
-    const table = new db.helpers.TableName({
-      table: "monitoramento_tela",
-      schema: "microcontrole"
+controller.armazenaTela = async (atividadeId, dados) => {
+  const table = new db.helpers.TableName({
+    table: "monitoramento_tela",
+    schema: "microcontrole"
+  });
+
+  const cs = new db.helpers.ColumnSet(["data", "atividade_id", "geom"], {
+    table
+  });
+
+  const values = [];
+
+  dados.foreach(d => {
+    // prettier-ignore
+    const geom = `ST_GeomFromEWKT('SRID=4674;POLYGON(${d.x_min} ${d.y_min},${d.x_min} ${d.y_max},${d.x_max} ${d.y_max}, ${d.x_max} ${d.y_min}, ${d.x_min} ${d.y_min})')`;
+    values.push({
+      geom: geom,
+      data: d.data,
+      atividade_id: atividadeId
     });
+  });
 
-    const cs = new db.helpers.ColumnSet(["data", "atividade_id", "geom"], {
-      table
-    });
+  const query = db.helpers.insert(values, cs);
 
-    const values = [];
-
-    dados.foreach(d => {
-      // prettier-ignore
-      const geom = `ST_GeomFromEWKT('SRID=4674;POLYGON(${d.x_min} ${d.y_min},${d.x_min} ${d.y_max},${d.x_max} ${d.y_max}, ${d.x_max} ${d.y_min}, ${d.x_min} ${d.y_min})')`;
-      values.push({
-        geom: geom,
-        data: d.data,
-        atividade_id: atividade_id
-      });
-    });
-
-    const query = db.helpers.insert(values, cs);
-
-    db.none(query);
-
-    return { error: null };
-  } catch (error) {
-    const err = new Error(
-      "Falha durante tentativa de inserção do sumário de tela."
-    );
-    err.status = 500;
-    err.context = "microcontrole_ctrl";
-    err.information = {};
-    err.information.atividade_id = atividade_id;
-    err.information.dados = dados;
-    err.information.trace = serializeError(error);
-    return { error: err };
-  }
+  db.none(query);
 };
 
-controller.armazenaAcao = async atividade_id => {
-  try {
-    await db.any(
-      `
-      INSERT INTO microcontrole.monitoramento_acao(atividade_id, data) VALUES($1, NOW())
-      `,
-      [atividade_id]
-    );
-    return { error: null };
-  } catch (error) {
-    const err = new Error("Falha durante tentativa de inserção de ação.");
-    err.status = 500;
-    err.context = "microcontrole_ctrl";
-    err.information = {};
-    err.information.atividade_id = atividade_id;
-    err.information.trace = serializeError(error);
-    return { error: err };
-  }
+controller.armazenaAcao = async atividadeId => {
+  await db.any(
+    `
+    INSERT INTO microcontrole.monitoramento_acao(atividade_id, data) VALUES($<atividadeId>, NOW())
+    `,
+    {atividadeId}
+  );
 };
 
 module.exports = controller;

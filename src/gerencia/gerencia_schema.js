@@ -1,7 +1,18 @@
+"use strict";
 
 const Joi = require("joi");
 
-const estilos = Joi.object().keys({
+const models = {};
+
+models.idParams = Joi.object().keys({
+  id: Joi.string().regex(/^[0-9]+$/).required()
+});
+
+models.proximaQuery = Joi.object().keys({
+  proxima: Joi.string().valid('true','false')
+});
+
+models.estilos = Joi.object().keys({
   estilos: Joi.array()
     .items(
       Joi.object().keys({
@@ -17,7 +28,7 @@ const estilos = Joi.object().keys({
     .required()
 });
 
-const menus = Joi.object().keys({
+models.menus = Joi.object().keys({
   menus: Joi.array()
     .items(
       Joi.object().keys({
@@ -29,7 +40,7 @@ const menus = Joi.object().keys({
     .required()
 });
 
-const regras = Joi.object().keys({
+models.regras = Joi.object().keys({
   regras: Joi.array()
     .items(
       Joi.object().keys({
@@ -50,7 +61,7 @@ const regras = Joi.object().keys({
     .required()
 });
 
-const qgis_models = Joi.object().keys({
+models.qgisModels = Joi.object().keys({
   modelos: Joi.array()
     .items(
       Joi.object().keys({
@@ -62,7 +73,7 @@ const qgis_models = Joi.object().keys({
     .required()
 });
 
-const unidade_trabalho_disponivel = Joi.object().keys({
+models.unidadeTrabalhoDisponivel = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
@@ -74,7 +85,7 @@ const unidade_trabalho_disponivel = Joi.object().keys({
   disponivel: Joi.boolean().required()
 });
 
-const atividade_pausar = Joi.object().keys({
+models.atividadePausar = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
@@ -85,7 +96,7 @@ const atividade_pausar = Joi.object().keys({
     .min(1)
 });
 
-const atividade_reiniciar = Joi.object().keys({
+models.atividadeReiniciar = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
@@ -96,7 +107,7 @@ const atividade_reiniciar = Joi.object().keys({
     .min(1)
 });
 
-const fila_prioritaria = Joi.object().keys({
+models.filaPrioritaria = Joi.object().keys({
   atividade_ids: Joi.array()
     .items(
       Joi.number()
@@ -115,7 +126,7 @@ const fila_prioritaria = Joi.object().keys({
     .required()
 });
 
-const fila_prioritaria_grupo = Joi.object().keys({
+models.filaPrioritariaGrupo = Joi.object().keys({
   atividade_ids: Joi.array()
     .items(
       Joi.number()
@@ -134,7 +145,7 @@ const fila_prioritaria_grupo = Joi.object().keys({
     .required()
 });
 
-const observacao = Joi.object().keys({
+models.observacao = Joi.object().keys({
   atividade_ids: Joi.array()
     .items(
       Joi.number()
@@ -143,13 +154,14 @@ const observacao = Joi.object().keys({
     )
     .required()
     .min(1),
-  observacao_atividade: Joi.string().allow("", null),
-  observacao_etapa: Joi.string().allow("", null),
-  observacao_subfase: Joi.string().allow("", null),
-  observacao_unidade_trabalho: Joi.string().allow("", null)
+  observacao_atividade: Joi.string().allow("", null).required(),
+  observacao_etapa: Joi.string().allow("", null).required(),
+  observacao_subfase: Joi.string().allow("", null).required(),
+  observacao_unidade_trabalho: Joi.string().allow("", null).required(),
+  observacao_lote: Joi.string().allow("", null).required()
 });
 
-const atividade_voltar = Joi.object().keys({
+models.atividadeVoltar = Joi.object().keys({
   atividade_ids: Joi.array()
     .items(
       Joi.number()
@@ -163,7 +175,7 @@ const atividade_voltar = Joi.object().keys({
     .required()
 });
 
-const atividade_avancar = Joi.object().keys({
+models.atividadeAvancar = Joi.object().keys({
   atividade_ids: Joi.array()
     .items(
       Joi.number()
@@ -177,7 +189,7 @@ const atividade_avancar = Joi.object().keys({
     .required()
 });
 
-const atividade_criar_revisao = Joi.object().keys({
+models.atividadeCriarRevisao = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
@@ -188,7 +200,7 @@ const atividade_criar_revisao = Joi.object().keys({
     .min(1)
 });
 
-const atividade_criar_revcorr = Joi.object().keys({
+models.atividadeCriarRevcorr = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
@@ -199,17 +211,4 @@ const atividade_criar_revcorr = Joi.object().keys({
     .min(1)
 });
 
-module.exports.estilos = estilos;
-module.exports.menus = menus;
-module.exports.regras = regras;
-module.exports.qgis_models = qgis_models;
-module.exports.unidade_trabalho_disponivel = unidade_trabalho_disponivel;
-module.exports.atividade_pausar = atividade_pausar;
-module.exports.atividade_reiniciar = atividade_reiniciar;
-module.exports.fila_prioritaria = fila_prioritaria;
-module.exports.fila_prioritaria_grupo = fila_prioritaria_grupo;
-module.exports.observacao = observacao;
-module.exports.atividade_voltar = atividade_voltar;
-module.exports.atividade_avancar = atividade_avancar;
-module.exports.atividade_criar_revisao = atividade_criar_revisao;
-module.exports.atividade_criar_revcorr = atividade_criar_revcorr;
+module.exports = models;

@@ -23,11 +23,8 @@ const verificaQGIS = async qgis => {
     semver.gte(semver.coerce(qgis), semver.coerce(qgisMinimo.versao_minima));
 
   if (!qgisVersionOk) {
-    throw new AppError(
-      "Versão incorreta do QGIS. A seguinte versão é necessária: " +
-        qgisMinimo.versao_minima,
-      httpCode.BadRequest
-    );
+    const msg = `Versão incorreta do QGIS. A seguinte versão é necessária: ${qgisMinimo.versao_minima}`
+    throw new AppError(msg,httpCode.BadRequest);
   }
 };
 
@@ -59,11 +56,9 @@ const verificaPlugins = async plugins => {
       pluginsMinimos.forEach(pm => {
         listplugins.push(pm.nome + "-" + pm.versao_minima);
       });
-      throw new AppError(
-        "Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: " +
-          listplugins.join(", "),
-        httpCode.BadRequest
-      );
+      const msg = `Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: ${listplugins.join(", ")}`
+        
+      throw new AppError(msg,httpCode.BadRequest);
     }
   }
 };
@@ -97,15 +92,12 @@ const signJWT = (data, secret) => {
 
 controller.login = async (usuario, senha, plugins, qgis) => {
   const verifycon = await testdb(usuario, senha);
-  if (!verifycon) {
-    throw new AppError("Usuário ou senha inválida", httpCode.Unauthorized);
-  }
 
   const usuarioDb = await db.oneOrNone(
     `SELECT id, administrador FROM dgeo.usuario WHERE login = $<usuario> and ativo IS TRUE`,
     { usuario }
   );
-  if (!usuarioDb) {
+  if (!verifycon || !usuarioDb) {
     throw new AppError("Usuário ou senha inválida", httpCode.Unauthorized);
   }
   const { id, administrador } = usuarioDb;

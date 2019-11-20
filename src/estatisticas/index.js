@@ -1,6 +1,7 @@
+"use strict";
 
 module.exports = {
   estatisticasCtrl: require("./estatisticas_ctrl"),
-  estatisticasModel: require("./estatisticas_model"),
+  estatisticasSchema: require("./estatisticas_schema"),
   estatisticasRoute: require("./estatisticas_route")
 };

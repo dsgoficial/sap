@@ -18,7 +18,6 @@ const {
   AppError,
   errorHandler,
   sendJsonAndLogMiddleware,
-  asyncHandler,
   httpCode
 } = require("./utils");
 
@@ -59,17 +58,16 @@ app.get("/favicon.ico", function(req, res) {
 //informa que o serviço de dados do SAP está operacional
 app.get(
   "/",
-  asyncHandler(async (req, res, next) => {
-    const dbVersion = await databaseVersion.get();
+  (req, res, next) => {
     return res.sendJsonAndLog(
       true,
       "Sistema de Apoio a produção operacional",
       httpCode.OK,
       {
-        database_version: dbVersion
+        database_version: databaseVersion.nome
       }
     );
-  })
+  }
 );
 
 //Serve SwaggerDoc

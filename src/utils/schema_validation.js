@@ -15,11 +15,18 @@ const validationError = error => {
   );
 };
 
-const middleware = ({ body: bodySchema, params: paramsSchema }) => {
+const middleware = ({ body: bodySchema, query: querySchema, params: paramsSchema }) => {
   return (req, res, next) => {
+    if (querySchema) {
+      const { error } = querySchema.validate(req.query, {
+        abortEarly: false
+      });
+      if (error) {
+        return next(validationError(error, "Query"));
+      }
+    }
     if (paramsSchema) {
       const { error } = paramsSchema.validate(req.params, {
-        stripUnknown: true,
         abortEarly: false
       });
       if (error) {
@@ -28,12 +35,14 @@ const middleware = ({ body: bodySchema, params: paramsSchema }) => {
     }
     if (bodySchema) {
       const { error } = bodySchema.validate(req.body, {
+        stripUnknown: true,
         abortEarly: false
       });
       if (error) {
         return next(validationError(error, "Dados"));
       }
     }
+
     return next();
   };
 };

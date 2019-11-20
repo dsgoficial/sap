@@ -7,5 +7,6 @@ module.exports = {
   asyncHandler: require("./async_handler"),
   errorHandler: require("./error_handler"),
   AppError: require("./app_error"),
-  httpCode: require("./http_code")
+  httpCode: require("./http_code"),
+  qgisProject: require("./qgis_project"),
 };

@@ -37,6 +37,16 @@ JWT_SECRET=${secret}`;
   fs.writeFileSync("config.env", env);
 };
 
+const givePermission = async ({dbUser, dbPassword, dbPort, dbServer, dbName, connection}) => {
+  if(!connection){
+    const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
+
+    connection = pgp(connectionString);
+  }
+  await connection.none(readSqlFile("./er/permissao.sql"),
+  [dbUser]
+  );
+}
 const createDatabase = async (dbUser, dbPassword, dbPort, dbServer, dbName) => {
   const config = {
     user: dbUser,
@@ -50,43 +60,14 @@ const createDatabase = async (dbUser, dbPassword, dbPort, dbServer, dbName) => {
   const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
 
   const db = pgp(connectionString);
-
-  const sql0 = readSqlFile("./er/versao.sql");
-  const sql1 = readSqlFile("./er/dominio.sql");
-  const sql2 = readSqlFile("./er/dgeo.sql");
-  const sql3 = readSqlFile("./er/macrocontrole.sql");
-  const sql4 = readSqlFile("./er/acompanhamento.sql");
-
-  await db.none(sql0);
-  await db.none(sql1);
-  await db.none(sql2);
-  await db.none(sql3);
-  await db.none(sql4);
-
-  await db.none(
-    `
-  GRANT USAGE ON schema public TO $1:name;
-  GRANT SELECT ON ALL TABLES IN SCHEMA public TO $1:name;
-
-  GRANT USAGE ON schema dominio TO $1:name;
-  GRANT SELECT ON ALL TABLES IN SCHEMA dominio TO $1:name;
-
-  GRANT USAGE ON SCHEMA dgeo TO $1:name;
-  GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;
-  GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA dgeo TO $1:name;
-
-  GRANT USAGE ON SCHEMA macrocontrole TO $1:name;
-  GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO $1:name;
-  GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
-  GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA macrocontrole TO $1:name;
-
-  GRANT USAGE ON schema acompanhamento TO $1:name;
-  GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA acompanhamento TO $1:name;
-  GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA acompanhamento TO $1:name;
-  GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA acompanhamento TO $1:name;
-  `,
-    [dbUser]
-  );
+  await db.tx(t=> {
+    await t.none(readSqlFile("./er/versao.sql"));
+    await t.none(readSqlFile("./er/dominio.sql"));
+    await t.none(readSqlFile("./er/dgeo.sql"));
+    await t.none(readSqlFile("./er/macrocontrole.sql"));
+    await t.none(readSqlFile("./er/acompanhamento.sql"));
+    await givePermission({connection: t})
+  })
 };
 
 const handleError = error => {
@@ -193,6 +174,10 @@ const createConfig = async () => {
       await createDatabase(dbUser, dbPassword, dbPort, dbServer, dbName);
 
       console.log("Banco de dados do SAP criado com sucesso!".blue);
+    } else {
+      await givePermission({dbUser, dbPassword, dbPort, dbServer, dbName})
+
+      console.log(`Permissão ao usuário ${dbUser} adicionada com sucesso`.blue);
     }
 
     createDotEnv(port, dbServer, dbPort, dbName, dbUser, dbPassword);
