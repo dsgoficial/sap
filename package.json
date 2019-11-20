@@ -15,7 +15,7 @@
     "dev": "nodemon src/index.js",
     "production": "pm2 start src/index.js --name sap",
     "config": "node create_config.js",
-    "generate-docs": "./node_modules/.bin/jsdoc -c ./jsdoc/jsdoc_config.js ./jsdoc/README.md -t ./jsdoc/templates/custom"
+    "generate-docs": "./node_modules/.bin/documentation build src/** -f html -o src/js_docs"
   },
   "keywords": [
     "Controle de Produção",
@@ -32,6 +32,7 @@
     "body-parser": "^1.19.0",
     "colors": "^1.4.0",
     "cors": "^2.8.5",
+    "documentation": "^12.1.4",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-rate-limit": "^5.0.0",
