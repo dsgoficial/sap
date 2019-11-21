@@ -37,6 +37,17 @@ JWT_SECRET=${secret}`;
   fs.writeFileSync("config.env", env);
 };
 
+/**
+ *
+ * @async
+ * @param {object} config
+ * @param {string} [config.dbUser]
+ * @param {string} [config.dbPassword]
+ * @param {string} [config.dbPort]
+ * @param {string} [config.dbServer]
+ * @param {string} [config.dbName]
+ * @param {*} [config.connection]
+ */
 const givePermission = async ({dbUser, dbPassword, dbPort, dbServer, dbName, connection}) => {
   if(!connection){
     const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
@@ -60,7 +71,7 @@ const createDatabase = async (dbUser, dbPassword, dbPort, dbServer, dbName) => {
   const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
 
   const db = pgp(connectionString);
-  await db.tx(t=> {
+  await db.tx(async t=> {
     await t.none(readSqlFile("./er/versao.sql"));
     await t.none(readSqlFile("./er/dominio.sql"));
     await t.none(readSqlFile("./er/dgeo.sql"));

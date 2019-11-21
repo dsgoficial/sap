@@ -4,7 +4,15 @@ const AppError = require("./app_error");
 
 const httpCode = require("./http_code");
 
-const validationError = error => {
+
+/**
+ * Retorna objeto de erro da validação realizada pelo middleware do Joi
+ *
+ * @param {object} error - Objeto de erro retornado pelo Joi
+ * @param {string} context - Em qual tipo de entrada foi realizada a validação
+ * @returns {AppError} Objeto de erro da validação
+ */
+const validationError = (error, context) => {
   const { details } = error;
   const message = details.map(i => i.message).join(",");
 
@@ -15,6 +23,15 @@ const validationError = error => {
   );
 };
 
+/**
+ *
+ *
+ * @param {object} schema - Objeto com schemas de body, query e params
+ * @param {object} [schema.body] - Schema do Joi para validação do body
+ * @param {object} [schema.query] - Schema do Joi para validação da query
+ * @param {object} [schema.params] - Schema do Joi para validação dos params
+ * @returns {RequestHandler} Middleware de validação utilizando Joi
+ */
 const middleware = ({ body: bodySchema, query: querySchema, params: paramsSchema }) => {
   return (req, res, next) => {
     if (querySchema) {

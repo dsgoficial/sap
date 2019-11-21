@@ -247,7 +247,7 @@ const getInfoModelsQGIS = async (connection, subfaseId) => {
   return result;
 };
 
-const getInfoLinhagem = async (connection, subfaseId, atividadeId) => {
+const getInfoLinhagem = async (connection, subfaseId, atividadeId, etapaCode) => {
   const perfil_linhagem = await connection.oneOrNone(
     "SELECT tipo_exibicao_id FROM macrocontrole.perfil_linhagem WHERE subfase_id = $1 LIMIT 1",
     [subfaseId]
@@ -255,10 +255,10 @@ const getInfoLinhagem = async (connection, subfaseId, atividadeId) => {
   let linhagem;
   if (
     perfil_linhagem &&
-    ((perfil_linhagem.tipo_exibicao_id == 2 && dadosut.etapa_code == 2) ||
+    ((perfil_linhagem.tipo_exibicao_id == 2 && etapaCode == 2) ||
       perfil_linhagem.tipo_exibicao_id == 3)
   ) {
-    linhagem = await t.any(
+    linhagem = await connection.any(
       `SELECT a_ant.data_inicio, a_ant.data_fim, u.nome_guerra, tpg.nome_abrev AS posto_grad,
         replace(etapa.nome || ' - ' || etapa.numero, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
         FROM macrocontrole.atividade AS a
@@ -277,7 +277,7 @@ const getInfoLinhagem = async (connection, subfaseId, atividadeId) => {
       [atividadeId]
     );
   } else {
-    linhagem = await t.any(
+    linhagem = await connection.any(
       `SELECT a_ant.data_inicio, a_ant.data_fim,
         replace(etapa.nome || ' - ' || etapa.numero, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
         FROM macrocontrole.atividade AS a
@@ -429,7 +429,8 @@ controller.dadosProducao = async atividadeId => {
     info.atividade.linhagem = await getInfoLinhagem(
       t,
       dadosut.subfase_id,
-      atividadeId
+      atividadeId,
+      dadosut.etapa_code
     );
 
     info.atividade.requisitos = await getInfoRequisitos(t, dadosut.subfase_id);

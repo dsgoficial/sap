@@ -149,6 +149,7 @@ INNER JOIN macrocontrole.lote AS l ON l.id = ativ.lote_id
 GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.lote_id
 ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.lote_id;
 
+
 CREATE VIEW acompanhamento.atividades_em_execucao AS
 SELECT ROW_NUMBER () OVER (ORDER BY ee.data_inicio) AS id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, l.nome AS lote, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,
@@ -194,38 +195,10 @@ WHERE ee.tipo_situacao_id = 4 --finalizada
 ORDER BY ee.data_fim DESC
 LIMIT 100;
 
-CREATE VIEW acompanhamento.atividades_bloqueadas AS
-SELECT atividade_id, ut.id as unidade_trabalho_id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+CREATE MATERIALIZED VIEW acompanhamento.atividades_bloqueadas AS
+SELECT row_number() OVER (ORDER BY atividade_id) as id, atividade_id, ut.id as unidade_trabalho_id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome, motivo, ut.geom
 FROM (
-SELECT a.id AS atividade_id, 'Unidade de trabalho não disponível. Atividade ' || situacao AS motivo
-        FROM (
-          SELECT id, etapa_id, unidade_trabalho_id, situacao
-        FROM (
-          SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant, ts.nome as situacao
-          FROM macrocontrole.atividade AS ee
-          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-          INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
-		  INNER JOIN dominio.tipo_situacao AS ts ON ts.code = ee.tipo_situacao_id
-          LEFT JOIN
-          (
-            SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
-            INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-            WHERE ee.tipo_situacao_id in (1,2,3,4)
-          ) 
-          AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
-          AND se.ordem > ee_ant.ordem
-          WHERE ee.tipo_situacao_id in (1,2,3)
-        ) AS ativ
-          GROUP BY id, etapa_id, unidade_trabalho_id, situacao
-          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
-      ) AS a  
-INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
-WHERE ut.disponivel IS FALSE
-UNION 
 SELECT a.id AS atividade_id, 'Atividade requer operadores distintos, porém a atividade só pode ser executada por um operador' AS motivo
 FROM (
 SELECT id
@@ -326,7 +299,7 @@ LEFT JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_i
 LEFT JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
 WHERE ppo.usuario_id IS NULL
 UNION
-SELECT a.id AS atividade_id, 'Restrição de usuários iguais e usuário não ativo ou como perda de recuros humano' AS motivo
+SELECT a.id AS atividade_id, 'Restrição de usuários iguais e usuário não ativo ou como perda de recurso humano' AS motivo
         FROM (
           SELECT id, etapa_id, unidade_trabalho_id
         FROM (
@@ -367,6 +340,10 @@ INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
 INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id;
 
+CREATE INDEX atividades_bloqueadas_geom
+    ON acompanhamento.atividades_bloqueadas USING gist
+    (geom)
+    TABLESPACE pg_default;
 
 CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_subfase()
   RETURNS trigger AS
