@@ -6,61 +6,23 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE SCHEMA macrocontrole;
 
--- Tipo do perfil de acesso ao controle macro
-CREATE TABLE macrocontrole.tipo_perfil_sistema(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_perfil_sistema (code,nome) VALUES
-(1, 'Visualizador'),
-(2, 'Operador'),
-(3, 'Gerente de Fluxo'),
-(4, 'Chefe Seção'),
-(5, 'Administrador'); 
-
--- Tabela que associa os usuarios ao perfil
-CREATE TABLE macrocontrole.usuario_perfil_sistema(
-  id SERIAL NOT NULL PRIMARY KEY,
-  tipo_perfil_sistema_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perfil_sistema (code),
-  usuario_id INTEGER NOT NULL UNIQUE REFERENCES dgeo.usuario (id)
-);
-
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE --conforme bdgex
 );
 
--- Tipos de produtos previstos na PCDG
-CREATE TABLE macrocontrole.tipo_produto(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_produto (code, nome) VALUES
-(1, 'Conjunto de dados geoespaciais vetoriais'),
-(2, 'Carta Topográfica'),
-(3, 'Carta Ortoimagem'),
-(4, 'Ortoimagem'),
-(5, 'Modelo Digital de Superfície'),
-(6, 'Modelo Digital de Terreno'),
-(7, 'Carta Temática'),
-(8, 'Conjunto de dados geoespaciais vetoriais - MGCP'),
-(9, 'Fototriangulação'),
-(10, 'Imagem aérea/satélite'),
-(11, 'Ponto de controle');
-
 CREATE TABLE macrocontrole.linha_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
-	tipo_produto_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_produto (code)
+	tipo_produto_id INTEGER NOT NULL REFERENCES dominio.tipo_produto (code),
+	UNIQUE(nome,projeto_id)
 );
 
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	uuid uuid NOT NULL DEFAULT uuid_generate_v4(),
-	nome VARCHAR(255) NOT NULL,
+	uuid text NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
+	nome VARCHAR(255),
 	mi VARCHAR(255),
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
@@ -73,48 +35,23 @@ CREATE INDEX produto_geom
     (geom)
     TABLESPACE pg_default;
 
--- Fase é somente para agrupar as Subfases
--- Deve ser correspondente as fases do RTM e a fases previstas no metadado do BDGEx
--- Adicionar outras fases do RTM
-CREATE TABLE macrocontrole.tipo_fase(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_fase (code, nome) VALUES
-(1, 'Digitalização'),
-(2, 'Reambulação'),
-(3, 'Validação'),
-(4, 'Edição'),
-(5, 'Área Contínua'),
-(6, 'Carregamento BDGEx'),
-(7, 'Vetorização'),
-(8, 'Avaliação imagens'),
-(9, 'Avaliação ortoimagens'),
-(10, 'Avaliação MDS'),
-(11, 'Avaliação MDT'),
-(12, 'Avaliação de dados vetoriais'),
-(13, 'Avaliação de cartas topográficas'),
-(14, 'Avaliação de aerotriangulação'),
-(15, 'Generalização');
-
 -- Associa uma fase prevista no BDGEx ao projeto
 -- as combinações (tipo_fase, linha_producao_id) são unicos
 CREATE TABLE macrocontrole.fase(
     id SERIAL NOT NULL PRIMARY KEY,
-    tipo_fase_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_fase (code),
+    tipo_fase_id INTEGER NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
     ordem INTEGER NOT NULL, -- as fases são ordenadas dentro de uma linha de produção de um projeto
     UNIQUE (linha_producao_id, tipo_fase_id)
 );
 
 --Meta anual estabelecida no PIT de uma fase
-CREATE TABLE macrocontrole.meta_anual(
-	id SERIAL NOT NULL PRIMARY KEY,
-	meta INTEGER NOT NULL,
-    ano INTEGER NOT NULL,
-    fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
-);
+--CREATE TABLE macrocontrole.meta_anual(
+--	id SERIAL NOT NULL PRIMARY KEY,
+--	meta INTEGER NOT NULL,
+--    ano INTEGER NOT NULL,
+--    fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
+--);
 
 -- Unidade de produção do controle de produção
 -- as combinações (nome,fase_id) são unicos
@@ -123,213 +60,276 @@ CREATE TABLE macrocontrole.subfase(
 	nome VARCHAR(255) NOT NULL,
 	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	ordem INTEGER NOT NULL, -- as subfases são ordenadas dentre de uma fase. Isso não impede o paralelismo de subfases. É uma ordenação para apresentação
+	observacao text,
 	UNIQUE (nome, fase_id)
 );
 
-CREATE TABLE macrocontrole.tipo_processo(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_processo (code, nome) VALUES
-(1, 'Execução'),
-(2, 'Revisão'),
-(3, 'Correção');
-
-CREATE TABLE macrocontrole.tipo_etapa(
+--restrição para as subfases serem do mesmo projeto
+CREATE TABLE macrocontrole.pre_requisito_subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	tipo_processo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_processo (code)
+	tipo_pre_requisito_id INTEGER NOT NULL REFERENCES dominio.tipo_pre_requisito (code),
+	subfase_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	subfase_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(subfase_anterior_id, subfase_posterior_id)
 );
 
-INSERT INTO macrocontrole.tipo_etapa (nome, tipo_processo_id) VALUES
-('Execução', 1),
-('Revisão 1', 2),
-('Correção 1', 3),
-('Revisão 2', 2),
-('Correção 2', 3),
-('Revisão 3', 2),
-('Correção 3', 3),
-('Revisão por pares 1', 3),
-('Revisão por pares 2', 3),
-('Revisão por amostragem', 2),
-('Revisão por pares 3', 3),
-('Validação', 1),
-('Ligação', 1),
-('Execução Delimitador', 1),
-('Execução Centroide', 1),
-('Preparo', 1),
-('Atributação', 1);
+-- Constraint
+CREATE OR REPLACE FUNCTION macrocontrole.verifica_pre_requisito_subfase()
+  RETURNS trigger AS
+$BODY$
+    DECLARE nr_erro integer;
+    BEGIN
+
+	SELECT count(*) into nr_erro from macrocontrole.pre_requisito_subfase AS prs
+	INNER JOIN macrocontrole.subfase AS s1 ON s1.id = prs.subfase_anterior_id
+	INNER JOIN macrocontrole.fase AS f1 ON f1.id = s1.fase_id
+	INNER JOIN macrocontrole.linha_producao AS l1 ON l1.id = f1.linha_producao_id
+	INNER JOIN macrocontrole.subfase AS s2 ON s2.id = prs.subfase_posterior_id
+	INNER JOIN macrocontrole.fase AS f2 ON f2.id = s2.fase_id
+	INNER JOIN macrocontrole.linha_producao AS l2 ON l2.id = f2.linha_producao_id
+	WHERE l1.projeto_id != l2.projeto_id;
+
+	IF nr_erro > 0 THEN
+		RAISE EXCEPTION 'O pré requisito deve ser entre subfases do mesmo projeto.';
+	END IF;
+
+	RETURN NEW;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.verifica_pre_requisito_subfase()
+  OWNER TO postgres;
+
+CREATE TRIGGER verifica_pre_requisito_subfase
+BEFORE UPDATE OR INSERT ON macrocontrole.pre_requisito_subfase
+FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.verifica_pre_requisito_subfase();
+
+--
 
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_etapa_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_etapa (id),
+	tipo_etapa_id INTEGER NOT NULL REFERENCES dominio.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	ordem INTEGER NOT NULL -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
+	ordem INTEGER NOT NULL, -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
+	observacao text,
+	CHECK (
+		tipo_etapa_id <> 1 or ordem = 1 -- Se tipo_etapa_id for 1 obrigatoriamente ordem tem que ser 1
+	),
+	UNIQUE (subfase_id, ordem)-- restrição para não ter ordem repetida para subfase
 );
+
+-- Constraint
+CREATE OR REPLACE FUNCTION macrocontrole.etapa_verifica_rev_corr()
+  RETURNS trigger AS
+$BODY$
+    DECLARE nr_erro integer;
+    BEGIN
+
+	WITH prev as (SELECT tipo_etapa_id, lag(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id ORDER BY ordem) as prev_tipo_etapa_id
+	FROM macrocontrole.etapa),
+	prox as (SELECT tipo_etapa_id, lead(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id ORDER BY ordem) as prox_tipo_etapa_id
+	FROM macrocontrole.etapa)
+	SELECT count(*) into nr_erro FROM (
+		SELECT 1 FROM prev WHERE tipo_etapa_id = 3 and prev_tipo_etapa_id != 2
+	    UNION
+		SELECT 1 FROM prox WHERE tipo_etapa_id = 2 and (prox_tipo_etapa_id != 3 OR prox_tipo_etapa_id IS NULL)
+	) as foo;
+
+	IF nr_erro > 0 THEN
+		RAISE EXCEPTION 'Etapa de Correção deve ser imediatamente após a uma etapa de Revisão.';
+	END IF;
+
+    RETURN NULL
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.etapa_verifica_rev_corr()
+  OWNER TO postgres;
+
+CREATE TRIGGER etapa_verifica_rev_corr
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
+
+--
 
 CREATE TABLE macrocontrole.requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
-  ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma etapa
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+    ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma etapa
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
 CREATE TABLE macrocontrole.perfil_fme(
 	id SERIAL NOT NULL PRIMARY KEY,
 	servidor VARCHAR(255) NOT NULL,
 	porta VARCHAR(255) NOT NULL,
-	categoria VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	rotina VARCHAR(255) NOT NULL,
+	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(servidor,porta,rotina,subfase_id)
 );
 
---CREATE TABLE macrocontrole.perfil_workspace_dsgtools(
---	id SERIAL NOT NULL PRIMARY KEY,
---	nome VARCHAR(255) NOT NULL,
---	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
---);
---TODO: configurar outras opções do DSGTools
-
-CREATE TABLE macrocontrole.menu_profile(
+CREATE TABLE macrocontrole.perfil_configuracao_qgis(
 	id SERIAL NOT NULL PRIMARY KEY,
-    nome_do_perfil text NOT NULL,
-    descricao text,
-    perfil json NOT NULL,
-    ordem_menu json NOT NULL
+	tipo_configuracao_id INTEGER NOT NULL REFERENCES dominio.tipo_configuracao (code),
+	parametros TEXT,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(tipo_configuracao_id,subfase_id)
 );
 
-CREATE TABLE macrocontrole.layer_styles(
-	id SERIAL NOT NULL PRIMARY KEY,
-	f_table_catalog character varying,
-	f_table_schema character varying,
-	f_table_name character varying,
-	f_geometry_column character varying,
-	stylename character varying(255),
-	styleqml text,
-	stylesld xml,
-	useasdefault boolean,
-	description text,
-	owner character varying(30),
-	ui xml,
-	update_time timestamp without time zone DEFAULT now()
-);
-
-CREATE TABLE macrocontrole.layer_rules(
-	id SERIAL NOT NULL PRIMARY KEY,
-    camada TEXT NOT NULL,
-    tipo_regra TEXT NOT NULL,
-    nome TEXT NOT NULL,
-    cor_rgb TEXT NOT NULL,
-    regra TEXT NOT NULL,
-    tipo_estilo TEXT NOT NULL,
-    atributo TEXT NOT NULL,
-    descricao TEXT NOT NULL,
-    ordem INTEGER NOT NULL
-);
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	menu_revisao BOOLEAN NOT NULL DEFAULT FALSE,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
-	exibir_linhagem BOOLEAN NOT NULL DEFAULT TRUE,
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	tipo_exibicao_id INTEGER NOT NULL REFERENCES dominio.tipo_exibicao (code),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	atributos_linhagem TEXT,
+	UNIQUE(subfase_id)
 );
 
 CREATE TABLE macrocontrole.camada(
 	id SERIAL NOT NULL PRIMARY KEY,
+	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
 	alias VARCHAR(255),
-	documentacao VARCHAR(255)
+	documentacao VARCHAR(255),
+	UNIQUE(schema,nome)
 );
 
 CREATE TABLE macrocontrole.atributo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
 	nome VARCHAR(255) NOT NULL,
-	alias VARCHAR(255)
+	alias VARCHAR(255),
+	UNIQUE(camada_id,nome)
 );
 
---TODO: outras configurações de camadas, como bloquear certos atributos, 
---filtros adicionais, ou bloquear a camada como um todo
 CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	escala_trabalho INTEGER,
+	atributo_filtro_subfase VARCHAR(255),
+	camada_apontamento BOOLEAN NOT NULL DEFAULT FALSE,
+	atributo_situacao_correcao VARCHAR(255),
+	atributo_justificativa_apontamento VARCHAR(255),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	CHECK (
+		(camada_apontamento IS TRUE AND atributo_situacao_correcao IS NOT NULL AND atributo_justificativa_apontamento IS NOT NULL) OR
+		(camada_apontamento IS FALSE AND atributo_situacao_correcao IS NULL AND atributo_justificativa_apontamento IS NULL)
+	),
+	UNIQUE(camada_id, subfase_id)
+);
+
+CREATE TABLE macrocontrole.perfil_model_qgis(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL,
+	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.banco_dados(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	servidor VARCHAR(255) NOT NULL,
-	porta VARCHAR(255) NOT NULL
+	porta VARCHAR(255) NOT NULL,
+	UNIQUE(nome,servidor,porta)
 );
-
-CREATE TABLE macrocontrole.tipo_monitoramento(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_monitoramento (code, nome) VALUES
-(1, 'Monitoramento de tela'),
-(2, 'Monitoramento de feição'),
-(3, 'Monitoramento de apontamento');
 
 CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_monitoramento_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_monitoramento (code),
-	camada_id INTEGER REFERENCES macrocontrole.camada (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
+	tipo_monitoramento_id INTEGER NOT NULL REFERENCES dominio.tipo_monitoramento (code),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(tipo_monitoramento_id, subfase_id)
 );
-
-CREATE TABLE macrocontrole.tipo_restricao(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_restricao (code, nome) VALUES
-(1, 'Operadores distintos'),
-(2, 'Operadores iguais'),
-(3, 'Operadores no mesmo turno');
 
 CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),
+	tipo_restricao_id INTEGER NOT NULL REFERENCES dominio.tipo_restricao (code),
 	etapa_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-	etapa_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)	
+	etapa_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+	UNIQUE(etapa_anterior_id, etapa_posterior_id)	
 );
+
+-- Constraint
+CREATE OR REPLACE FUNCTION macrocontrole.verifica_restricao_etapa()
+  RETURNS trigger AS
+$BODY$
+    DECLARE nr_erro integer;
+    BEGIN
+
+	SELECT count(*) into nr_erro from macrocontrole.restricao_etapa AS re
+	INNER JOIN macrocontrole.etapa AS e1 ON e1.id = re.etapa_anterior_id
+	INNER JOIN macrocontrole.subfase AS s1 ON s1.id = e1.subfase_id
+	INNER JOIN macrocontrole.fase AS f1 ON f1.id = s1.fase_id
+	INNER JOIN macrocontrole.linha_producao AS l1 ON l1.id = f1.linha_producao_id
+	INNER JOIN macrocontrole.etapa AS e2 ON e2.id = re.etapa_posterior_id
+	INNER JOIN macrocontrole.subfase AS s2 ON s2.id = e2.subfase_id
+	INNER JOIN macrocontrole.fase AS f2 ON f2.id = s2.fase_id
+	INNER JOIN macrocontrole.linha_producao AS l2 ON l2.id = f2.linha_producao_id
+	WHERE l1.projeto_id != l2.projeto_id;
+
+	IF nr_erro > 0 THEN
+		RAISE EXCEPTION 'A restrição deve ser entre etapas do mesmo projeto.';
+	END IF;
+
+	RETURN NEW;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.verifica_restricao_etapa()
+  OWNER TO postgres;
+
+CREATE TRIGGER verifica_restricao_etapa
+BEFORE UPDATE OR INSERT ON macrocontrole.restricao_etapa
+FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.verifica_restricao_etapa();
+
+--
 
 CREATE TABLE macrocontrole.lote(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
+	nome VARCHAR(255) UNIQUE NOT NULL,
 	prioridade INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255),
-  	geom geometry(POLYGON, 4674) NOT NULL,
+	nome VARCHAR(255) NOT NULL,
+    geom geometry(POLYGON, 4674) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	prioridade INTEGER NOT NULL,
+	observacao text,
 	UNIQUE (nome, subfase_id)
 );
 
@@ -344,30 +344,15 @@ CREATE INDEX unidade_trabalho_geom
 
 CREATE TABLE macrocontrole.grupo_insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
+	nome VARCHAR(255) UNIQUE NOT NULL
 );
-
-CREATE TABLE macrocontrole.tipo_insumo(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_insumo (code, nome) VALUES
-(1, 'Arquivo (download)'),
-(2, 'Arquivo (via rede)'),
-(3, 'Banco de dados PostGIS'),
-(4, 'Insumo físico'),
-(5, 'URL'),
-(6, 'Serviço WMS'),
-(7, 'Serviço WFS'),
-(8, 'Projeto QGIS');
 
 CREATE TABLE macrocontrole.insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	caminho VARCHAR(255) NOT NULL,
 	epsg VARCHAR(5),
-	tipo_insumo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_insumo (code),
+	tipo_insumo_id INTEGER NOT NULL REFERENCES dominio.tipo_insumo (code),
 	grupo_insumo_id INTEGER NOT NULL REFERENCES macrocontrole.grupo_insumo (id),
 	geom geometry(POLYGON, 4674) --se for não espacial a geometria é nula
 );
@@ -380,64 +365,137 @@ CREATE INDEX insumo_geom
 CREATE TABLE macrocontrole.insumo_unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
-	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id)
+	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id),
+	caminho_padrao VARCHAR(255),
+	UNIQUE(unidade_trabalho_id, insumo_id)
 );
-
-CREATE TABLE macrocontrole.tipo_situacao(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255)
-);
-
-INSERT INTO macrocontrole.tipo_situacao (code, nome) VALUES
-(1, 'Não iniciada'),
-(2, 'Em execução'),
-(3, 'Pausada'),
-(4, 'Finalizada'),
-(5, 'Não será executada'),
-(6, 'Não finalizada');
 
 CREATE TABLE macrocontrole.atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
-	etapa_id INTEGER REFERENCES macrocontrole.etapa (id),
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	usuario_id INTEGER REFERENCES dgeo.usuario (id),
-	tipo_situacao_id INTEGER REFERENCES macrocontrole.tipo_situacao (code),
+	tipo_situacao_id INTEGER NOT NULL REFERENCES dominio.tipo_situacao (code),
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone,
-	observacao text
+	observacao text,
+	tempo_execucao_microcontrole integer,
+	tempo_execucao_estimativa integer
 );
 
 CREATE INDEX atividade_etapa_id
     ON macrocontrole.atividade
     (etapa_id);
 
--- (etapa_id, unidade_trabalho_id) deve ser unico para tipo_situacao !=6
+-- (etapa_id, unidade_trabalho_id) deve ser unico para tipo_situacao !=5
 CREATE UNIQUE INDEX atividade_unique_index
 ON macrocontrole.atividade (etapa_id, unidade_trabalho_id) 
-WHERE tipo_situacao_id != 6;
+WHERE tipo_situacao_id in (1,2,3,4);
+
+-- Constraint
+CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase()
+  RETURNS trigger AS
+$BODY$
+    DECLARE nr_erro integer;
+    BEGIN
+		SELECT count(*) into nr_erro AS ut_sufase_id from macrocontrole.atividade AS a
+		INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+		INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+		WHERE e.subfase_id != ut.subfase_id;
+
+		IF nr_erro > 0 THEN
+			RAISE EXCEPTION 'Etapa e Unidade de Trabalho não devem possuir subfases distintas.';
+		END IF;
+    RETURN NEW;
 
 
--- Tabela que associa um operador as operações que pode desempenhar
--- O numero da prioridade é unico por operador
--- Não pode associar um operador a mesma etapa duas vezes
-CREATE TABLE macrocontrole.tipo_rotina(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION macrocontrole.atividade_verifica_subfase()
+  OWNER TO postgres;
 
-INSERT INTO macrocontrole.tipo_rotina (code, nome) VALUES
-(1, 'outOfBoundsAngles'),
-(2, 'invalidGeometry'),
-(3, 'notSimpleGeometry');
+CREATE TRIGGER atividade_verifica_subfase
+BEFORE UPDATE OR INSERT ON macrocontrole.atividade
+FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
 
-CREATE TABLE macrocontrole.perfil_rotina(
-	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_rotina_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_rotina (code),
-	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
-	camada_apontamento_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id), 
-	parametros VARCHAR(255),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id)
-);
+--
+
+CREATE OR REPLACE FUNCTION macrocontrole.tempo_execucao_estimativa(i integer) RETURNS integer AS $$
+DECLARE
+   tempo_minutos integer;
+BEGIN
+ WITH datas AS (
+        SELECT a.id, COUNT (DISTINCT data_login::date) as nr_dias 
+        FROM macrocontrole.atividade AS a
+        INNER JOIN acompanhamento.login AS l ON l.usuario_id = a.usuario_id
+        WHERE a.id = i
+        AND l.data_login::date >= a.data_inicio::date AND l.data_login::date <= a.data_fim::date
+		GROUP BY a.id
+        ),
+		cte AS (
+        SELECT a.id,
+        CASE 
+        WHEN data_fim::date = data_inicio::date
+        THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio )
+        WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) < 12
+        THEN 0
+        WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) <= 18
+        THEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) +DATE_PART('seconds', data_fim - data_inicio )/60  - 12*60
+        ELSE
+        24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 18*60
+        END AS minutos,
+        CASE
+        WHEN d.nr_dias > 2
+        THEN (d.nr_dias - 2 )*6*60
+        ELSE 0
+        END AS minutos_dias
+        FROM macrocontrole.atividade AS a
+        INNER JOIN datas AS d ON d.id = a.id
+        )
+        SELECT (minutos + minutos_dias) INTO tempo_minutos
+        FROM cte;
+
+        RETURN tempo_minutos;
+END;
+$$ LANGUAGE plpgsql;
+ALTER FUNCTION macrocontrole.tempo_execucao_estimativa(integer)
+  OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION macrocontrole.tempo_execucao_microcontrole(i integer) RETURNS integer AS $$
+DECLARE
+   tempo_minutos integer;
+BEGIN
+		WITH datas AS (
+		SELECT data_inicio AS data FROM macrocontrole.atividade WHERE id = i
+		UNION
+		(SELECT data
+		FROM microcontrole.monitoramento_acao AS ma
+		INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
+		WHERE ma.atividade_id = i AND a.data_inicio < ma.data AND a.data_fim > ma.data
+		ORDER BY data)
+		UNION 
+		SELECT data_fim AS data FROM macrocontrole.atividade WHERE id = i
+		)
+		, dl AS (
+		SELECT data, LAG(data,1) OVER(ORDER BY data) AS previous_data
+		FROM datas
+		)
+		SELECT 
+		round(SUM(CASE 
+		WHEN data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60) < 5
+		THEN (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60)
+		ELSE 0
+        END)) INTO tempo_minutos
+		FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL;
+
+        RETURN tempo_minutos;
+END;
+$$ LANGUAGE plpgsql;
+ALTER FUNCTION macrocontrole.tempo_execucao_microcontrole(integer)
+  OWNER TO postgres;
+--
 
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -463,58 +521,32 @@ CREATE TABLE macrocontrole.fila_prioritaria(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-	prioridade INTEGER NOT NULL
+	prioridade INTEGER NOT NULL,
+	UNIQUE(atividade_id, usuario_id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
  	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
-	prioridade INTEGER NOT NULL
+	prioridade INTEGER NOT NULL,
+	UNIQUE(atividade_id, perfil_producao_id)
 );
-
-CREATE TABLE macrocontrole.tipo_perda_recurso_humano(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_perda_recurso_humano (code, nome) VALUES
-(1, 'Atividades extra PIT'),
-(2, 'Atividades militares'),
-(3, 'Atividades administrativas'),
-(4, 'Problemas técnicos'),
-(5, 'Feriado'),
-(6, 'Férias'),
-(7, 'Dispensa por motivo de saúde'),
-(8, 'Dispensa como recompensa'),
-(9, 'Dispensa por regresso de atividade de campo'),
-(10, 'Designação para realizar curso / capacitação'),
-(11, 'Designação para ministrar curso / capacitação'),
-(12, 'Designação para participação em eventos');
 
 CREATE TABLE macrocontrole.perda_recurso_humano(
 	id SERIAL NOT NULL PRIMARY KEY,
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
- 	tipo_perda_recurso_humano_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_perda_recurso_humano (code),
-	horas REAL NOT NULL,
-	data DATE NOT NULL
+ 	tipo_perda_recurso_humano_id INTEGER NOT NULL REFERENCES dominio.tipo_perda_recurso_humano (code),
+	horas REAL,
+	data DATE NOT NULL,
+	observacao TEXT
 );
-
-CREATE TABLE macrocontrole.tipo_problema(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO macrocontrole.tipo_problema (code, nome) VALUES
-(1, 'Insumo não é suficiente para execução da atividade'),
-(2, 'Problema em etapa anterior, necessita ser refeita'),
-(3, 'Erro durante execução da atividade atual'),
-(99, 'Outros');
 
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
-	tipo_problema_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_problema (code),
+ 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
+	tipo_problema_id INTEGER NOT NULL REFERENCES dominio.tipo_problema (code),
 	descricao TEXT NOT NULL,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE
 );

@@ -2,7 +2,7 @@ BEGIN;
 
 CREATE SCHEMA metadado;
 
-CREATE TABLE metadado.responsavel_metadado(
+CREATE TABLE metadado.responsavel_produto(
   id SERIAL NOT NULL PRIMARY KEY,
 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	data_inicio timestamp with time zone NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE metadado.palavra_chave(
 CREATE TABLE metadado.documento_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	uuid uuid NOT NULL,
+	uuid text NOT NULL,
 	data TIMESTAMP WITH TIME ZONE NOT NULL,
 	link VARCHAR(255) NOT NULL
 );

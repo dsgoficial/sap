@@ -5,8 +5,8 @@ CREATE SCHEMA avaliacao;
 CREATE TABLE avaliacao.questionario(
   id SERIAL NOT NULL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
-  etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
-  UNIQUE (etapa_id)
+  subfase_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+  UNIQUE (subfase_id)
 );
 
 CREATE TABLE avaliacao.pergunta(

@@ -1,4 +1,3 @@
-"use strict";
 
 /*
   router.get('/rtm', function(req, res, next) {

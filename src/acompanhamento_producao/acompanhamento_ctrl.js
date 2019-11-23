@@ -1,4 +1,3 @@
-"use strict";
 
 /*
   function getRtm(req,res,next){

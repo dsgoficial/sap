@@ -1,5 +1,3 @@
-"use strict";
-
 const { db } = require("../database");
 
 const controller = {};
@@ -15,7 +13,6 @@ xmlTemplate["6"] = "template_mdt.xml";
 xmlTemplate["7"] = "template_carta_tematica.xml";
 
 controller.geraMetadado = async uuid => {
-  
   const produto = await db.oneOrNone(
     `SELECT p.nome, p.mi, p.inom, p.escala, p.geometry, lp.tipo_produto_id,
     proj.nome AS projeto, ip.resumo, ip.proposito, ip.creditos, ip.informacoes_complementares,
@@ -29,7 +26,7 @@ controller.geraMetadado = async uuid => {
     [uuid]
   );
   //descobrir se o produto existe
-  if(!produto){
+  if (!produto) {
     //throw error
   }
   const producao = await db.any(
@@ -44,7 +41,7 @@ controller.geraMetadado = async uuid => {
       FROM macrocontrole.unidade_trabalho AS ut
       INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
       INNER JOIN
-      (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id NOT IN (5,6)) AS a
+      (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
       ON a.unidade_trabalho_id = ut.id
       GROUP BY ut.id, s.fase_id
     ) AS ut
@@ -54,9 +51,10 @@ controller.geraMetadado = async uuid => {
     [uuid]
   );
   //descobrir se o produto está finalizado
-  let finalizado = producao.every(v => {
-    return v.data_fim })
-  if(!finalizado){
+  const finalizado = producao.every(v => {
+    return v.data_fim;
+  });
+  if (!finalizado) {
     //throw error
   }
 
@@ -69,9 +67,9 @@ controller.geraMetadado = async uuid => {
     [uuid]
   );
 
-  let template = xmlTemplate[produto.tipo_produto_id];
+  const template = xmlTemplate[produto.tipo_produto_id];
 
-  let dados = produto;
+  const dados = produto;
   const d = new Date();
   dados.data_metadado = d.toISOString().split("T")[0];
   dados.palavras_chave = palavras_chave;

@@ -2,87 +2,90 @@
 
 const express = require("express");
 const path = require("path");
-
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const helmet = require("helmet");
+const xss = require("xss-clean");
+const hpp = require("hpp");
+const rateLimit = require("express-rate-limit");
+const swaggerUi = require("swagger-ui-express");
+const swaggerJSDoc = require("swagger-jsdoc");
+
+const swaggerOptions = require("./swagger_options");
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+
+const {
+  AppError,
+  errorHandler,
+  sendJsonAndLogMiddleware,
+  httpCode
+} = require("./utils");
+
+const { databaseVersion } = require("./database");
 
 const routes = require("./routes");
-const { sendJsonAndLog } = require("./logger");
 
 const app = express();
-app.disable("x-powered-by");
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json()); //parsear POST em JSON
+app.use(xss()); //sanitize body input
+app.use(hpp()); //protection against parameter polution
 
 //CORS middleware
-app.use(
-  cors({
-    exposedHeaders: [
-      "Origin",
-      "X-Requested-With",
-      "Content-Type",
-      "Accept",
-      "Link",
-      "Location"
-    ]
-  })
-);
+app.use(cors());
 
 //Helmet Protection
 app.use(helmet());
-//Disables cache
+//Disables cache https://helmetjs.github.io/docs/nocache/
 app.use(helmet.noCache());
 
-//Lower case query parameters
-app.use((req, res, next) => {
-  for (let key in req.query) {
-    req.query[key.toLowerCase()] = req.query[key];
-  }
-  next();
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 30 // limit each IP to 30 requests per windowMs
 });
 
-//informa que o serviço de dados do SAP está operacional
-app.get("/", (req, res, next) => {
-  res.status(200).json({
-    sucess: true,
-    message: "Sistema de Apoio a produção operacional"
-  });
-});
+//apply limit all requests
+app.use(limiter);
+
+//Add sendJsonAndLog to res object
+app.use(sendJsonAndLogMiddleware);
 
 //prevent browser from request favicon
 app.get("/favicon.ico", function(req, res) {
-  res.status(204);
+  res.status(httpCode.NoContent);
 });
 
-//Serve APIDoc
-app.use("/docs", express.static(path.join(__dirname, "apidoc")));
+//informa que o serviço de dados do SAP está operacional
+app.get(
+  "/",
+  (req, res, next) => {
+    return res.sendJsonAndLog(
+      true,
+      "Sistema de Apoio a produção operacional",
+      httpCode.OK,
+      {
+        database_version: databaseVersion.nome
+      }
+    );
+  }
+);
 
+//Serve SwaggerDoc
+app.use("/api_docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+//Serve JSDocs
+app.use("/js_docs", express.static(path.join(__dirname, "js_docs")));
+
+//All routes used by the App
 routes(app);
 
+//Handle missing URL
 app.use((req, res, next) => {
-  const err = new Error("Not Found");
-  err.status = 404;
-  err.context = "app";
-  err.information = {};
-  err.information.url =
-    req.protocol + "://" + req.get("host") + req.originalUrl;
-  next(err);
+  const err = new AppError("URL não encontrada", httpCode.NotFound);
+  return next(err);
 });
 
 //Error handling
-app.use((err, req, res, next) => {
-  const status = err.status || 500;
-  sendJsonAndLog(
-    false,
-    err.message,
-    err.context,
-    err.information,
-    res,
-    status,
-    null
-  );
-});
+app.use(errorHandler);
 
 module.exports = app;

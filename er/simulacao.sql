@@ -8,8 +8,8 @@ CREATE TABLE simulacao.usuario(
   nome_guerra VARCHAR(255) NOT NULL,
   login VARCHAR(255) UNIQUE NOT NULL,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
-  tipo_turno_id INTEGER NOT NULL REFERENCES dgeo.tipo_turno (code),
-  tipo_posto_grad_id INTEGER NOT NULL REFERENCES dgeo.tipo_posto_grad (code)
+  tipo_turno_id INTEGER NOT NULL REFERENCES dominio.tipo_turno (code),
+  tipo_posto_grad_id INTEGER NOT NULL REFERENCES dominio.tipo_posto_grad (code)
 );
 
 CREATE TABLE simulacao.projeto(
@@ -21,12 +21,12 @@ CREATE TABLE simulacao.linha_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	projeto_id INTEGER NOT NULL REFERENCES simulacao.projeto (id),
-	tipo_produto_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_produto (code)
+	tipo_produto_id INTEGER NOT NULL REFERENCES dominio.tipo_produto (code)
 );
 
 CREATE TABLE simulacao.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	uuid uuid NOT NULL DEFAULT uuid_generate_v4(),
+	uuid text NOT NULL DEFAULT uuid_generate_v4(),
 	nome VARCHAR(255) NOT NULL,
 	mi VARCHAR(255),
 	inom VARCHAR(255),
@@ -42,7 +42,7 @@ CREATE INDEX produto_geom
 
 CREATE TABLE simulacao.fase(
     id SERIAL NOT NULL PRIMARY KEY,
-    tipo_fase_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_fase (code),
+    tipo_fase_id INTEGER NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES simulacao.linha_producao (id),
     ordem INTEGER NOT NULL,
     UNIQUE (linha_producao_id, tipo_fase_id)
@@ -56,22 +56,25 @@ CREATE TABLE simulacao.subfase(
 	UNIQUE (nome, fase_id)
 );
 
-CREATE TABLE simulacao.tipo_etapa(
+CREATE TABLE simulacao.pre_requisito_subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	tipo_processo_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_processo (code)
+	tipo_pre_requisito_id INTEGER NOT NULL REFERENCES dominio.tipo_pre_requisito (code),
+	subfase_anterior_id INTEGER NOT NULL REFERENCES simulacao.subfase (id),
+	subfase_posterior_id INTEGER NOT NULL REFERENCES simulacao.subfase (id)	
 );
 
 CREATE TABLE simulacao.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_etapa_id INTEGER NOT NULL REFERENCES simulacao.tipo_etapa (id),
+	tipo_etapa_id INTEGER NOT NULL REFERENCES dominio.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES simulacao.subfase (id),
-	ordem INTEGER NOT NULL
+	ordem INTEGER NOT NULL,
+	observacao text,
+	UNIQUE (subfase_id, ordem)
 );
 
 CREATE TABLE simulacao.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_restricao_id INTEGER NOT NULL REFERENCES macrocontrole.tipo_restricao (code),
+	tipo_restricao_id INTEGER NOT NULL REFERENCES dominio.tipo_restricao (code),
 	etapa_anterior_id INTEGER NOT NULL REFERENCES simulacao.etapa (id),
 	etapa_posterior_id INTEGER NOT NULL REFERENCES simulacao.etapa (id)	
 );
@@ -105,14 +108,14 @@ CREATE TABLE simulacao.atividade(
 	etapa_id INTEGER REFERENCES simulacao.etapa (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES simulacao.unidade_trabalho (id),
 	usuario_id INTEGER REFERENCES simulacao.usuario (id),
-	tipo_situacao_id INTEGER REFERENCES macrocontrole.tipo_situacao (code),
+	tipo_situacao_id INTEGER REFERENCES dominio.tipo_situacao (code),
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone
 );
 
 CREATE UNIQUE INDEX atividade_unique_index
 ON simulacao.atividade (etapa_id, unidade_trabalho_id) 
-WHERE tipo_situacao_id != 6;
+WHERE tipo_situacao_id in (1,2,3,4);
 
 CREATE TABLE simulacao.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,

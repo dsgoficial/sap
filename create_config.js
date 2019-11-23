@@ -2,10 +2,11 @@
 
 const fs = require("fs");
 const inquirer = require("inquirer");
-const chalk = require("chalk");
+const colors = require("colors"); //colors for console
 const pgtools = require("pgtools");
 const path = require("path");
 const promise = require("bluebird");
+const crypto = require("crypto");
 
 const initOptions = {
   promiseLib: promise
@@ -13,222 +14,191 @@ const initOptions = {
 
 const pgp = require("pg-promise")(initOptions);
 
-const sql1 = fs.readFileSync(path.resolve("./er/dgeo.sql"), "utf-8").trim();
-const sql2 = fs
-  .readFileSync(path.resolve("./er/macrocontrole.sql"), "utf-8")
-  .trim();
-const sql3 = fs
-  .readFileSync(path.resolve("./er/acompanhamento.sql"), "utf-8")
-  .trim();
-const sql4 = fs
-  .readFileSync(path.resolve("./er/microcontrole.sql"), "utf-8")
-  .trim();
+const readSqlFile = file => {
+  const fullPath = path.join(__dirname, file);
+  return new pgp.QueryFile(fullPath, { minify: true });
+};
 
-const sql5 = fs
-  .readFileSync(path.resolve("./er/avaliacao.sql"), "utf-8")
-  .trim();
+const verifyDotEnv = () => {
+  return fs.existsSync("config.env");
+};
 
-const sql6 = fs.readFileSync(path.resolve("./er/metadado.sql"), "utf-8").trim();
+const createDotEnv = (port, dbServer, dbPort, dbName, dbUser, dbPassword) => {
+  const secret = crypto.randomBytes(64).toString("hex");
 
-const sql7 = fs.readFileSync(path.resolve("./er/simulacao.sql"), "utf-8").trim();
+  const env = `PORT=${port}
+dbServer=${dbServer}
+dbPort=${dbPort}
+dbName=${dbName}
+dbUser=${dbUser}
+dbPassword=${dbPassword}
+JWT_SECRET=${secret}`;
 
+  fs.writeFileSync("config.env", env);
+};
 
-const createConfig = () => {
-  console.log(chalk.blue("Sistema de Apoio a Produção"));
-  console.log(chalk.blue("Criação do arquivo de configuração"));
+/**
+ *
+ * @async
+ * @param {object} config
+ * @param {string} [config.dbUser]
+ * @param {string} [config.dbPassword]
+ * @param {string} [config.dbPort]
+ * @param {string} [config.dbServer]
+ * @param {string} [config.dbName]
+ * @param {*} [config.connection]
+ */
+const givePermission = async ({dbUser, dbPassword, dbPort, dbServer, dbName, connection}) => {
+  if(!connection){
+    const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
 
-  let questions = [
-    {
-      type: "input",
-      name: "db_server",
-      message: "Qual o endereço de IP do servidor do banco de dados PostgreSQL?"
-    },
-    {
-      type: "input",
-      name: "db_port",
-      message: "Qual a porta do servidor do banco de dados PostgreSQL?",
-      default: 5432
-    },
-    {
-      type: "input",
-      name: "db_user",
-      message:
-        "Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?",
-      default: "controle_app"
-    },
-    {
-      type: "password",
-      name: "db_password",
-      message: "Qual a senha do usuário do PostgreSQL para interação com o SAP?"
-    },
-    {
-      type: "input",
-      name: "db_name",
-      message: "Qual o nome do banco de dados do SAP?",
-      default: "sap"
-    },
-    {
-      type: "input",
-      name: "port",
-      message: "Qual a porta do serviço do SAP?",
-      default: 3013
-    },
-    {
-      type: "confirm",
-      name: "db_create",
-      message: "Deseja criar o banco de dados do SAP?",
-      default: true
-    }
-  ];
+    connection = pgp(connectionString);
+  }
+  await connection.none(readSqlFile("./er/permissao.sql"),
+  [dbUser]
+  );
+}
+const createDatabase = async (dbUser, dbPassword, dbPort, dbServer, dbName) => {
+  const config = {
+    user: dbUser,
+    password: dbPassword,
+    port: dbPort,
+    host: dbServer
+  };
 
-  inquirer.prompt(questions).then(async answers => {
-    const config = {
-      user: answers.db_user,
-      password: answers.db_password,
-      port: answers.db_port,
-      host: answers.db_server
-    };
+  await pgtools.createdb(config, dbName);
 
-    try {
-      if (answers.db_create) {
-        await pgtools.createdb(config, answers.db_name);
+  const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
 
-        const connectionString =
-          "postgres://" +
-          answers.db_user +
-          ":" +
-          answers.db_password +
-          "@" +
-          answers.db_server +
-          ":" +
-          answers.db_port +
-          "/" +
-          answers.db_name;
+  const db = pgp(connectionString);
+  await db.tx(async t=> {
+    await t.none(readSqlFile("./er/versao.sql"));
+    await t.none(readSqlFile("./er/dominio.sql"));
+    await t.none(readSqlFile("./er/dgeo.sql"));
+    await t.none(readSqlFile("./er/macrocontrole.sql"));
+    await t.none(readSqlFile("./er/acompanhamento.sql"));
+    await givePermission({connection: t})
+  })
+};
 
-        const db = pgp(connectionString);
+const handleError = error => {
+  if (
+    error.message ===
+    "Postgres error. Cause: permission denied to create database"
+  ) {
+    console.log(
+      "O usuário informado não é superusuário. Sem permissão para criar bancos de dados."
+        .red
+    );
+  } else if (
+    error.message === 'permission denied to create extension "postgis"'
+  ) {
+    console.log(
+      "O usuário informado não é superusuário. Sem permissão para criar a extensão 'postgis'. Delete o banco de dados criado antes de executar a configuração novamente."
+        .red
+    );
+  } else if (
+    error.message.startsWith("Attempted to create a duplicate database")
+  ) {
+    console.log(`O banco já existe.`.red);
+  } else if (
+    error.message.startsWith("password authentication failed for user")
+  ) {
+    console.log(`Senha inválida para o usuário`.red);
+  } else {
+    console.log(error.message.red);
+    console.log("-------------------------------------------------");
+    console.log(error);
+  }
+  process.exit(0);
+};
 
-        await db.none(sql1);
-        await db.none(sql2);
-        await db.none(sql3);
-        await db.none(sql4);
-        await db.none(sql5);
-        await db.none(sql6);
-        await db.none(sql7);
+const createConfig = async () => {
+  try {
+    console.log("Sistema de Apoio a Produção".blue);
+    console.log("Criação do arquivo de configuração".blue);
 
-        await db.none(
-          `
-        GRANT ALL ON SCHEMA dgeo TO $1:name;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dgeo TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA dgeo TO $1:name;
-
-        GRANT ALL ON SCHEMA macrocontrole TO $1:name;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA macrocontrole TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA macrocontrole TO $1:name;
-
-        GRANT ALL ON SCHEMA microcontrole TO $1:name;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA microcontrole TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA microcontrole TO $1:name;
-
-        GRANT ALL ON schema acompanhamento TO public;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA acompanhamento TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA acompanhamento TO $1:name;
-
-        GRANT ALL ON schema avaliacao TO public;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA avaliacao TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA avaliacao TO $1:name;
-
-        GRANT ALL ON schema metadado TO public;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA metadado TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA metadado TO $1:name;
-
-        GRANT ALL ON schema simulacao TO public;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA simulacao TO $1:name;
-        GRANT ALL ON ALL SEQUENCES IN SCHEMA simulacao TO $1:name;
-        `,
-          [answers.db_user]
-        );
-
-        console.log(chalk.blue("Banco de dados do SAP criado com sucesso!"));
-      }
-
-      let env = `PORT=${answers.port}
-DB_SERVER=${answers.db_server}
-DB_PORT=${answers.db_port}
-DB_NAME=${answers.db_name}
-DB_USER=${answers.db_user}
-DB_PASSWORD=${answers.db_password}
-JWT_SECRET=tassofragoso`;
-
-      let exists = fs.existsSync(".env");
-      if (exists) {
-        throw Error(
-          "Arquivo .env já existe, apague antes de iniciar a configuração."
-        );
-      }
-      fs.writeFileSync(".env", env);
-      console.log(
-        chalk.blue("Arquivo de configuração (.env) criado com sucesso!")
+    const exists = verifyDotEnv();
+    if (exists) {
+      throw new Error(
+        "Arquivo config.env já existe, apague antes de iniciar a configuração."
       );
-    } catch (error) {
-      if (
-        error.message ===
-        "Postgres error. Cause: permission denied to create database"
-      ) {
-        console.log(
-          chalk.red(
-            "O usuário informado não é superusuário. Sem permissão para criar bancos de dados."
-          )
-        );
-      } else if (
-        error.message === 'permission denied to create extension "postgis"'
-      ) {
-        console.log(
-          chalk.red(
-            "O usuário informado não é superusuário. Sem permissão para criar a extensão 'postgis'."
-          )
-        );
-        console.log(
-          chalk.red(
-            "Delete o banco de dados criado antes de executar a configuração novamente."
-          )
-        );
-      } else if (
-        error.message ===
-        'Attempted to create a duplicate database. Cause: database "' +
-          answers.db_name +
-          '" already exists'
-      ) {
-        console.log(chalk.red("O banco " + answers.db_name + " já existe."));
-      } else if (
-        error.message ===
-        'password authentication failed for user "' + answers.db_user + '"'
-      ) {
-        console.log(
-          chalk.red("Senha inválida para o usuário " + answers.db_user)
-        );
-      } else if (
-        error.message ===
-        "Arquivo .env já existe, apague antes de iniciar a configuração."
-      ) {
-        console.log(
-          chalk.red(
-            "Arquivo .env já existe, apague antes de iniciar a configuração."
-          )
-        );
-        if (answers.db_create) {
-          console.log(
-            chalk.red(
-              "Delete o banco de dados criado antes de executar a configuração novamente."
-            )
-          );
-        }
-      } else {
-        console.log(chalk.red(error.message));
-        console.log("-------------------------------------------------");
-        console.log(chalk.red(error));
-      }
     }
-  });
+
+    const questions = [
+      {
+        type: "input",
+        name: "dbServer",
+        message:
+          "Qual o endereço de IP do servidor do banco de dados PostgreSQL?"
+      },
+      {
+        type: "input",
+        name: "dbPort",
+        message: "Qual a porta do servidor do banco de dados PostgreSQL?",
+        default: 5432
+      },
+      {
+        type: "input",
+        name: "dbUser",
+        message:
+          "Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?",
+        default: "controle_app"
+      },
+      {
+        type: "password",
+        name: "dbPassword",
+        message:
+          "Qual a senha do usuário do PostgreSQL para interação com o SAP?"
+      },
+      {
+        type: "input",
+        name: "dbName",
+        message: "Qual o nome do banco de dados do SAP?",
+        default: "sap"
+      },
+      {
+        type: "input",
+        name: "port",
+        message: "Qual a porta do serviço do SAP?",
+        default: 3013
+      },
+      {
+        type: "confirm",
+        name: "dbCreate",
+        message: "Deseja criar o banco de dados do SAP?",
+        default: true
+      }
+    ];
+
+    const {
+      port,
+      dbServer,
+      dbPort,
+      dbName,
+      dbUser,
+      dbPassword,
+      dbCreate
+    } = await inquirer.prompt(questions);
+
+    if (dbCreate) {
+      await createDatabase(dbUser, dbPassword, dbPort, dbServer, dbName);
+
+      console.log("Banco de dados do SAP criado com sucesso!".blue);
+    } else {
+      await givePermission({dbUser, dbPassword, dbPort, dbServer, dbName})
+
+      console.log(`Permissão ao usuário ${dbUser} adicionada com sucesso`.blue);
+    }
+
+    createDotEnv(port, dbServer, dbPort, dbName, dbUser, dbPassword);
+
+    console.log(
+      "Arquivo de configuração (config.env) criado com sucesso!".blue
+    );
+  } catch (e) {
+    handleError(e);
+  }
 };
 
 createConfig();

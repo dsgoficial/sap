@@ -1,6 +1,6 @@
 {
   "name": "sap",
-  "version": "2.1.0",
+  "version": "2.0.0",
   "description": "Sistema de Apoio a Produção",
   "main": "src/index.js",
   "repository": {
@@ -12,12 +12,10 @@
     "npm": ">=5.4.2"
   },
   "scripts": {
-    "apidoc": "gulp apidoc",
     "dev": "nodemon src/index.js",
     "production": "pm2 start src/index.js --name sap",
     "config": "node create_config.js",
-    "project": "node create_project.js",
-    "import-docs": "node import_docs.js"
+    "generate-docs": "./node_modules/.bin/documentation build src/** -f html -o src/js_docs"
   },
   "keywords": [
     "Controle de Produção",
@@ -30,32 +28,30 @@
     "url": "https://github.com/1cgeo/sap/issues"
   },
   "dependencies": {
-    "apidoc": "^0.17.7",
-    "bluebird": "^3.5.5",
+    "bluebird": "^3.7.1",
     "body-parser": "^1.19.0",
-    "chalk": "^2.4.2",
+    "colors": "^1.4.0",
     "cors": "^2.8.5",
-    "dotenv": "^8.0.0",
+    "documentation": "^12.1.4",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "gulp": "^4.0.2",
-    "gulp-apidoc": "^0.2.8",
-    "helmet": "^3.19.0",
-    "inquirer": "^6.5.0",
+    "express-rate-limit": "^5.0.0",
+    "helmet": "^3.21.2",
+    "hpp": "^0.2.2",
+    "inquirer": "^7.0.0",
     "joi": "^14.3.1",
+    "jsdoc": "^3.6.3",
     "jsonwebtoken": "^8.5.1",
-    "nodemon": "^1.19.1",
-    "nunjucks": "^3.2.0",
-    "pg-promise": "^8.7.5",
+    "nodemon": "^1.19.4",
+    "pg-promise": "^10.2.1",
     "pgtools": "^0.3.0",
-    "pm2": "^3.5.1",
-    "uuid": "^3.3.2",
+    "pm2": "^4.1.2",
+    "semver": "^6.3.0",
+    "serialize-error": "^5.0.0",
+    "swagger-jsdoc": "^3.4.0",
+    "swagger-ui-express": "^4.1.2",
     "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^3.10.0"
-  },
-  "apidoc": {
-    "name": "API SAP",
-    "version": "1.0.0",
-    "title": "API SAP",
-    "description": "Comunicação com a API REST do SAP"
+    "winston-daily-rotate-file": "^4.2.1",
+    "xss-clean": "^0.1.1"
   }
 }

@@ -2,54 +2,40 @@
 
 const jwt = require("jsonwebtoken");
 
-const { sendJsonAndLog } = require("../logger");
+const { JWT_SECRET } = require("../config");
+
+const { AppError, asyncHandler, httpCode } = require("../utils");
+
+const decodeJwt = (token, secret) => {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, secret, (err, decoded) => {
+      if (err) {
+        reject(
+          new AppError("Falha ao autenticar token", httpCode.BadRequest, err)
+        );
+      }
+      resolve(decoded);
+    });
+  });
+};
 
 //middleware para verificar o JWT
-const verifyToken = function(req, res, next) {
+const verifyToken = asyncHandler(async (req, res, next) => {
   //verifica o header authorization para pegar o token
-  const token =
-    req.body.token ||
-    req.query.token ||
-    req.headers["x-access-token"] ||
-    req.headers["authorization"];
-  //decode token
-  if (token) {
-    //verifica se o token é valido
-    jwt.verify(token, process.env.JWT_SECRET, function(err, decoded) {
-      if (err) {
-        let information = {
-          url: req.protocol + "://" + req.get("host") + req.originalUrl,
-          token: token
-        };
-        return sendJsonAndLog(
-          false,
-          "Failed to authenticate token",
-          "login_middleware",
-          information,
-          res,
-          401,
-          null
-        );
-      } else {
-        // se tudo estiver ok segue para a próxima rota com o atributo id
-        req.body.usuario_id = decoded.id;
-        next();
-      }
-    });
-  } else {
-    let information = {
-      url: req.protocol + "://" + req.get("host") + req.originalUrl
-    };
-    return sendJsonAndLog(
-      false,
-      "No token provided",
-      "login_middleware",
-      information,
-      res,
-      403,
-      null
-    );
+  const token = req.headers["authorization"];
+
+  if (!token) {
+    throw new AppError("Nenhum token fornecido", httpCode.Unauthorized);
   }
-};
+  if (token.startsWith("Bearer ")) {
+    // Remove Bearer from string
+    token = token.slice(7, token.length);
+  }
+
+  const decoded = await decodeJwt(token, JWT_SECRET);
+
+  req.body.usuarioId = decoded.id;
+  next();
+});
 
 module.exports = verifyToken;

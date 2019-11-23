@@ -1,7 +1,6 @@
 ### Node ###
 
 # Logs
-logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -94,8 +93,14 @@ $RECYCLE.BIN/
 
 # APIDOC
 src/apidoc
-src/logger/log
+logs
+log
 .vscode
 
 sap_config.qgs
 sap_config.qgs~
+
+*.env
+
+/src/js_docs
+

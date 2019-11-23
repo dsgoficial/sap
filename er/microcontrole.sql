@@ -48,14 +48,24 @@ CREATE TABLE microcontrole.monitoramento_tela(
   geom geometry(POLYGON, 4674) NOT NULL
 );
 
-CREATE INDEX monitoramento_monitoramento_geom
+CREATE INDEX monitoramento_tela_geom
     ON microcontrole.monitoramento_tela USING gist
     (geom)
     TABLESPACE pg_default;
 
-CREATE INDEX monitoramento_monitoramento_idx
+CREATE INDEX monitoramento_tela_idx
     ON microcontrole.monitoramento_tela USING btree
     (data DESC)
     TABLESPACE pg_default;
+
+
+CREATE TABLE microcontrole.monitoramento_acao(
+  id SERIAL NOT NULL PRIMARY KEY,
+  data timestamp with time zone NOT NULL,
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
+);
+
+CREATE INDEX monitoramento_acao_data_idx ON microcontrole.monitoramento_acao USING BRIN (data) WITH (pages_per_range = 128);
+CREATE INDEX monitoramento_acao_atividade_id_idx ON microcontrole.monitoramento_acao (atividade_id);
 
 COMMIT;

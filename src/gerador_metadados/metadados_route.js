@@ -1,10 +1,8 @@
-"use strict";
-
 const express = require("express");
 
 const path = require("path");
 
-const { renderAndLog } = require("../logger");
+const { renderAndLog } = require("../utils");
 
 const metadadosCtrl = require("./metadados_ctrl");
 
@@ -40,14 +38,14 @@ nunjucks.configure(
  */
 
 router.get("/:uuid", async (req, res, next) => {
-  let { erro, template, dados } = await metadadosCtrl.geraMetadado(
+  const { erro, template, dados } = await metadadosCtrl.geraMetadado(
     req.params.uuid
   );
   if (erro) {
     return next(erro);
   }
 
-  let information = {
+  const information = {
     produto_uuid: req.params.uuid
   };
 

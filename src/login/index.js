@@ -3,6 +3,7 @@
 module.exports = {
   loginCtrl: require("./login_ctrl"),
   loginMiddleware: require("./login_middleware"),
-  loginModel: require("./login_model"),
-  loginRoute: require("./login_route")
+  loginModel: require("./login_schema"),
+  loginRoute: require("./login_route"),
+  verifyAdmin: require("./admin_middleware")
 };

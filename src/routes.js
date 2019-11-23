@@ -1,12 +1,15 @@
 "use strict";
 
-const { loginRoute, loginMiddleware } = require("./login");
+const { loginRoute, loginMiddleware, verifyAdmin } = require("./login");
 const { distribuicaoRoute } = require("./distribuicao_atividades");
-const { microcontroleRoute } = require("./dados_microcontrole");
-const { metadadosRoute } = require("./gerador_metadados");
+const { gerenciaRoute } = require("./gerencia");
+const { microcontroleRoute } = require("./microcontrole");
+const { estatisticasRoute } = require("./estatisticas");
 
 const routes = app => {
   app.use("/login", loginRoute);
+
+  app.use("/estatisticas", estatisticasRoute);
 
   //Todas as requisições abaixo necessitam Token
   app.use(loginMiddleware);
@@ -15,7 +18,9 @@ const routes = app => {
 
   app.use("/microcontrole", microcontroleRoute);
 
-  app.use("/metadados", metadadosRoute);
+  //Todas as requisições abaixo necessitam de admin (e token)
+  app.use(verifyAdmin);
 
+  app.use("/gerencia", gerenciaRoute);
 };
 module.exports = routes;

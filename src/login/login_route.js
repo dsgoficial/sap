@@ -1,79 +1,94 @@
 "use strict";
 
 const express = require("express");
-const Joi = require("joi");
 
-const { sendJsonAndLog } = require("../logger");
+const { schemaValidation, asyncHandler, httpCode } = require("../utils");
 
 const loginCtrl = require("./login_ctrl");
-const loginModel = require("./login_model");
+const loginSchema = require("./login_schema");
 
 const router = express.Router();
 
 /**
- * @api {post} /login Autenticação de um usuário
- * @apiGroup Login
- *
- * @apiParam (Request body) {String} usuario Usuário conforme acesso ao banco de dados de produção
- * @apiParam (Request body) {String} senha Senha conforme acesso ao banco de dados de produção
- *
- * @apiSuccess {String} token JWT Token for authentication.
- *
- * @apiSuccessExample Success-Response:
- *     HTTP/1.1 200 OK
- *     {
- *       "success": true,
- *       "message": "Authentication success",
- *       "token": "eyJhbGciOiJIUzI1NiIsIn..."
- *     }
- *
- * @apiError JsonValidationError O objeto json não segue o padrão estabelecido.
- *
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 400 Bad Request
- *     {
- *       "success": false,
- *       "message": "Login Post validation error"
- *     }
- *
- * @apiError AuthenticationError Usuário ou senha inválidas.
- *
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 401 Unauthorized
- *     {
- *       "success": false,
- *       "message": "Falha durante autenticação"
- *     }
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Autenticação de um usuário
+ *     description: Retorna um token de autenticação caso o usuário seja válido e as versões dos plugins e do QGIS estejam corretas
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - login
+ *     requestBody:
+ *      content:
+ *       application/json:
+ *        schema:
+ *         type: object
+ *         properties:
+ *          usuario:
+ *           type: string
+ *           description: Nome do usuário
+ *          senha:
+ *           type: string
+ *           description: Senha do usuário
+ *          qgis:
+ *           type: string
+ *           description: Versão do QGIS em uso
+ *          plugins:
+ *           type: array
+ *           description: Lista de plugins em uso
+ *           items:
+ *            type: object
+ *            properties:
+ *             nome:
+ *              type: string
+ *              description: Nome do plugin
+ *             versao:
+ *              type: string
+ *              description: Versão do plugin
+ *     responses:
+ *       201:
+ *         message: Usuário autenticado com sucesso
+ *         schema:
+ *           type: object
+ *           properties:
+ *             success:
+ *               type: boolean
+ *               description: Indica se a requisição ocorreu com sucesso
+ *             message:
+ *               type: string
+ *               description: Descrição do resultado da requisição
+ *             version:
+ *               type: string
+ *               description: Versão do SAP
+ *             dados:
+ *               type: object
+ *               properties:
+ *                administrador:
+ *                 type: boolean
+ *                 description: Indicar se o usuário possui privilégios de administrador
+ *                token:
+ *                 type: string
+ *                 description: Token de login
  */
-router.post("/", async (req, res, next) => {
-  let validationResult = Joi.validate(req.body, loginModel.login);
-  if (validationResult.error) {
-    const err = new Error("Login Post validation error");
-    err.status = 400;
-    err.context = "login_route";
-    err.information = {};
-    err.information.body = req.body;
-    err.information.trace = validationResult.error;
-    return next(err);
-  }
+router.post(
+  "/",
+  schemaValidation({ body: loginSchema.login }),
+  asyncHandler(async (req, res, next) => {
+    const { token, administrador } = await loginCtrl.login(
+      req.body.usuario,
+      req.body.senha,
+      req.body.plugins,
+      req.body.qgis
+    );
 
-  let { loginError, token } = await loginCtrl.login(
-    req.body.usuario,
-    req.body.senha
-  );
-  if (loginError) {
-    return next(loginError);
-  }
-
-  return sendJsonAndLog(
-    true,
-    "Authentication success",
-    "login_route",
-    null,
-    res,
-    200,
-    { token }
-  );
-});
+    return res.sendJsonAndLog(
+      true,
+      "Usuário autenticado com sucesso",
+      httpCode.Created,
+      { token, administrador }
+    );
+  })
+);
 
 module.exports = router;
