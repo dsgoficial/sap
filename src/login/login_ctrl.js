@@ -3,11 +3,11 @@
 const jwt = require("jsonwebtoken");
 const semver = require("semver");
 
-const { db, testdb } = require("../database");
+const { db } = require("../database");
 
 const { JWT_SECRET } = require("../config");
 
-const { AppError, httpCode } = require("../utils");
+const { AppError, httpCode, authorization } = require("../utils");
 
 const controller = {};
 
@@ -23,8 +23,8 @@ const verificaQGIS = async qgis => {
     semver.gte(semver.coerce(qgis), semver.coerce(qgisMinimo.versao_minima));
 
   if (!qgisVersionOk) {
-    const msg = `Versão incorreta do QGIS. A seguinte versão é necessária: ${qgisMinimo.versao_minima}`
-    throw new AppError(msg,httpCode.BadRequest);
+    const msg = `Versão incorreta do QGIS. A seguinte versão é necessária: ${qgisMinimo.versao_minima}`;
+    throw new AppError(msg, httpCode.BadRequest);
   }
 };
 
@@ -56,9 +56,11 @@ const verificaPlugins = async plugins => {
       pluginsMinimos.forEach(pm => {
         listplugins.push(pm.nome + "-" + pm.versao_minima);
       });
-      const msg = `Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: ${listplugins.join(", ")}`
-        
-      throw new AppError(msg,httpCode.BadRequest);
+      const msg = `Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: ${listplugins.join(
+        ", "
+      )}`;
+
+      throw new AppError(msg, httpCode.BadRequest);
     }
   }
 };
@@ -91,20 +93,27 @@ const signJWT = (data, secret) => {
 };
 
 controller.login = async (usuario, senha, plugins, qgis) => {
-  const verifycon = await testdb(usuario, senha);
-
   const usuarioDb = await db.oneOrNone(
     `SELECT id, administrador FROM dgeo.usuario WHERE login = $<usuario> and ativo IS TRUE`,
     { usuario }
   );
-  if (!verifycon || !usuarioDb) {
+  if (!usuarioDb) {
+    throw new AppError(
+      "Usuário não autorizado para utilizar o SAP",
+      httpCode.Unauthorized
+    );
+  }
+
+  const verifyAuthorization = await authorization(usuario, senha);
+  if (!verifyAuthorization) {
     throw new AppError("Usuário ou senha inválida", httpCode.Unauthorized);
   }
-  const { id, administrador } = usuarioDb;
 
   await verificaQGIS(qgis);
 
   await verificaPlugins(plugins);
+
+  const { id, administrador } = usuarioDb;
 
   const token = await signJWT({ id, administrador }, JWT_SECRET);
 

@@ -1,6 +1,6 @@
 "use strict";
 
-const { db } = require("../database");
+const { db, temporaryLogin } = require("../database");
 
 const { AppError, httpCode } = require("../utils");
 
@@ -247,7 +247,12 @@ const getInfoModelsQGIS = async (connection, subfaseId) => {
   return result;
 };
 
-const getInfoLinhagem = async (connection, subfaseId, atividadeId, etapaCode) => {
+const getInfoLinhagem = async (
+  connection,
+  subfaseId,
+  atividadeId,
+  etapaCode
+) => {
   const perfil_linhagem = await connection.oneOrNone(
     "SELECT tipo_exibicao_id FROM macrocontrole.perfil_linhagem WHERE subfase_id = $1 LIMIT 1",
     [subfaseId]
@@ -358,7 +363,7 @@ const getInfoQuestionario = async (connection, subfaseId) => {
   return result;
 };
 
-controller.dadosProducao = async atividadeId => {
+const dadosProducao = async atividadeId => {
   const results = await db.task(async t => {
     const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId]);
 
@@ -447,6 +452,14 @@ controller.dadosProducao = async atividadeId => {
   return results;
 };
 
+controller.getDadosAtividade = async (atividadeId, usuarioId) => {
+  const dados = await dadosProducao(atividadeId);
+
+  dados.login_info = await temporaryLogin.get(atividadeId, usuarioId);
+
+  return dados;
+};
+
 controller.verifica = async usuarioId => {
   const emAndamento = await db.oneOrNone(
     `SELECT a.id
@@ -467,9 +480,8 @@ controller.verifica = async usuarioId => {
        WHERE tipo_situacao_id = 2 AND usuario_id = $<usuarioId> AND id != $<emAndamentoId>`,
     { usuarioId, emAndamentoId: emAndamento.id }
   );
-  const dados = await controller.dadosProducao(emAndamento.id);
 
-  return dados;
+  return controller.getDadosAtividade(emAndamento.id, usuarioId);
 };
 
 controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
@@ -510,6 +522,8 @@ controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
       if (!result.rowCount || result.rowCount != 1) {
         throw new AppError("Erro ao bloquear correção");
       }
+
+      await temporaryLogin.destroy(usuarioId);
     }
   });
 };
@@ -558,9 +572,7 @@ controller.inicia = async usuarioId => {
     }
   });
 
-  const dados = await controller.dadosProducao(prioridade);
-
-  return dados;
+  return controller.getDadosAtividade(prioridade, usuarioId);
 };
 
 controller.respondeQuestionario = async (atividadeId, respostas, usuarioId) => {
@@ -663,6 +675,8 @@ controller.problemaAtividade = async (
         `,
       { unidadeTrabalhoId: atividade.unidade_trabalho_id }
     );
+
+    await temporaryLogin.destroy(usuarioId);
   });
 };
 

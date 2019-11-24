@@ -7,6 +7,7 @@ const pgtools = require("pgtools");
 const path = require("path");
 const promise = require("bluebird");
 const crypto = require("crypto");
+const axios = require("axios");
 
 const initOptions = {
   promiseLib: promise
@@ -23,7 +24,23 @@ const verifyDotEnv = () => {
   return fs.existsSync("config.env");
 };
 
-const createDotEnv = (port, dbServer, dbPort, dbName, dbUser, dbPassword) => {
+const verifyAuthServer = authServer => {
+  const response = await axios.get(authServer);
+  if (!response || response.status !== 200 || !("data" in response)) {
+    throw new Error("Erro ao se comunicar com o servidor de autenticação");
+  }
+  //test auth server version
+};
+
+const createDotEnv = (
+  port,
+  dbServer,
+  dbPort,
+  dbName,
+  dbUser,
+  dbPassword,
+  authServer
+) => {
   const secret = crypto.randomBytes(64).toString("hex");
 
   const env = `PORT=${port}
@@ -32,7 +49,8 @@ dbPort=${dbPort}
 dbName=${dbName}
 dbUser=${dbUser}
 dbPassword=${dbPassword}
-JWT_SECRET=${secret}`;
+JWT_SECRET=${secret}
+AUTH_SERVER=${authServer}`;
 
   fs.writeFileSync("config.env", env);
 };
@@ -48,16 +66,21 @@ JWT_SECRET=${secret}`;
  * @param {string} [config.dbName]
  * @param {*} [config.connection]
  */
-const givePermission = async ({dbUser, dbPassword, dbPort, dbServer, dbName, connection}) => {
-  if(!connection){
+const givePermission = async ({
+  dbUser,
+  dbPassword,
+  dbPort,
+  dbServer,
+  dbName,
+  connection
+}) => {
+  if (!connection) {
     const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
 
     connection = pgp(connectionString);
   }
-  await connection.none(readSqlFile("./er/permissao.sql"),
-  [dbUser]
-  );
-}
+  await connection.none(readSqlFile("./er/permissao.sql"), [dbUser]);
+};
 const createDatabase = async (dbUser, dbPassword, dbPort, dbServer, dbName) => {
   const config = {
     user: dbUser,
@@ -71,14 +94,14 @@ const createDatabase = async (dbUser, dbPassword, dbPort, dbServer, dbName) => {
   const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
 
   const db = pgp(connectionString);
-  await db.tx(async t=> {
+  await db.tx(async t => {
     await t.none(readSqlFile("./er/versao.sql"));
     await t.none(readSqlFile("./er/dominio.sql"));
     await t.none(readSqlFile("./er/dgeo.sql"));
     await t.none(readSqlFile("./er/macrocontrole.sql"));
     await t.none(readSqlFile("./er/acompanhamento.sql"));
-    await givePermission({connection: t})
-  })
+    await givePermission({ connection: t });
+  });
 };
 
 const handleError = error => {
@@ -168,6 +191,11 @@ const createConfig = async () => {
         name: "dbCreate",
         message: "Deseja criar o banco de dados do SAP?",
         default: true
+      },
+      {
+        type: "input",
+        name: "authServer",
+        message: "Qual a URL do serviço de autenticação?"
       }
     ];
 
@@ -178,20 +206,31 @@ const createConfig = async () => {
       dbName,
       dbUser,
       dbPassword,
-      dbCreate
+      dbCreate,
+      authServer
     } = await inquirer.prompt(questions);
+
+    await verifyAuthServer(authServer);
 
     if (dbCreate) {
       await createDatabase(dbUser, dbPassword, dbPort, dbServer, dbName);
 
       console.log("Banco de dados do SAP criado com sucesso!".blue);
     } else {
-      await givePermission({dbUser, dbPassword, dbPort, dbServer, dbName})
+      await givePermission({ dbUser, dbPassword, dbPort, dbServer, dbName });
 
       console.log(`Permissão ao usuário ${dbUser} adicionada com sucesso`.blue);
     }
 
-    createDotEnv(port, dbServer, dbPort, dbName, dbUser, dbPassword);
+    createDotEnv(
+      port,
+      dbServer,
+      dbPort,
+      dbName,
+      dbUser,
+      dbPassword,
+      authServer
+    );
 
     console.log(
       "Arquivo de configuração (config.env) criado com sucesso!".blue

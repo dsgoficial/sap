@@ -13,33 +13,26 @@ const getUsuarioNomeById = async usuarioId => {
     `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
     WHERE u.id = $<usuarioId>`,
-    {usuarioId}
+    { usuarioId }
   );
   return usuario.posto_nome;
 };
 
-controller.getAtividade = async atividadeId => {
+controller.getAtividade = async (atividadeId, gerenteId) => {
   const atividade = await db.oneOrNone(
     `SELECT a.etapa_id, a.unidade_trabalho_id
     FROM macrocontrole.atividade AS a
     WHERE a.id = $<atividadeId>`,
-    {atividadeId}
+    { atividadeId }
   );
-  if(!atividade){
-    throw new AppError(
-      "Atividadade não encontrada",
-      httpCode.NotFound
-    );
+  if (!atividade) {
+    throw new AppError("Atividadade não encontrada", httpCode.NotFound);
   }
 
-  const dados = await distribuicaoCtrl.dadosProducao(
-    atividadeId
-  );
-  return dados;
-
+  return distribuicaoCtrl.getDadosAtividade(atividadeId, gerenteId);
 };
 
-controller.getAtividadeUsuario = async (usuarioId, proxima) => {
+controller.getAtividadeUsuario = async (usuarioId, proxima, gerenteId) => {
   let atividadeId;
 
   if (proxima) {
@@ -50,7 +43,7 @@ controller.getAtividadeUsuario = async (usuarioId, proxima) => {
       `SELECT a.id FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
       WHERE a.usuario_id = $<usuarioId> and ut.disponivel IS TRUE and a.tipo_situacao_id = 2`,
-      {usuarioId}
+      { usuarioId }
     );
     if (!emAndamento) {
       return null;
@@ -58,11 +51,7 @@ controller.getAtividadeUsuario = async (usuarioId, proxima) => {
     atividadeId = emAndamento.id;
   }
 
-  const dados = await distribuicaoCtrl.dados_producao(
-    atividadeId
-  );
-  return dados;
-
+  return distribuicaoCtrl.getDadosAtividade(atividadeId, gerenteId);
 };
 
 controller.getEstilos = async () => {
@@ -84,7 +73,6 @@ controller.getMenus = async () => {
 controller.gravaEstilos = async (estilos, usuarioId) => {
   const dataGravacao = new Date();
   await db.tx(async t => {
-
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none(`TRUNCATE dgeo.layer_styles RESTART IDENTITY`);
@@ -132,7 +120,7 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
 
 controller.grava_regras = async (regras, usuarioId) => {
   const dataGravacao = new Date();
-    await db.tx(async t => {
+  await db.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none(`TRUNCATE dgeo.layer_rules RESTART IDENTITY`);
@@ -179,13 +167,12 @@ controller.grava_regras = async (regras, usuarioId) => {
     const query = db.helpers.insert(values, cs);
 
     await t.none(query);
-
   });
 };
 
 controller.grava_modelos = async (modelos, usuarioId) => {
   const dataGravacao = new Date();
-    await db.tx(async t => {
+  await db.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none(`TRUNCATE dgeo.layer_qgis_models RESTART IDENTITY`);
@@ -219,7 +206,7 @@ controller.grava_modelos = async (modelos, usuarioId) => {
 
 controller.grava_menus = async (menus, usuarioId) => {
   const dataGravacao = new Date();
-    await db.tx(async t => {
+  await db.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none(`TRUNCATE dgeo.layer_menus RESTART IDENTITY`);
@@ -248,26 +235,24 @@ controller.grava_menus = async (menus, usuarioId) => {
     const query = db.helpers.insert(values, cs);
 
     await t.none(query);
-    });
+  });
 };
 
 controller.getBancoDados = async () => {
   return await db.any(
-      `SELECT nome, servidor, porta FROM macrocontrole.banco_dados`
-    );
+    `SELECT nome, servidor, porta FROM macrocontrole.banco_dados`
+  );
 };
 
 controller.getUsuario = async () => {
   return await db.any(
-      `SELECT u.id, tpg.nome_abrev || ' ' || u.nome_guerra AS nome
+    `SELECT u.id, tpg.nome_abrev || ' ' || u.nome_guerra AS nome
       FROM dgeo.usuario AS u INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id WHERE u.ativo IS TRUE`
-    );
+  );
 };
 
 controller.getPerfilProducao = async () => {
-  await db.any(
-      `SELECT id, nome FROM macrocontrole.perfil_producao`
-    );
+  await db.any(`SELECT id, nome FROM macrocontrole.perfil_producao`);
 };
 
 const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
@@ -282,10 +267,10 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
     WHERE ut.id in ($<unidadeTrabalhoIds>:csv) AND a.tipo_situacao_id = 2
     ) RETURNING id
   `,
-    {dataFim, unidadeTrabalhoIds}
+    { dataFim, unidadeTrabalhoIds }
   );
   if (updatedIds.length === 0) {
-    return false
+    return false;
   }
   const updatedIdsFixed = [];
   updatedIds.forEach(u => {
@@ -293,7 +278,7 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
   });
   const atividades = await connection.any(
     `SELECT etapa_id, unidade_trabalho_id, usuario_id FROM macrocontrole.atividade WHERE id in ($<updatedIdsFixed>:csv)`,
-    {updatedIdsFixed}
+    { updatedIdsFixed }
   );
 
   const table = new db.helpers.TableName({
@@ -319,8 +304,8 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
   const query = db.helpers.insert(values, cs);
 
   await connection.none(query);
-  return true
-}
+  return true;
+};
 
 controller.unidadeTrabalhoDisponivel = async (
   unidadeTrabalhoIds,
@@ -349,15 +334,15 @@ controller.unidadeTrabalhoDisponivel = async (
 
   await db.tx(async t => {
     await t.none(query);
-    if(!disponivel){
-      await pausaAtividadeMethod(unidadeTrabalhoIds, t)
+    if (!disponivel) {
+      await pausaAtividadeMethod(unidadeTrabalhoIds, t);
     }
   });
 };
 
 controller.pausaAtividade = async unidadeTrabalhoIds => {
   await db.tx(async t => {
-    const changed = await pausaAtividadeMethod(unidadeTrabalhoIds, t)
+    const changed = await pausaAtividadeMethod(unidadeTrabalhoIds, t);
     if (!changed) {
       throw new AppError(
         "Unidades de trabalho não possuem atividades em execução",
@@ -382,7 +367,7 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
       ORDER BY ut.id, e.ordem
       ) RETURNING id
     `,
-      {dataFim, unidadeTrabalhoIds}
+      { dataFim, unidadeTrabalhoIds }
     );
     if (updatedIds.length === 0) {
       throw new AppError(
@@ -396,7 +381,7 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
     });
     const atividades = await t.any(
       `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($<updatedIdsFixed>:csv)`,
-      {updatedIdsFixed}
+      { updatedIdsFixed }
     );
     const table = new db.helpers.TableName({
       table: "atividade",
@@ -426,7 +411,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
   const dataFim = new Date();
   await db.tx(async t => {
     const atividadesUpdates = await t.any(
-    `UPDATE macrocontrole.atividade SET
+      `UPDATE macrocontrole.atividade SET
     tipo_situacao_id = 5, data_inicio = COALESCE(data_inicio, $<dataFim>), data_fim = COALESCE(data_fim, $<dataFim>), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
     WHERE id IN (
         SELECT a_ant.id
@@ -435,7 +420,8 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
         INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
         INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
         WHERE a.id in ($<atividadeIds>:csv) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,3,4)
-    ) RETURNING id`, {atividadeIds, dataFim}
+    ) RETURNING id`,
+      { atividadeIds, dataFim }
     );
     const ids = [];
     atividadesUpdates.forEach(i => {
@@ -449,12 +435,13 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
     }
     if (manterUsuarios) {
       await t.none(
-      `INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id, observacao)
+        `INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id, observacao)
       (
         SELECT etapa_id, unidade_trabalho_id, usuario_id, 3 AS tipo_situacao_id, observacao
         FROM macrocontrole.atividade
         WHERE id in ($<ids>:csv)
-      )`, {ids}
+      )`,
+        { ids }
       );
     } else {
       await t.none(
@@ -464,7 +451,8 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
           SELECT etapa_id, unidade_trabalho_id, 1 AS tipo_situacao_id, observacao
           FROM macrocontrole.atividade
           WHERE id in ($<ids>:csv)
-        )`, {ids}
+        )`,
+        { ids }
       );
     }
   });
@@ -475,8 +463,8 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
   let comparisonOperator = concluida ? "<=" : "=";
 
   await db.tx(async t => {
-      await t.none(
-        `
+    await t.none(
+      `
         DELETE FROM macrocontrole.atividade
         WHERE id IN (
             SELECT a_ant.id
@@ -487,10 +475,10 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
             WHERE a.id in ($<atividadeIds>:csv) AND e_ant.ordem $<comparisonOperator>:raw e.ordem AND a_ant.tipo_situacao_id IN (1,3)
         )
         `,
-        {atividadeIds, comparisonOperator}
-      );
-      await t.none(
-        `
+      { atividadeIds, comparisonOperator }
+    );
+    await t.none(
+      `
         UPDATE macrocontrole.atividade SET
         tipo_situacao_id = 5, data_fim = $<dataFim>, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
         WHERE id IN (
@@ -502,21 +490,22 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
             WHERE a.id in ($<atividadeIds>:csv) AND e_ant.ordem $<comparisonOperator>:raw e.ordem AND a_ant.tipo_situacao_id IN (2)
         )
         `,
-        {atividadeIds, dataFim, comparisonOperator}
-      );
+      { atividadeIds, dataFim, comparisonOperator }
+    );
   });
 };
 
 controller.criaRevisao = async unidadeTrabalhoIds => {
   await db.tx(async t => {
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
+      //refactor to batch
       const ordemEtapa = await t.one(
         `SELECT ut.subfase_id, max(e.ordem) AS ordem 
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
         WHERE ut.id = $<unidadeTrabalhoId>
         GROUP BY ut.subfase_id`,
-        {unidadeTrabalhoId}
+        { unidadeTrabalhoId }
       );
       const etapaRev = await t.oneOrNone(
         `SELECT e.id FROM macrocontrole.unidade_trabalho AS ut
@@ -525,7 +514,7 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
         WHERE ut.id = $<unidadeTrabalhoId> AND a.id IS NULL AND e.tipo_etapa_id = 2
         ORDER BY e.ordem
         LIMIT 1`,
-        {unidadeTrabalhoId}
+        { unidadeTrabalhoId }
       );
       const etapaCorr = await t.oneOrNone(
         `SELECT e.id FROM macrocontrole.unidade_trabalho AS ut
@@ -534,7 +523,7 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
         WHERE ut.id = $<unidadeTrabalhoId> AND a.id IS NULL AND e.tipo_etapa_id = 3
         ORDER BY e.ordem
         LIMIT 1`,
-        {unidadeTrabalhoId}
+        { unidadeTrabalhoId }
       );
       let ids;
       if (etapaRev && etapaCorr) {
@@ -543,20 +532,24 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
         ids.push(etapaCorr);
       } else {
         // cria novas etapas
-          ids = await t.any(
-            `
+        ids = await t.any(
+          `
         INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
         VALUES(2,$<subfaseId>,$<ordem1>),(3,$<subfaseId>,$<ordem2>) RETURNING id
         `,
-            {subfaseId: ordemEtapa.subfase_id, ordem1: ordemEtapa.ordem + 1, ordem2: ordemEtapa.ordem + 2}
-          );
+          {
+            subfaseId: ordemEtapa.subfase_id,
+            ordem1: ordemEtapa.ordem + 1,
+            ordem2: ordemEtapa.ordem + 2
+          }
+        );
       }
       await t.none(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
       VALUES ($<idRev>,$<unidadeTrabalhoId>,1),($<idCorr>,$<unidadeTrabalhoId>,1)
       `,
-        {idRev: ids[0].id, idCorr: ids[1].id, unidadeTrabalhoId}
+        { idRev: ids[0].id, idCorr: ids[1].id, unidadeTrabalhoId }
       );
     }
   });
@@ -565,13 +558,14 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
 controller.criaRevcorr = async unidadeTrabalhoIds => {
   await db.tx(async t => {
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
+      //refactor to batch
       const ordemEtapa = await t.one(
         `SELECT ut.subfase_id, max(e.ordem) AS ordem 
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
         WHERE ut.id = $<unidadeTrabalhoId>
         GROUP BY ut.subfase_id`,
-        {unidadeTrabalhoId}
+        { unidadeTrabalhoId }
       );
       const etapaRevcorr = await t.oneOrNone(
         `SELECT e.id FROM macrocontrole.unidade_trabalho AS ut
@@ -580,21 +574,23 @@ controller.criaRevcorr = async unidadeTrabalhoIds => {
         WHERE ut.id = $<unidadeTrabalhoId> AND a.id IS NULL AND e.tipo_etapa_id = 4
         ORDER BY e.ordem
         LIMIT 1`,
-        {unidadeTrabalhoId}
+        { unidadeTrabalhoId }
       );
-      const revcorr = etapaRevcorr || await t.one(
+      const revcorr =
+        etapaRevcorr ||
+        (await t.one(
           `
         INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
         VALUES(4,$<subfaseId>,$<ordem>) RETURNING id
         `,
-          {subfaseId: ordemEtapa.subfase_id, ordem: ordemEtapa.ordem + 1}
-        );
+          { subfaseId: ordemEtapa.subfase_id, ordem: ordemEtapa.ordem + 1 }
+        ));
       await t.none(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
       VALUES ($<idRevCorr>,$<unidadeTrabalhoId>,1)
       `,
-        {idRevCorr: revcorr.id, unidadeTrabalhoId}
+        { idRevCorr: revcorr.id, unidadeTrabalhoId }
       );
     }
   });
@@ -605,8 +601,8 @@ controller.criaFilaPrioritaria = async (
   usuarioPrioridadeId,
   prioridade
 ) => {
-    await db.none(
-      `
+  await db.none(
+    `
       INSERT INTO macrocontrole.fila_prioritaria(atividade_id, usuario_id, prioridade)
       (
         SELECT id, $<usuarioPrioridadeId> as usuario_id, row_number() over(order by id) + $<prioridade>-1 as prioridade
@@ -614,8 +610,8 @@ controller.criaFilaPrioritaria = async (
         WHERE id in ($<atividadeIds>:csv)
       )
       `,
-      {atividadeIds, usuarioPrioridadeId, prioridade}
-    );
+    { atividadeIds, usuarioPrioridadeId, prioridade }
+  );
 };
 
 controller.criaFilaPrioritariaGrupo = async (
@@ -632,7 +628,7 @@ controller.criaFilaPrioritariaGrupo = async (
       WHERE id in ($<atividadeIds>:csv)
     )
     `,
-    {atividadeIds, perfilProducaoId, prioridade}
+    { atividadeIds, perfilProducaoId, prioridade }
   );
 };
 
@@ -698,9 +694,8 @@ controller.criaObservacao = async (
   });
 };
 
-
 controller.getProject = async () => {
-  return qgisProject
+  return qgisProject;
 };
 
 module.exports = controller;

@@ -2,18 +2,22 @@ BEGIN;
 
 CREATE SCHEMA dgeo;
 
---Usuários do sistema
---Login deve ser o mesmo do banco de dados de produção
---Senha do usuário vem do banco de dados
 CREATE TABLE dgeo.usuario(
   id SERIAL NOT NULL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL,
   nome_guerra VARCHAR(255) NOT NULL,
-  login VARCHAR(255) UNIQUE NOT NULL,
   administrador BOOLEAN NOT NULL DEFAULT FALSE,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
   tipo_turno_id INTEGER NOT NULL REFERENCES dominio.tipo_turno (code),
   tipo_posto_grad_id INTEGER NOT NULL REFERENCES dominio.tipo_posto_grad (code)
+);
+
+CREATE TABLE dgeo.login_temporario(
+  id SERIAL NOT NULL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id)
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
+  login VARCHAR(255) UNIQUE NOT NULL,
+  senha VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE dgeo.plugin(
