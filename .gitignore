@@ -104,3 +104,6 @@ sap_config.qgs~
 
 /src/js_docs
 
+config.env
+
+sslcert

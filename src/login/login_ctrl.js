@@ -7,7 +7,9 @@ const { db } = require("../database");
 
 const { JWT_SECRET } = require("../config");
 
-const { AppError, httpCode, authorization } = require("../utils");
+const { AppError, httpCode } = require("../utils");
+
+const { authenticateUser } = require("../authentication");
 
 const controller = {};
 
@@ -104,8 +106,8 @@ controller.login = async (usuario, senha, plugins, qgis) => {
     );
   }
 
-  const verifyAuthorization = await authorization(usuario, senha);
-  if (!verifyAuthorization) {
+  const verifyAuthentication = await authenticateUser(usuario, senha);
+  if (!verifyAuthentication) {
     throw new AppError("Usuário ou senha inválida", httpCode.Unauthorized);
   }
 

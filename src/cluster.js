@@ -4,10 +4,17 @@ const colors = require("colors"); //colors for console
 
 const setupWorkerProcesses = () => {
   if (cluster.isMaster) {
-    const numCores = os.cpus().length;
+    const argv = require('minimist')(process.argv.slice(2));
+
+    let numCores;
+    if("multicore" in argv && argv["multicore"]){
+      numCores = os.cpus().length;
+    } else {
+      numCores = 1
+    }
 
     console.log(
-      `O SAP irá iniciar em modo cluster com ${numCores} workers`.bold.blue
+      `O SAP irá iniciar em modo cluster com ${numCores} worker(s)`.bold.blue
     );
     for (let i = 0; i < numCores; i++) {
       let newCluster = cluster.fork();

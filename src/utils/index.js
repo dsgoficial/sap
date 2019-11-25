@@ -8,6 +8,5 @@ module.exports = {
   errorHandler: require("./error_handler"),
   AppError: require("./app_error"),
   httpCode: require("./http_code"),
-  qgisProject: require("./qgis_project"),
-  authorization: require("./authorization")
+  qgisProject: require("./qgis_project")
 };

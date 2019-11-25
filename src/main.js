@@ -8,6 +8,7 @@ if (isMaster) {
   const { errorHandler } = require("./utils");
   const startServer = require("./server");
   const { databaseVersion } = require("./database");
-  
-  databaseVersion.load().then(startServer).catch(errorHandler)
+  const { verifyAuthServer } = require("./authentication")
+
+  databaseVersion.load().then(verifyAuthServer).then(startServer).catch(errorHandler)
 }

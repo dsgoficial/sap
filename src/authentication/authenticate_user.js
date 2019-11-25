@@ -4,9 +4,9 @@ const axios = require("axios");
 
 const { AUTH_SERVER } = require("../config");
 
-const AppError = require("./app_error");
+const AppError = require("../utils/app_error");
 
-const http_code = require("./http_code");
+const http_code = require("../utils/http_code");
 
 const authorization = async (usuario, senha) => {
   const response = await axios.post(`${AUTH_SERVER}/login`, {

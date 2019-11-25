@@ -24,12 +24,13 @@ const verifyDotEnv = () => {
   return fs.existsSync("config.env");
 };
 
-const verifyAuthServer = authServer => {
+const verifyAuthServer = async authServer => {
   const response = await axios.get(authServer);
-  if (!response || response.status !== 200 || !("data" in response)) {
+  const test = !response || response.status !== 200 || !("data" in response) || response.data.message !== "Serviço de autenticação operacional"
+  
+  if (test) {
     throw new Error("Erro ao se comunicar com o servidor de autenticação");
   }
-  //test auth server version
 };
 
 const createDotEnv = (

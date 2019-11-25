@@ -15,7 +15,8 @@ CREATE TABLE dgeo.usuario(
 CREATE TABLE dgeo.login_temporario(
   id SERIAL NOT NULL PRIMARY KEY,
   usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id)
-  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
+  servidor VARCHAR(255) NOT NULL,
+  porta VARCHAR(255) NOT NULL,
   login VARCHAR(255) UNIQUE NOT NULL,
   senha VARCHAR(255) NOT NULL
 );
