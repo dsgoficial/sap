@@ -55,8 +55,8 @@ const getUserName = async usuarioId => {
   );
 };
 
-const checkUserIfExists = async (login, conn) => {
-  const user = await conn.oneOrNone(
+const checkUserIfExists = async (login, connection) => {
+  const user = await connection.oneOrNone(
     `SELECT usename FROM pg_catalog.pg_user WHERE usename = $<login>`,
     { login }
   );
@@ -80,21 +80,18 @@ const createDbUser = async (login, senha, connection) => {
   return senha;
 };
 
-const updatePasswordAndValidity = async (login, senha, connection) => {
-  const validity = await db.one(`SELECT now() + interval '5' day AS data`);
-
-  await connection.none(
-    `ALTER USER $<login>:name WITH PASSWORD $<senha> VALID UNTIL $<validity>`,
+const updatePassword = async (login, senha, connection) => {
+  return await connection.none(
+    `ALTER USER $<login>:name WITH PASSWORD $<senha>`,
     {
       login,
       senha,
       validity: validity.data
     }
   );
-  return senha
 };
 
-const insertTempLogin = async (usuarioId, dbServer, dbPort, senha) => {
+const updateTempLogin = async (usuarioId, dbServer, dbPort, senha) => {
   await db.tx(async t => {
     await t.none(
       `DELETE FROM dgeo.login_temporario
@@ -133,7 +130,7 @@ const updateValidity = async (login, connection) => {
   );
 };
 
-temporaryLogin.get = async (atividadeId, usuarioId, resetPassword = false) => {
+const processTempUser = async (atividadeId, usuarioId, resetPassword, extendValidity) => {
   const dbInfo = await getDbInfo(atividadeId);
   if(!dbInfo){
     return null
@@ -146,41 +143,50 @@ temporaryLogin.get = async (atividadeId, usuarioId, resetPassword = false) => {
 
   const conn = await getProdDbConnection(dbInfo.servidor, dbInfo.porta, dbInfo.nome);
   
-  const senha = crypto.randomBytes(20).toString("hex");
+  let login;
+  let senha;
+  const novaSenha = crypto.randomBytes(20).toString("hex");
+  let updated = False;
 
   if(!loginInfo){
     const usuarioNome = await getUserName(usuarioId);
-    const login = `sap_${usuarioNome}`;
-    const userExists = await checkUserIfExists(login, conn)
-    if(!userExists){
-      await createDbUser(login, senha, conn)
-    } else {
-      await updatePasswordAndValidity(login, senha, conn)
-    }
-    await insertTempLogin(usuarioId, dbInfo.servidor, dbInfo.porta, senha)
-
-    return {login, senha};
+    login = `sap_${usuarioNome}`;
+    senha = novaSenha;
+  } else {
+    login = loginInfo.login
+    senha = loginInfo.senha;
   }
-
-  const userExists = await checkUserIfExists(loginInfo.login, conn)
+  const userExists = await checkUserIfExists(login, conn)
   if(!userExists){
-    await createDbUser(loginInfo.login, senha, conn)
-    await updateTempLogin(usuarioId, dbInfo.servidor, dbInfo.porta, senha)
-
-    return {login: loginInfo.login, senha};
+    senha = novaSenha;
+    updated = true;
+    await createDbUser(login, senha, conn)
   }
 
-  const userConnected = await testDb(loginInfo.login, loginInfo.senha, conn, dbInfo.servidor, dbInfo.porta, dbInfo.nome)
+  const userConnected = await testDb(login, senha, conn, dbInfo.servidor, dbInfo.porta, dbInfo.nome)
   if(!userConnected || resetPassword){
-    await updatePasswordAndValidity(loginInfo.login, senha, conn)
-    await updateTempLogin(usuarioId, dbInfo.servidor, dbInfo.porta, senha)
-
-    return {login: loginInfo.login, senha};
+    senha = novaSenha;
+    updated = true;
+    await updatePassword(login, senha, conn)
   }
 
-  await updateValidity(loginInfo.login, conn)
+  if(extendValidity){
+    await updateValidity(login, conn)
+  }
 
-  return {login: loginInfo.login, senha: loginInfo.senha};
+  if(updated){
+    await updateTempLogin(usuarioId, dbInfo.servidor, dbInfo.porta, senha)
+  }
+
+  return {login, senha};
 };
+
+temporaryLogin.resetPassword = async (atividadeId, usuarioId) => {
+  return processTempUser(atividadeId, usuarioId, true, false)
+}
+
+temporaryLogin.getLogin = async (atividadeId, usuarioId, resetPassword = false) => {
+  return processTempUser(atividadeId, usuarioId, resetPassword, true)
+}
 
 module.exports = temporaryLogin;

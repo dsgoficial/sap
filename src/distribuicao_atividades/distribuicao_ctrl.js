@@ -452,10 +452,10 @@ const dadosProducao = async atividadeId => {
   return results;
 };
 
-controller.getDadosAtividade = async (atividadeId, usuarioId) => {
+controller.getDadosAtividade = async (atividadeId, usuarioId, resetPassword = false) => {
   const dados = await dadosProducao(atividadeId);
 
-  dados.login_info = await temporaryLogin.get(atividadeId, usuarioId);
+  dados.login_info = await temporaryLogin.getLogin(atividadeId, usuarioId, resetPassword);
 
   return dados;
 };
@@ -523,7 +523,7 @@ controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
         throw new AppError("Erro ao bloquear correção");
       }
 
-      await temporaryLogin.destroy(usuarioId);
+      await temporaryLogin.resetPassword(atividadeId, usuarioId);
     }
   });
 };
@@ -572,7 +572,7 @@ controller.inicia = async usuarioId => {
     }
   });
 
-  return controller.getDadosAtividade(prioridade, usuarioId);
+  return controller.getDadosAtividade(prioridade, usuarioId, true);
 };
 
 controller.respondeQuestionario = async (atividadeId, respostas, usuarioId) => {
@@ -676,7 +676,7 @@ controller.problemaAtividade = async (
       { unidadeTrabalhoId: atividade.unidade_trabalho_id }
     );
 
-    await temporaryLogin.destroy(usuarioId);
+    await temporaryLogin.resetPassword(atividadeId, usuarioId);
   });
 };
 

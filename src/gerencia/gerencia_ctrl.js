@@ -257,6 +257,7 @@ controller.getPerfilProducao = async () => {
 
 const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
   const dataFim = new Date();
+
   const updatedIds = await connection.any(
     `
   UPDATE macrocontrole.atividade SET
@@ -265,7 +266,7 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
     SELECT a.id FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
     WHERE ut.id in ($<unidadeTrabalhoIds>:csv) AND a.tipo_situacao_id = 2
-    ) RETURNING id
+    ) RETURNING id, usuario_id
   `,
     { dataFim, unidadeTrabalhoIds }
   );
@@ -304,6 +305,11 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
   const query = db.helpers.insert(values, cs);
 
   await connection.none(query);
+
+  updatedIds.forEach(u => {
+    temporaryLogin.resetPassword(u.id, u.usuario_id)
+  })
+
   return true;
 };
 
@@ -355,6 +361,17 @@ controller.pausaAtividade = async unidadeTrabalhoIds => {
 controller.reiniciaAtividade = async unidadeTrabalhoIds => {
   const dataFim = new Date();
   await db.tx(async t => {
+    const usersResetPassword = await t.any(
+      `
+      SELECT DISTINCT ON (ut.id) a.id, a.usuario_id FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
+      INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+      WHERE ut.id in ($<unidadeTrabalhoIds>:csv) AND a.tipo_situacao_id in (2)
+      ORDER BY ut.id, e.ordem
+    `,
+      { unidadeTrabalhoIds }
+    );
+
     const updatedIds = await t.any(
       `
     UPDATE macrocontrole.atividade SET
@@ -404,12 +421,29 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
     const query = db.helpers.insert(values, cs);
 
     await t.none(query);
+
+    usersResetPassword.forEach(u => {
+      temporaryLogin.resetPassword(u.id, u.usuario_id)
+    })
   });
 };
 
 controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
   const dataFim = new Date();
   await db.tx(async t => {
+    const ativEmExec = await t.any(
+      `SELECT a_ant.id
+        FROM macrocontrole.atividade AS a
+        INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+        INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+        INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+        WHERE a.id in ($<atividadeIds>:csv) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2)`,
+      { atividadeIds }
+    );
+    if(ativEmExec){
+      throw new AppError("Não se pode voltar atividades em execução. Pause a atividade primeiro", httpCode.BadRequest);
+    }
+
     const atividadesUpdates = await t.any(
       `UPDATE macrocontrole.atividade SET
     tipo_situacao_id = 5, data_inicio = COALESCE(data_inicio, $<dataFim>), data_fim = COALESCE(data_fim, $<dataFim>), tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
@@ -419,7 +453,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
         INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
         INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
         INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-        WHERE a.id in ($<atividadeIds>:csv) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2,3,4)
+        WHERE a.id in ($<atividadeIds>:csv) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (3,4)
     ) RETURNING id`,
       { atividadeIds, dataFim }
     );
@@ -459,10 +493,22 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
 };
 
 controller.avancaAtividade = async (atividadeIds, concluida) => {
-  const dataFim = new Date();
   let comparisonOperator = concluida ? "<=" : "=";
 
   await db.tx(async t => {
+    const ativEmExec = await t.any(
+      `SELECT a_ant.id
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+      INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+      WHERE a.id in ($<atividadeIds>:csv) AND e_ant.ordem $<comparisonOperator>:raw e.ordem AND a_ant.tipo_situacao_id IN (2)`,
+      { atividadeIds, comparisonOperator }
+    );
+    if(ativEmExec){
+      throw new AppError("Não se pode avançar atividades em execução. Pause a atividade primeiro", httpCode.BadRequest);
+    }
+
     await t.none(
       `
         DELETE FROM macrocontrole.atividade
@@ -476,21 +522,6 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
         )
         `,
       { atividadeIds, comparisonOperator }
-    );
-    await t.none(
-      `
-        UPDATE macrocontrole.atividade SET
-        tipo_situacao_id = 5, data_fim = $<dataFim>, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole(id), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa(id)
-        WHERE id IN (
-            SELECT a_ant.id
-            FROM macrocontrole.atividade AS a
-            INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
-            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-            INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-            WHERE a.id in ($<atividadeIds>:csv) AND e_ant.ordem $<comparisonOperator>:raw e.ordem AND a_ant.tipo_situacao_id IN (2)
-        )
-        `,
-      { atividadeIds, dataFim, comparisonOperator }
     );
   });
 };
