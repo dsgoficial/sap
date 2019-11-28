@@ -29,7 +29,6 @@ router.get(
   "/verifica",
   asyncHandler(async (req, res, next) => {
     const dados = await producaoCtrl.verifica(req.body.usuarioId);
-
     const msg = dados
       ? "Atividade em execução retornada"
       : "Sem atividade em execução";

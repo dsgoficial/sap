@@ -55,7 +55,6 @@
     "serialize-error": "^5.0.0",
     "swagger-jsdoc": "^3.4.0",
     "swagger-ui-express": "^4.1.2",
-    "uuid": "^3.3.3",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^4.3.0",
     "xss-clean": "^0.1.1"

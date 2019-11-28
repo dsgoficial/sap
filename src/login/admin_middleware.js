@@ -9,7 +9,7 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
   }
   const {
     administrador
-  } = await db.oneOrNone(
+  } = await db.conn.oneOrNone(
     `SELECT administrador FROM dgeo.usuario WHERE id = $<usuarioId> and ativo IS TRUE`,
     { usuarioId: req.body.usuarioId }
   );

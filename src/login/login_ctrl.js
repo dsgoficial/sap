@@ -14,7 +14,7 @@ const { authenticateUser } = require("../authentication");
 const controller = {};
 
 const verificaQGIS = async qgis => {
-  const qgisMinimo = await db.oneOrNone(
+  const qgisMinimo = await db.conn.oneOrNone(
     `SELECT versao_minima FROM dgeo.versao_qgis LIMIT 1`
   );
   if (!qgisMinimo) {
@@ -31,7 +31,7 @@ const verificaQGIS = async qgis => {
 };
 
 const verificaPlugins = async plugins => {
-  const pluginsMinimos = await db.any(
+  const pluginsMinimos = await db.conn.any(
     `SELECT nome, versao_minima FROM dgeo.plugin`
   );
   if (!pluginsMinimos) {
@@ -68,9 +68,9 @@ const verificaPlugins = async plugins => {
 };
 
 const gravaLogin = async usuarioId => {
-  await db.any(
+  await db.conn.any(
     `
-      INSERT INTO acompanhamento.login(usuario_id, data_login) VALUES($<usuario_id>, now())
+      INSERT INTO acompanhamento.login(usuario_id, data_login) VALUES($<usuarioId>, now())
       `,
     { usuarioId }
   );
@@ -94,8 +94,8 @@ const signJWT = (data, secret) => {
   });
 };
 
-controller.login = async (usuario, senha, plugins, qgis) => {
-  const usuarioDb = await db.oneOrNone(
+controller.login = async (usuario, senha, cliente, plugins, qgis) => {
+  const usuarioDb = await db.conn.oneOrNone(
     `SELECT id, administrador FROM dgeo.usuario WHERE login = $<usuario> and ativo IS TRUE`,
     { usuario }
   );
@@ -111,9 +111,11 @@ controller.login = async (usuario, senha, plugins, qgis) => {
     throw new AppError("Usuário ou senha inválida", httpCode.Unauthorized);
   }
 
-  await verificaQGIS(qgis);
-
-  await verificaPlugins(plugins);
+  if(cliente === "qgis"){
+    await verificaQGIS(qgis);
+  
+    await verificaPlugins(plugins);
+  }
 
   const { id, administrador } = usuarioDb;
 

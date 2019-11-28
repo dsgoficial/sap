@@ -7,12 +7,12 @@ const { AppError, httpCode } = require("../utils");
 const controller = {};
 
 controller.armazenaFeicao = async (atividadeId, data, dados) => {
-  const table = new db.helpers.TableName({
+  const table = new db.pgp.helpers.TableName({
     table: "monitoramento_feicao",
     schema: "microcontrole"
   });
 
-  const cs = new db.helpers.ColumnSet(
+  const cs = new db.pgp.helpers.ColumnSet(
     [
       "tipo_operacao_id",
       "camada_id",
@@ -38,18 +38,18 @@ controller.armazenaFeicao = async (atividadeId, data, dados) => {
     });
   });
 
-  const query = db.helpers.insert(values, cs);
+  const query = db.pgp.helpers.insert(values, cs);
 
-  db.none(query);
+  db.conn.none(query);
 };
 
 controller.armazenaApontamento = async (atividadeId, data, dados) => {
-  const table = new db.helpers.TableName({
+  const table = new db.pgp.helpers.TableName({
     table: "monitoramento_apontamento",
     schema: "microcontrole"
   });
 
-  const cs = new db.helpers.ColumnSet(
+  const cs = new db.pgp.helpers.ColumnSet(
     ["quantidade", "categoria", "data", "atividade_id"],
     { table }
   );
@@ -64,18 +64,18 @@ controller.armazenaApontamento = async (atividadeId, data, dados) => {
     });
   });
 
-  const query = db.helpers.insert(values, cs);
+  const query = db.pgp.helpers.insert(values, cs);
 
-  db.none(query);
+  db.conn.none(query);
 };
 
 controller.armazenaTela = async (atividadeId, dados) => {
-  const table = new db.helpers.TableName({
+  const table = new db.pgp.helpers.TableName({
     table: "monitoramento_tela",
     schema: "microcontrole"
   });
 
-  const cs = new db.helpers.ColumnSet(["data", "atividade_id", "geom"], {
+  const cs = new db.pgp.helpers.ColumnSet(["data", "atividade_id", "geom"], {
     table
   });
 
@@ -91,13 +91,13 @@ controller.armazenaTela = async (atividadeId, dados) => {
     });
   });
 
-  const query = db.helpers.insert(values, cs);
+  const query = db.pgp.helpers.insert(values, cs);
 
-  db.none(query);
+  db.conn.none(query);
 };
 
 controller.armazenaAcao = async atividadeId => {
-  await db.any(
+  await db.conn.any(
     `
     INSERT INTO microcontrole.monitoramento_acao(atividade_id, data) VALUES($<atividadeId>, NOW())
     `,

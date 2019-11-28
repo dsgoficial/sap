@@ -27,6 +27,9 @@ const routes = require("./routes");
 
 const app = express();
 
+//Add sendJsonAndLog to res object
+app.use(sendJsonAndLogMiddleware);
+
 app.use(bodyParser.json()); //parsear POST em JSON
 app.use(xss()); //sanitize body input
 app.use(hpp()); //protection against parameter polution
@@ -46,9 +49,6 @@ const limiter = rateLimit({
 
 //apply limit all requests
 app.use(limiter);
-
-//Add sendJsonAndLog to res object
-app.use(sendJsonAndLogMiddleware);
 
 //prevent browser from request favicon
 app.get("/favicon.ico", function(req, res) {
@@ -86,6 +86,9 @@ app.use((req, res, next) => {
 });
 
 //Error handling
-app.use(errorHandler);
+app.use((err, req, res, next) => {
+  return errorHandler(err, res);
+});
+
 
 module.exports = app;

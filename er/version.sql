@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE TABLE public.versao(
   code SMALLINT NOT NULL PRIMARY KEY,
   nome VARCHAR(255) NOT NULL
@@ -21,3 +23,5 @@ CREATE TABLE public.layer_styles(
   ui text,
   update_time timestamp without time zone DEFAULT now()
 );
+
+COMMIT;

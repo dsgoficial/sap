@@ -14,7 +14,7 @@ CREATE TABLE dgeo.usuario(
 
 CREATE TABLE dgeo.login_temporario(
   id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id)
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
   servidor VARCHAR(255) NOT NULL,
   porta VARCHAR(255) NOT NULL,
   login VARCHAR(255) UNIQUE NOT NULL,

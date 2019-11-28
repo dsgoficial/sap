@@ -26,12 +26,12 @@ const cn = {
   password: DB_PASSWORD
 };
 
-const db = pgp(cn);
+const conn = pgp(cn);
 
-db.connect()
+conn.connect()
   .then(function(obj) {
     obj.done(); // success, release connection;
   })
   .catch(errorHandler);
 
-module.exports = db;
+module.exports = {conn, pgp};

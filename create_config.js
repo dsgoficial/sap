@@ -45,11 +45,11 @@ const createDotEnv = (
   const secret = crypto.randomBytes(64).toString("hex");
 
   const env = `PORT=${port}
-dbServer=${dbServer}
-dbPort=${dbPort}
-dbName=${dbName}
-dbUser=${dbUser}
-dbPassword=${dbPassword}
+DB_SERVER=${dbServer}
+DB_PORT=${dbPort}
+DB_NAME=${dbName}
+DB_USER=${dbUser}
+DB_PASSWORD=${dbPassword}
 JWT_SECRET=${secret}
 AUTH_SERVER=${authServer}`;
 
@@ -95,13 +95,13 @@ const createDatabase = async (dbUser, dbPassword, dbPort, dbServer, dbName) => {
   const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
 
   const db = pgp(connectionString);
-  await db.tx(async t => {
+  await db.conn.tx(async t => {
     await t.none(readSqlFile("./er/versao.sql"));
     await t.none(readSqlFile("./er/dominio.sql"));
     await t.none(readSqlFile("./er/dgeo.sql"));
     await t.none(readSqlFile("./er/macrocontrole.sql"));
     await t.none(readSqlFile("./er/acompanhamento.sql"));
-    await givePermission({ connection: t });
+    await givePermission({ dbUser, connection: t });
   });
 };
 

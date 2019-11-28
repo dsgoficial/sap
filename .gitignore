@@ -107,3 +107,5 @@ sap_config.qgs~
 config.env
 
 sslcert
+
+test_request.http

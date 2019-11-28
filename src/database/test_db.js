@@ -1,18 +1,11 @@
 "use strict";
 
-const promise = require("bluebird");
-
-const initOptions = {
-  promiseLib: promise
-};
-
-const pgp = require("pg-promise")(initOptions);
+const { pgp } = require("./main_db")
 
 const testeDBs = {};
 
 const testdb = async (usuario, senha, server, port, dbname) => {
   const con = `postgres://${usuario}:${senha}@${server}:${port}/${dbname}`;
-
   if (!(con in testeDBs)) {
     testeDBs[con] = pgp(con);
   }
@@ -28,7 +21,6 @@ const testdb = async (usuario, senha, server, port, dbname) => {
     .catch(function(error) {
       result = false;
     });
-
   return result;
 };
 

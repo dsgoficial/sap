@@ -18,7 +18,7 @@ const tempUserDbs = {};
 const temporaryLogin = {};
 
 const getDbInfo = async atividadeId => { 
-  return await db.oneOrNone(
+  return await db.conn.oneOrNone(
     `SELECT bd.nome, bd.servidor, bd.porta FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut
     ON ut.id = a.unidade_trabalho_id 
@@ -33,7 +33,7 @@ const getProdDbConnection = async (dbServer, dbPort, dbName) => {
   const connString = `postgres://${DB_USER}:${DB_PASSWORD}@${dbServer}:${dbPort}/${dbName}`;
 
   if (!(connString in tempUserDbs)) {
-    tempUserDbs[connString] = pgp(connString);
+    tempUserDbs[connString] = db.pgp(connString);
 
     tempUserDbs[connString].connect()
       .then(function (obj) {
@@ -46,13 +46,14 @@ const getProdDbConnection = async (dbServer, dbPort, dbName) => {
 }
 
 const getUserName = async usuarioId => { 
-  return await db.one(
+  const usuario = await db.conn.one(
     `SELECT translate(replace(lower(nome_guerra),' ', '_'),  
     'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\\,.;:<>?!\`{}[]()~\`@#$%^&*+=''',  
-    'aaaaaeeeeiiiiooooouuuucc________________________________') from dgeo.usuario
-    WHERE id = $<atividadeId>`,
+    'aaaaaeeeeiiiiooooouuuucc________________________________') As nome from dgeo.usuario
+    WHERE id = $<usuarioId>`,
     { usuarioId }
   );
+  return usuario.nome
 };
 
 const checkUserIfExists = async (login, connection) => {
@@ -67,32 +68,30 @@ const checkUserIfExists = async (login, connection) => {
 };
 
 const createDbUser = async (login, senha, connection) => {
-  const validity = await db.one(`SELECT now() + interval '5' day AS data`);
+  const validity = await connection.one(`SELECT now() + interval '5' day AS data`);
 
   await connection.none(
-    `CREATE USER $<login>:name WITH LOGIN PASSWORD $<senha> VALID UNTIL $<validity>`,
+    `CREATE USER $<login:name> WITH LOGIN PASSWORD $<senha> VALID UNTIL $<validity>`,
     {
       login,
       senha,
       validity: validity.data
     }
   );
-  return senha;
 };
 
 const updatePassword = async (login, senha, connection) => {
   return await connection.none(
-    `ALTER USER $<login>:name WITH PASSWORD $<senha>`,
+    `ALTER USER $<login:name> WITH PASSWORD $<senha>`,
     {
       login,
-      senha,
-      validity: validity.data
+      senha
     }
   );
 };
 
-const updateTempLogin = async (usuarioId, dbServer, dbPort, senha) => {
-  await db.tx(async t => {
+const updateTempLogin = async (usuarioId, dbServer, dbPort, login, senha) => {
+  await db.conn.tx(async t => {
     await t.none(
       `DELETE FROM dgeo.login_temporario
        WHERE usuario_id = $<usuarioId> AND servidor = $<dbServer> AND porta = $<dbPort>`,
@@ -119,10 +118,10 @@ const updateTempLogin = async (usuarioId, dbServer, dbPort, senha) => {
 
 const updateValidity = async (login, connection) => {
 
-  const validity = await db.one(`SELECT now() + interval '5' day AS data`);
+  const validity = await connection.one(`SELECT now() + interval '5' day AS data`);
 
   await connection.none(
-    `ALTER USER $<login>:name VALID UNTIL $<validity>`,
+    `ALTER USER $<login:name> VALID UNTIL $<validity>`,
     {
       login,
       validity: validity.data
@@ -135,18 +134,20 @@ const processTempUser = async (atividadeId, usuarioId, resetPassword, extendVali
   if(!dbInfo){
     return null
   }
-  const loginInfo = await db.oneOrNone(
+  const {servidor, porta, nome: nomeDb} = dbInfo
+  
+  const conn = await getProdDbConnection(servidor, porta, nomeDb);
+
+  const loginInfo = await db.conn.oneOrNone(
     `SELECT login, senha FROM dgeo.login_temporario 
     WHERE usuario_id = $<usuarioId> AND servidor = $<servidor> AND porta = $<porta>`,
-    { usuarioId, servidor: dbInfo.servidor, porta: dbInfo.porta }
+    { usuarioId, servidor, porta }
   );
-
-  const conn = await getProdDbConnection(dbInfo.servidor, dbInfo.porta, dbInfo.nome);
   
   let login;
   let senha;
   const novaSenha = crypto.randomBytes(20).toString("hex");
-  let updated = False;
+  let updated = false;
 
   if(!loginInfo){
     const usuarioNome = await getUserName(usuarioId);
@@ -163,7 +164,7 @@ const processTempUser = async (atividadeId, usuarioId, resetPassword, extendVali
     await createDbUser(login, senha, conn)
   }
 
-  const userConnected = await testDb(login, senha, conn, dbInfo.servidor, dbInfo.porta, dbInfo.nome)
+  const userConnected = await testDb(login, senha, servidor, porta, nomeDb)
   if(!userConnected || resetPassword){
     senha = novaSenha;
     updated = true;
@@ -175,7 +176,7 @@ const processTempUser = async (atividadeId, usuarioId, resetPassword, extendVali
   }
 
   if(updated){
-    await updateTempLogin(usuarioId, dbInfo.servidor, dbInfo.porta, senha)
+    await updateTempLogin(usuarioId, servidor, porta, login, senha)
   }
 
   return {login, senha};

@@ -78,6 +78,7 @@ router.post(
     const { token, administrador } = await loginCtrl.login(
       req.body.usuario,
       req.body.senha,
+      req.body.cliente,
       req.body.plugins,
       req.body.qgis
     );
