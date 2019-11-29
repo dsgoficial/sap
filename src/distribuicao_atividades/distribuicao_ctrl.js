@@ -520,9 +520,8 @@ controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
       if (!result.rowCount || result.rowCount != 1) {
         throw new AppError("Erro ao bloquear correção");
       }
-
-      await temporaryLogin.resetPassword(atividadeId, usuarioId);
     }
+    await temporaryLogin.resetPassword(atividadeId, usuarioId);
   });
 };
 

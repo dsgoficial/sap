@@ -128,8 +128,7 @@ router.get(
       req.query.proxima,
       req.body.usuarioId //gerenteId
     );
-
-    const msg = "Banco de dados retornados";
+    const msg = dados ? "Atividade retornada" : "Usuário não possui atividade";
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
   })
@@ -140,9 +139,7 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getBancoDados();
 
-    const msg = dados
-      ? "Atividade retornada"
-      : "Atividade do usuário não encontrada";
+    const msg = "Banco de dados retornados";
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
   })
@@ -174,7 +171,7 @@ router.post(
   "/unidade_trabalho/disponivel",
   schemaValidation({ body: gerenciaSchema.unidadeTrabalhoDisponivel }),
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.unidadeTrabalhoDisponivel(
+    await gerenciaCtrl.unidadeTrabalhoDisponivel(
       req.body.unidade_trabalho_ids,
       req.body.disponivel
     );
@@ -182,7 +179,7 @@ router.post(
     const msg =
       "Atributo disponível das unidades de trabalho atualizado com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -194,7 +191,7 @@ router.post(
 
     const msg = "Atividade pausada com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -206,7 +203,7 @@ router.post(
 
     const msg = "Atividade reiniciada com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -221,7 +218,7 @@ router.post(
 
     const msg = "Atividade voltou para etapa anterior com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -236,7 +233,7 @@ router.post(
 
     const msg = "Atividade avançou para próxima etapa com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -248,7 +245,7 @@ router.post(
 
     const msg = "Revisão criada com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -260,7 +257,7 @@ router.post(
 
     const msg = "Revisão/Correção criada com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -276,7 +273,7 @@ router.post(
 
     const msg = "Fila prioritaria criada com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -292,7 +289,7 @@ router.post(
 
     const msg = "Fila prioritaria grupo criada com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -310,6 +307,42 @@ router.post(
     );
 
     const msg = "Observação criada com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.get(
+  "/observacao/:id",
+  schemaValidation({ params: gerenciaSchema.idParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getObservacao(
+      req.params.id,
+    );
+
+    const msg = "Observações retornadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.get(
+  "/projeto_qgis",
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getProject();
+
+    const msg = "Projeto do QGIS retornado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.get(
+  "/lote",
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getLotes();
+
+    const msg = "Lotes retornados com sucesso";
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
   })

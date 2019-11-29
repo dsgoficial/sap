@@ -36,8 +36,10 @@ controller.getAtividadeUsuario = async (usuarioId, proxima, gerenteId) => {
   let atividadeId;
 
   if (proxima) {
-    const prioridade = await distribuicaoCtrl.calculaFila(usuario_id);
-    atividadeId = prioridade;
+    atividadeId = await distribuicaoCtrl.calculaFila(usuario_id);
+    if (!atividadeId) {
+      return null;
+    }
   } else {
     const emAndamento = await db.conn.oneOrNone(
       `SELECT a.id FROM macrocontrole.atividade AS a
@@ -252,7 +254,7 @@ controller.getUsuario = async () => {
 };
 
 controller.getPerfilProducao = async () => {
-  await db.conn.any(`SELECT id, nome FROM macrocontrole.perfil_producao`);
+  return await db.conn.any(`SELECT id, nome FROM macrocontrole.perfil_producao`);
 };
 
 const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
@@ -306,10 +308,10 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
 
   await connection.none(query);
 
-  updatedIds.forEach(u => {
-    temporaryLogin.resetPassword(u.id, u.usuario_id)
-  })
-
+  for (const u of updatedIds) {
+    await temporaryLogin.resetPassword(u.id, u.usuario_id)
+  }
+  
   return true;
 };
 
@@ -422,9 +424,9 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
 
     await t.none(query);
 
-    usersResetPassword.forEach(u => {
-      temporaryLogin.resetPassword(u.id, u.usuario_id)
-    })
+    for (const u of usersResetPassword) {
+      await temporaryLogin.resetPassword(u.id, u.usuario_id)
+    }
   });
 };
 
@@ -632,17 +634,23 @@ controller.criaFilaPrioritaria = async (
   usuarioPrioridadeId,
   prioridade
 ) => {
-  await db.conn.none(
+  const result = await db.conn.result(
     `
       INSERT INTO macrocontrole.fila_prioritaria(atividade_id, usuario_id, prioridade)
       (
-        SELECT id, $<usuarioPrioridadeId> as usuario_id, row_number() over(order by id) + $<prioridade>-1 as prioridade
-        FROM macrocontrole.atividade
-        WHERE id in ($<atividadeIds:csv>)
+        SELECT a.id, $<usuarioPrioridadeId> as usuario_id, row_number() over(order by a.id) + $<prioridade>-1 as prioridade
+        FROM macrocontrole.atividade AS a
+        WHERE a.id in ($<atividadeIds:csv>) AND a.tipo_situacao_id IN (1)
       )
       `,
     { atividadeIds, usuarioPrioridadeId, prioridade }
   );
+  if (!result.rowCount || result.rowCount != 1) {
+    throw new AppError(
+      "Atividade não encontrada ou não pode ser adicionada na fila prioritária",
+      httpCode.BadRequest
+    );
+  }
 };
 
 controller.criaFilaPrioritariaGrupo = async (
@@ -650,17 +658,24 @@ controller.criaFilaPrioritariaGrupo = async (
   perfilProducaoId,
   prioridade
 ) => {
-  await db.conn.none(
+  const result = await db.conn.result(
     `
     INSERT INTO macrocontrole.fila_prioritaria_grupo(atividade_id, perfil_producao_id, prioridade)
     (
       SELECT id, $<perfilProducaoId> as perfil_producao_id, row_number() over(order by id) + $<prioridade>-1 as prioridade
       FROM macrocontrole.atividade
-      WHERE id in ($<atividadeIds:csv>)
+      WHERE id in ($<atividadeIds:csv>) AND tipo_situacao_id IN (1)
     )
     `,
     { atividadeIds, perfilProducaoId, prioridade }
   );
+
+  if (!result.rowCount || result.rowCount != 1) {
+    throw new AppError(
+      "Atividade não encontrada ou não pode ser adicionada na fila prioritária",
+      httpCode.BadRequest
+    );
+  }
 };
 
 controller.criaObservacao = async (
@@ -725,8 +740,27 @@ controller.criaObservacao = async (
   });
 };
 
+controller.getObservacao = async atividadeId => {
+  return await db.conn.any(
+    `SELECT a.observacao AS observacao_atividade, ut.observacao AS observacao_unidade_trabalho,
+    l.observacao AS observacao_lote, e.observacao AS observacao_etapa, sf.observacao AS observacao_subfase
+    FROM macrocontrole.atividade AS a
+    INNER JOIN macrocontrole.unidade_trabalho_id AS ut ON ut.id = a.unidade_trabalho_id
+    INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+    INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+    INNER JOIN macrocontrole.subfase AS sf ON sf.id = e.subfase_id
+    WHERE a.id = $<atividadeId>`,
+    {atividadeId}
+    );
+};
+
 controller.getProject = async () => {
   return qgisProject;
 };
+
+controller.getLotes = async () => {
+  return await db.conn.any(`SELECT id, nome FROM macrocontrole.lote`);
+};
+
 
 module.exports = controller;

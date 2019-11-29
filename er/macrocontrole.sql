@@ -316,7 +316,8 @@ FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.verifica_restricao_etapa();
 CREATE TABLE macrocontrole.lote(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
-	prioridade INTEGER NOT NULL
+	prioridade INTEGER NOT NULL,
+	observacao VARCHAR(255)
 );
 
 CREATE TABLE macrocontrole.unidade_trabalho(
