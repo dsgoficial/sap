@@ -2,9 +2,12 @@
 
 const jwt = require("jsonwebtoken");
 
-const { JWT_SECRET } = require("../config");
-
-const { AppError, asyncHandler, httpCode } = require("../utils");
+const {
+  AppError,
+  asyncHandler,
+  httpCode,
+  config: { JWT_SECRET }
+} = require("../utils");
 
 const decodeJwt = (token, secret) => {
   return new Promise((resolve, reject) => {

@@ -6,7 +6,7 @@ module.exports = {
   schemaValidation: require("./schema_validation"),
   asyncHandler: require("./async_handler"),
   errorHandler: require("./error_handler"),
-  AppError: require("./app_error"),
+  AppError: require("./App_error"),
   httpCode: require("./http_code"),
-  qgisProject: require("./qgis_project")
+  config: require("./config")
 };

@@ -1,22 +1,15 @@
 "use strict";
 
-const { errorHandler } = require("../utils");
+const {
+  errorHandler,
+  config: { DB_USER, DB_PASSWORD, DB_SERVER, DB_PORT, DB_NAME }
+} = require("../utils");
 
 const promise = require("bluebird");
 
-const initOptions = {
+const pgp = require("pg-promise")({
   promiseLib: promise
-};
-
-const pgp = require("pg-promise")(initOptions);
-
-const {
-  DB_USER,
-  DB_PASSWORD,
-  DB_SERVER,
-  DB_PORT,
-  DB_NAME
-} = require("../config");
+});
 
 const cn = {
   host: DB_SERVER,
@@ -28,10 +21,11 @@ const cn = {
 
 const conn = pgp(cn);
 
-conn.connect()
+conn
+  .connect()
   .then(function(obj) {
     obj.done(); // success, release connection;
   })
   .catch(errorHandler);
 
-module.exports = {conn, pgp};
+module.exports = { conn, pgp };

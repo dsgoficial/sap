@@ -9,11 +9,9 @@ const promise = require("bluebird");
 const crypto = require("crypto");
 const axios = require("axios");
 
-const initOptions = {
+const pgp = require("pg-promise")({
   promiseLib: promise
-};
-
-const pgp = require("pg-promise")(initOptions);
+});
 
 const readSqlFile = file => {
   const fullPath = path.join(__dirname, file);
@@ -26,9 +24,13 @@ const verifyDotEnv = () => {
 
 const verifyAuthServer = async authServer => {
   const response = await axios.get(authServer);
-  const test = !response || response.status !== 200 || !("data" in response) || response.data.message !== "Serviço de autenticação operacional"
-  
-  if (test) {
+  const wrongServer =
+    !response ||
+    response.status !== 200 ||
+    !("data" in response) ||
+    response.data.message !== "Serviço de autenticação operacional";
+
+  if (wrongServer) {
     throw new Error("Erro ao se comunicar com o servidor de autenticação");
   }
 };
@@ -56,17 +58,6 @@ AUTH_SERVER=${authServer}`;
   fs.writeFileSync("config.env", env);
 };
 
-/**
- *
- * @async
- * @param {object} config
- * @param {string} [config.dbUser]
- * @param {string} [config.dbPassword]
- * @param {string} [config.dbPort]
- * @param {string} [config.dbServer]
- * @param {string} [config.dbName]
- * @param {*} [config.connection]
- */
 const givePermission = async ({
   dbUser,
   dbPassword,
@@ -82,6 +73,7 @@ const givePermission = async ({
   }
   await connection.none(readSqlFile("./er/permissao.sql"), [dbUser]);
 };
+
 const createDatabase = async (dbUser, dbPassword, dbPort, dbServer, dbName) => {
   const config = {
     user: dbUser,

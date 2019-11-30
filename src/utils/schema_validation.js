@@ -1,9 +1,7 @@
 "use strict";
 
-const AppError = require("./app_error");
-
+const AppError = require("./App_error");
 const httpCode = require("./http_code");
-
 
 /**
  * Retorna objeto de erro da validação realizada pelo middleware do Joi
@@ -32,7 +30,11 @@ const validationError = (error, context) => {
  * @param {object} [schema.params] - Schema do Joi para validação dos params
  * @returns {RequestHandler} Middleware de validação utilizando Joi
  */
-const middleware = ({ body: bodySchema, query: querySchema, params: paramsSchema }) => {
+const middleware = ({
+  body: bodySchema,
+  query: querySchema,
+  params: paramsSchema
+}) => {
   return (req, res, next) => {
     if (querySchema) {
       const { error } = querySchema.validate(req.query, {

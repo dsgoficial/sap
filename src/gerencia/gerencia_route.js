@@ -316,9 +316,7 @@ router.get(
   "/observacao/:id",
   schemaValidation({ params: gerenciaSchema.idParams }),
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getObservacao(
-      req.params.id,
-    );
+    const dados = await gerenciaCtrl.getObservacao(req.params.id);
 
     const msg = "Observações retornadas com sucesso";
 

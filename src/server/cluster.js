@@ -4,13 +4,13 @@ const colors = require("colors"); //colors for console
 
 const setupWorkerProcesses = () => {
   if (cluster.isMaster) {
-    const argv = require('minimist')(process.argv.slice(2));
+    const argv = require("minimist")(process.argv.slice(2));
 
     let numCores;
-    if("multicore" in argv && argv["multicore"]){
+    if ("multicore" in argv && argv["multicore"]) {
       numCores = os.cpus().length;
     } else {
-      numCores = 1
+      numCores = 1;
     }
 
     console.log(

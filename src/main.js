@@ -1,14 +1,21 @@
 "use strict";
 
-const { isMaster, setupWorkerProcesses } = require("./cluster");
+const {
+  cluster: { isMaster, setupWorkerProcesses }
+} = require("./server");
 
 if (isMaster) {
   setupWorkerProcesses();
 } else {
   const { errorHandler } = require("./utils");
-  const startServer = require("./server");
+  const { startServer, createDocumentation } = require("./server");
   const { databaseVersion } = require("./database");
-  const { verifyAuthServer } = require("./authentication")
+  const { verifyAuthServer } = require("./authentication");
 
-  databaseVersion.load().then(verifyAuthServer).then(startServer).catch(errorHandler)
+  databaseVersion
+    .load()
+    .then(verifyAuthServer)
+    .then(createDocumentation)
+    .then(startServer)
+    .catch(errorHandler);
 }

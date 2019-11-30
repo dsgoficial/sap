@@ -16,9 +16,9 @@ const httpCode = require("./http_code");
  * @param {number} [status=500] - Código HTTP do erro
  * @param {Error|string} [errorTrace] - Objeto de erro ou descrição textual do erro
  * @returns {AppError} Objeto de erro customizado
- * 
+ *
  * @example
- * 
+ *
  * throw new AppError('Recurso não encontrado', httpCode.NotFound)
  */
 class AppError extends Error {
@@ -29,7 +29,5 @@ class AppError extends Error {
       errorTrace instanceof Error ? serializeError(errorTrace) : errorTrace;
   }
 }
-
-new AppError()
 
 module.exports = AppError;

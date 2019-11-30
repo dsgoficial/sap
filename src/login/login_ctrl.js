@@ -5,9 +5,11 @@ const semver = require("semver");
 
 const { db } = require("../database");
 
-const { JWT_SECRET } = require("../config");
-
-const { AppError, httpCode } = require("../utils");
+const {
+  AppError,
+  httpCode,
+  config: { JWT_SECRET }
+} = require("../utils");
 
 const { authenticateUser } = require("../authentication");
 
@@ -111,9 +113,9 @@ controller.login = async (usuario, senha, cliente, plugins, qgis) => {
     throw new AppError("Usuário ou senha inválida", httpCode.Unauthorized);
   }
 
-  if(cliente === "qgis"){
+  if (cliente === "qgis") {
     await verificaQGIS(qgis);
-  
+
     await verificaPlugins(plugins);
   }
 

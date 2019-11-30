@@ -4,8 +4,8 @@ const express = require("express");
 
 const { schemaValidation, asyncHandler, httpCode } = require("../utils");
 
-const producaoCtrl = require("./distribuicao_ctrl");
-const producaoSchema = require("./distribuicao_schema");
+const producaoCtrl = require("./producao_ctrl");
+const producaoSchema = require("./producao_schema");
 
 const router = express.Router();
 

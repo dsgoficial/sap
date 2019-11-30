@@ -1,10 +1,10 @@
 "use strict";
 
-const { loginRoute, loginMiddleware, verifyAdmin } = require("./login");
-const { distribuicaoRoute } = require("./distribuicao_atividades");
-const { gerenciaRoute } = require("./gerencia");
-const { microcontroleRoute } = require("./microcontrole");
-const { estatisticasRoute } = require("./estatisticas");
+const { loginRoute, loginMiddleware, verifyAdmin } = require("../login");
+const { producaoRoute } = require("../producao");
+const { gerenciaRoute } = require("../gerencia");
+const { microcontroleRoute } = require("../microcontrole");
+const { estatisticasRoute } = require("../estatisticas");
 
 const routes = app => {
   app.use("/login", loginRoute);
@@ -14,7 +14,7 @@ const routes = app => {
   //Todas as requisições abaixo necessitam Token
   app.use(loginMiddleware);
 
-  app.use("/distribuicao", distribuicaoRoute);
+  app.use("/distribuicao", producaoRoute);
 
   app.use("/microcontrole", microcontroleRoute);
 

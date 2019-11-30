@@ -1,3 +1,5 @@
+"use strict";
+
 const swaggerOptions = {
   swaggerDefinition: {
     openapi: "3.0.0",

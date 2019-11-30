@@ -3,7 +3,6 @@
 const { serializeError } = require("serialize-error");
 
 const logger = require("./logger");
-
 const httpCode = require("./http_code");
 
 const errorHandler = (err, res = null) => {

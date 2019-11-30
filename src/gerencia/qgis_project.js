@@ -1,11 +1,14 @@
 "use strict";
 
-const { DB_NAME, DB_SERVER, DB_PORT, DB_USER, DB_PASSWORD} = require("../config");
-const fs = require('fs');
-const path = require('path');
+const {
+  config: { DB_NAME, DB_SERVER, DB_PORT, DB_USER, DB_PASSWORD }
+} = require("../utils");
 
-const qgisProject = (function(){
-    return fs
+const fs = require("fs");
+const path = require("path");
+
+const qgisProject = (function() {
+  return fs
     .readFileSync(
       path.resolve("./src/templates/sap_config_template.qgs"),
       "utf-8"
@@ -17,4 +20,4 @@ const qgisProject = (function(){
     .replace(/{{PASSWORD}}/g, DB_PASSWORD);
 })();
 
-module.exports = qgisProject
+module.exports = qgisProject;

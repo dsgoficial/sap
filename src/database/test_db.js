@@ -1,13 +1,13 @@
 "use strict";
 
-const { pgp } = require("./main_db")
+const db = require("./main_db");
 
 const testeDBs = {};
 
 const testdb = async (usuario, senha, server, port, dbname) => {
   const con = `postgres://${usuario}:${senha}@${server}:${port}/${dbname}`;
   if (!(con in testeDBs)) {
-    testeDBs[con] = pgp(con);
+    testeDBs[con] = db.pgp(con);
   }
 
   let result;

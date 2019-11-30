@@ -2,9 +2,11 @@
 
 const { db } = require("../database");
 
-const { AppError, httpCode, qgisProject } = require("../utils");
+const { AppError, httpCode } = require("../utils");
 
-const { distribuicaoCtrl } = require("../distribuicao_atividades");
+const { qgisProject } = require("../gerencia");
+
+const { producaoCtrl } = require("../producao");
 
 const controller = {};
 
@@ -29,14 +31,14 @@ controller.getAtividade = async (atividadeId, gerenteId) => {
     throw new AppError("Atividadade não encontrada", httpCode.NotFound);
   }
 
-  return distribuicaoCtrl.getDadosAtividade(atividadeId, gerenteId);
+  return producaoCtrl.getDadosAtividade(atividadeId, gerenteId);
 };
 
 controller.getAtividadeUsuario = async (usuarioId, proxima, gerenteId) => {
   let atividadeId;
 
   if (proxima) {
-    atividadeId = await distribuicaoCtrl.calculaFila(usuario_id);
+    atividadeId = await producaoCtrl.calculaFila(usuario_id);
     if (!atividadeId) {
       return null;
     }
@@ -53,7 +55,7 @@ controller.getAtividadeUsuario = async (usuarioId, proxima, gerenteId) => {
     atividadeId = emAndamento.id;
   }
 
-  return distribuicaoCtrl.getDadosAtividade(atividadeId, gerenteId);
+  return producaoCtrl.getDadosAtividade(atividadeId, gerenteId);
 };
 
 controller.getEstilos = async () => {
@@ -254,7 +256,9 @@ controller.getUsuario = async () => {
 };
 
 controller.getPerfilProducao = async () => {
-  return await db.conn.any(`SELECT id, nome FROM macrocontrole.perfil_producao`);
+  return await db.conn.any(
+    `SELECT id, nome FROM macrocontrole.perfil_producao`
+  );
 };
 
 const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
@@ -309,9 +313,9 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
   await connection.none(query);
 
   for (const u of updatedIds) {
-    await temporaryLogin.resetPassword(u.id, u.usuario_id)
+    await temporaryLogin.resetPassword(u.id, u.usuario_id);
   }
-  
+
   return true;
 };
 
@@ -425,7 +429,7 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
     await t.none(query);
 
     for (const u of usersResetPassword) {
-      await temporaryLogin.resetPassword(u.id, u.usuario_id)
+      await temporaryLogin.resetPassword(u.id, u.usuario_id);
     }
   });
 };
@@ -442,8 +446,11 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
         WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2)`,
       { atividadeIds }
     );
-    if(ativEmExec){
-      throw new AppError("Não se pode voltar atividades em execução. Pause a atividade primeiro", httpCode.BadRequest);
+    if (ativEmExec) {
+      throw new AppError(
+        "Não se pode voltar atividades em execução. Pause a atividade primeiro",
+        httpCode.BadRequest
+      );
     }
 
     const atividadesUpdates = await t.any(
@@ -507,8 +514,11 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
       WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.tipo_situacao_id IN (2)`,
       { atividadeIds, comparisonOperator }
     );
-    if(ativEmExec){
-      throw new AppError("Não se pode avançar atividades em execução. Pause a atividade primeiro", httpCode.BadRequest);
+    if (ativEmExec) {
+      throw new AppError(
+        "Não se pode avançar atividades em execução. Pause a atividade primeiro",
+        httpCode.BadRequest
+      );
     }
 
     await t.none(
@@ -750,8 +760,8 @@ controller.getObservacao = async atividadeId => {
     INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
     INNER JOIN macrocontrole.subfase AS sf ON sf.id = e.subfase_id
     WHERE a.id = $<atividadeId>`,
-    {atividadeId}
-    );
+    { atividadeId }
+  );
 };
 
 controller.getProject = async () => {
@@ -761,6 +771,5 @@ controller.getProject = async () => {
 controller.getLotes = async () => {
   return await db.conn.any(`SELECT id, nome FROM macrocontrole.lote`);
 };
-
 
 module.exports = controller;

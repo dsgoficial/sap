@@ -99,8 +99,8 @@ const activityStatistics = activity_fixed => {
 };
 
 controller.getAcaoUsuario = async (usuario_id, days) => {
-    const no_activity = await db.conn.any(
-      `
+  const no_activity = await db.conn.any(
+    `
       WITH datas AS (
         SELECT ma.data
         FROM microcontrole.monitoramento_acao AS ma
@@ -118,10 +118,10 @@ controller.getAcaoUsuario = async (usuario_id, days) => {
         AND data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60) > 3
         ORDER BY data::date, previous_data;
       `,
-      [usuario_id, days]
-    );
-    const min_max_points = await db.conn.any(
-      `
+    [usuario_id, days]
+  );
+  const min_max_points = await db.conn.any(
+    `
       SELECT to_char(ma.data::date, 'YYYY-MM-DD') AS dia, to_char(min(ma.data), 'YYYY-MM-DD HH24:MI:00') as min_data, to_char(max(ma.data), 'YYYY-MM-DD HH24:MI:00') as max_data, tpg.nome_abrev || ' ' || u.nome_guerra as usuario
       FROM microcontrole.monitoramento_acao AS ma
       INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
@@ -131,18 +131,17 @@ controller.getAcaoUsuario = async (usuario_id, days) => {
       GROUP BY data::date, tpg.nome_abrev , u.nome_guerra
       ORDER BY data::date
       `,
-      [usuario_id, days]
-    );
-    const activity_fixed = fixActivity(no_activity, min_max_points);
-    activity_fixed = activityStatistics(activity_fixed);
+    [usuario_id, days]
+  );
+  const activity_fixed = fixActivity(no_activity, min_max_points);
+  activity_fixed = activityStatistics(activity_fixed);
 
-    return activity_fixed;
-
+  return activity_fixed;
 };
 
 controller.getAcaoEmExecucao = async () => {
-    const no_activity = await db.conn.any(
-      `
+  const no_activity = await db.conn.any(
+    `
       WITH datas AS (
         SELECT a.usuario_id, ma.data
         FROM microcontrole.monitoramento_acao AS ma
@@ -160,9 +159,9 @@ controller.getAcaoEmExecucao = async () => {
         AND data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60) > 3
         ORDER BY usuario_id, data::date, previous_data;
       `
-    );
-    const min_max_points = await db.conn.any(
-      `
+  );
+  const min_max_points = await db.conn.any(
+    `
       SELECT u.id AS usuario_id, to_char(ma.data::date, 'YYYY-MM-DD') AS dia, to_char(min(ma.data), 'YYYY-MM-DD HH24:MI:00') as min_data, to_char(max(ma.data), 'YYYY-MM-DD HH24:MI:00') as max_data, tpg.nome_abrev || ' ' || u.nome_guerra as usuario
       FROM microcontrole.monitoramento_acao AS ma
       INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
@@ -172,10 +171,10 @@ controller.getAcaoEmExecucao = async () => {
       GROUP BY data::date, u.id, tpg.nome_abrev , u.nome_guerra
       ORDER BY data::date
       `
-    );
-    const activity_fixed = fixActivity(no_activity, min_max_points);
-    activity_fixed = activityStatistics(activity_fixed);
+  );
+  const activity_fixed = fixActivity(no_activity, min_max_points);
+  activity_fixed = activityStatistics(activity_fixed);
 
-    return activity_fixed;
+  return activity_fixed;
 };
 module.exports = controller;

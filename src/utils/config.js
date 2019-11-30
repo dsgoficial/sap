@@ -2,12 +2,36 @@
 
 const dotenv = require("dotenv");
 
+const Joi = require("joi");
+
+const AppError = require("./App_error");
+const errorHandler = require("./error_handler");
+
 dotenv.config({
   path: process.env.NODE_ENV === "test" ? "config_testing.env" : "config.env"
 });
 
 const VERSION = "2.0.0";
 const MIN_DATABASE_VERSION = "2.0.0";
+
+const configSchema = Joi.object().keys({
+  PORT: Joi.number()
+    .integer()
+    .required(),
+  DB_SERVER: Joi.string().required(),
+  DB_PORT: Joi.number()
+    .integer()
+    .required(),
+  DB_NAME: Joi.string().required(),
+  DB_USER: Joi.string().required(),
+  DB_PASSWORD: Joi.string().required(),
+  JWT_SECRET: Joi.string().required(),
+  AUTH_SERVER: Joi.string()
+    .uri()
+    .required(),
+  VERSION: Joi.string().required(),
+  MIN_DATABASE_VERSION: Joi.string().required()
+});
 
 /**
  * Objeto de configuração
@@ -37,5 +61,21 @@ const config = {
   VERSION,
   MIN_DATABASE_VERSION
 };
+
+const { error } = configSchema.validate(config, {
+  abortEarly: false
+});
+if (error) {
+  const { details } = error;
+  const message = details.map(i => i.message).join(",");
+
+  errorHandler(
+    new AppError(
+      `Arquivo de configuração inválido. Configure novamente o serviço.`,
+      null,
+      message
+    )
+  );
+}
 
 module.exports = config;
