@@ -794,4 +794,10 @@ controller.getViewsAcompanhamento = async () => {
   return dados;
 };
 
+controller.atualizaAtivdadesBloqueadas = async () => {
+  return await db.conn.none(
+    `REFRESH MATERIALIZED VIEW acompanhamento.atividades_bloqueadas;`
+  );
+};
+
 module.exports = controller;

@@ -386,4 +386,16 @@ router.get(
   })
 );
 
+router.post(
+  "/atualiza_atividades_bloqueadas",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaAtivdadesBloqueadas();
+
+    const msg = "View Atividades Bloqueadas atualizada com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
 module.exports = router;
