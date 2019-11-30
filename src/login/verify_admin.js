@@ -2,16 +2,24 @@
 
 const { AppError, asyncHandler, httpCode } = require("../utils");
 
+const { db } = require("../database");
+
+const validateToken = require("./validate_token");
+
 //middleware para verificar se o usuário é administrador
 const verifyAdmin = asyncHandler(async (req, res, next) => {
-  if (!("usuarioId" in req.body && req.body.usuarioId)) {
+  const token = req.headers["authorization"];
+
+  const decoded = await validateToken(token);
+
+  if (!("id" in decoded && decoded.id)) {
     throw new AppError("Falta informação de usuário");
   }
   const {
     administrador
   } = await db.conn.oneOrNone(
     `SELECT administrador FROM dgeo.usuario WHERE id = $<usuarioId> and ativo IS TRUE`,
-    { usuarioId: req.body.usuarioId }
+    { usuarioId: decoded.id }
   );
   if (!administrador) {
     throw new AppError(
@@ -19,6 +27,9 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
       httpCode.Forbidden
     );
   }
+  req.body.usuarioId = decoded.id;
+  req.body.administrador = true;
+
   next();
 });
 

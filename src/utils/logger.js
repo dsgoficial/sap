@@ -12,10 +12,7 @@ if (!fs.existsSync(logDir)) {
 }
 
 const rotateTransport = new DailyRotateFile({
-  format: format.combine(
-    format.timestamp(),
-    format.json()
-  ),
+  format: format.combine(format.timestamp(), format.json()),
   filename: path.join(logDir, "/%DATE%-application.log"),
   datePattern: "YYYY-MM-DD",
   maxSize: "20m",
@@ -23,11 +20,7 @@ const rotateTransport = new DailyRotateFile({
 });
 
 const consoleTransport = new transports.Console({
-  format: format.combine(
-    format.colorize(),
-    format.timestamp(),
-    format.simple()
-  )
+  format: format.combine(format.colorize(), format.timestamp(), format.simple())
 });
 
 const logger = createLogger({

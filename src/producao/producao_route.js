@@ -4,6 +4,8 @@ const express = require("express");
 
 const { schemaValidation, asyncHandler, httpCode } = require("../utils");
 
+const { verifyLogin } = require("../login");
+
 const producaoCtrl = require("./producao_ctrl");
 const producaoSchema = require("./producao_schema");
 
@@ -11,6 +13,7 @@ const router = express.Router();
 
 router.post(
   "/finaliza",
+  verifyLogin,
   schemaValidation({ body: producaoSchema.finaliza }),
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.finaliza(
@@ -27,6 +30,7 @@ router.post(
 
 router.get(
   "/verifica",
+  verifyLogin,
   asyncHandler(async (req, res, next) => {
     const dados = await producaoCtrl.verifica(req.body.usuarioId);
     const msg = dados
@@ -39,6 +43,7 @@ router.get(
 
 router.post(
   "/inicia",
+  verifyLogin,
   asyncHandler(async (req, res, next) => {
     const dados = await producaoCtrl.inicia(req.body.usuarioId);
 
@@ -52,6 +57,7 @@ router.post(
 
 router.post(
   "/resposta_questionario",
+  verifyLogin,
   schemaValidation({ body: producaoSchema.respostaQuestionario }),
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.respondeQuestionario(
@@ -67,6 +73,7 @@ router.post(
 
 router.post(
   "/problema_atividade",
+  verifyLogin,
   schemaValidation({ body: producaoSchema.problemaAtividade }),
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.problemaAtividade(
@@ -83,6 +90,7 @@ router.post(
 
 router.get(
   "/tipo_problema",
+  verifyLogin,
   asyncHandler(async (req, res, next) => {
     const dados = await producaoCtrl.getTipoProblema();
 

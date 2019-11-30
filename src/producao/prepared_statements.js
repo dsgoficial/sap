@@ -1,7 +1,7 @@
 "use strict";
 
 const path = require("path");
-const { createPS } = require("../../database");
+const { createPS } = require("../database");
 
 /**
  * Returns the full path of a file
@@ -9,7 +9,7 @@ const { createPS } = require("../../database");
  * @returns {string} Full path of a file
  */
 const fp = p => {
-  return path.join(__dirname, p);
+  return path.join(__dirname, "sql", p);
 };
 
 module.exports = {

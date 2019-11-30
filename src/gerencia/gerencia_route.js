@@ -4,6 +4,8 @@ const express = require("express");
 
 const { schemaValidation, asyncHandler, httpCode } = require("../utils");
 
+const { verifyAdmin } = require("../login");
+
 const gerenciaCtrl = require("./gerencia_ctrl");
 const gerenciaSchema = require("./gerencia_schema");
 
@@ -11,6 +13,7 @@ const router = express.Router();
 
 router.get(
   "/estilos",
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getEstilos();
 
@@ -22,6 +25,7 @@ router.get(
 
 router.get(
   "/regras",
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getRegras();
 
@@ -33,6 +37,7 @@ router.get(
 
 router.get(
   "/modelos",
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getModelos();
 
@@ -44,6 +49,7 @@ router.get(
 
 router.get(
   "/menus",
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getMenus();
 
@@ -55,6 +61,7 @@ router.get(
 
 router.post(
   "/estilos",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.estilos }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.gravaEstilos(req.body.estilos, req.body.usuarioId);
@@ -67,6 +74,7 @@ router.post(
 
 router.post(
   "/regras",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.regras }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.gravaRegras(req.body.regras, req.body.usuarioId);
@@ -79,6 +87,7 @@ router.post(
 
 router.post(
   "/menus",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.menus }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.gravaMenus(req.body.menus, req.body.usuarioId);
@@ -91,6 +100,7 @@ router.post(
 
 router.post(
   "/modelos",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.qgisModels }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.gravaModelos(req.body.modelos, req.body.usuarioId);
@@ -103,6 +113,7 @@ router.post(
 
 router.get(
   "/atividade/:id",
+  verifyAdmin,
   schemaValidation({ params: gerenciaSchema.idParams }),
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAtividade(
@@ -118,6 +129,7 @@ router.get(
 
 router.get(
   "/atividade/usuario/:id",
+  verifyAdmin,
   schemaValidation({
     params: gerenciaSchema.idParams,
     query: gerenciaSchema.proximaQuery
@@ -136,6 +148,7 @@ router.get(
 
 router.get(
   "/banco_dados",
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getBancoDados();
 
@@ -147,6 +160,7 @@ router.get(
 
 router.get(
   "/usuario",
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getUsuario();
 
@@ -158,6 +172,7 @@ router.get(
 
 router.get(
   "/perfil_producao",
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getPerfilProducao();
 
@@ -169,6 +184,7 @@ router.get(
 
 router.post(
   "/unidade_trabalho/disponivel",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.unidadeTrabalhoDisponivel }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.unidadeTrabalhoDisponivel(
@@ -185,6 +201,7 @@ router.post(
 
 router.post(
   "/atividade/pausar",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadePausar }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.pausaAtividade(req.body.unidade_trabalho_ids);
@@ -197,6 +214,7 @@ router.post(
 
 router.post(
   "/atividade/reiniciar",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeReiniciar }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.reiniciaAtividade(req.body.unidade_trabalho_ids);
@@ -209,6 +227,7 @@ router.post(
 
 router.post(
   "/atividade/voltar",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeVoltar }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.voltaAtividade(
@@ -224,6 +243,7 @@ router.post(
 
 router.post(
   "/atividade/avancar",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeAvancar }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.avancaAtividade(
@@ -239,6 +259,7 @@ router.post(
 
 router.post(
   "/atividade/criar_revisao",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeCriarRevisao }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.criaRevisao(req.body.unidade_trabalho_ids);
@@ -251,6 +272,7 @@ router.post(
 
 router.post(
   "/atividade/criar_revcorr",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeCriarRevcorr }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.criaRevcorr(req.body.unidade_trabalho_ids);
@@ -263,6 +285,7 @@ router.post(
 
 router.post(
   "/fila_prioritaria",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.filaPrioritaria }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.criaFilaPrioritaria(
@@ -279,6 +302,7 @@ router.post(
 
 router.post(
   "/fila_prioritaria_grupo",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.filaPrioritariaGrupo }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.criaFilaPrioritariaGrupo(
@@ -295,6 +319,7 @@ router.post(
 
 router.post(
   "/observacao",
+  verifyAdmin,
   schemaValidation({ body: gerenciaSchema.observacao }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.criaObservacao(
@@ -314,6 +339,7 @@ router.post(
 
 router.get(
   "/observacao/:id",
+  verifyAdmin,
   schemaValidation({ params: gerenciaSchema.idParams }),
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getObservacao(req.params.id);
@@ -326,6 +352,7 @@ router.get(
 
 router.get(
   "/projeto_qgis",
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getProject();
 
@@ -337,6 +364,7 @@ router.get(
 
 router.get(
   "/lote",
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getLotes();
 

@@ -1,6 +1,7 @@
 const cluster = require("cluster");
 const os = require("os");
-const colors = require("colors"); //colors for console
+
+const { logger } = require("../utils");
 
 const setupWorkerProcesses = () => {
   if (cluster.isMaster) {
@@ -13,23 +14,31 @@ const setupWorkerProcesses = () => {
       numCores = 1;
     }
 
-    console.log(
-      `O SAP irá iniciar em modo cluster com ${numCores} worker(s)`.bold.blue
+    logger.info(
+      `O Serviço irá iniciar em modo cluster com ${numCores} worker(s)`,
+      { workers: numCores }
     );
+
     for (let i = 0; i < numCores; i++) {
       let newCluster = cluster.fork();
 
       newCluster.on("message", function(message) {
-        console.log(message);
+        logger.info(`Worker message: ${message}`, { message });
       });
     }
     cluster.on("online", function(worker) {
-      console.log(`Worker ${worker.process.pid} iniciado`.blue);
+      logger.info(`Worker ${worker.process.pid} iniciado`, {
+        worker_pid: worker.process.pid
+      });
     });
     cluster.on("exit", function(worker, code, signal) {
-      console.log(
-        `Worker ${worker.process.pid} morreu com código ${code} e sinal ${signal}`
-          .red
+      logger.error(
+        `Worker ${worker.process.pid} morreu com código ${code} e sinal ${signal}`,
+        {
+          worker_pid: worker.process.pid,
+          code,
+          signal
+        }
       );
     });
   }

@@ -452,9 +452,17 @@ const dadosProducao = async atividadeId => {
   return results;
 };
 
-controller.getDadosAtividade = async (atividadeId, usuarioId, resetPassword = false) => {
+controller.getDadosAtividade = async (
+  atividadeId,
+  usuarioId,
+  resetPassword = false
+) => {
   const dados = await dadosProducao(atividadeId);
-  dados.login_info = await temporaryLogin.getLogin(atividadeId, usuarioId, resetPassword);
+  dados.login_info = await temporaryLogin.getLogin(
+    atividadeId,
+    usuarioId,
+    resetPassword
+  );
   return dados;
 };
 

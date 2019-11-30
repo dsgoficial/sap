@@ -4,7 +4,7 @@ const { db } = require("../database");
 
 const { AppError, httpCode } = require("../utils");
 
-const { qgisProject } = require("../gerencia");
+const qgisProject = require("./qgis_project");
 
 const { producaoCtrl } = require("../producao");
 

@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 
 const {
   AppError,
-  asyncHandler,
   httpCode,
   config: { JWT_SECRET }
 } = require("../utils");
@@ -22,11 +21,7 @@ const decodeJwt = (token, secret) => {
   });
 };
 
-//middleware para verificar o JWT
-const verifyToken = asyncHandler(async (req, res, next) => {
-  //verifica o header authorization para pegar o token
-  const token = req.headers["authorization"];
-
+const validateToken = async token => {
   if (!token) {
     throw new AppError("Nenhum token fornecido", httpCode.Unauthorized);
   }
@@ -35,10 +30,7 @@ const verifyToken = asyncHandler(async (req, res, next) => {
     token = token.slice(7, token.length);
   }
 
-  const decoded = await decodeJwt(token, JWT_SECRET);
+  return await decodeJwt(token, JWT_SECRET);
+};
 
-  req.body.usuarioId = decoded.id;
-  next();
-});
-
-module.exports = verifyToken;
+module.exports = validateToken;

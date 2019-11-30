@@ -17,8 +17,7 @@
     "dev-https": "nodemon src/index.js --https",
     "dev-https-multicore": "nodemon src/index.js --https --multicore",
     "production": "pm2 start src/index.js -multicore -https --name sap",
-    "config": "node create_config.js",
-    "generate-docs": "./node_modules/.bin/documentation build src/** -f html -o src/js_docs"
+    "config": "node create_config.js"
   },
   "keywords": [
     "Controle de Produção",
