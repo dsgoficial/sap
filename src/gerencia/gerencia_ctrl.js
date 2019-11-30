@@ -2,6 +2,10 @@
 
 const { db } = require("../database");
 
+const {
+  config: { DB_USER, DB_PASSWORD, DB_SERVER, DB_PORT, DB_NAME }
+} = require("../utils");
+
 const { AppError, httpCode } = require("../utils");
 
 const qgisProject = require("./qgis_project");
@@ -770,6 +774,24 @@ controller.getProject = async () => {
 
 controller.getLotes = async () => {
   return await db.conn.any(`SELECT id, nome FROM macrocontrole.lote`);
+};
+
+controller.getViewsAcompanhamento = async () => {
+  const views = await db.conn.any(`
+  SELECT table_schema AS schema, table_name AS nome from information_schema.views
+  WHERE table_schema = 'acompanhamento';`);
+
+  const dados = {};
+  dados.banco_dados = {
+    nome_db: DB_NAME,
+    servidor: DB_SERVER,
+    porta: DB_PORT,
+    login: DB_USER,
+    senha: DB_PASSWORD
+  };
+  dados.views = views;
+
+  return dados;
 };
 
 module.exports = controller;

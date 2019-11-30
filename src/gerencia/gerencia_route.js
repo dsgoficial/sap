@@ -374,4 +374,16 @@ router.get(
   })
 );
 
+router.get(
+  "/view_acompanhamento",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getViewsAcompanhamento();
+
+    const msg = "Views de acompanhamento retornadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
 module.exports = router;
