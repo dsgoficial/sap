@@ -19,6 +19,9 @@
     "production": "pm2 start src/index.js -multicore -https --name sap",
     "config": "node create_config.js"
   },
+  "nodemonConfig": {
+    "ignore": ["src/js_docs/*"]
+  },
   "keywords": [
     "Controle de Produção",
     "Node",

@@ -1,14 +1,25 @@
 "use strict";
 
 const dotenv = require("dotenv");
-
 const Joi = require("joi");
+const fs = require("fs");
 
 const AppError = require("./App_error");
 const errorHandler = require("./error_handler");
 
+const configFile =
+  process.env.NODE_ENV === "test" ? "config_testing.env" : "config.env";
+
+if (!fs.existsSync(configFile)) {
+  errorHandler(
+    new AppError(
+      `Arquivo de configuração não encontrado. Configure o serviço primeiro.`
+    )
+  );
+}
+
 dotenv.config({
-  path: process.env.NODE_ENV === "test" ? "config_testing.env" : "config.env"
+  path: configFile
 });
 
 const VERSION = "2.0.0";

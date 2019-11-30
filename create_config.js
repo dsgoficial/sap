@@ -23,14 +23,21 @@ const verifyDotEnv = () => {
 };
 
 const verifyAuthServer = async authServer => {
-  const response = await axios.get(authServer);
-  const wrongServer =
-    !response ||
-    response.status !== 200 ||
-    !("data" in response) ||
-    response.data.message !== "Serviço de autenticação operacional";
+  if (!authServer.startsWith("http://") && !authServer.startsWith("https://")) {
+    throw new Error("Servidor deve iniciar com http:// ou https://");
+  }
+  try {
+    const response = await axios.get(authServer);
+    const wrongServer =
+      !response ||
+      response.status !== 200 ||
+      !("data" in response) ||
+      response.data.message !== "Serviço de autenticação operacional";
 
-  if (wrongServer) {
+    if (wrongServer) {
+      throw new Error();
+    }
+  } catch (e) {
     throw new Error("Erro ao se comunicar com o servidor de autenticação");
   }
 };
@@ -87,7 +94,7 @@ const createDatabase = async (dbUser, dbPassword, dbPort, dbServer, dbName) => {
   const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`;
 
   const db = pgp(connectionString);
-  await db.conn.tx(async t => {
+  await db.tx(async t => {
     await t.none(readSqlFile("./er/versao.sql"));
     await t.none(readSqlFile("./er/dominio.sql"));
     await t.none(readSqlFile("./er/dgeo.sql"));
@@ -188,7 +195,8 @@ const createConfig = async () => {
       {
         type: "input",
         name: "authServer",
-        message: "Qual a URL do serviço de autenticação?"
+        message:
+          "Qual a URL do serviço de autenticação (iniciar com http:// ou https://)?"
       }
     ];
 

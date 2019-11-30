@@ -182,8 +182,9 @@ INSERT INTO dominio.tipo_problema (code, nome) VALUES
 (1, 'Insumo não é suficiente para execução da atividade'),
 (2, 'Problema em etapa anterior, necessita ser refeita'),
 (3, 'Erro durante execução da atividade atual'),
-(4, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida'),
-(5, 'Problema nas rotinas')
+(4, 'Problema em unidade de trabalho vizinha'),
+(5, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida'),
+(6, 'Problema nas rotinas'),
 (99, 'Outros');
 
 CREATE TABLE dominio.tipo_perda_recurso_humano(

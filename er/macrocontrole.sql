@@ -141,7 +141,7 @@ $BODY$
 		RAISE EXCEPTION 'Etapa de Correção deve ser imediatamente após a uma etapa de Revisão.';
 	END IF;
 
-    RETURN NULL
+    RETURN NULL;
 
     END;
 $BODY$
@@ -488,7 +488,7 @@ BEGIN
 		WHEN data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60) < 5
 		THEN (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60)
 		ELSE 0
-        END)) INTO tempo_minutos
+    END)) INTO tempo_minutos
 		FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL;
 
         RETURN tempo_minutos;
