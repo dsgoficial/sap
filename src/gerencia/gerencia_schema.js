@@ -5,11 +5,13 @@ const Joi = require("joi");
 const models = {};
 
 models.idParams = Joi.object().keys({
-  id: Joi.string().regex(/^[0-9]+$/).required()
+  id: Joi.string()
+    .regex(/^[0-9]+$/)
+    .required()
 });
 
 models.proximaQuery = Joi.object().keys({
-  proxima: Joi.string().valid('true','false')
+  proxima: Joi.string().valid("true", "false")
 });
 
 models.estilos = Joi.object().keys({
@@ -85,6 +87,21 @@ models.unidadeTrabalhoDisponivel = Joi.object().keys({
   disponivel: Joi.boolean().required()
 });
 
+models.unidadeTrabalhoLote = Joi.object().keys({
+  unidade_trabalho_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
+  lote: Joi.number()
+    .integer()
+    .strict()
+    .required()
+});
+
 models.atividadePausar = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
     .items(
@@ -154,11 +171,21 @@ models.observacao = Joi.object().keys({
     )
     .required()
     .min(1),
-  observacao_atividade: Joi.string().allow("", null).required(),
-  observacao_etapa: Joi.string().allow("", null).required(),
-  observacao_subfase: Joi.string().allow("", null).required(),
-  observacao_unidade_trabalho: Joi.string().allow("", null).required(),
-  observacao_lote: Joi.string().allow("", null).required()
+  observacao_atividade: Joi.string()
+    .allow("", null)
+    .required(),
+  observacao_etapa: Joi.string()
+    .allow("", null)
+    .required(),
+  observacao_subfase: Joi.string()
+    .allow("", null)
+    .required(),
+  observacao_unidade_trabalho: Joi.string()
+    .allow("", null)
+    .required(),
+  observacao_lote: Joi.string()
+    .allow("", null)
+    .required()
 });
 
 models.atividadeVoltar = Joi.object().keys({

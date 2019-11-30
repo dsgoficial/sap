@@ -63,19 +63,19 @@ controller.getAtividadeUsuario = async (usuarioId, proxima, gerenteId) => {
 };
 
 controller.getEstilos = async () => {
-  return await db.conn.any(`SELECT * FROM dgeo.layer_styles`);
+  return db.conn.any(`SELECT * FROM dgeo.layer_styles`);
 };
 
 controller.getRegras = async () => {
-  return await db.conn.any(`SELECT * FROM dgeo.layer_rules`);
+  return db.conn.any(`SELECT * FROM dgeo.layer_rules`);
 };
 
 controller.getModelos = async () => {
-  return await db.conn.any(`SELECT * FROM dgeo.layer_qgis_models`);
+  return db.conn.any(`SELECT * FROM dgeo.layer_qgis_models`);
 };
 
 controller.getMenus = async () => {
-  return await db.conn.any(`SELECT * FROM dgeo.layer_menus`);
+  return db.conn.any(`SELECT * FROM dgeo.layer_menus`);
 };
 
 controller.gravaEstilos = async (estilos, usuarioId) => {
@@ -247,22 +247,20 @@ controller.grava_menus = async (menus, usuarioId) => {
 };
 
 controller.getBancoDados = async () => {
-  return await db.conn.any(
+  return db.conn.any(
     `SELECT nome, servidor, porta FROM macrocontrole.banco_dados`
   );
 };
 
 controller.getUsuario = async () => {
-  return await db.conn.any(
+  return db.conn.any(
     `SELECT u.id, tpg.nome_abrev || ' ' || u.nome_guerra AS nome
       FROM dgeo.usuario AS u INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id WHERE u.ativo IS TRUE`
   );
 };
 
 controller.getPerfilProducao = async () => {
-  return await db.conn.any(
-    `SELECT id, nome FROM macrocontrole.perfil_producao`
-  );
+  return db.conn.any(`SELECT id, nome FROM macrocontrole.perfil_producao`);
 };
 
 const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
@@ -327,29 +325,13 @@ controller.unidadeTrabalhoDisponivel = async (
   unidadeTrabalhoIds,
   disponivel
 ) => {
-  const table = new db.pgp.helpers.TableName({
-    table: "unidade_trabalho",
-    schema: "macrocontrole"
-  });
-
-  const cs = new db.pgp.helpers.ColumnSet(["?id", "disponivel"], { table });
-
-  const values = [];
-  unidadeTrabalhoIds.forEach(d => {
-    values.push({
-      id: d,
-      disponivel
-    });
-  });
-
-  const query =
-    db.pgp.helpers.update(values, cs, null, {
-      tableAlias: "X",
-      valueAlias: "Y"
-    }) + "WHERE Y.id = X.id";
-
   await db.conn.tx(async t => {
-    await t.none(query);
+    await t.none(
+      `UPDATE macrocontrole.unidade_trabalho
+      SET disponivel = $<disponivel>
+      WHERE id in ($<unidadeTrabalhoIds:csv>)`,
+      { unidadeTrabalhoIds, disponivel }
+    );
     if (!disponivel) {
       await pausaAtividadeMethod(unidadeTrabalhoIds, t);
     }
@@ -755,7 +737,7 @@ controller.criaObservacao = async (
 };
 
 controller.getObservacao = async atividadeId => {
-  return await db.conn.any(
+  return db.conn.any(
     `SELECT a.observacao AS observacao_atividade, ut.observacao AS observacao_unidade_trabalho,
     l.observacao AS observacao_lote, e.observacao AS observacao_etapa, sf.observacao AS observacao_subfase
     FROM macrocontrole.atividade AS a
@@ -773,7 +755,7 @@ controller.getProject = async () => {
 };
 
 controller.getLotes = async () => {
-  return await db.conn.any(`SELECT id, nome FROM macrocontrole.lote`);
+  return db.conn.any(`SELECT id, nome FROM macrocontrole.lote`);
 };
 
 controller.getViewsAcompanhamento = async () => {
@@ -794,9 +776,12 @@ controller.getViewsAcompanhamento = async () => {
   return dados;
 };
 
-controller.atualizaAtivdadesBloqueadas = async () => {
-  return await db.conn.none(
-    `REFRESH MATERIALIZED VIEW acompanhamento.atividades_bloqueadas;`
+controller.atualizaAtivdadesBloqueadas = async (unidadeTrabalhoIds, lote) => {
+  return db.conn.none(
+    `UPDATE macrocontrole.unidade_trabalho
+    SET lote = $<lote>
+    WHERE id in ($<unidadeTrabalhoIds:csv>)`,
+    { unidadeTrabalhoIds, lote }
   );
 };
 

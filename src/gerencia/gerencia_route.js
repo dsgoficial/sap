@@ -398,4 +398,20 @@ router.post(
   })
 );
 
+router.post(
+  "/unidade_trabalho/lote",
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.unidadeTrabalhoLote }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.unidadeTrabalhoLote(
+      req.body.unidade_trabalho_ids,
+      req.body.lote
+    );
+
+    const msg = "Lote das unidades de trabalho atualizado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
 module.exports = router;
