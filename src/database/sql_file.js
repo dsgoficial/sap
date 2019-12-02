@@ -33,4 +33,4 @@ const createPS = sql => {
   }
 };
 
-module.exports = createPS;
+module.exports = {readSqlFile, createPS};

@@ -3,6 +3,8 @@
 const db = require("./main_db");
 const testDb = require("./test_db");
 
+const { revokeAllPermissionsUser, grantPermissionsUser} = require("./manage_permissions")
+
 const {
   errorHandler,
   config: { DB_USER, DB_PASSWORD }
@@ -130,8 +132,7 @@ const updateValidity = async (login, connection) => {
 const processTempUser = async (
   atividadeId,
   usuarioId,
-  resetPassword,
-  extendValidity
+  {resetPassword,  extendValidity, revokePermission, grantPermission}
 ) => {
   const dbInfo = await getDbInfo(atividadeId);
   if (!dbInfo) {
@@ -182,11 +183,18 @@ const processTempUser = async (
     await updateTempLogin(usuarioId, servidor, porta, login, senha);
   }
 
+  if(revokePermission){
+    await revokeAllPermissionsUser(atividadeId, login, conn)
+  }
+  if(grantPermission){
+    await grantPermissionsUser(atividadeId, login, conn)
+  }
+  
   return { login, senha };
 };
 
 temporaryLogin.resetPassword = async (atividadeId, usuarioId) => {
-  return processTempUser(atividadeId, usuarioId, true, false);
+  return processTempUser(atividadeId, usuarioId, { resetPassword: true,  extendValidity: false, revokePermission: true, grantPermission: false});
 };
 
 temporaryLogin.getLogin = async (
@@ -194,7 +202,7 @@ temporaryLogin.getLogin = async (
   usuarioId,
   resetPassword = false
 ) => {
-  return processTempUser(atividadeId, usuarioId, resetPassword, true);
+  return processTempUser(atividadeId, usuarioId,  { resetPassword,  extendValidity: true, revokePermission: false, grantPermission: resetPassword});
 };
 
 module.exports = temporaryLogin;
