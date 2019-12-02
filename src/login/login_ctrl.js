@@ -22,7 +22,7 @@ const verificaQGIS = async qgis => {
   if (!qgisMinimo) {
     return;
   }
-  let qgisVersionOk =
+  const qgisVersionOk =
     qgis &&
     semver.gte(semver.coerce(qgis), semver.coerce(qgisMinimo.versao_minima));
 
@@ -39,7 +39,8 @@ const verificaPlugins = async plugins => {
   if (!pluginsMinimos) {
     return;
   }
-  for (const i = 0; i < pluginsMinimos.length; i++) {
+
+  for (let i = 0; i < pluginsMinimos.length; i++) {
     let notFound = true;
     if (plugins) {
       plugins.forEach(p => {
@@ -54,16 +55,16 @@ const verificaPlugins = async plugins => {
         }
       });
     }
-
     if (notFound) {
       const listplugins = [];
+
       pluginsMinimos.forEach(pm => {
         listplugins.push(pm.nome + "-" + pm.versao_minima);
       });
+
       const msg = `Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: ${listplugins.join(
         ", "
       )}`;
-
       throw new AppError(msg, httpCode.BadRequest);
     }
   }
@@ -118,7 +119,6 @@ controller.login = async (usuario, senha, cliente, plugins, qgis) => {
 
     await verificaPlugins(plugins);
   }
-
   const { id, administrador } = usuarioDb;
 
   const token = await signJWT({ id, administrador }, JWT_SECRET);

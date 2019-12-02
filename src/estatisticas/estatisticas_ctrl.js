@@ -19,8 +19,8 @@ const fixActivity = (no_activity, min_max_points) => {
   });
 
   const activity_fixed = {};
-  for (const dia in no_activity_fixed) {
-    for (const i = 0; i < no_activity_fixed[dia].length; i++) {
+  for (let dia in no_activity_fixed) {
+    for (let i = 0; i < no_activity_fixed[dia].length; i++) {
       if (!(dia in activity_fixed)) {
         activity_fixed[dia] = {};
         activity_fixed[dia]["data"] = [];
@@ -66,7 +66,7 @@ const fixActivity = (no_activity, min_max_points) => {
 };
 
 const activityStatistics = activity_fixed => {
-  for (const dia in activity_fixed) {
+  for (let dia in activity_fixed) {
     const parts = {};
     parts["0"] = [];
     parts["1"] = [];

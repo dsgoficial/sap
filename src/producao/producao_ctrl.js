@@ -356,7 +356,7 @@ const getInfoQuestionario = async (connection, subfaseId) => {
     });
   });
 
-  for (const key in perguntas) {
+  for (let key in perguntas) {
     result.perguntas.push(perguntas[key]);
   }
 

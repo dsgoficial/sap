@@ -314,7 +314,7 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
 
   await connection.none(query);
 
-  for (const u of updatedIds) {
+  for (let u of updatedIds) {
     await temporaryLogin.resetPassword(u.id, u.usuario_id);
   }
 
@@ -414,7 +414,7 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
 
     await t.none(query);
 
-    for (const u of usersResetPassword) {
+    for (let u of usersResetPassword) {
       await temporaryLogin.resetPassword(u.id, u.usuario_id);
     }
   });
@@ -526,7 +526,7 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
 
 controller.criaRevisao = async unidadeTrabalhoIds => {
   await db.conn.tx(async t => {
-    for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
+    for (let unidadeTrabalhoId of unidadeTrabalhoIds) {
       //refactor to batch
       const ordemEtapa = await t.one(
         `SELECT ut.subfase_id, max(e.ordem) AS ordem 
@@ -586,7 +586,7 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
 
 controller.criaRevcorr = async unidadeTrabalhoIds => {
   await db.conn.tx(async t => {
-    for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
+    for (let unidadeTrabalhoId of unidadeTrabalhoIds) {
       //refactor to batch
       const ordemEtapa = await t.one(
         `SELECT ut.subfase_id, max(e.ordem) AS ordem 
