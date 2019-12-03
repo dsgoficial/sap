@@ -1,23 +1,15 @@
 "use strict";
 
-const db = require("./main_db");
-const testDb = require("./test_db");
+const {sapConn, createAdminConn, testConn} = require("./db");
 
 const { revokeAllPermissionsUser, grantPermissionsUser} = require("./manage_permissions")
 
-const {
-  errorHandler,
-  config: { DB_USER, DB_PASSWORD }
-} = require("../utils");
-
 const crypto = require("crypto");
-
-const tempUserDbs = {};
 
 const temporaryLogin = {};
 
 const getDbInfo = async atividadeId => {
-  return await db.conn.oneOrNone(
+  return await sapConn.oneOrNone(
     `SELECT bd.nome, bd.servidor, bd.porta FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut
     ON ut.id = a.unidade_trabalho_id 
@@ -28,25 +20,8 @@ const getDbInfo = async atividadeId => {
   );
 };
 
-const getProdDbConnection = async (dbServer, dbPort, dbName) => {
-  const connString = `postgres://${DB_USER}:${DB_PASSWORD}@${dbServer}:${dbPort}/${dbName}`;
-
-  if (!(connString in tempUserDbs)) {
-    tempUserDbs[connString] = db.pgp(connString);
-
-    tempUserDbs[connString]
-      .connect()
-      .then(function(obj) {
-        obj.done(); // success, release connection;
-      })
-      .catch(errorHandler);
-  }
-
-  return tempUserDbs[connString];
-};
-
 const getUserName = async usuarioId => {
-  const usuario = await db.conn.one(
+  const usuario = await sapConn.one(
     `SELECT translate(replace(lower(nome_guerra),' ', '_'),  
     'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\\,.;:<>?!\`{}[]()~\`@#$%^&*+=''',  
     'aaaaaeeeeiiiiooooouuuucc________________________________') As nome from dgeo.usuario
@@ -93,7 +68,7 @@ const updatePassword = async (login, senha, connection) => {
 };
 
 const updateTempLogin = async (usuarioId, dbServer, dbPort, login, senha) => {
-  await db.conn.tx(async t => {
+  await sapConn.tx(async t => {
     await t.none(
       `DELETE FROM dgeo.login_temporario
        WHERE usuario_id = $<usuarioId> AND servidor = $<dbServer> AND porta = $<dbPort>`,
@@ -132,7 +107,7 @@ const updateValidity = async (login, connection) => {
 const processTempUser = async (
   atividadeId,
   usuarioId,
-  {resetPassword,  extendValidity, revokePermission, grantPermission}
+  {resetPassword,  extendValidity, grantPermission}
 ) => {
   const dbInfo = await getDbInfo(atividadeId);
   if (!dbInfo) {
@@ -140,9 +115,9 @@ const processTempUser = async (
   }
   const { servidor, porta, nome: nomeDb } = dbInfo;
 
-  const conn = await getProdDbConnection(servidor, porta, nomeDb);
+  const conn = await createAdminConn(servidor, porta, nomeDb);
 
-  const loginInfo = await db.conn.oneOrNone(
+  const loginInfo = await sapConn.oneOrNone(
     `SELECT login, senha FROM dgeo.login_temporario 
     WHERE usuario_id = $<usuarioId> AND servidor = $<servidor> AND porta = $<porta>`,
     { usuarioId, servidor, porta }
@@ -168,7 +143,7 @@ const processTempUser = async (
     await createDbUser(login, senha, conn);
   }
 
-  const userConnected = await testDb(login, senha, servidor, porta, nomeDb);
+  const userConnected = await testConn(login, senha, servidor, porta, nomeDb);
   if (!userConnected || resetPassword) {
     senha = novaSenha;
     updated = true;
@@ -181,11 +156,10 @@ const processTempUser = async (
 
   if (updated) {
     await updateTempLogin(usuarioId, servidor, porta, login, senha);
+    await revokeAllPermissionsUser(login, conn)
   }
 
-  if(revokePermission){
-    await revokeAllPermissionsUser(atividadeId, login, conn)
-  }
+
   if(grantPermission){
     await grantPermissionsUser(atividadeId, login, conn)
   }
@@ -194,7 +168,7 @@ const processTempUser = async (
 };
 
 temporaryLogin.resetPassword = async (atividadeId, usuarioId) => {
-  return processTempUser(atividadeId, usuarioId, { resetPassword: true,  extendValidity: false, revokePermission: true, grantPermission: false});
+  return processTempUser(atividadeId, usuarioId, { resetPassword: true,  extendValidity: false, grantPermission: false});
 };
 
 temporaryLogin.getLogin = async (
@@ -202,7 +176,7 @@ temporaryLogin.getLogin = async (
   usuarioId,
   resetPassword = false
 ) => {
-  return processTempUser(atividadeId, usuarioId,  { resetPassword,  extendValidity: true, revokePermission: false, grantPermission: resetPassword});
+  return processTempUser(atividadeId, usuarioId,  { resetPassword,  extendValidity: true, grantPermission: true});
 };
 
 module.exports = temporaryLogin;

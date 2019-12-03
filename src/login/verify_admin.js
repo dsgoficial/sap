@@ -17,7 +17,7 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
   }
   const {
     administrador
-  } = await db.conn.oneOrNone(
+  } = await db.sapConn.oneOrNone(
     `SELECT administrador FROM dgeo.usuario WHERE id = $<usuarioId> and ativo IS TRUE`,
     { usuarioId: decoded.id }
   );

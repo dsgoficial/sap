@@ -12,6 +12,8 @@ const qgisProject = require("./qgis_project");
 
 const { producaoCtrl } = require("../producao");
 
+const { managePermissions } = require("../database");
+
 const controller = {};
 
 const getUsuarioNomeById = async usuarioId => {
@@ -25,7 +27,7 @@ const getUsuarioNomeById = async usuarioId => {
 };
 
 controller.getAtividade = async (atividadeId, gerenteId) => {
-  const atividade = await db.conn.oneOrNone(
+  const atividade = await db.sapConn.oneOrNone(
     `SELECT a.etapa_id, a.unidade_trabalho_id
     FROM macrocontrole.atividade AS a
     WHERE a.id = $<atividadeId>`,
@@ -47,7 +49,7 @@ controller.getAtividadeUsuario = async (usuarioId, proxima, gerenteId) => {
       return null;
     }
   } else {
-    const emAndamento = await db.conn.oneOrNone(
+    const emAndamento = await db.sapConn.oneOrNone(
       `SELECT a.id FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
       WHERE a.usuario_id = $<usuarioId> and ut.disponivel IS TRUE and a.tipo_situacao_id = 2`,
@@ -63,24 +65,24 @@ controller.getAtividadeUsuario = async (usuarioId, proxima, gerenteId) => {
 };
 
 controller.getEstilos = async () => {
-  return db.conn.any(`SELECT * FROM dgeo.layer_styles`);
+  return db.sapConn.any(`SELECT * FROM dgeo.layer_styles`);
 };
 
 controller.getRegras = async () => {
-  return db.conn.any(`SELECT * FROM dgeo.layer_rules`);
+  return db.sapConn.any(`SELECT * FROM dgeo.layer_rules`);
 };
 
 controller.getModelos = async () => {
-  return db.conn.any(`SELECT * FROM dgeo.layer_qgis_models`);
+  return db.sapConn.any(`SELECT * FROM dgeo.layer_qgis_models`);
 };
 
 controller.getMenus = async () => {
-  return db.conn.any(`SELECT * FROM dgeo.layer_menus`);
+  return db.sapConn.any(`SELECT * FROM dgeo.layer_menus`);
 };
 
 controller.gravaEstilos = async (estilos, usuarioId) => {
   const dataGravacao = new Date();
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none(`TRUNCATE dgeo.layer_styles RESTART IDENTITY`);
@@ -128,7 +130,7 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
 
 controller.grava_regras = async (regras, usuarioId) => {
   const dataGravacao = new Date();
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none(`TRUNCATE dgeo.layer_rules RESTART IDENTITY`);
@@ -180,7 +182,7 @@ controller.grava_regras = async (regras, usuarioId) => {
 
 controller.grava_modelos = async (modelos, usuarioId) => {
   const dataGravacao = new Date();
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none(`TRUNCATE dgeo.layer_qgis_models RESTART IDENTITY`);
@@ -214,7 +216,7 @@ controller.grava_modelos = async (modelos, usuarioId) => {
 
 controller.grava_menus = async (menus, usuarioId) => {
   const dataGravacao = new Date();
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none(`TRUNCATE dgeo.layer_menus RESTART IDENTITY`);
@@ -247,20 +249,20 @@ controller.grava_menus = async (menus, usuarioId) => {
 };
 
 controller.getBancoDados = async () => {
-  return db.conn.any(
+  return db.sapConn.any(
     `SELECT nome, servidor, porta FROM macrocontrole.banco_dados`
   );
 };
 
 controller.getUsuario = async () => {
-  return db.conn.any(
+  return db.sapConn.any(
     `SELECT u.id, tpg.nome_abrev || ' ' || u.nome_guerra AS nome
       FROM dgeo.usuario AS u INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id WHERE u.ativo IS TRUE`
   );
 };
 
 controller.getPerfilProducao = async () => {
-  return db.conn.any(`SELECT id, nome FROM macrocontrole.perfil_producao`);
+  return db.sapConn.any(`SELECT id, nome FROM macrocontrole.perfil_producao`);
 };
 
 const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
@@ -325,7 +327,7 @@ controller.unidadeTrabalhoDisponivel = async (
   unidadeTrabalhoIds,
   disponivel
 ) => {
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     await t.none(
       `UPDATE macrocontrole.unidade_trabalho
       SET disponivel = $<disponivel>
@@ -339,7 +341,7 @@ controller.unidadeTrabalhoDisponivel = async (
 };
 
 controller.pausaAtividade = async unidadeTrabalhoIds => {
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const changed = await pausaAtividadeMethod(unidadeTrabalhoIds, t);
     if (!changed) {
       throw new AppError(
@@ -352,7 +354,7 @@ controller.pausaAtividade = async unidadeTrabalhoIds => {
 
 controller.reiniciaAtividade = async unidadeTrabalhoIds => {
   const dataFim = new Date();
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const usersResetPassword = await t.any(
       `
       SELECT DISTINCT ON (ut.id) a.id, a.usuario_id FROM macrocontrole.atividade AS a
@@ -422,7 +424,7 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
 
 controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
   const dataFim = new Date();
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
         FROM macrocontrole.atividade AS a
@@ -490,7 +492,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
 controller.avancaAtividade = async (atividadeIds, concluida) => {
   let comparisonOperator = concluida ? "<=" : "=";
 
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
       FROM macrocontrole.atividade AS a
@@ -525,7 +527,7 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
 };
 
 controller.criaRevisao = async unidadeTrabalhoIds => {
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     for (let unidadeTrabalhoId of unidadeTrabalhoIds) {
       //refactor to batch
       const ordemEtapa = await t.one(
@@ -585,7 +587,7 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
 };
 
 controller.criaRevcorr = async unidadeTrabalhoIds => {
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     for (let unidadeTrabalhoId of unidadeTrabalhoIds) {
       //refactor to batch
       const ordemEtapa = await t.one(
@@ -630,7 +632,7 @@ controller.criaFilaPrioritaria = async (
   usuarioPrioridadeId,
   prioridade
 ) => {
-  const result = await db.conn.result(
+  const result = await db.sapConn.result(
     `
       INSERT INTO macrocontrole.fila_prioritaria(atividade_id, usuario_id, prioridade)
       (
@@ -654,7 +656,7 @@ controller.criaFilaPrioritariaGrupo = async (
   perfilProducaoId,
   prioridade
 ) => {
-  const result = await db.conn.result(
+  const result = await db.sapConn.result(
     `
     INSERT INTO macrocontrole.fila_prioritaria_grupo(atividade_id, perfil_producao_id, prioridade)
     (
@@ -682,7 +684,7 @@ controller.criaObservacao = async (
   observacaoUnidadeTrabalho,
   observacaoLote
 ) => {
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     await t.any(
       `
       UPDATE macrocontrole.atividade SET
@@ -737,7 +739,7 @@ controller.criaObservacao = async (
 };
 
 controller.getObservacao = async atividadeId => {
-  return db.conn.any(
+  return db.sapConn.any(
     `SELECT a.observacao AS observacao_atividade, ut.observacao AS observacao_unidade_trabalho,
     l.observacao AS observacao_lote, e.observacao AS observacao_etapa, sf.observacao AS observacao_subfase
     FROM macrocontrole.atividade AS a
@@ -755,11 +757,11 @@ controller.getProject = async () => {
 };
 
 controller.getLotes = async () => {
-  return db.conn.any(`SELECT id, nome FROM macrocontrole.lote`);
+  return db.sapConn.any(`SELECT id, nome FROM macrocontrole.lote`);
 };
 
 controller.getViewsAcompanhamento = async () => {
-  const views = await db.conn.any(`
+  const views = await db.sapConn.any(`
   SELECT table_schema AS schema, table_name AS nome from information_schema.views
   WHERE table_schema = 'acompanhamento';`);
 
@@ -777,12 +779,16 @@ controller.getViewsAcompanhamento = async () => {
 };
 
 controller.atualizaAtivdadesBloqueadas = async (unidadeTrabalhoIds, lote) => {
-  return db.conn.none(
+  return db.sapConn.none(
     `UPDATE macrocontrole.unidade_trabalho
     SET lote = $<lote>
     WHERE id in ($<unidadeTrabalhoIds:csv>)`,
     { unidadeTrabalhoIds, lote }
   );
+};
+
+controller.redefinirPermissoes = async () => {
+  return managePermissions.revokeAndGrantAllExecution()
 };
 
 module.exports = controller;

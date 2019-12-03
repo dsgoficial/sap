@@ -338,7 +338,7 @@ router.post(
 );
 
 router.get(
-  "/observacao/:id",
+  "/atividade/:id/observacao",
   verifyAdmin,
   schemaValidation({ params: gerenciaSchema.idParams }),
   asyncHandler(async (req, res, next) => {
@@ -386,19 +386,19 @@ router.get(
   })
 );
 
-router.post(
-  "/atualiza_atividades_bloqueadas",
+router.put(
+  "/atividades_bloqueadas",
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.atualizaAtivdadesBloqueadas();
 
     const msg = "View Atividades Bloqueadas atualizada com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
   })
 );
 
-router.post(
+router.put(
   "/unidade_trabalho/lote",
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.unidadeTrabalhoLote }),
@@ -410,8 +410,21 @@ router.post(
 
     const msg = "Lote das unidades de trabalho atualizado com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
   })
 );
+
+router.put(
+  "/atividade/permissoes",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.redefinirPermissoes();
+
+    const msg = "Permissões das atividades em execução redefinidas";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
 
 module.exports = router;

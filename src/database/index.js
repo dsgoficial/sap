@@ -1,8 +1,9 @@
 "use strict";
 
 module.exports = {
-  db: require("./main_db"),
+  db: require("./db"),
   databaseVersion: require("./database_version"),
   sqlFile: require("./sql_file"),
-  temporaryLogin: require("./temporary_login")
+  temporaryLogin: require("./temporary_login"),
+  managePermissions: require("./manage_permissions")
 };

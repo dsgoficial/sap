@@ -9,7 +9,7 @@ const prepared = require("./prepared_statements");
 const controller = {};
 
 controller.calculaFila = async usuarioId => {
-  const prioridade = await db.conn.task(async t => {
+  const prioridade = await db.sapConn.task(async t => {
     const fila_prioritaria = await t.oneOrNone(
       prepared.calculaFilaPrioritaria,
       [usuarioId]
@@ -364,7 +364,7 @@ const getInfoQuestionario = async (connection, subfaseId) => {
 };
 
 const dadosProducao = async atividadeId => {
-  const results = await db.conn.task(async t => {
+  const results = await db.sapConn.task(async t => {
     const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId]);
 
     const info = {};
@@ -467,7 +467,7 @@ controller.getDadosAtividade = async (
 };
 
 controller.verifica = async usuarioId => {
-  const emAndamento = await db.conn.oneOrNone(
+  const emAndamento = await db.sapConn.oneOrNone(
     `SELECT a.id
       FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
@@ -480,7 +480,7 @@ controller.verifica = async usuarioId => {
   }
 
   //Medida de segurança para tornar outras atividades que estão em execução como pausadas
-  await db.conn.none(
+  await db.sapConn.none(
     `UPDATE macrocontrole.atividade SET
        tipo_situacao_id = 3 
        WHERE tipo_situacao_id = 2 AND usuario_id = $<usuarioId> AND id != $<emAndamentoId>`,
@@ -492,7 +492,7 @@ controller.verifica = async usuarioId => {
 
 controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
   const dataFim = new Date();
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     //Usuário é passado como uma medida de segurança para garantir que quem está finalizando é o usuário da atividade
     const result = await t.result(
       `UPDATE macrocontrole.atividade SET
@@ -539,7 +539,7 @@ controller.inicia = async usuarioId => {
   if (!prioridade) {
     return null;
   }
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const verify = await t.oneOrNone(
       `SELECT id FROM macrocontrole.atividade
       WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 2`,
@@ -582,7 +582,7 @@ controller.inicia = async usuarioId => {
 
 controller.respondeQuestionario = async (atividadeId, respostas, usuarioId) => {
   const dataQuestionario = new Date();
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const verify = await t.oneOrNone(
       `SELECT id FROM macrocontrole.atividade
       WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 2 AND atividade_id = $<atividadeId>`,
@@ -629,7 +629,7 @@ controller.problemaAtividade = async (
   usuarioId
 ) => {
   const dataFim = new Date();
-  await db.conn.tx(async t => {
+  await db.sapConn.tx(async t => {
     const result = await t.result(
       `
       UPDATE macrocontrole.atividade SET
@@ -686,7 +686,7 @@ controller.problemaAtividade = async (
 };
 
 controller.getTipoProblema = async () => {
-  const tipoProblema = await db.conn.any(
+  const tipoProblema = await db.sapConn.any(
     `SELECT code, nome FROM dominio.tipo_problema`
   );
   const dados = [];

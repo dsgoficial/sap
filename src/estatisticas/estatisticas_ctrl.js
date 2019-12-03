@@ -99,7 +99,7 @@ const activityStatistics = activity_fixed => {
 };
 
 controller.getAcaoUsuario = async (usuario_id, days) => {
-  const no_activity = await db.conn.any(
+  const no_activity = await db.sapConn.any(
     `
       WITH datas AS (
         SELECT ma.data
@@ -120,7 +120,7 @@ controller.getAcaoUsuario = async (usuario_id, days) => {
       `,
     [usuario_id, days]
   );
-  const min_max_points = await db.conn.any(
+  const min_max_points = await db.sapConn.any(
     `
       SELECT to_char(ma.data::date, 'YYYY-MM-DD') AS dia, to_char(min(ma.data), 'YYYY-MM-DD HH24:MI:00') as min_data, to_char(max(ma.data), 'YYYY-MM-DD HH24:MI:00') as max_data, tpg.nome_abrev || ' ' || u.nome_guerra as usuario
       FROM microcontrole.monitoramento_acao AS ma
@@ -140,7 +140,7 @@ controller.getAcaoUsuario = async (usuario_id, days) => {
 };
 
 controller.getAcaoEmExecucao = async () => {
-  const no_activity = await db.conn.any(
+  const no_activity = await db.sapConn.any(
     `
       WITH datas AS (
         SELECT a.usuario_id, ma.data
@@ -160,7 +160,7 @@ controller.getAcaoEmExecucao = async () => {
         ORDER BY usuario_id, data::date, previous_data;
       `
   );
-  const min_max_points = await db.conn.any(
+  const min_max_points = await db.sapConn.any(
     `
       SELECT u.id AS usuario_id, to_char(ma.data::date, 'YYYY-MM-DD') AS dia, to_char(min(ma.data), 'YYYY-MM-DD HH24:MI:00') as min_data, to_char(max(ma.data), 'YYYY-MM-DD HH24:MI:00') as max_data, tpg.nome_abrev || ' ' || u.nome_guerra as usuario
       FROM microcontrole.monitoramento_acao AS ma

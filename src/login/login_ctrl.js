@@ -16,7 +16,7 @@ const { authenticateUser } = require("../authentication");
 const controller = {};
 
 const verificaQGIS = async qgis => {
-  const qgisMinimo = await db.conn.oneOrNone(
+  const qgisMinimo = await db.sapConn.oneOrNone(
     `SELECT versao_minima FROM dgeo.versao_qgis LIMIT 1`
   );
   if (!qgisMinimo) {
@@ -33,7 +33,7 @@ const verificaQGIS = async qgis => {
 };
 
 const verificaPlugins = async plugins => {
-  const pluginsMinimos = await db.conn.any(
+  const pluginsMinimos = await db.sapConn.any(
     `SELECT nome, versao_minima FROM dgeo.plugin`
   );
   if (!pluginsMinimos) {
@@ -71,7 +71,7 @@ const verificaPlugins = async plugins => {
 };
 
 const gravaLogin = async usuarioId => {
-  await db.conn.any(
+  await db.sapConn.any(
     `
       INSERT INTO acompanhamento.login(usuario_id, data_login) VALUES($<usuarioId>, now())
       `,
@@ -98,7 +98,7 @@ const signJWT = (data, secret) => {
 };
 
 controller.login = async (usuario, senha, cliente, plugins, qgis) => {
-  const usuarioDb = await db.conn.oneOrNone(
+  const usuarioDb = await db.sapConn.oneOrNone(
     `SELECT id, administrador FROM dgeo.usuario WHERE login = $<usuario> and ativo IS TRUE`,
     { usuario }
   );

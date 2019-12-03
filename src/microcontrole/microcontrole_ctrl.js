@@ -40,7 +40,7 @@ controller.armazenaFeicao = async (atividadeId, data, dados) => {
 
   const query = db.pgp.helpers.insert(values, cs);
 
-  db.conn.none(query);
+  db.sapConn.none(query);
 };
 
 controller.armazenaApontamento = async (atividadeId, data, dados) => {
@@ -66,7 +66,7 @@ controller.armazenaApontamento = async (atividadeId, data, dados) => {
 
   const query = db.pgp.helpers.insert(values, cs);
 
-  db.conn.none(query);
+  db.sapConn.none(query);
 };
 
 controller.armazenaTela = async (atividadeId, dados) => {
@@ -93,11 +93,11 @@ controller.armazenaTela = async (atividadeId, dados) => {
 
   const query = db.pgp.helpers.insert(values, cs);
 
-  db.conn.none(query);
+  db.sapConn.none(query);
 };
 
 controller.armazenaAcao = async atividadeId => {
-  await db.conn.any(
+  await db.sapConn.any(
     `
     INSERT INTO microcontrole.monitoramento_acao(atividade_id, data) VALUES($<atividadeId>, NOW())
     `,

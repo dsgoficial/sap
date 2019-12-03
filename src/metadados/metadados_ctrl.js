@@ -15,7 +15,7 @@ xmlTemplate["6"] = "template_mdt.xml";
 xmlTemplate["7"] = "template_carta_tematica.xml";
 
 controller.geraMetadado = async uuid => {
-  const produto = await db.conn.oneOrNone(
+  const produto = await db.sapConn.oneOrNone(
     `SELECT p.nome, p.mi, p.inom, p.escala, p.geometry, lp.tipo_produto_id,
     proj.nome AS projeto, ip.resumo, ip.proposito, ip.creditos, ip.informacoes_complementares,
     ip.limitacao_acesso_id, ip.restricao_uso_id, ip.grau_sigilo_id, ip.organizacao_responsavel_id,
@@ -31,7 +31,7 @@ controller.geraMetadado = async uuid => {
   if (!produto) {
     //throw error
   }
-  const producao = await db.conn.any(
+  const producao = await db.sapConn.any(
     `SELECT ut.fase_id,
     (CASE WHEN min(ut.unidade_trabalho_id) IS NOT NULL min(ut.data_inicio) ELSE '-' END) AS data_inicio,
     (CASE WHEN min(ut.unidade_trabalho_id) IS NOT NULL (CASE WHEN count(*) - count(ut.data_fim) = 0 THEN max(ut.data_fim) ELSE NULL END) ELSE '-' END) AS data_fim
@@ -60,7 +60,7 @@ controller.geraMetadado = async uuid => {
     //throw error
   }
 
-  const palavras_chave = await db.conn.any(
+  const palavras_chave = await db.sapConn.any(
     `SELECT pc.nome AS palavra_chave, tpc.nome AS tipo_palavra_chave
     FROM metadado.palavra_chave AS pc
     INNER JOIN metadado.tipo_palavra_chave_id AS tpc ON tpc.code = pc.tipo_palavra_chave_id
