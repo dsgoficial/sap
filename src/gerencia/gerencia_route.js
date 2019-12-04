@@ -377,8 +377,11 @@ router.get(
 router.get(
   "/view_acompanhamento",
   verifyAdmin,
+  schemaValidation({
+    query: gerenciaSchema.emAndamentoQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getViewsAcompanhamento();
+    const dados = await gerenciaCtrl.getViewsAcompanhamento(req.query.em_andamento);
 
     const msg = "Views de acompanhamento retornadas com sucesso";
 
@@ -390,7 +393,7 @@ router.put(
   "/atividades_bloqueadas",
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.atualizaAtivdadesBloqueadas();
+    await gerenciaCtrl.atualizaAtividadesBloqueadas();
 
     const msg = "View Atividades Bloqueadas atualizada com sucesso";
 

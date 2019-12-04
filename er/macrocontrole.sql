@@ -8,7 +8,8 @@ CREATE SCHEMA macrocontrole;
 
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL UNIQUE --conforme bdgex
+	nome VARCHAR(255) NOT NULL UNIQUE,
+	finalizado BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE macrocontrole.linha_producao(

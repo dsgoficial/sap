@@ -4,6 +4,8 @@ const {sapConn, createAdminConn} = require("./db");
 
 const { createPS } = require("./sql_file")
 
+const path = require("path")
+
 const revokeSQL = createPS(path.join(__dirname, "sql", "revoke.sql"));
 
 const managePermissions = {}
@@ -58,7 +60,7 @@ managePermissions.grantPermissionsUser = async (atividadeId, login, connection) 
         return null
     }
 
-    await connection.tx(t => {
+    await connection.tx(async t => {
         const dbName = grantInfo[0].db_nome;
         await t.none(
             `GRANT CONNECT ON DATABASE $<db:name> TO $<login:name>;`, { dbName, login }
@@ -100,6 +102,15 @@ managePermissions.grantPermissionsUser = async (atividadeId, login, connection) 
                             .reduce((prev, e) => `${prev} ${e}`)
 
         await t.none(enableRLS);
+
+        let camadasPolicy;
+
+        if(tipoEtapa === 2  || tipoEtapa === 3){ //Revisão e Correção POLICY
+            grantInfo.filter(v => v.camada_apontamento == false)
+                    .map(v => `${v.schema}.${v.nome_camada}`)
+                    .filter((v, i, array) => array.indexOf(v) === i)
+        }
+
 
         const epsg =  grantInfo[0].epsg;
         const geom =  grantInfo[0].geom;

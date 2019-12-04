@@ -2,7 +2,7 @@
 
 const semver = require("semver");
 
-const db = require("./main_db");
+const db = require("./db");
 
 const {
   AppError,

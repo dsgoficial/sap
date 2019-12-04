@@ -9,11 +9,11 @@ if (isMaster) {
 } else {
   const { errorHandler } = require("./utils");
   const { startServer, createDocumentation } = require("./server");
-  const { databaseVersion } = require("./database");
+  const { db, databaseVersion } = require("./database");
   const { verifyAuthServer } = require("./authentication");
 
-  databaseVersion
-    .load()
+  db.createSapConn()
+    .then(databaseVersion.load)
     .then(verifyAuthServer)
     .then(createDocumentation)
     .then(startServer)

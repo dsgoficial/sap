@@ -760,11 +760,39 @@ controller.getLotes = async () => {
   return db.sapConn.any(`SELECT id, nome FROM macrocontrole.lote`);
 };
 
-controller.getViewsAcompanhamento = async () => {
-  const views = await db.sapConn.any(`
-  SELECT table_schema AS schema, table_name AS nome from information_schema.views
-  WHERE table_schema = 'acompanhamento';`);
-
+controller.getViewsAcompanhamento = async (emAndamento) => {
+  let views = await db.sapConn.any(`
+    SELECT v.schema, v.nome, v.tipo, coalesce(s.nome, f.nome, lp.nome) AS projeto,
+    coalesce(s.finalizado, f.finalizado, lp.finalizado) AS finalizado
+    FROM (SELECT v.table_schema AS schema, v.table_name AS nome,
+    regexp_replace(substring(v.table_name, '^(subfase_|fase_|linha_producao_)'), '_$', '') AS tipo,
+    substring(regexp_replace(v.table_name,'^(subfase_|fase_|linha_producao_)', ''), '^(\d+)_')::integer AS id
+    FROM information_schema.views AS v
+    WHERE v.table_schema = 'acompanhamento'
+    AND substring(v.table_name, '^(subfase_|fase_|linha_producao_)') IS NOT NULL) AS v
+    LEFT JOIN (
+      SELECT s.id, p.nome, p.finalizado FROM macrocontrole.subfase AS s
+        INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+        INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
+        INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+    ) AS s ON s.id = v.id AND v.tipo = 'subfase'
+    LEFT JOIN (
+      SELECT f.id, p.nome, p.finalizado FROM macrocontrole.fase AS f
+        INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
+        INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+    ) AS f ON f.id = v.id AND v.tipo = 'fase'
+    LEFT JOIN (
+        SELECT lp.id, p.nome, p.finalizado FROM macrocontrole.linha_producao AS lp
+        INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+    ) AS lp ON lp.id = v.id AND v.tipo = 'linha_producao'
+    ORDER BY projeto, tipo, nome
+  `);
+  if(!views){
+    return null
+  }
+  if(emAndamento){
+    views = views.filter(v => v.finalizado === emAndamento)
+  }
   const dados = {};
   dados.banco_dados = {
     nome_db: DB_NAME,
@@ -778,7 +806,7 @@ controller.getViewsAcompanhamento = async () => {
   return dados;
 };
 
-controller.atualizaAtivdadesBloqueadas = async (unidadeTrabalhoIds, lote) => {
+controller.atualizaAtividadesBloqueadas = async (unidadeTrabalhoIds, lote) => {
   return db.sapConn.none(
     `UPDATE macrocontrole.unidade_trabalho
     SET lote = $<lote>

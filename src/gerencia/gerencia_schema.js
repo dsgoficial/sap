@@ -14,6 +14,10 @@ models.proximaQuery = Joi.object().keys({
   proxima: Joi.string().valid("true", "false")
 });
 
+models.emAndamentoQuery = Joi.object().keys({
+  em_andamento: Joi.string().valid("true", "false")
+});
+
 models.estilos = Joi.object().keys({
   estilos: Joi.array()
     .items(
