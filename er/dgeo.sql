@@ -34,6 +34,12 @@ CREATE TABLE dgeo.versao_qgis(
   CHECK (versao_minima ~ '^\d+(\.\d+){0,2}$')
 );
 
+CREATE TABLE dgeo.gerenciador_fme(
+  id SERIAL NOT NULL PRIMARY KEY,
+	servidor VARCHAR(255) NOT NULL,
+	porta VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE dgeo.layer_menus(
 	  id SERIAL NOT NULL PRIMARY KEY,
     nome text NOT NULL,

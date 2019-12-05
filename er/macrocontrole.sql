@@ -166,9 +166,9 @@ CREATE TABLE macrocontrole.requisito_finalizacao(
 
 CREATE TABLE macrocontrole.perfil_fme(
 	id SERIAL NOT NULL PRIMARY KEY,
-	servidor VARCHAR(255) NOT NULL,
-	porta VARCHAR(255) NOT NULL,
+	gerenciador_fme_id INTEGER NOT NULL REFERENCES dgeo.gerenciador_fme (id),
 	rotina VARCHAR(255) NOT NULL,
+	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(servidor,porta,rotina,subfase_id)
@@ -249,6 +249,7 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 CREATE TABLE macrocontrole.perfil_model_qgis(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
+	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(nome,subfase_id)
@@ -550,7 +551,14 @@ CREATE TABLE macrocontrole.problema_atividade(
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	tipo_problema_id INTEGER NOT NULL REFERENCES dominio.tipo_problema (code),
 	descricao TEXT NOT NULL,
-	resolvido BOOLEAN NOT NULL DEFAULT FALSE
+	data  timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	resolvido BOOLEAN NOT NULL DEFAULT FALSE,
+	geom geometry(POLYGON, 4674) NOT NULL
 );
+
+CREATE INDEX problema_atividade_geom
+    ON macrocontrole.problema_atividade USING gist
+    (geom)
+    TABLESPACE pg_default;
 
 COMMIT;

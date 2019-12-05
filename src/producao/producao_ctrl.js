@@ -164,87 +164,49 @@ const getInfoRegras = async (connection, subfaseId) => {
 };
 
 const getInfoFME = async (connection, subfaseId) => {
-  const fme = await connection.any(
-    "SELECT servidor, porta, rotina, gera_falso_positivo FROM macrocontrole.perfil_fme WHERE subfase_id = $1",
-    [subfaseId]
+  return await connection.any(
+    `SELECT gf.servidor, gf.porta, pf.rotina, pf.gera_falso_positivo, pf.requisito_finalizacao FROM macrocontrole.perfil_fme AS pf
+    INNER JOIN dgeo.gerenciador_fme AS gf ON gf.id = pf.gerenciador_fme_id
+    WHERE subfase_id = $<subfaseId>`,
+    {subfaseId}
   );
-
-  const result = [];
-  fme.forEach(f => {
-    result.push({
-      rotina: f.rotina,
-      servidor: f.servidor,
-      porta: f.porta,
-      gera_falso_positivo: f.gera_falso_positivo
-    });
-  });
-  return result;
 };
 
 const getInfoConfigQGIS = async (connection, subfaseId) => {
   return await connection.any(
-    "SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $1",
-    [subfaseId]
+    `SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId>`,
+    {subfaseId}
   );
 };
 
 const getInfoMonitoramento = async (connection, subfaseId) => {
-  const monitoramento = await connection.any(
+  return await connection.any(
     `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
       FROM macrocontrole.perfil_monitoramento AS pm
       INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
       WHERE subfase_id = $1`,
     [subfaseId]
   );
-
-  return {
-    id: monitoramento.tipo_monitoramento_id,
-    tipo_monitoramento: monitoramento.tipo_monitoramento
-  };
 };
 
 const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
-  const insumos = await connection.any(
+  return await connection.any(
     `SELECT i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
       FROM macrocontrole.insumo AS i
       INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
       WHERE iut.unidade_trabalho_id = $1`,
     [unidadeTrabalhoId]
   );
-
-  const result = [];
-
-  insumos.forEach(i => {
-    result.push({
-      nome: i.nome,
-      caminho: i.caminho,
-      epsg: i.epsg,
-      tipo_insumo_id: i.tipo_insumo_id,
-      caminho_padrao: i.caminho_padrao
-    });
-  });
-
-  return result;
 };
 
 const getInfoModelsQGIS = async (connection, subfaseId) => {
-  const models_qgis = await connection.any(
-    `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo
+  return await connection.any(
+    `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo, pmq.requisito_finalizacao
       FROM macrocontrole.perfil_model_qgis AS pmq
       INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.nome = lqm.nome
       WHERE pmq.subfase_id = $1`,
     [subfaseId]
   );
-  const result = [];
-  models_qgis.forEach(r => {
-    result.push({
-      nome: r.nome,
-      descricao: r.descricao,
-      model_xml: r.model_xml,
-      gera_falso_positivo: r.gera_falso_positivo
-    });
-  });
-  return result;
 };
 
 const getInfoLinhagem = async (
@@ -645,7 +607,10 @@ controller.problemaAtividade = async (
       );
     }
     const atividade = await t.one(
-      `SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id = $<atividadeId>`,
+      `SELECT a.etapa_id, a.unidade_trabalho_id, ST_AsText(ut.geom) AS geom
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      WHERE id = $<atividadeId>`,
       { atividadeId }
     );
 
@@ -662,14 +627,15 @@ controller.problemaAtividade = async (
     );
     await t.any(
       `
-      INSERT INTO macrocontrole.problema_atividade(atividade_id, unidade_trabalho_id, tipo_problema_id, descricao, resolvido)
-      VALUES($<id>,$<unidadeTrabalhoId>,$<tipoProblemaId>,$<descricao>,FALSE)
+      INSERT INTO macrocontrole.problema_atividade(atividade_id, unidade_trabalho_id, tipo_problema_id, descricao, data, resolvido, geom)
+      VALUES($<id>,$<unidadeTrabalhoId>,$<tipoProblemaId>,$<descricao>, NOW(), FALSE, ST_GEOMFROMEWKT($<geom>))
       `,
       {
         id: newId.id,
         unidadeTrabalhoId: atividade.unidade_trabalho_id,
         tipoProblemaId,
-        descricao
+        descricao,
+        geom: `SRID=4674;${atividade.geom}`
       }
     );
     await t.any(
