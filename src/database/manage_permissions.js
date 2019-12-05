@@ -103,24 +103,45 @@ managePermissions.grantPermissionsUser = async (atividadeId, login, connection) 
 
         await t.none(enableRLS);
 
-        let camadasPolicy;
-
-        if(tipoEtapa === 2  || tipoEtapa === 3){ //Revisão e Correção POLICY
-            grantInfo.filter(v => v.camada_apontamento == false)
-                    .map(v => `${v.schema}.${v.nome_camada}`)
-                    .filter((v, i, array) => array.indexOf(v) === i)
-        }
-
-
+        let createPolicy;
         const epsg =  grantInfo[0].epsg;
         const geom =  grantInfo[0].geom;
-        const createPolicy = camadas
-                            .map(v => {
-                                let policyName = `policy_${login}_${v.replace('.','_')}`;
-                                let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('SRID=${epsg};${geom}'))`;
-                                return `CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
-                            })
-                            .reduce((prev, e) => `${prev} ${e}`)
+
+        if(tipoEtapa === 1 || tipoEtapa === 4 || tipoEtapa === 2){//Execução, Revisão, RevCorr POLICY
+            createPolicy = camadas
+            .map(v => {
+                let policyName = `policy_${login}_${v.replace('.','_')}`;
+                let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('SRID=${epsg};${geom}'))`;
+                return `CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
+            })
+            .reduce((prev, e) => `${prev} ${e}`)
+        }
+
+        if(tipoEtapa === 3){ //Correção
+            let flagPolicy = grantInfo
+            .filter(v => v.camada_apontamento == true)
+            .map(v => `${v.schema}.${v.nome_camada}`)
+            .filter((v, i, array) => array.indexOf(v) === i)
+            .map(v => {
+                let policyName = `flagpolicy_${login}_${v.replace('.','_')}`;
+                let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('SRID=${epsg};${geom}'))`;
+                return `CREATE POLICY ${policyName} ON ${v} FOR SELECT, UPDATE TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
+            })
+            .reduce((prev, e) => `${prev} ${e}`) 
+
+            let otherPolicy = grantInfo
+            .filter(v => v.camada_apontamento == false)
+            .map(v => `${v.schema}.${v.nome_camada}`)
+            .filter((v, i, array) => array.indexOf(v) === i)
+            .map(v => {
+                let policyName = `otherpolicy_${login}_${v.replace('.','_')}`;
+                let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('SRID=${epsg};${geom}'))`;
+                return `CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
+            })
+            .reduce((prev, e) => `${prev} ${e}`) 
+
+            createPolicy = `${flagPolicy} ${otherPolicy}`;
+        }
 
         await t.none(createPolicy);
 
