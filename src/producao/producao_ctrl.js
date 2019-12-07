@@ -168,14 +168,14 @@ const getInfoFME = async (connection, subfaseId) => {
     `SELECT gf.servidor, gf.porta, pf.rotina, pf.gera_falso_positivo, pf.requisito_finalizacao FROM macrocontrole.perfil_fme AS pf
     INNER JOIN dgeo.gerenciador_fme AS gf ON gf.id = pf.gerenciador_fme_id
     WHERE subfase_id = $<subfaseId>`,
-    {subfaseId}
+    { subfaseId }
   );
 };
 
 const getInfoConfigQGIS = async (connection, subfaseId) => {
   return await connection.any(
     `SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId>`,
-    {subfaseId}
+    { subfaseId }
   );
 };
 
@@ -274,16 +274,19 @@ const getInfoLinhagem = async (
 };
 
 const getInfoRequisitos = async (connection, subfaseId) => {
-  const requisitos = await connection.any(
+  return await connection.any(
     `SELECT r.descricao
       FROM macrocontrole.requisito_finalizacao AS r
       WHERE r.subfase_id = $1 ORDER BY r.ordem`,
     [subfaseId]
   );
-  const result = [];
-  requisitos.forEach(r => result.push(r.descricao));
+};
 
-  return result;
+const getAtalhos = async connection => {
+  return await connection.any(
+    `SELECT descricao, ferramenta, atalho
+      FROM dgeo.atalhos_qgis`
+  );
 };
 
 const getInfoQuestionario = async (connection, subfaseId) => {
@@ -401,6 +404,8 @@ const dadosProducao = async atividadeId => {
     );
 
     info.atividade.requisitos = await getInfoRequisitos(t, dadosut.subfase_id);
+
+    info.atividade.atalhos = await getAtalhos(t);
 
     /*
     info.atividade.questionario = await getInfoQuestionario(

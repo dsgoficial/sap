@@ -12,106 +12,6 @@ const gerenciaSchema = require("./gerencia_schema");
 const router = express.Router();
 
 router.get(
-  "/estilos",
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getEstilos();
-
-    const msg = "Estilos retornados";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
-  })
-);
-
-router.get(
-  "/regras",
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getRegras();
-
-    const msg = "Regras retornadas";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
-  })
-);
-
-router.get(
-  "/modelos",
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getModelos();
-
-    const msg = "Modelos retornados";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
-  })
-);
-
-router.get(
-  "/menus",
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getMenus();
-
-    const msg = "Menus retornados";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
-  })
-);
-
-router.post(
-  "/estilos",
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.estilos }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.gravaEstilos(req.body.estilos, req.body.usuarioId);
-
-    const msg = "Estilos gravados com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
-  })
-);
-
-router.post(
-  "/regras",
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.regras }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.gravaRegras(req.body.regras, req.body.usuarioId);
-
-    const msg = "Regras gravados com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
-  })
-);
-
-router.post(
-  "/menus",
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.menus }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.gravaMenus(req.body.menus, req.body.usuarioId);
-
-    const msg = "Menus gravados com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
-  })
-);
-
-router.post(
-  "/modelos",
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.qgisModels }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.gravaModelos(req.body.modelos, req.body.usuarioId);
-
-    const msg = "Modelos gravados com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
-  })
-);
-
-router.get(
   "/atividade/:id",
   verifyAdmin,
   schemaValidation({ params: gerenciaSchema.idParams }),
@@ -141,30 +41,6 @@ router.get(
       req.body.usuarioId //gerenteId
     );
     const msg = dados ? "Atividade retornada" : "Usuário não possui atividade";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
-  })
-);
-
-router.get(
-  "/banco_dados",
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getBancoDados();
-
-    const msg = "Banco de dados retornados";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
-  })
-);
-
-router.get(
-  "/usuario",
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getUsuario();
-
-    const msg = "Usuários retornados";
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
   })
@@ -258,32 +134,6 @@ router.post(
 );
 
 router.post(
-  "/atividade/criar_revisao",
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.atividadeCriarRevisao }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaRevisao(req.body.unidade_trabalho_ids);
-
-    const msg = "Revisão criada com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
-  })
-);
-
-router.post(
-  "/atividade/criar_revcorr",
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.atividadeCriarRevcorr }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaRevcorr(req.body.unidade_trabalho_ids);
-
-    const msg = "Revisão/Correção criada com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
-  })
-);
-
-router.post(
   "/fila_prioritaria",
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.filaPrioritaria }),
@@ -351,37 +201,15 @@ router.get(
 );
 
 router.get(
-  "/projeto_qgis",
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getProject();
-
-    const msg = "Projeto do QGIS retornado com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
-  })
-);
-
-router.get(
-  "/lote",
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getLotes();
-
-    const msg = "Lotes retornados com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
-  })
-);
-
-router.get(
   "/view_acompanhamento",
   verifyAdmin,
   schemaValidation({
     query: gerenciaSchema.emAndamentoQuery
   }),
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getViewsAcompanhamento(req.query.em_andamento);
+    const dados = await gerenciaCtrl.getViewsAcompanhamento(
+      req.query.em_andamento
+    );
 
     const msg = "Views de acompanhamento retornadas com sucesso";
 
@@ -402,22 +230,6 @@ router.put(
 );
 
 router.put(
-  "/unidade_trabalho/lote",
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.unidadeTrabalhoLote }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.unidadeTrabalhoLote(
-      req.body.unidade_trabalho_ids,
-      req.body.lote
-    );
-
-    const msg = "Lote das unidades de trabalho atualizado com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
-  })
-);
-
-router.put(
   "/atividade/permissoes",
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
@@ -428,6 +240,5 @@ router.put(
     return res.sendJsonAndLog(true, msg, httpCode.OK);
   })
 );
-
 
 module.exports = router;

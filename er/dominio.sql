@@ -72,17 +72,20 @@ INSERT INTO dominio.tipo_fase (code, nome) VALUES
 (2, 'Reambulação'),
 (3, 'Validação'),
 (4, 'Edição'),
-(5, 'Área Contínua'),
+(5, 'Geração de área Contínua'),
 (6, 'Carregamento BDGEx'),
 (7, 'Vetorização'),
-(8, 'Avaliação imagens'), -- rever diferentes avaliações com o relatório
+(8, 'Avaliação imagens'),
 (9, 'Avaliação ortoimagens'),
 (10, 'Avaliação MDS'),
 (11, 'Avaliação MDT'),
 (12, 'Avaliação de dados vetoriais'),
 (13, 'Avaliação de cartas topográficas'),
-(14, 'Avaliação de aerotriangulação'),
-(15, 'Generalização');
+(14, 'Avaliação de fototriangulação'),
+(15, 'Generalização'),
+(16, 'Carregamento BDGEx Operações'),
+(17, 'Fototriangulação'),
+(18, 'Restituição');
 
 CREATE TABLE dominio.tipo_pre_requisito(
 	code SMALLINT NOT NULL PRIMARY KEY,
