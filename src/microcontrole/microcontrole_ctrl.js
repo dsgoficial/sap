@@ -6,7 +6,7 @@ const { AppError, httpCode } = require("../utils");
 
 const controller = {};
 
-controller.armazenaFeicao = async (atividadeId, data, dados) => {
+controller.armazenaFeicao = async (atividadeId, usuarioId, data, dados) => {
   const table = new db.pgp.helpers.TableName({
     table: "monitoramento_feicao",
     schema: "microcontrole"
@@ -20,7 +20,8 @@ controller.armazenaFeicao = async (atividadeId, data, dados) => {
       "comprimento",
       "vertices",
       "data",
-      "atividade_id"
+      "atividade_id",
+      "usuario_id"
     ],
     { table }
   );
@@ -34,7 +35,8 @@ controller.armazenaFeicao = async (atividadeId, data, dados) => {
       comprimento: d.comprimento,
       vertices: d.vertices,
       data: data,
-      atividade_id: atividadeId
+      atividade_id: atividadeId,
+      usuario_id: usuarioId
     });
   });
 
@@ -43,14 +45,19 @@ controller.armazenaFeicao = async (atividadeId, data, dados) => {
   db.sapConn.none(query);
 };
 
-controller.armazenaApontamento = async (atividadeId, data, dados) => {
+controller.armazenaApontamento = async (
+  atividadeId,
+  usuarioId,
+  data,
+  dados
+) => {
   const table = new db.pgp.helpers.TableName({
     table: "monitoramento_apontamento",
     schema: "microcontrole"
   });
 
   const cs = new db.pgp.helpers.ColumnSet(
-    ["quantidade", "categoria", "data", "atividade_id"],
+    ["quantidade", "categoria", "data", "atividade_id", "usuario_id"],
     { table }
   );
 
@@ -60,7 +67,8 @@ controller.armazenaApontamento = async (atividadeId, data, dados) => {
       quantidade: d.quantidade,
       categoria: d.categoria,
       data: data,
-      atividade_id: atividadeId
+      atividade_id: atividadeId,
+      usuario_id: usuarioId
     });
   });
 
@@ -69,25 +77,29 @@ controller.armazenaApontamento = async (atividadeId, data, dados) => {
   db.sapConn.none(query);
 };
 
-controller.armazenaTela = async (atividadeId, dados) => {
+controller.armazenaTela = async (atividadeId, usuarioId, dados) => {
   const table = new db.pgp.helpers.TableName({
     table: "monitoramento_tela",
     schema: "microcontrole"
   });
 
-  const cs = new db.pgp.helpers.ColumnSet(["data", "atividade_id", "geom"], {
-    table
-  });
+  const cs = new db.pgp.helpers.ColumnSet(
+    ["geom", "zoom", "data", "atividade_id", "usuario_id"],
+    {
+      table
+    }
+  );
 
   const values = [];
 
   dados.foreach(d => {
-    // prettier-ignore
-    const geom = `ST_GeomFromEWKT('SRID=4674;POLYGON(${d.x_min} ${d.y_min},${d.x_min} ${d.y_max},${d.x_max} ${d.y_max}, ${d.x_max} ${d.y_min}, ${d.x_min} ${d.y_min})')`;
+    const geom = `ST_GeomFromEWKT('SRID=4326;POLYGON(${d.x_min} ${d.y_min},${d.x_min} ${d.y_max},${d.x_max} ${d.y_max}, ${d.x_max} ${d.y_min}, ${d.x_min} ${d.y_min})')`;
     values.push({
       geom: geom,
+      zoom: d.zoom,
       data: d.data,
-      atividade_id: atividadeId
+      atividade_id: atividadeId,
+      usuario_id: usuarioId
     });
   });
 
@@ -96,13 +108,34 @@ controller.armazenaTela = async (atividadeId, dados) => {
   db.sapConn.none(query);
 };
 
-controller.armazenaAcao = async atividadeId => {
-  await db.sapConn.any(
-    `
-    INSERT INTO microcontrole.monitoramento_acao(atividade_id, data) VALUES($<atividadeId>, NOW())
-    `,
-    {atividadeId}
+controller.armazenaComportamento = async (atividadeId, usuarioId, dados) => {
+  const table = new db.pgp.helpers.TableName({
+    table: "monitoramento_comportamento",
+    schema: "microcontrole"
+  });
+
+  const cs = new db.pgp.helpers.ColumnSet(
+    ["data", "atividade_id", "usuario_id", "propriedade", "valor"],
+    {
+      table
+    }
   );
+
+  const values = [];
+
+  dados.foreach(d => {
+    values.push({
+      data: d.data,
+      atividade_id: atividadeId,
+      usuario_id: usuarioId,
+      propriedade: d.propriedade,
+      valor: d.valor
+    });
+  });
+
+  const query = db.pgp.helpers.insert(values, cs);
+
+  db.sapConn.none(query);
 };
 
 module.exports = controller;

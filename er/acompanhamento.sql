@@ -837,4 +837,27 @@ CREATE TRIGGER atualiza_view_acompanhamento_linha_producao
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.linha_producao
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.atualiza_view_acompanhamento_linha_producao();
 
+-- Adapted from
+-- https://raw.githubusercontent.com/jawg/blog-resources/master/how-to-make-mvt-with-postgis/bbox.sql
+CREATE OR REPLACE FUNCTION acompanhamento.BBox(x integer, y integer, zoom integer)
+    RETURNS geometry AS
+$BODY$
+DECLARE
+    max numeric := 6378137 * pi();
+    res numeric := max * 2 / 2^zoom;
+    bbox geometry;
+BEGIN
+    return ST_Transform(ST_MakeEnvelope(
+        -max + (x * res),
+        max - (y * res),
+        -max + (x * res) + res,
+        max - (y * res) - res,
+        3857), 4326);
+END;
+$BODY$
+LANGUAGE plpgsql IMMUTABLE;
+
+ALTER FUNCTION acompanhamento.BBox(integer,integer,integer)
+  OWNER TO postgres;
+
 COMMIT;

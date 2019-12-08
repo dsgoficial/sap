@@ -150,7 +150,8 @@ INSERT INTO dominio.tipo_insumo (code, nome) VALUES
 (5, 'URL'),
 (6, 'Serviço WMS'),
 (7, 'Serviço WFS'),
-(8, 'XYZ Tiles');
+(8, 'XYZ Tiles'),
+(9, 'Download via HTTP');
 
 CREATE TABLE dominio.tipo_situacao(
 	code SMALLINT NOT NULL PRIMARY KEY,

@@ -56,7 +56,7 @@
 						<gco:CharacterString>European Petroleum Survey Group (EPSG)</gco:CharacterString>
 					</gmd:authority>
 					<gmd:code>
-						<gco:CharacterString>4674</gco:CharacterString>
+						<gco:CharacterString>4326</gco:CharacterString>
 					</gmd:code>
 					<gmd:version>
 						<gco:CharacterString>7.4</gco:CharacterString>

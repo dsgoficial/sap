@@ -2,15 +2,13 @@
 
 const { loginRoute } = require("../login");
 const { producaoRoute } = require("../producao");
+const { microcontroleRoute } = require("../microcontrole");
 const { gerenciaRoute } = require("../gerencia");
 const { projetoRoute } = require("../projeto");
-const { microcontroleRoute } = require("../microcontrole");
-const { estatisticasRoute } = require("../estatisticas");
+const { acompanhamentoRoute } = require("../acompanhamento");
 
 const routes = app => {
   app.use("/login", loginRoute);
-
-  app.use("/estatisticas", estatisticasRoute);
 
   app.use("/distribuicao", producaoRoute);
 
@@ -19,5 +17,7 @@ const routes = app => {
   app.use("/gerencia", gerenciaRoute);
 
   app.use("/projeto", projetoRoute);
+
+  app.use("/acompanhamento", acompanhamentoRoute);
 };
 module.exports = routes;

@@ -457,7 +457,14 @@ controller.verifica = async usuarioId => {
   return controller.getDadosAtividade(emAndamento.id, usuarioId);
 };
 
-controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
+controller.finaliza = async (
+  usuarioId,
+  atividadeId,
+  semCorrecao,
+  alterarFluxo,
+  infoEdicao,
+  observacaoProximaAtividade
+) => {
   const dataFim = new Date();
   await db.sapConn.tx(async t => {
     //Usuário é passado como uma medida de segurança para garantir que quem está finalizando é o usuário da atividade
@@ -474,6 +481,35 @@ controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
         httpCode.BadRequest
       );
     }
+
+    if (observacaoProximaAtividade) {
+      const obsResult = await t.result(
+        `UPDATE macrocontrole.atividade SET
+          observacao = concat_ws(' | ', observacao, $<observacaoProximaAtividade>)
+          WHERE id IN (
+            SELECT aprox.id FROM macrocontrole.atividade AS a
+            INNER JOIN macrocontrole.atividade AS aprox ON aprox.unidade_trabalho_id = a.unidade_trabalho_id
+            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            INNER JOIN macrocontrole.etapa AS eprox ON eprox.id = aprox.etapa_id
+            WHERE a.id = $<atividadeId> AND eprox.ordem > e.ordem
+            ORDER BY eprox.ordem
+            LIMIT 1
+          )`,
+        { atividadeId, observacaoProximaAtividade }
+      );
+
+      if (!obsResult.rowCount || obsResult.rowCount != 1) {
+        throw new AppError(
+          "Erro ao finalizar atividade. Não foi encontrada uma próxima atividade para preencher a observação.",
+          httpCode.BadRequest
+        );
+      }
+    }
+
+    if (infoEdicao) {
+      //TODO
+    }
+
     if (semCorrecao) {
       const result = await t.result(
         `DELETE FROM macrocontrole.atividade 
@@ -496,6 +532,29 @@ controller.finaliza = async (usuarioId, atividadeId, semCorrecao) => {
         throw new AppError("Erro ao bloquear correção");
       }
     }
+    if (alterarFluxo) {
+      await t.none(
+        `
+        INSERT INTO macrocontrole.alteracao_fluxo(atividade_id, unidade_trabalho_id, descricao, geom)
+        SELECT a.id, a.unidade_trabalho_id, $<alterarFluxo> AS descricao, ut.geom FROM macrocontrole.atividade AS a
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+        WHERE a.id = $<atividadeId>
+        `,
+        { atividadeId, alterarFluxo }
+      );
+      await t.none(
+        `
+        UPDATE macrocontrole.unidade_trabalho SET
+        disponivel = FALSE
+        WHERE id IN (
+          SELECT unidade_trabalho_id FROM macrocontrole.atividade
+          WHERE id = $<atividadeId>
+        )
+        `,
+        { atividadeId }
+      );
+    }
+
     await temporaryLogin.resetPassword(atividadeId, usuarioId);
   });
 };
@@ -640,7 +699,7 @@ controller.problemaAtividade = async (
         unidadeTrabalhoId: atividade.unidade_trabalho_id,
         tipoProblemaId,
         descricao,
-        geom: `SRID=4674;${atividade.geom}`
+        geom: `SRID=4326;${atividade.geom}`
       }
     );
     await t.any(
@@ -665,6 +724,70 @@ controller.getTipoProblema = async () => {
     dados.push({ tipo_problema_id: p.code, tipo_problema: p.nome });
   });
   return dados;
+};
+
+controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
+  await db.sapConn.tx(async t => {
+    const result = await t.result(
+      `
+      UPDATE macrocontrole.atividade SET
+      data_fim = $<dataFim>, tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($<atividadeId>), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($<atividadeId>)
+      WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId>
+      `,
+      { dataFim, atividadeId, usuarioId }
+    );
+    if (!result.rowCount) {
+      throw new AppError(
+        "Não foi possível de reportar problema, atividade não encontrada ou não corresponde a uma atividade em execução do usuário",
+        httpCode.BadRequest
+      );
+    }
+    const atividade = await t.one(
+      `SELECT a.etapa_id, a.unidade_trabalho_id, ST_AsText(ut.geom) AS geom
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      WHERE id = $<atividadeId>`,
+      { atividadeId }
+    );
+
+    await t.none(
+      `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
+      VALUES($<etapaId>,$<unidadeTrabalhoId>,$<usuarioId>,3)
+      `,
+      {
+        etapaId: atividade.etapa_id,
+        unidadeTrabalhoId: atividade.unidade_trabalho_id,
+        usuarioId: usuarioId
+      }
+    );
+
+    await t.none(
+      `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
+        SELECT a.etapa_id, a.unidade_trabalho_id, a.usuario_id, 3 AS tipo_situacao_id FROM macrocontrole.atividade AS a
+        WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 4
+        ORDER BY data_fim DESC
+        LIMIT 1
+      )`,
+      { usuarioId }
+    );
+
+    await t.none(
+      `
+      UPDATE macrocontrole.atividade SET
+      tipo_situacao_id = 5
+      WHERE id IN (
+        SELECT a.id FROM macrocontrole.atividade AS a
+        WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 4
+        ORDER BY data_fim DESC
+        LIMIT 1
+      )`,
+      { usuarioId }
+    );
+
+    await temporaryLogin.resetPassword(atividadeId, usuarioId);
+  });
 };
 
 module.exports = controller;

@@ -78,6 +78,9 @@ models.tela = Joi.object().keys({
           .required(),
         y_max: Joi.number()
           .strict()
+          .required(),
+        zoom: Joi.number()
+          .strict()
           .required()
       })
     )
@@ -85,11 +88,20 @@ models.tela = Joi.object().keys({
     .min(1)
 });
 
-models.acao = Joi.object().keys({
+models.comportamento = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()
     .strict()
+    .required(),
+  dados: Joi.array()
+    .items(
+      Joi.object().keys({
+        propriedade: Joi.string().required(),
+        valor: Joi.string().required()
+      })
+    )
     .required()
+    .min(1)
 });
 
 module.exports = models;

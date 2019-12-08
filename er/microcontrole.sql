@@ -20,7 +20,8 @@ CREATE TABLE microcontrole.monitoramento_feicao(
   comprimento real,
   vertices integer,
   data timestamp with time zone NOT NULL,
-  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id)
 );
 
 CREATE INDEX monitoramento_feicao_idx
@@ -33,7 +34,8 @@ CREATE TABLE microcontrole.monitoramento_apontamento(
   quantidade integer NOT NULL,
   categoria VARCHAR(255) NOT NULL,
   data timestamp with time zone NOT NULL,
-  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id)
 );
 
 CREATE INDEX monitoramento_apontamento_idx
@@ -44,8 +46,10 @@ CREATE INDEX monitoramento_apontamento_idx
 CREATE TABLE microcontrole.monitoramento_tela(
   id SERIAL NOT NULL PRIMARY KEY,
   data timestamp with time zone NOT NULL,
+  zoom REAL NOT NULL,
   atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
-  geom geometry(POLYGON, 4674) NOT NULL
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+  geom geometry(POLYGON, 4326) NOT NULL
 );
 
 CREATE INDEX monitoramento_tela_geom
@@ -58,14 +62,19 @@ CREATE INDEX monitoramento_tela_idx
     (data DESC)
     TABLESPACE pg_default;
 
+CREATE INDEX monitoramento_comportamento_data_idx ON microcontrole.monitoramento_comportamento USING BRIN (data) WITH (pages_per_range = 128);
+CREATE INDEX monitoramento_comportamento_atividade_id_idx ON microcontrole.monitoramento_comportamento (atividade_id);
 
-CREATE TABLE microcontrole.monitoramento_acao(
+CREATE TABLE microcontrole.monitoramento_comportamento(
   id SERIAL NOT NULL PRIMARY KEY,
   data timestamp with time zone NOT NULL,
-  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id)
+  atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+  propriedade VARCHAR(255) NOT NULL,
+  valor VARCHAR(255) NOT NULL
 );
 
-CREATE INDEX monitoramento_acao_data_idx ON microcontrole.monitoramento_acao USING BRIN (data) WITH (pages_per_range = 128);
-CREATE INDEX monitoramento_acao_atividade_id_idx ON microcontrole.monitoramento_acao (atividade_id);
+CREATE INDEX monitoramento_comportamento_data_idx ON microcontrole.monitoramento_comportamento USING BRIN (data) WITH (pages_per_range = 128);
+CREATE INDEX monitoramento_comportamento_atividade_id_idx ON microcontrole.monitoramento_comportamento (atividade_id);
 
 COMMIT;

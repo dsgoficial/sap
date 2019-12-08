@@ -9,8 +9,8 @@
     <spatialrefsys>
       <proj4>+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs</proj4>
       <srsid>3517</srsid>
-      <srid>4674</srid>
-      <authid>EPSG:4674</authid>
+      <srid>4326</srid>
+      <authid>EPSG:4326</authid>
       <description>SIRGAS 2000</description>
       <projectionacronym>longlat</projectionacronym>
       <ellipsoidacronym>GRS80</ellipsoidacronym>
@@ -63,13 +63,13 @@
       <layer-tree-layer id="lote_89c2df35_abe0_4b9d_beb3_d71c61f1a5d5" providerKey="postgres" name="lote" checked="Qt::Checked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' table=&quot;macrocontrole&quot;.&quot;lote&quot; sql=" expanded="1">
         <customproperties/>
       </layer-tree-layer>
-      <layer-tree-layer id="unidade_trabalho_b36bf897_4582_4968_b530_83e11fbc45c7" providerKey="postgres" name="unidade_trabalho" checked="Qt::Unchecked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' srid=4674 type=Polygon checkPrimaryKeyUnicity='1' table=&quot;macrocontrole&quot;.&quot;unidade_trabalho&quot; (geom) sql=&quot;nome&quot; = 'Edif_2799-4_6'" expanded="1">
+      <layer-tree-layer id="unidade_trabalho_b36bf897_4582_4968_b530_83e11fbc45c7" providerKey="postgres" name="unidade_trabalho" checked="Qt::Unchecked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' srid=4326 type=Polygon checkPrimaryKeyUnicity='1' table=&quot;macrocontrole&quot;.&quot;unidade_trabalho&quot; (geom) sql=&quot;nome&quot; = 'Edif_2799-4_6'" expanded="1">
         <customproperties/>
       </layer-tree-layer>
       <layer-tree-layer id="grupo_insumo_2da221c0_dc16_4db8_9828_18e3873de6d8" providerKey="postgres" name="grupo_insumo" checked="Qt::Checked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' table=&quot;macrocontrole&quot;.&quot;grupo_insumo&quot; sql=" expanded="1">
         <customproperties/>
       </layer-tree-layer>
-      <layer-tree-layer id="insumo_cf8e5a79_f684_4cbd_9b32_4806cb9efaa5" providerKey="postgres" name="insumo" checked="Qt::Unchecked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' srid=4674 type=Polygon table=&quot;macrocontrole&quot;.&quot;insumo&quot; (geom) sql=" expanded="1">
+      <layer-tree-layer id="insumo_cf8e5a79_f684_4cbd_9b32_4806cb9efaa5" providerKey="postgres" name="insumo" checked="Qt::Unchecked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' srid=4326 type=Polygon table=&quot;macrocontrole&quot;.&quot;insumo&quot; (geom) sql=" expanded="1">
         <customproperties/>
       </layer-tree-layer>
       <layer-tree-layer id="insumo_unidade_trabalho_0d7a838f_4b8d_4933_821f_44bebd663088" providerKey="postgres" name="insumo_unidade_trabalho" checked="Qt::Checked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' table=&quot;macrocontrole&quot;.&quot;insumo_unidade_trabalho&quot; sql=" expanded="1">
@@ -78,7 +78,7 @@
       <layer-tree-layer id="atividade_e4c46f08_8531_41ec_a5e2_97ee66033986" providerKey="postgres" name="atividade" checked="Qt::Checked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' table=&quot;macrocontrole&quot;.&quot;atividade&quot; sql=" expanded="1">
         <customproperties/>
       </layer-tree-layer>
-      <layer-tree-layer id="produto_954135b9_01a8_42dd_90e8_a1a803d7b80d" providerKey="postgres" name="produto" checked="Qt::Unchecked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' srid=4674 type=Polygon table=&quot;macrocontrole&quot;.&quot;produto&quot; (geom) sql=" expanded="1">
+      <layer-tree-layer id="produto_954135b9_01a8_42dd_90e8_a1a803d7b80d" providerKey="postgres" name="produto" checked="Qt::Unchecked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' srid=4326 type=Polygon table=&quot;macrocontrole&quot;.&quot;produto&quot; (geom) sql=" expanded="1">
         <customproperties/>
       </layer-tree-layer>
       <layer-tree-layer id="fila_prioritaria_grupo_ae58a5b8_30c5_4f3a_adec_c5ef767e6c2f" providerKey="postgres" name="fila_prioritaria_grupo" checked="Qt::Checked" source="dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' sslmode=disable key='id' table=&quot;macrocontrole&quot;.&quot;fila_prioritaria_grupo&quot; sql=" expanded="1">
@@ -266,8 +266,8 @@
       <spatialrefsys>
         <proj4>+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs</proj4>
         <srsid>3517</srsid>
-        <srid>4674</srid>
-        <authid>EPSG:4674</authid>
+        <srid>4326</srid>
+        <authid>EPSG:4326</authid>
         <description>SIRGAS 2000</description>
         <projectionacronym>longlat</projectionacronym>
         <ellipsoidacronym>GRS80</ellipsoidacronym>
@@ -3106,7 +3106,7 @@ def my_form_open(diálogo, camada, feição):
         <ymax>-24.95151519775389914</ymax>
       </extent>
       <id>insumo_cf8e5a79_f684_4cbd_9b32_4806cb9efaa5</id>
-      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' password='{{PASSWORD}}' sslmode=disable key='id' srid=4674 type=Polygon table="macrocontrole"."insumo" (geom) sql=</datasource>
+      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' password='{{PASSWORD}}' sslmode=disable key='id' srid=4326 type=Polygon table="macrocontrole"."insumo" (geom) sql=</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -3115,8 +3115,8 @@ def my_form_open(diálogo, camada, feição):
         <spatialrefsys>
           <proj4>+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs</proj4>
           <srsid>3517</srsid>
-          <srid>4674</srid>
-          <authid>EPSG:4674</authid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
           <description>SIRGAS 2000</description>
           <projectionacronym>longlat</projectionacronym>
           <ellipsoidacronym>GRS80</ellipsoidacronym>
@@ -3146,8 +3146,8 @@ def my_form_open(diálogo, camada, feição):
           <spatialrefsys>
             <proj4>+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs</proj4>
             <srsid>3517</srsid>
-            <srid>4674</srid>
-            <authid>EPSG:4674</authid>
+            <srid>4326</srid>
+            <authid>EPSG:4326</authid>
             <description>SIRGAS 2000</description>
             <projectionacronym>longlat</projectionacronym>
             <ellipsoidacronym>GRS80</ellipsoidacronym>
@@ -3155,7 +3155,7 @@ def my_form_open(diálogo, camada, feição):
           </spatialrefsys>
         </crs>
         <extent>
-          <spatial maxz="0" dimensions="2" minz="0" maxx="0" minx="0" miny="0" maxy="0" crs="EPSG:4674"/>
+          <spatial maxz="0" dimensions="2" minz="0" maxx="0" minx="0" miny="0" maxy="0" crs="EPSG:4326"/>
           <temporal>
             <period>
               <start></start>
@@ -7465,7 +7465,7 @@ def my_form_open(diálogo, camada, feição):
         <ymax>-19.92985916137699931</ymax>
       </extent>
       <id>produto_954135b9_01a8_42dd_90e8_a1a803d7b80d</id>
-      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' password='{{PASSWORD}}' sslmode=disable key='id' srid=4674 type=Polygon table="macrocontrole"."produto" (geom) sql=</datasource>
+      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' password='{{PASSWORD}}' sslmode=disable key='id' srid=4326 type=Polygon table="macrocontrole"."produto" (geom) sql=</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -7474,8 +7474,8 @@ def my_form_open(diálogo, camada, feição):
         <spatialrefsys>
           <proj4>+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs</proj4>
           <srsid>3517</srsid>
-          <srid>4674</srid>
-          <authid>EPSG:4674</authid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
           <description>SIRGAS 2000</description>
           <projectionacronym>longlat</projectionacronym>
           <ellipsoidacronym>GRS80</ellipsoidacronym>
@@ -7505,8 +7505,8 @@ def my_form_open(diálogo, camada, feição):
           <spatialrefsys>
             <proj4>+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs</proj4>
             <srsid>3517</srsid>
-            <srid>4674</srid>
-            <authid>EPSG:4674</authid>
+            <srid>4326</srid>
+            <authid>EPSG:4326</authid>
             <description>SIRGAS 2000</description>
             <projectionacronym>longlat</projectionacronym>
             <ellipsoidacronym>GRS80</ellipsoidacronym>
@@ -7514,7 +7514,7 @@ def my_form_open(diálogo, camada, feição):
           </spatialrefsys>
         </crs>
         <extent>
-          <spatial maxz="0" dimensions="2" minz="0" maxx="0" minx="0" miny="0" maxy="0" crs="EPSG:4674"/>
+          <spatial maxz="0" dimensions="2" minz="0" maxx="0" minx="0" miny="0" maxy="0" crs="EPSG:4326"/>
           <temporal>
             <period>
               <start></start>
@@ -12421,7 +12421,7 @@ def my_form_open(diálogo, camada, feição):
         <ymax>-24.31227414795300135</ymax>
       </extent>
       <id>unidade_trabalho_b36bf897_4582_4968_b530_83e11fbc45c7</id>
-      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' password='{{PASSWORD}}' sslmode=disable key='id' srid=4674 type=Polygon checkPrimaryKeyUnicity='1' table="macrocontrole"."unidade_trabalho" (geom) sql="nome" = 'Edif_2799-4_6'</datasource>
+      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='{{USER}}' password='{{PASSWORD}}' sslmode=disable key='id' srid=4326 type=Polygon checkPrimaryKeyUnicity='1' table="macrocontrole"."unidade_trabalho" (geom) sql="nome" = 'Edif_2799-4_6'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -12430,8 +12430,8 @@ def my_form_open(diálogo, camada, feição):
         <spatialrefsys>
           <proj4>+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs</proj4>
           <srsid>3517</srsid>
-          <srid>4674</srid>
-          <authid>EPSG:4674</authid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
           <description>SIRGAS 2000</description>
           <projectionacronym>longlat</projectionacronym>
           <ellipsoidacronym>GRS80</ellipsoidacronym>
@@ -12461,8 +12461,8 @@ def my_form_open(diálogo, camada, feição):
           <spatialrefsys>
             <proj4>+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs</proj4>
             <srsid>3517</srsid>
-            <srid>4674</srid>
-            <authid>EPSG:4674</authid>
+            <srid>4326</srid>
+            <authid>EPSG:4326</authid>
             <description>SIRGAS 2000</description>
             <projectionacronym>longlat</projectionacronym>
             <ellipsoidacronym>GRS80</ellipsoidacronym>
@@ -12470,7 +12470,7 @@ def my_form_open(diálogo, camada, feição):
           </spatialrefsys>
         </crs>
         <extent>
-          <spatial maxz="0" dimensions="2" minz="0" maxx="0" minx="0" miny="0" maxy="0" crs="EPSG:4674"/>
+          <spatial maxz="0" dimensions="2" minz="0" maxx="0" minx="0" miny="0" maxy="0" crs="EPSG:4326"/>
           <temporal>
             <period>
               <start></start>

@@ -10,6 +10,19 @@ models.idParams = Joi.object().keys({
     .required()
 });
 
+models.mvtParams = Joi.object().keys({
+  nome: Joi.string().required(),
+  x: Joi.number()
+    .integer()
+    .required(),
+  y: Joi.number()
+    .integer()
+    .required(),
+  z: Joi.number()
+    .integer()
+    .required()
+});
+
 models.diasQuery = Joi.object().keys({
   dias: Joi.string().regex(/^[0-9]+$/)
 });

@@ -177,4 +177,28 @@ controller.getAcaoEmExecucao = async () => {
 
   return activity_fixed;
 };
+
+controller.getMvtLinhaProducao = async (nome, x, y, z) => {
+  return db.sapConn.one(
+    `
+  SELECT ST_AsMVT(q, $<nome>, 4096, 'geom')
+    FROM (
+      SELECT
+          c.*,
+          ST_AsMVTGeom(
+              geom
+              BBox($<x>, $<y>, $<z>),
+              4096,
+              0,
+              false
+          ) AS geom
+      FROM acompanhamento.$<nome:raw> AS c
+      WHERE c.geom && BBox($<x>, $<y>, $<z>)
+      AND ST_Intersects(c.geom, BBox($<x>, $<y>, $<z>))
+    ) q
+  `,
+    { nome, x, y, z }
+  );
+};
+
 module.exports = controller;

@@ -28,7 +28,7 @@ CREATE TABLE macrocontrole.produto(
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
-	geom geometry(POLYGON, 4674) NOT NULL
+	geom geometry(POLYGON, 4326) NOT NULL
 );
 
 CREATE INDEX produto_geom
@@ -325,7 +325,7 @@ CREATE TABLE macrocontrole.lote(
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-    geom geometry(POLYGON, 4674) NOT NULL,
+    geom geometry(POLYGON, 4326) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
@@ -357,7 +357,7 @@ CREATE TABLE macrocontrole.insumo(
 	epsg VARCHAR(5),
 	tipo_insumo_id INTEGER NOT NULL REFERENCES dominio.tipo_insumo (code),
 	grupo_insumo_id INTEGER NOT NULL REFERENCES macrocontrole.grupo_insumo (id),
-	geom geometry(POLYGON, 4674) --se for não espacial a geometria é nula
+	geom geometry(POLYGON, 4326) --se for não espacial a geometria é nula
 );
 
 CREATE INDEX insumo_geom
@@ -545,6 +545,12 @@ CREATE TABLE macrocontrole.perda_recurso_humano(
 	observacao TEXT
 );
 
+CREATE TABLE macrocontrole.funcao_especial(
+	id SERIAL NOT NULL PRIMARY KEY,
+ 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+	funcao VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
@@ -553,11 +559,27 @@ CREATE TABLE macrocontrole.problema_atividade(
 	descricao TEXT NOT NULL,
 	data  timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE,
-	geom geometry(POLYGON, 4674) NOT NULL
+	geom geometry(POLYGON, 4326) NOT NULL
 );
 
 CREATE INDEX problema_atividade_geom
     ON macrocontrole.problema_atividade USING gist
+    (geom)
+    TABLESPACE pg_default;
+
+
+CREATE TABLE macrocontrole.alteracao_fluxo(
+	id SERIAL NOT NULL PRIMARY KEY,
+ 	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
+ 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
+	descricao TEXT NOT NULL,
+	data  timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	resolvido BOOLEAN NOT NULL DEFAULT FALSE,
+	geom geometry(POLYGON, 4326) NOT NULL
+);
+
+CREATE INDEX alteracao_fluxo_geom
+    ON macrocontrole.alteracao_fluxo USING gist
     (geom)
     TABLESPACE pg_default;
 
