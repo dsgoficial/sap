@@ -4,7 +4,7 @@ CREATE SCHEMA acompanhamento;
 
 CREATE TABLE acompanhamento.login(
   id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+  usuario_id SMALLINT NOT NULL REFERENCES dgeo.usuario (id),
   data_login  timestamp with time zone NOT NULL
 );
 

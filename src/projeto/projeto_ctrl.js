@@ -6,6 +6,11 @@ const { AppError, httpCode } = require("../utils");
 
 const qgisProject = require("./qgis_project");
 
+const {
+  checkFMEConnection,
+  validadeParameters
+} = require("../gerenciador_fme");
+
 const controller = {};
 
 const getUsuarioNomeById = async usuarioId => {
@@ -345,6 +350,147 @@ controller.unidadeTrabalhoLote = async (unidadeTrabalhoIds, lote) => {
     WHERE id in ($<unidadeTrabalhoIds:csv>)`,
     { unidadeTrabalhoIds, lote }
   );
+};
+
+controller.deletaAtividades = async atividadeIds => {
+  return db.sapConn.none(
+    `
+  DELETE FROM macrocontrole.atividade
+  WHERE id in ($<atividadeIds:csv>) AND tipo_situacao IN (1,3)
+  `,
+    { atividadeIds }
+  );
+};
+
+controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
+  const result = await db.sapConn.result(
+    `
+  INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+  SELECT DISTINCT $<etapaId> AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+  FROM macrocontrole.unidade_trabalho AS ut
+  INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
+  LEFT JOIN (
+    SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+    ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
+  WHERE ut.id IN ($<unidadeTrabalhoIds:csv>) AND e.id = $<etapaId> AND a.id IS NULL
+  `,
+    { unidadeTrabalhoIds, etapaId }
+  );
+  if (!result.rowCount || result.rowCount != 1) {
+    throw new AppError(
+      "As atividades não podem ser criadas pois já existem.",
+      httpCode.BadRequest
+    );
+  }
+};
+
+controller.getProjetos = async () => {
+  return db.sapConn.any(
+    `SELECT id, nome, finalizado FROM macrocontrole.projeto`
+  );
+};
+
+controller.getLinhasProducao = async () => {
+  return db.sapConn.any(
+    `SELECT id, nome, projeto_id, tipo_produto_id FROM macrocontrole.linha_producao`
+  );
+};
+
+controller.getFases = async () => {
+  return db.sapConn.any(
+    `SELECT f.id, tf.nome, f.tipo_fase_id, f.linha_producao_id, f.ordem
+    FROM macrocontrole.fase AS f
+    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id`
+  );
+};
+
+controller.getSubfases = async () => {
+  return db.sapConn.any(
+    `SELECT id, nome, fase_id, ordem, observacao FROM macrocontrole.subfase`
+  );
+};
+
+controller.getEtapas = async () => {
+  return db.sapConn.any(
+    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, e.ordem, e.observacao
+    FROM macrocontrole.etapa AS e
+    INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id`
+  );
+};
+
+controller.getGerenciadorFME = async () => {
+  return db.sapConn.any(
+    `SELECT id, servidor, porta
+    FROM dgeo.gerenciador_fme`
+  );
+};
+
+controller.criaGerenciadorFME = async (servidor, porta) => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.gerenciador_fme
+      WHERE servidor = $<servidor> AND porta = $<porta>`,
+      { servidor, porta }
+    );
+    if (exists) {
+      throw new AppError("O servidor já está cadastrado", httpCode.BadRequest);
+    }
+
+    await checkFMEConnection(servidor, porta);
+
+    return t.any(
+      `INSERT INTO dgeo.gerenciador_fme(servidor, porta)
+      VALUES ($<servidor>, $<porta>)`,
+      { servidor, porta }
+    );
+  });
+};
+
+controller.atualizaGerenciadorFME = async (id, servidor, porta) => {
+  await checkFMEConnection(servidor, porta);
+
+  return db.sapConn.any(
+    `UPDATE dgeo.gerenciador_fme
+    SET servidor = $<servidor>, porta =$<porta>
+    where id = $<id>`,
+    { id, servidor, porta }
+  );
+};
+
+controller.deletaGerenciadorFME = async id => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.gerenciador_fme
+      WHERE id = $<id>`,
+      { id }
+    );
+    if (!exists) {
+      throw new AppError(
+        "O id informado não corresponde a um servidor do Gerenciador do FME",
+        httpCode.BadRequest
+      );
+    }
+
+    const existsAssociation = await t.any(
+      `SELECT id FROM macrocontrole.perfil_fme 
+      WHERE gerenciador_fme_id = $<id>`,
+      { id }
+    );
+    if (existsAssociation) {
+      throw new AppError(
+        "O servidor possui rotinas do fme associadas em perfil_fme",
+        httpCode.BadRequest
+      );
+    }
+
+    await checkFMEConnection(servidor, porta);
+
+    return t.any(
+      `DELETE FROM dgeo.gerenciador_fme
+      WHERE id = $<id>`,
+      { id }
+    );
+  });
 };
 
 module.exports = controller;

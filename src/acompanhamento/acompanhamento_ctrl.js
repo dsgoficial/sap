@@ -179,6 +179,24 @@ controller.getAcaoEmExecucao = async () => {
 };
 
 controller.getMvtLinhaProducao = async (nome, x, y, z) => {
+  const camadaExist = await db.sapConn.any(
+    `
+    SELECT EXISTS (
+      SELECT 1
+      FROM   information_schema.tables 
+      WHERE  table_schema = 'acompanhamento'
+      AND    table_name = $<nome>
+      );
+  `,
+    { nome }
+  );
+  if (!camadaExist) {
+    throw new AppError(
+      "Camada de acompanhamento não encontrada",
+      httpCode.BadRequest
+    );
+  }
+
   return db.sapConn.one(
     `
   SELECT ST_AsMVT(q, $<nome>, 4096, 'geom')
@@ -198,6 +216,67 @@ controller.getMvtLinhaProducao = async (nome, x, y, z) => {
     ) q
   `,
     { nome, x, y, z }
+  );
+};
+
+controller.getPerdaRecursoHumano = async mes => {
+  return db.sapConn.any(
+    `
+    SELECT prh.id, prh.usuario_id, prh.tipo_perda_recurso_humano_id, prh.horas, prh.data, prh.observacao,
+    tprh.nome AS tipo_perda_recurso_humano, 
+    FROM macrocontrole.perda_recurso_humano AS prh
+    INNER JOIN dominio.tipo_perda_recurso_humano AS tprh ON tprh.code = prh.tipo_perda_recurso_humano_id
+    INNER JOIN dgeo.usuario AS u ON u.id = prh.usuario_id
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    WHERE EXTRACT(MONTH FROM prh.data) = $<mes>
+  `,
+    { mes }
+  );
+};
+
+controller.criaPerdaRecursoHumano = async perdaRecursoHumano => {
+  const table = new db.pgp.helpers.TableName({
+    table: "perda_recurso_humano",
+    schema: "macrocontrole"
+  });
+
+  const cs = new db.pgp.helpers.ColumnSet(
+    [
+      "usuario_id",
+      "tipo_perda_recurso_humano_id",
+      "horas",
+      "data",
+      "observacao"
+    ],
+    {
+      table
+    }
+  );
+
+  const query = db.pgp.helpers.insert(perdaRecursoHumano, cs);
+
+  db.sapConn.none(query);
+};
+
+controller.getDiasTrabalhados = async mes => {
+  return db.sapConn.any(
+    `
+    SELECT DISTINCT l.usuario_id, DATE(l.data_login) AS data
+    FROM acompanhamento.login AS l
+    WHERE EXTRACT(MONTH FROM l.data_login) = $<mes>
+  `,
+    { mes }
+  );
+};
+
+controller.getInfoProjetos = async (ano, finalizado) => {
+  const dados = await db.sapConn.any(
+    `
+    SELECT DISTINCT l.usuario_id, DATE(l.data_login) AS data
+    FROM acompanhamento.login AS l
+    WHERE EXTRACT(MONTH FROM l.data_login) = $<mes>
+  `,
+    { mes }
   );
 };
 

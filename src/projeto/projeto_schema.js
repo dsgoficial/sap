@@ -119,8 +119,41 @@ models.unidadeTrabalhoLote = Joi.object().keys({
     )
     .required()
     .min(1),
-  lote: Joi.number()
+  lote_id: Joi.number()
     .integer()
+    .strict()
+    .required()
+});
+
+models.listaAtividades = Joi.object().keys({
+  atividades_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1)
+});
+
+models.unidadeTrabalhoEtapa = Joi.object().keys({
+  unidade_trabalho_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
+  etapa_id: Joi.number()
+    .integer()
+    .strict()
+    .required()
+});
+
+models.gerenciadorFME = Joi.object().keys({
+  servidor: Joi.string().required(),
+  porta: Joi.number()
     .strict()
     .required()
 });

@@ -2,64 +2,36 @@
 
 const express = require("express");
 
-const path = require("path");
+const { schemaValidation, asyncHandler, httpCode } = require("../utils");
 
-const { renderAndLog } = require("../utils");
+const { verifyAdmin } = require("../login");
 
 const metadadosCtrl = require("./metadados_ctrl");
+const metadadosSchema = require("./metadados_schema");
 
 const router = express.Router();
 
-const nunjucks = require("nunjucks");
-/**app.set(
-  "templates",
-  path.join(__dirname, "src", "gerador_metadados", "templates")
+router.get(
+  "/:uuid",
+  verifyAdmin,
+  schemaValidation({
+    params: metadadosSchema.uuidParams
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getMetadado(req.params.uuid);
+
+    const msg = "Metadados retornados";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
 );
-nunjucks.configure(
-  path.join(__dirname, "src", "gerador_metadados", "templates"),
-  {
-    autoescape: true,
-    express: app
-  }
-);**/
 
-/**
- * @api {get} /metadados/:uuid Retorna metadado de um produto identificado pelo UUID
- * @apiGroup Metadados
- * @apiVersion 1.0.0
- * @apiName GeraMetadado
- * @apiPermission operador
- *
- *
- * @apiDescription Gera os metadados de um determinado produto
- *
- *
- * @apiSuccess {String} Retorna os metadados gerados no formato XML.
- *
- *
- */
+//get tipo palavra chave
 
-router.get("/:uuid", async (req, res, next) => {
-  const { erro, template, dados } = await metadadosCtrl.geraMetadado(
-    req.params.uuid
-  );
-  if (erro) {
-    return next(erro);
-  }
+//insere palavra chave de um produto
 
-  const information = {
-    produto_uuid: req.params.uuid
-  };
+// inserir informacoes gerais de um produto
 
-  return renderAndLog(
-    "Metadado retornado.",
-    "metadados_route",
-    information,
-    res,
-    200,
-    template,
-    dados
-  );
-});
+// inserir informacoes gerais da linha de producao
 
 module.exports = router;

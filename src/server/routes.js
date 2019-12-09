@@ -6,6 +6,7 @@ const { microcontroleRoute } = require("../microcontrole");
 const { gerenciaRoute } = require("../gerencia");
 const { projetoRoute } = require("../projeto");
 const { acompanhamentoRoute } = require("../acompanhamento");
+const { metadadosRoute } = require("../metadados");
 
 const routes = app => {
   app.use("/login", loginRoute);
@@ -19,5 +20,7 @@ const routes = app => {
   app.use("/projeto", projetoRoute);
 
   app.use("/acompanhamento", acompanhamentoRoute);
+
+  app.use("/metadados", metadadosRoute);
 };
 module.exports = routes;

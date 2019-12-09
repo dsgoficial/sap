@@ -10,14 +10,14 @@ CREATE TABLE dgeo.usuario(
   nome_guerra VARCHAR(255) NOT NULL,
   administrador BOOLEAN NOT NULL DEFAULT FALSE,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
-  tipo_turno_id INTEGER NOT NULL REFERENCES dominio.tipo_turno (code),
-  tipo_posto_grad_id INTEGER NOT NULL REFERENCES dominio.tipo_posto_grad (code),
+  tipo_turno_id SMALLINT NOT NULL REFERENCES dominio.tipo_turno (code),
+  tipo_posto_grad_id SMALLINT NOT NULL REFERENCES dominio.tipo_posto_grad (code),
   uuid UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4()
 );
 
 CREATE TABLE dgeo.login_temporario(
   id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+  usuario_id SMALLINT NOT NULL REFERENCES dgeo.usuario (id),
   servidor VARCHAR(255) NOT NULL,
   porta VARCHAR(255) NOT NULL,
   login VARCHAR(255) UNIQUE NOT NULL,
@@ -73,7 +73,8 @@ INSERT INTO dgeo.atalhos_qgis (ferramenta, descricao, atalho) VALUES
 CREATE TABLE dgeo.gerenciador_fme(
   id SERIAL NOT NULL PRIMARY KEY,
 	servidor VARCHAR(255) NOT NULL,
-	porta VARCHAR(255) NOT NULL
+	porta VARCHAR(255) NOT NULL,
+  UNIQUE(servidor,porta)
 );
 
 CREATE TABLE dgeo.layer_menus(
