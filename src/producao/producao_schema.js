@@ -16,16 +16,15 @@ models.finaliza = Joi.object().keys({
   ),
   info_edicao: Joi.object().keys({
     nome_carta: Joi.string().required(),
-    palavras_chave: Joi.array(
+    palavras_chave: Joi.array()
+      .items(
       Joi.object().keys({
         palavra_chave: Joi.string().required(),
         tipo_palavra_chave: Joi.number()
           .integer()
           .strict()
           .required()
-      })
-    )
-      .items()
+      }))
       .required()
       .min(1)
   }),

@@ -18,7 +18,7 @@ models.mesParam = Joi.object().keys({
 
 models.anoParam = Joi.object().keys({
   ano: Joi.string()
-    .regex(/^202[0-9])$/)
+    .regex(/^202[0-9]$/)
     .required()
 });
 
@@ -44,7 +44,7 @@ models.diasQuery = Joi.object().keys({
 });
 
 models.perdaRecursoHumano = Joi.object().keys({
-  perda_recurso_humano: Joi.array(
+  perda_recurso_humano: Joi.array().items(
     Joi.object().keys({
       usuario_id: Joi.number()
         .integer()
