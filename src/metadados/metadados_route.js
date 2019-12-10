@@ -26,6 +26,22 @@ router.get(
   })
 );
 
+router.get(
+  "/linha_producao/:nome/qrcode",
+  verifyAdmin,
+  schemaValidation({
+    params: metadadosSchema.nomeParams
+  }),
+  asyncHandler(async (req, res, next) => {
+    const host = req.protocol + "://" + req.get("host");
+    const qrcode = await metadadosCtrl.getQRCode(host, req.params.nome);
+
+    res.type("svg");
+
+    qrcode.pipe(res);
+  })
+);
+
 //get tipo palavra chave
 
 //insere palavra chave de um produto

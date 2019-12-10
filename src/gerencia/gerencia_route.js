@@ -241,4 +241,23 @@ router.put(
   })
 );
 
+router.post(
+  "/banco_dados/revogar_permissoes",
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.bancoDados
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.revogarPermissoesDB(
+      req.body.servidor,
+      req.body.porta,
+      req.body.banco
+    );
+
+    const msg = "Permissões do banco revogadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
 module.exports = router;

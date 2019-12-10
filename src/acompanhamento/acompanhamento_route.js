@@ -77,6 +77,17 @@ router.get(
   })
 );
 
+router.get(
+  "/tipo_perda_recurso_humano",
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getTipoPerdaRecursoHumano();
+
+    const msg = "Tipos de perda de recurso humano retornados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
 router.post(
   "/perda_recurso_humano",
   schemaValidation({

@@ -10,4 +10,8 @@ models.uuidParams = Joi.object().keys({
     .required()
 });
 
+models.nomeParams = Joi.object().keys({
+  nome: Joi.string().required()
+});
+
 module.exports = models;

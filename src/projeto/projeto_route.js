@@ -330,4 +330,98 @@ router.post(
   })
 );
 
+router.put(
+  "/configuracao/gerenciador_fme/:id",
+  verifyAdmin,
+  schemaValidation({
+    params: projetoSchema.idParams,
+    body: projetoSchema.gerenciadorFME
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaGerenciadorFME(
+      req.params.id,
+      req.body.servidor,
+      req.body.porta
+    );
+
+    const msg =
+      "Informações dos serviços do Gerenciador do FME atualizadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.delete(
+  "/configuracao/gerenciador_fme/:id",
+  verifyAdmin,
+  schemaValidation({
+    params: projetoSchema.idParams
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaGerenciadorFME(req.params.id);
+
+    const msg =
+      "Informações dos serviços do Gerenciador do FME deletadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.get(
+  "/camadas",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getCamadas();
+
+    const msg = "Camadas retornadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.delete(
+  "/camadas",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.camadasIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deleteCamadas(req.params.camadas_ids);
+
+    const msg = "Camada deletada com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
+router.post(
+  "/camadas",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.camadas
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaCamadas(req.body.camadas);
+
+    const msg = "Camadas criadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.put(
+  "/camadas",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.camadasAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaCamadas(req.body.camadas_atualizacao);
+
+    const msg = "Camadas atualizadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
 module.exports = router;

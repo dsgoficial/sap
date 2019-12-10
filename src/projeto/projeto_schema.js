@@ -4,6 +4,12 @@ const Joi = require("joi");
 
 const models = {};
 
+models.idParams = Joi.object().keys({
+  id: Joi.string()
+    .regex(/^[0-9]+$/)
+    .required()
+});
+
 models.usuarios = Joi.object().keys({
   usuarios: Joi.array()
     .items(
@@ -156,6 +162,50 @@ models.gerenciadorFME = Joi.object().keys({
   porta: Joi.number()
     .strict()
     .required()
+});
+
+models.camadasIds = Joi.object().keys({
+  camadas_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+        .required()
+    )
+    .required()
+    .min(1)
+});
+
+models.camadas = Joi.object().keys({
+  camadas: Joi.array()
+    .items()
+    .required(
+      Joi.object().keys({
+        schema: Joi.string().required(),
+        nome: Joi.string().required(),
+        alias: Joi.string().required(),
+        documentacao: Joi.uri().required()
+      })
+    )
+    .min(1)
+});
+
+models.camadasAtualizacao = Joi.object().keys({
+  camadas_atualizacao: Joi.array()
+    .items()
+    .required(
+      Joi.object().keys({
+        id: Joi.number()
+          .integer()
+          .strict()
+          .required(),
+        schema: Joi.string().required(),
+        nome: Joi.string().required(),
+        alias: Joi.string().required(),
+        documentacao: Joi.uri().required()
+      })
+    )
+    .min(1)
 });
 
 module.exports = models;

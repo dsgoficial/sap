@@ -492,4 +492,8 @@ controller.redefinirPermissoes = async () => {
   return managePermissions.revokeAndGrantAllExecution();
 };
 
+controller.revogarPermissoesDB = async (servidor, porta, banco) => {
+  return managePermissions.revokeAllDb(servidor, porta, banco);
+};
+
 module.exports = controller;

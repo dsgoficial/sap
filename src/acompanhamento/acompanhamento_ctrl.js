@@ -234,6 +234,12 @@ controller.getPerdaRecursoHumano = async mes => {
   );
 };
 
+controller.getTipoPerdaRecursoHumano = async () => {
+  return db.sapConn.any(
+    `SELECT code, nome FROM dominio.tipo_perda_recurso_humano`
+  );
+};
+
 controller.criaPerdaRecursoHumano = async perdaRecursoHumano => {
   const table = new db.pgp.helpers.TableName({
     table: "perda_recurso_humano",
@@ -270,6 +276,7 @@ controller.getDiasTrabalhados = async mes => {
 };
 
 controller.getInfoProjetos = async (ano, finalizado) => {
+  //TODO
   const dados = await db.sapConn.any(
     `
     SELECT DISTINCT l.usuario_id, DATE(l.data_login) AS data

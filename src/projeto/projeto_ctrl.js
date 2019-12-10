@@ -6,6 +6,8 @@ const { AppError, httpCode } = require("../utils");
 
 const qgisProject = require("./qgis_project");
 
+const { managePermissions } = require("../database");
+
 const {
   checkFMEConnection,
   validadeParameters
@@ -447,14 +449,28 @@ controller.criaGerenciadorFME = async (servidor, porta) => {
 };
 
 controller.atualizaGerenciadorFME = async (id, servidor, porta) => {
-  await checkFMEConnection(servidor, porta);
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.gerenciador_fme
+      WHERE id = $<id>`,
+      { id }
+    );
+    if (!exists) {
+      throw new AppError(
+        "O id informado não corresponde a um servidor do Gerenciador do FME",
+        httpCode.BadRequest
+      );
+    }
 
-  return db.sapConn.any(
-    `UPDATE dgeo.gerenciador_fme
-    SET servidor = $<servidor>, porta =$<porta>
-    where id = $<id>`,
-    { id, servidor, porta }
-  );
+    await checkFMEConnection(servidor, porta);
+
+    return t.any(
+      `UPDATE dgeo.gerenciador_fme
+      SET servidor = $<servidor>, porta =$<porta>
+      where id = $<id>`,
+      { id, servidor, porta }
+    );
+  });
 };
 
 controller.deletaGerenciadorFME = async id => {
@@ -491,6 +507,110 @@ controller.deletaGerenciadorFME = async id => {
       { id }
     );
   });
+};
+
+controller.getCamadas = async () => {
+  return db.sapConn.any(
+    `SELECT id, schema, nome, alias, documentacao
+    FROM macrocontrole.camada`
+  );
+};
+
+controller.deleteCamadas = async camadasIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.camada
+      WHERE id in ($<camadasIds:csv>)`,
+      { camadasIds }
+    );
+    if (!exists) {
+      throw new AppError(
+        "Os ids informado não correspondem a uma camada",
+        httpCode.BadRequest
+      );
+    }
+
+    const existsAssociationAtributo = await t.any(
+      `SELECT id FROM macrocontrole.atributo 
+      WHERE camada_id in ($<camadasIds:csv>)`,
+      { camadasIds }
+    );
+    if (existsAssociationAtributo) {
+      throw new AppError(
+        "A camada possui atributos associados",
+        httpCode.BadRequest
+      );
+    }
+    const existsAssociationPerfil = await t.any(
+      `SELECT id FROM macrocontrole.perfil_propriedades_camada 
+      WHERE camada_id in ($<camadasIds:csv>)`,
+      { camadasIds }
+    );
+    if (existsAssociationPerfil) {
+      throw new AppError(
+        "A camada possui perfil propriedades camadas associados",
+        httpCode.BadRequest
+      );
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.camada
+      WHERE id IN ($<camadasIds:csv>)`,
+      { camadasIds }
+    );
+  });
+};
+
+controller.atualizaCamadas = async camadas => {
+  return db.sapConn.tx(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.camada
+      WHERE id in ($<camadasIds:csv>)`,
+      { camadasIds }
+    );
+    if (!exists) {
+      throw new AppError(
+        "Os ids informado não correspondem a uma camada",
+        httpCode.BadRequest
+      );
+    }
+    const query = [];
+    camadas.forEach(c => {
+      const { id, schema, nome, alias, documentacao } = c;
+
+      query.push(
+        t.any(
+          `UPDATE macrocontrole.camada
+          SET schema = $<schema>, nome = $<nome>, alias = $<alias>, documentacao = $<documentacao>
+          where id = $<id>`,
+          { id, schema, nome, alias, documentacao }
+        )
+      );
+    });
+
+    await t.batch(query);
+
+    //update all permissions
+    await managePermissions.revokeAndGrantAllExecution();
+  });
+};
+
+controller.criaCamadas = async camadas => {
+  const table = new db.pgp.helpers.TableName({
+    table: "camada",
+    schema: "macrocontrole"
+  });
+
+  const cs = new db.pgp.helpers.ColumnSet(
+    ["schema", "nome", "alias", "documentacao"],
+    {
+      table
+    }
+  );
+
+  const query = db.pgp.helpers.insert(camadas, cs);
+
+  db.sapConn.none(query);
 };
 
 module.exports = controller;

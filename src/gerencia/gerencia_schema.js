@@ -144,4 +144,13 @@ models.atividadeAvancar = Joi.object().keys({
     .required()
 });
 
+models.bancoDados = Joi.object().keys({
+  servidor: Joi.string().required(),
+  porta: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  banco: Joi.string().required()
+});
+
 module.exports = models;

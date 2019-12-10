@@ -2,6 +2,8 @@
 
 const nunjucks = require("nunjucks");
 
+const qr = require("qr-image");
+
 const { db } = require("../database");
 
 const { AppError, httpCode } = require("../utils");
@@ -98,6 +100,12 @@ controller.getMetadado = async uuid => {
 
     return template.render(dados);
   });
+};
+
+controller.getQRCode = async (host, nome) => {
+  const url = `${host}/acompanhamento/linha_producao/${nome}`;
+
+  return qr.image(url, { type: "svg" });
 };
 
 module.exports = controller;

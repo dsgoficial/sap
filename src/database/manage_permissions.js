@@ -7,8 +7,22 @@ const { createPS } = require("./sql_file");
 const path = require("path");
 
 const revokeSQL = createPS(path.join(__dirname, "sql", "revoke.sql"));
+const revokeAllUsersSQL = createPS(
+  path.join(__dirname, "sql", "revoke_all_users.sql")
+);
 
 const managePermissions = {};
+
+managePermissions.revokeAllDb = async (servidor, porta, banco) => {
+  const conn = await createAdminConn(servidor, porta, banco);
+
+  const query = await conn.oneOrNone(revokeAllUsersSQL);
+  if (!query) {
+    return null;
+  }
+
+  return connection.none(query.revoke_query);
+};
 
 managePermissions.revokeAndGrantAllExecution = async () => {
   const dbInfos = await sapConn.any(
@@ -38,7 +52,7 @@ managePermissions.revokeAndGrantAllExecution = async () => {
 };
 
 managePermissions.revokeAllPermissionsUser = async (login, connection) => {
-  const query = await connection.oneOrNone(revokeSQL, { login });
+  const query = await connection.oneOrNone(revokeSQL, [login]);
   if (!query) {
     return null;
   }
