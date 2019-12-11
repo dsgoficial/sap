@@ -368,7 +368,7 @@ router.delete(
 );
 
 router.get(
-  "/camadas",
+  "/configuracao/camadas",
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await projetoCtrl.getCamadas();
@@ -380,7 +380,7 @@ router.get(
 );
 
 router.delete(
-  "/camadas",
+  "/configuracao/camadas",
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.camadasIds
@@ -395,7 +395,7 @@ router.delete(
 );
 
 router.post(
-  "/camadas",
+  "/configuracao/camadas",
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.camadas
@@ -410,15 +410,72 @@ router.post(
 );
 
 router.put(
-  "/camadas",
+  "/configuracao/camadas",
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.camadasAtualizacao
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaCamadas(req.body.camadas_atualizacao);
+    await projetoCtrl.atualizaCamadas(req.body.camadas);
 
     const msg = "Camadas atualizadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
+router.get(
+  "/configuracao/perfil_fme",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilFME();
+
+    const msg = "Perfil FME retornado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.delete(
+  "/configuracao/perfil_fme",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilFMEIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilFME(req.params.perfil_fme_ids);
+
+    const msg = "Perfil FME deletado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
+router.post(
+  "/configuracao/perfil_fme",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfisFME
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilFME(req.body.perfis_fme);
+
+    const msg = "Perfis FME criados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.put(
+  "/configuracao/perfil_fme",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilFMEAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilFME(req.body.perfis_fme);
+
+    const msg = "Perfis FME atualizados com sucesso";
 
     return res.sendJsonAndLog(true, msg, httpCode.OK);
   })

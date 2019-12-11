@@ -499,8 +499,6 @@ controller.deletaGerenciadorFME = async id => {
       );
     }
 
-    await checkFMEConnection(servidor, porta);
-
     return t.any(
       `DELETE FROM dgeo.gerenciador_fme
       WHERE id = $<id>`,
@@ -525,7 +523,7 @@ controller.deleteCamadas = async camadasIds => {
     );
     if (!exists) {
       throw new AppError(
-        "Os ids informado não correspondem a uma camada",
+        "Os ids informados não correspondem a uma camada",
         httpCode.BadRequest
       );
     }
@@ -566,7 +564,7 @@ controller.atualizaCamadas = async camadas => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.camada
       WHERE id in ($<camadasIds:csv>)`,
-      { camadasIds }
+      { camadasIds: camadas.map(c => c.id) }
     );
     if (!exists) {
       throw new AppError(
@@ -613,4 +611,114 @@ controller.criaCamadas = async camadas => {
   db.sapConn.none(query);
 };
 
+controller.getPerfilFME = async () => {
+  return db.sapConn.any(
+    `SELECT id, gerenciador_fme_id, rotina, requisito_finalizacao, gera_falso_positivo, subfase_id
+    FROM macrocontrole.perfil_fme`
+  );
+};
+
+controller.deletePerfilFME = async perfilFMEIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_fme
+      WHERE id in ($<perfilFMEIds:csv>)`,
+      { perfilFMEIds }
+    );
+    if (!exists) {
+      throw new AppError(
+        "Os ids informados não correspondem a um perfil fme",
+        httpCode.BadRequest
+      );
+    }
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_fme
+      WHERE id IN ($<perfilFMEIds:csv>)`,
+      { perfilFMEIds }
+    );
+  });
+};
+
+controller.atualizaPerfilFME = async perfilFME => {
+  return db.sapConn.tx(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_fme
+      WHERE id in ($<perfilFMEIds:csv>)`,
+      { perfilFMEIds: perfilFME.map(c => c.id) }
+    );
+    if (!exists) {
+      throw new AppError(
+        "Os ids informados não correspondem a um perfil fme",
+        httpCode.BadRequest
+      );
+    }
+    const query = [];
+    perfilFME.forEach(c => {
+      const {
+        id,
+        gerenciador_fme_id,
+        rotina,
+        requisito_finalizacao,
+        gera_falso_positivo,
+        subfase_id
+      } = c;
+
+      query.push(
+        t.any(
+          `UPDATE macrocontrole.perfil_fme
+          SET gerenciador_fme_id = $<gerenciador_fme_id>, rotina = $<rotina>, requisito_finalizacao = $<requisito_finalizacao>, gera_falso_positivo = $<gera_falso_positivo>,
+          subfase_id = $<subfase_id>
+          where id = $<id>`,
+          {
+            id,
+            gerenciador_fme_id,
+            rotina,
+            requisito_finalizacao,
+            gera_falso_positivo,
+            subfase_id
+          }
+        )
+      );
+    });
+
+    const rotinasFME = perfilFME.map(c => {
+      return { servidor: c.gerenciador_fme_id, rotina: c.rotina };
+    });
+    await validadeParameters(rotinasFME);
+
+    await t.batch(query);
+  });
+};
+
+controller.criaPerfilFME = async perfilFME => {
+  const table = new db.pgp.helpers.TableName({
+    table: "perfil_fme",
+    schema: "macrocontrole"
+  });
+
+  const cs = new db.pgp.helpers.ColumnSet(
+    [
+      "gerenciador_fme_id",
+      "rotina",
+      "requisito_finalizacao",
+      "gera_falso_positivo",
+      "subfase_id"
+    ],
+    {
+      table
+    }
+  );
+
+  const rotinasFME = perfilFME.map(c => {
+    return { servidor: c.gerenciador_fme_id, rotina: c.rotina };
+  });
+  await validadeParameters(rotinasFME);
+
+  for (let r of perfilFME) {
+  }
+
+  const query = db.pgp.helpers.insert(perfilFME, cs);
+
+  db.sapConn.none(query);
+};
 module.exports = controller;

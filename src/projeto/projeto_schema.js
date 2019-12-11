@@ -191,7 +191,7 @@ models.camadas = Joi.object().keys({
 });
 
 models.camadasAtualizacao = Joi.object().keys({
-  camadas_atualizacao: Joi.array()
+  camadas: Joi.array()
     .items()
     .required(
       Joi.object().keys({
@@ -203,6 +203,78 @@ models.camadasAtualizacao = Joi.object().keys({
         nome: Joi.string().required(),
         alias: Joi.string().required(),
         documentacao: Joi.uri().required()
+      })
+    )
+    .min(1)
+});
+
+models.perfilFMEIds = Joi.object().keys({
+  perfil_fme_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+        .required()
+    )
+    .required()
+    .min(1)
+});
+
+models.perfisFME = Joi.object().keys({
+  perfis_fme: Joi.array()
+    .items()
+    .required(
+      Joi.object().keys({
+        gerenciador_fme_id: Joi.number()
+          .integer()
+          .strict()
+          .required(),
+        rotina: Joi.number()
+          .integer()
+          .strict()
+          .required(),
+        requisito_finalizacao: Joi.boolean()
+          .strict()
+          .required(),
+        gera_falso_positivo: Joi.boolean()
+          .strict()
+          .required(),
+        subfase_id: Joi.number()
+          .integer()
+          .strict()
+          .required()
+      })
+    )
+    .min(1)
+});
+
+models.perfilFMEAtualizacao = Joi.object().keys({
+  perfis_fme: Joi.array()
+    .items()
+    .required(
+      Joi.object().keys({
+        id: Joi.number()
+          .integer()
+          .strict()
+          .required(),
+        gerenciador_fme_id: Joi.number()
+          .integer()
+          .strict()
+          .required(),
+        rotina: Joi.number()
+          .integer()
+          .strict()
+          .required(),
+        requisito_finalizacao: Joi.boolean()
+          .strict()
+          .required(),
+        gera_falso_positivo: Joi.boolean()
+          .strict()
+          .required(),
+        subfase_id: Joi.number()
+          .integer()
+          .strict()
+          .required()
       })
     )
     .min(1)
