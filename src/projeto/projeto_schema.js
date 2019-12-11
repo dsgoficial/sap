@@ -184,7 +184,7 @@ models.camadas = Joi.object().keys({
         schema: Joi.string().required(),
         nome: Joi.string().required(),
         alias: Joi.string().required(),
-        documentacao: Joi.uri().required()
+        documentacao: Joi.string().uri().required()
       })
     )
     .min(1)
@@ -202,7 +202,7 @@ models.camadasAtualizacao = Joi.object().keys({
         schema: Joi.string().required(),
         nome: Joi.string().required(),
         alias: Joi.string().required(),
-        documentacao: Joi.uri().required()
+        documentacao: Joi.string().uri().required()
       })
     )
     .min(1)
