@@ -43,7 +43,7 @@ models.estilos = Joi.object().keys({
         stylename: Joi.string().required(),
         styleqml: Joi.string().required(),
         stylesld: Joi.string().required(),
-        ui: Joi.string().required()
+        ui: Joi.string().allow('', null).required()
       })
     )
     .required()

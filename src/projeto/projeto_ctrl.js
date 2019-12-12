@@ -16,7 +16,7 @@ const {
 const controller = {};
 
 const getUsuarioNomeById = async usuarioId => {
-  const usuario = await t.one(
+  const usuario = await db.sapConn.one(
     `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
     WHERE u.id = $<usuarioId>`,
@@ -76,8 +76,8 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
         f_geometry_column: d.f_geometry_column,
         stylename: d.stylename,
         styleqml: d.styleqml,
-        stylesld: stylesld,
-        ui: ui,
+        stylesld: d.stylesld,
+        ui: d.ui,
         owner: usuarioPostoNome,
         update_time: dataGravacao
       });

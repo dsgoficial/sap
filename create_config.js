@@ -58,10 +58,7 @@ const verifyLoginAuthServer = async (servidor, usuario, senha) => {
 
     return response.data.success || false;
   } catch (e) {
-    throw new AppError(
-      "Erro ao se comunicar com o servidor de autenticação",
-      http_code.InternalError
-    );
+    throw new Error("Erro ao se comunicar com o servidor de autenticação")
   }
 };
 

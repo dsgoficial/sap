@@ -30,7 +30,7 @@ const app = express();
 //Add sendJsonAndLog to res object
 app.use(sendJsonAndLogMiddleware);
 
-app.use(bodyParser.json()); //parsear POST em JSON
+app.use(bodyParser.json({limit: '50mb'})); //parsear POST em JSON
 app.use(xss()); //sanitize body input
 app.use(hpp()); //protection against parameter polution
 
