@@ -1,0 +1,751 @@
+{
+    "projeto": "SISFRON",
+    "linhas_producao": [
+        {"nome": "Santa Catarina - Dados vetoriais - EDGV 3.0",
+            "tipo_produto_id": 1,
+            "fases": [
+                {"tipo_fase_id": 1,
+                    "ordem": 1,
+                    "subfases": [
+                        {"nome": "Digitalização Hidrografia",
+                            "ordem": 1,
+                            "etapas": [
+                                {
+                                    "tipo_etapa_id": 1,
+                                    "ordem": 1
+                                }                              
+                            ],
+                            "perfil_linhagem": 2,
+                            "requisito_finalizacao": [
+                                {
+                                    "descricao": "Digitalizar trecho de drenagem utilizando como referência a carta topográfica antiga e os insumos de hidrografia e curva de nível.",
+                                    "ordem": 1
+                                },
+                                {
+                                    "descricao": "Digitalizar massa dágua utilizando aquisicao_limite_massa_dagua e aquisicao_centroide_massa_dagua. Barragem também é utilizada como delimitador.",
+                                    "ordem": 2
+                                },
+                                {
+                                    "descricao": "Tamanho mínimo para trecho de drenagem 250m. Área mínima para massa dágua 2500 m². Para utilizar barragem área ela deve ter largura superior a 20 metros.",
+                                    "ordem": 3
+                                },
+                                {
+                                    "descricao": "Atentar para digitalização das linhas de talvegue no centro da massa dágua e para delimitação de ilhas.",
+                                    "ordem": 4
+                                },
+                                {
+                                    "descricao": "Rodar rotinas e corrigir os flags. A área prévia de hidrografia para consulta pode ser gerada utilizando uma das rotinas.",
+                                    "ordem": 5
+                                }
+                            ],
+                            "perfil_estilo": [
+                                "digitalizacao",
+                                "validacao"
+                            ],
+                            "perfil_menu": [
+                                {
+                                    "nome": "digitalizacao_hidrografia",
+                                    "revisao": false
+                                }                   
+                            ],
+                            "perfil_propriedades_camada": [
+                                {
+                                    "camada": "aquisicao_limite_massa_dagua_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aquisicao_centroide_massa_dagua_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_trecho_drenagem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_a",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_sumidouro_vertedouro_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aux_validacao_a",
+                                    "schema": "classes",
+                                    "atributo_filtro_subfase": "subfase_id"
+                                }
+                            ]
+                        },
+                        {"nome": "Atributação Hidrografia",
+                            "ordem": 2,
+                            "etapas": [
+                                {
+                                    "tipo_etapa_id": 1,
+                                    "ordem": 1
+                                },
+                                {
+                                    "tipo_etapa_id": 2,
+                                    "ordem": 2,
+                                    "restricao_etapa": [
+                                        {
+                                            "tipo_restricao_id": 1,
+                                            "tipo_etapa_id": 1,
+                                            "subfase": "Digitalização Hidrografia",
+                                            "tipo_fase_id": 1,
+                                            "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "tipo_etapa_id": 3,
+                                    "ordem": 3,
+                                    "restricao_etapa": [
+                                        {
+                                            "tipo_restricao_id": 2,
+                                            "tipo_etapa_id": 1,
+                                            "subfase": "Digitalização Hidrografia",
+                                            "tipo_fase_id": 1,
+                                            "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                        }
+                                    ]
+                                }                           
+                            ],
+                            "perfil_linhagem": 2,
+                            "requisito_finalizacao": [
+                                {
+                                    "descricao": "Corrigir curvas de nível dando atenção aos fundo de vale e relacionamento com barragem.",
+                                    "ordem": 1
+                                },
+                                {
+                                    "descricao": "Atributar barragem, trechos de drenagem e aquisicao_centroide_massa_dagua. Utilizar insumos externos e os mapeamentos anteriores.",
+                                    "ordem": 2
+                                },
+                                {
+                                    "descricao": "Tamanho mínimo para trecho de drenagem 250m. Área mínima para massa dágua 2500 m². Para utilizar barragem área ela deve ter largura superior a 20 metros.",
+                                    "ordem": 3
+                                },
+                                {
+                                    "descricao": "Rodar rotinas e corrigir os flags. A área prévia de hidrografia para consulta pode ser gerada utilizando uma das rotinas.",
+                                    "ordem": 4
+                                }
+                            ],
+                            "perfil_regras": [
+                                "Atributo incorreto",
+                                "Preencher atributo",
+                                "Atributo incomum"
+                            ],
+                            "perfil_estilo": [
+                                "atributacao",
+                                "digitalizacao",
+                                "validacao"
+                            ],
+                            "perfil_menu": [
+                                {
+                                    "nome": "digitalizacao_hidrografia",
+                                    "revisao": false
+                                },
+                                {
+                                    "nome": "revisao_hidrografia",
+                                    "revisao": true
+                                }                  
+                            ],
+                            "perfil_propriedades_camada": [
+                                {
+                                    "camada": "aquisicao_limite_massa_dagua_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aquisicao_centroide_massa_dagua_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_trecho_drenagem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_a",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_sumidouro_vertedouro_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aux_validacao_a",
+                                    "schema": "classes",
+                                    "atributo_filtro_subfase": "subfase_id"
+                                },
+                                {
+                                    "camada": "elemnat_curva_nivel_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_elemento_hidrografia_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_elemento_hidrografia_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_elemento_hidrografia_a",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aux_revisao_a",
+                                    "schema": "classes",
+                                    "atributo_filtro_subfase": "subfase_id",
+                                    "camada_apontamento": true,
+                                    "atributo_situacao_correcao": "corrigido",
+                                    "atributo_justificativa_apontamento": "justificativa"
+                                }
+                            ],
+                            "pre_requisito_subfase": [
+                                {
+                                    "tipo_pre_requisito_id": 1,
+                                    "subfase": "Digitalização Hidrografia",
+                                    "tipo_fase_id": 1,
+                                    "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                }
+                            ]
+                        },
+                        {"nome": "Insumo Externo Ferrovia",
+                            "ordem": 3,
+                            "etapas": [
+                                {
+                                    "tipo_etapa_id": 1,
+                                    "ordem": 1
+                                }                         
+                            ],
+                            "perfil_linhagem": 2,
+                            "requisito_finalizacao": [
+                                {
+                                    "descricao": "Digitalizar e atributar ferrovias baseado no insumo externo.",
+                                    "ordem": 1
+                                },
+                                {
+                                    "descricao": "Rodar rotinas e corrigir os flags.",
+                                    "ordem": 2
+                                }
+                            ],
+                            "perfil_regras": [
+                                "Atributo incorreto",
+                                "Preencher atributo",
+                                "Atributo incomum"
+                            ],
+                            "perfil_estilo": [
+                                "atributacao",
+                                "validacao"
+                            ],
+                            "perfil_menu": [
+                                {
+                                    "nome": "digitalizacao_ferrovia",
+                                    "revisao": false
+                                }     
+                            ],
+                            "perfil_propriedades_camada": [
+                                {
+                                    "camada": "aquisicao_limite_massa_dagua_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aquisicao_centroide_massa_dagua_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_trecho_drenagem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_a",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_sumidouro_vertedouro_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aux_validacao_a",
+                                    "schema": "classes",
+                                    "atributo_filtro_subfase": "subfase_id"
+                                },
+                                {
+                                    "camada": "infra_ferrovia_l",
+                                    "schema": "classes"
+                                }
+                            ],
+                            "pre_requisito_subfase": [
+                                {
+                                    "tipo_pre_requisito_id": 1,
+                                    "subfase": "Digitalização Hidrografia",
+                                    "tipo_fase_id": 1,
+                                    "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                }
+                            ]
+                        },
+                        {"nome": "Digitalização Via Deslocamento",
+                            "ordem": 4,
+                            "etapas": [
+                                {
+                                    "tipo_etapa_id": 1,
+                                    "ordem": 1
+                                }                      
+                            ],
+                            "perfil_linhagem": 2,
+                            "requisito_finalizacao": [
+                                {
+                                    "descricao": "Digitalizar via de deslocamento e ferrovia utilizando tamanho mínimo de 250m.",
+                                    "ordem": 1
+                                },
+                                {
+                                    "descricao": "Rodar rotinas e corrigir os flags. A área prévia de hidrografia para consulta pode ser gerada utilizando uma das rotinas.",
+                                    "ordem": 2
+                                }
+                            ],
+                            "perfil_estilo": [
+                                "digitalizacao",
+                                "validacao"
+                            ],
+                            "perfil_menu": [
+                                {
+                                    "nome": "digitalizacao_via_deslocamento",
+                                    "revisao": false
+                                }                 
+                            ],
+                            "perfil_propriedades_camada": [
+                                {
+                                    "camada": "aquisicao_limite_massa_dagua_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aquisicao_centroide_massa_dagua_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_trecho_drenagem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_a",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_sumidouro_vertedouro_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aux_validacao_a",
+                                    "schema": "classes",
+                                    "atributo_filtro_subfase": "subfase_id"
+                                },
+                                {
+                                    "camada": "infra_ferrovia_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_via_deslocamento_l",
+                                    "schema": "classes"
+                                }
+                            ],
+                            "pre_requisito_subfase": [
+                                {
+                                    "tipo_pre_requisito_id": 1,
+                                    "subfase": "Insumo Externo Ferrovia",
+                                    "tipo_fase_id": 1,
+                                    "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                }
+                            ]
+                        },
+                        {"nome": "Atributação Via Deslocamento",
+                            "ordem": 5,
+                            "etapas": [
+                                {
+                                    "tipo_etapa_id": 1,
+                                    "ordem": 1
+                                },
+                                {
+                                    "tipo_etapa_id": 2,
+                                    "ordem": 2,
+                                    "restricao_etapa": [
+                                        {
+                                            "tipo_restricao_id": 1,
+                                            "tipo_etapa_id": 1,
+                                            "subfase": "Atributação Via Deslocamento",
+                                            "tipo_fase_id": 1,
+                                            "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "tipo_etapa_id": 3,
+                                    "ordem": 3,
+                                    "restricao_etapa": [
+                                        {
+                                            "tipo_restricao_id": 2,
+                                            "tipo_etapa_id": 1,
+                                            "subfase": "Atributação Via Deslocamento",
+                                            "tipo_fase_id": 1,
+                                            "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                        }
+                                    ]
+                                } 
+                            ],
+                            "perfil_linhagem": 2,
+                            "requisito_finalizacao": [
+                                {
+                                    "descricao": "Atributar via de deslocamento e ferrovia baseado em fotointerpretação e insumo externos.",
+                                    "ordem": 1
+                                },
+                                {
+                                    "descricao": "Rodar rotinas e corrigir os flags. A área prévia de hidrografia para consulta pode ser gerada utilizando uma das rotinas.",
+                                    "ordem": 2
+                                }
+                            ],
+                            "perfil_estilo": [
+                                "digitalizacao",
+                                "atributação",
+                                "validacao"
+                            ],
+                            "perfil_menu": [
+                                {
+                                    "nome": "digitalizacao_via_deslocamento",
+                                    "revisao": false
+                                },
+                                {
+                                    "nome": "revisao_via_deslocamento",
+                                    "revisao": true
+                                }  
+                            ],
+                            "perfil_propriedades_camada": [
+                                {
+                                    "camada": "aquisicao_limite_massa_dagua_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aquisicao_centroide_massa_dagua_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_trecho_drenagem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_a",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_sumidouro_vertedouro_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aux_validacao_a",
+                                    "schema": "classes",
+                                    "atributo_filtro_subfase": "subfase_id"
+                                },
+                                {
+                                    "camada": "infra_ferrovia_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_via_deslocamento_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aux_revisao_a",
+                                    "schema": "classes",
+                                    "atributo_filtro_subfase": "subfase_id",
+                                    "camada_apontamento": true,
+                                    "atributo_situacao_correcao": "corrigido",
+                                    "atributo_justificativa_apontamento": "justificativa"
+                                }
+                            ],
+                            "pre_requisito_subfase": [
+                                {
+                                    "tipo_pre_requisito_id": 1,
+                                    "subfase": "Digitalização Via Deslocamento",
+                                    "tipo_fase_id": 1,
+                                    "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                }
+                            ]
+                        },
+                        {"nome": "Digitalização Limites",   
+                            "ordem": 6,
+                            "etapas": [
+                                {
+                                    "tipo_etapa_id": 1,
+                                    "ordem": 1
+                                },
+                                {
+                                    "tipo_etapa_id": 4,
+                                    "ordem": 2,
+                                    "restricao_etapa": [
+                                        {
+                                            "tipo_restricao_id": 1,
+                                            "tipo_etapa_id": 1,
+                                            "subfase": "Digitalização Limites",
+                                            "tipo_fase_id": 1,
+                                            "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                        }
+                                    ]
+                                } 
+                            ],
+                            "perfil_linhagem": 2,
+                            "requisito_finalizacao": [
+                                {
+                                    "descricao": "Digitalizar e atributar os limites legais e especiais baseado nos insumos externos.",
+                                    "ordem": 1
+                                },
+                                {
+                                    "descricao": "Rodar rotinas e corrigir os flags. A área prévia de hidrografia para consulta pode ser gerada utilizando uma das rotinas.",
+                                    "ordem": 2
+                                }
+                            ],
+                            "perfil_estilo": [
+                                "digitalizacao",
+                                "validacao"
+                            ],
+                            "perfil_menu": [
+                                {
+                                    "nome": "digitalizacao_limites",
+                                    "revisao": false
+                                }
+                            ],
+                            "perfil_propriedades_camada": [
+                                {
+                                    "camada": "aquisicao_limite_massa_dagua_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aquisicao_centroide_massa_dagua_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_trecho_drenagem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_barragem_a",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_sumidouro_vertedouro_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "aux_validacao_a",
+                                    "schema": "classes",
+                                    "atributo_filtro_subfase": "subfase_id"
+                                },
+                                {
+                                    "camada": "infra_ferrovia_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "infra_via_deslocamento_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_curva_nivel_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_elemento_hidrografia_p",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_elemento_hidrografia_l",
+                                    "schema": "classes"
+                                },
+                                {
+                                    "camada": "elemnat_elemento_hidrografia_a",
+                                    "schema": "classes"
+                                }
+                            ],
+                            "pre_requisito_subfase": [
+                                {
+                                    "tipo_pre_requisito_id": 1,
+                                    "subfase": "Atributação Via Deslocamento",
+                                    "tipo_fase_id": 1,
+                                    "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                },
+                                {
+                                    "tipo_pre_requisito_id": 1,
+                                    "subfase": "Atributação Hidrografia",
+                                    "tipo_fase_id": 1,
+                                    "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {"tipo_fase_id": 3,
+                    "ordem": 2
+                },
+                {"tipo_fase_id": 5,
+                    "ordem": 3
+                },
+                {"tipo_fase_id": 6,
+                    "ordem": 4
+                }
+            ]
+        },
+        {"nome": "Santa Catarina - Carta Topográfica - EDGV 3.0",
+            "tipo_produto_id": 2,
+            "fases": [
+                {"tipo_fase_id": 4,
+                    "ordem": 1,
+                    "subfases": [
+                        {"nome": "Edição",
+                            "ordem": 1,
+                            "etapas": [
+                                {
+                                    "tipo_etapa_id": 1,
+                                    "ordem": 1
+                                },
+                                {
+                                    "tipo_etapa_id": 2,
+                                    "ordem": 2,
+                                    "restricao_etapa": [
+                                        {
+                                            "tipo_restricao_id": 1,
+                                            "tipo_etapa_id": 1,
+                                            "subfase": "Edição",
+                                            "tipo_fase_id": 4,
+                                            "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "tipo_etapa_id": 3,
+                                    "ordem": 3,
+                                    "restricao_etapa": [
+                                        {
+                                            "tipo_restricao_id": 2,
+                                            "tipo_etapa_id": 1,
+                                            "subfase": "Edição",
+                                            "tipo_fase_id": 4,
+                                            "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "tipo_etapa_id": 4,
+                                    "ordem": 4,
+                                    "restricao_etapa": [
+                                        {
+                                            "tipo_restricao_id": 1,
+                                            "tipo_etapa_id": 1,
+                                            "subfase": "Edição",
+                                            "tipo_fase_id": 4,
+                                            "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                        }
+                                    ]
+                                }                                
+                            ],
+                            "pre_requisito_subfase": [
+                                {
+                                    "tipo_pre_requisito_id": 1,
+                                    "subfase": "Verificação Área Contínua",
+                                    "tipo_fase_id": 6,
+                                    "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                }
+                            ],
+                            "requisito_finalizacao": [
+                                {
+                                    "descricao": "Digitalizar todas as vias utilizando distância mínima de 20 m e tamanho mínimo de 250 m. Em área urbanizada tamanho minimo de 125 m.",
+                                    "ordem": 1
+                                }
+                            ],
+                            "perfil_linhagem": 3,
+                            "perfil_propriedades_camada": [
+                                {
+                                    "camada": "infra_via_deslocamento_l",
+                                    "schema": "edgv",
+                                    "escala_trabalho": 4000,
+                                    "atributo_filtro_subfase": null,
+                                    "camada_apontamento": false,
+                                    "atributo_situacao_correcao": null,
+                                    "atributo_justificativa_apontamento": null
+                                }
+                            ],
+                            "perfil_estilo": [
+                                "edicao"
+                            ],
+                            "perfil_menu": [
+                                {
+                                    "nome": "edicao",
+                                    "revisao": false
+                                },
+                                {
+                                    "nome": "revisao_edicao",
+                                    "revisao": true
+                                }                 
+                            ]
+                        }
+                    ]
+                },
+                {"tipo_fase_id": 6,
+                    "ordem": 2,
+                    "subfases": [
+                        {"nome": "Carregamento BDGEx Carta Topográfica",
+                            "ordem": 1,
+                            "etapas": [
+                                {
+                                    "tipo_etapa_id": 1,
+                                    "ordem": 1
+                                }                              
+                            ],
+                            "pre_requisito_subfase": [
+                                {
+                                    "tipo_pre_requisito_id": 1,
+                                    "subfase": "Edição",
+                                    "tipo_fase_id": 6,
+                                    "linha_producao": "Santa Catarina - Dados vetoriais - EDGV 3.0"
+                                }
+                            ],
+                            "requisito_finalizacao": [
+                                {
+                                    "descricao": "Carregar PDF e Geotiff no BDGEx.",
+                                    "ordem": 1
+                                }
+                            ],
+                            "perfil_linhagem": 2
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+
+
+
+
+
+
+
