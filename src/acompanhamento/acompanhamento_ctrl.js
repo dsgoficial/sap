@@ -267,8 +267,10 @@ controller.criaPerdaRecursoHumano = async perdaRecursoHumano => {
 controller.getDiasTrabalhados = async mes => {
   return db.sapConn.any(
     `
-    SELECT DISTINCT l.usuario_id, DATE(l.data_login) AS data
+    SELECT DISTINCT l.usuario_id, tpg.nome_abrev || ' ' || u.nome_gerra AS nome_usuario, DATE(l.data_login) AS data
     FROM acompanhamento.login AS l
+    INNER JOIN dgeo.usuario AS u ON u.id = l.usuario_id
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
     WHERE EXTRACT(MONTH FROM l.data_login) = $<mes>
   `,
     { mes }
