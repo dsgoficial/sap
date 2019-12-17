@@ -1,6 +1,6 @@
 "use strict";
 
-const {sapConn, createAdminConn, testConn} = require("./db");
+const db = require("./db");
 
 const { revokeAllPermissionsUser, grantPermissionsUser} = require("./manage_permissions")
 
@@ -9,7 +9,7 @@ const crypto = require("crypto");
 const temporaryLogin = {};
 
 const getDbInfo = async atividadeId => {
-  return await sapConn.oneOrNone(
+  return db.sapConn.oneOrNone(
     `SELECT bd.nome, bd.servidor, bd.porta FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut
     ON ut.id = a.unidade_trabalho_id 
@@ -21,7 +21,7 @@ const getDbInfo = async atividadeId => {
 };
 
 const getUserName = async usuarioId => {
-  const usuario = await sapConn.one(
+  const usuario = await db.sapConn.one(
     `SELECT translate(replace(lower(nome_guerra),' ', '_'),  
     'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\\,.;:<>?!\`{}[]()~\`@#$%^&*+=''',  
     'aaaaaeeeeiiiiooooouuuucc________________________________') As nome from dgeo.usuario
@@ -68,7 +68,7 @@ const updatePassword = async (login, senha, connection) => {
 };
 
 const updateTempLogin = async (usuarioId, dbServer, dbPort, login, senha) => {
-  await sapConn.tx(async t => {
+  await db.sapConn.tx(async t => {
     await t.none(
       `DELETE FROM dgeo.login_temporario
        WHERE usuario_id = $<usuarioId> AND servidor = $<dbServer> AND porta = $<dbPort>`,
@@ -115,9 +115,9 @@ const processTempUser = async (
   }
   const { servidor, porta, nome: nomeDb } = dbInfo;
 
-  const conn = await createAdminConn(servidor, porta, nomeDb);
+  const conn = await db.createAdminConn(servidor, porta, nomeDb);
 
-  const loginInfo = await sapConn.oneOrNone(
+  const loginInfo = await db.sapConn.oneOrNone(
     `SELECT login, senha FROM dgeo.login_temporario 
     WHERE usuario_id = $<usuarioId> AND servidor = $<servidor> AND porta = $<porta>`,
     { usuarioId, servidor, porta }
@@ -143,7 +143,8 @@ const processTempUser = async (
     await createDbUser(login, senha, conn);
   }
 
-  const userConnected = await testConn(login, senha, servidor, porta, nomeDb);
+  const userConnected = await db.testConn(login, senha, servidor, porta, nomeDb);
+  
   if (!userConnected || resetPassword) {
     senha = novaSenha;
     updated = true;
@@ -157,13 +158,10 @@ const processTempUser = async (
   if (updated) {
     await updateTempLogin(usuarioId, servidor, porta, login, senha);
     await revokeAllPermissionsUser(login, conn)
+    if(grantPermission){
+      await grantPermissionsUser(atividadeId, login, conn)
+    }
   }
-
-
-  if(grantPermission){
-    await grantPermissionsUser(atividadeId, login, conn)
-  }
-  
   return { login, senha };
 };
 

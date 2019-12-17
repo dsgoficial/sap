@@ -142,7 +142,7 @@ const getInfoMenus = async (connection, etapaCode, subfaseId) => {
 };
 
 const getInfoEstilos = async (connection, subfaseId) => {
-  return await connection.any(
+  return connection.any(
     `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
       INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
       INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
@@ -153,7 +153,7 @@ const getInfoEstilos = async (connection, subfaseId) => {
 };
 
 const getInfoRegras = async (connection, subfaseId) => {
-  return await connection.any(
+  return connection.any(
     `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
       INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra = pr.nome
       INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
@@ -164,7 +164,7 @@ const getInfoRegras = async (connection, subfaseId) => {
 };
 
 const getInfoFME = async (connection, subfaseId) => {
-  return await connection.any(
+  return connection.any(
     `SELECT gf.servidor, gf.porta, pf.rotina, pf.gera_falso_positivo, pf.requisito_finalizacao FROM macrocontrole.perfil_fme AS pf
     INNER JOIN dgeo.gerenciador_fme AS gf ON gf.id = pf.gerenciador_fme_id
     WHERE subfase_id = $<subfaseId>`,
@@ -173,14 +173,14 @@ const getInfoFME = async (connection, subfaseId) => {
 };
 
 const getInfoConfigQGIS = async (connection, subfaseId) => {
-  return await connection.any(
+  return connection.any(
     `SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId>`,
     { subfaseId }
   );
 };
 
 const getInfoMonitoramento = async (connection, subfaseId) => {
-  return await connection.any(
+  return connection.any(
     `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
       FROM macrocontrole.perfil_monitoramento AS pm
       INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
@@ -190,7 +190,7 @@ const getInfoMonitoramento = async (connection, subfaseId) => {
 };
 
 const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
-  return await connection.any(
+  return connection.any(
     `SELECT i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
       FROM macrocontrole.insumo AS i
       INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
@@ -200,7 +200,7 @@ const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
 };
 
 const getInfoModelsQGIS = async (connection, subfaseId) => {
-  return await connection.any(
+  return connection.any(
     `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo, pmq.requisito_finalizacao
       FROM macrocontrole.perfil_model_qgis AS pmq
       INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.nome = lqm.nome
@@ -269,12 +269,11 @@ const getInfoLinhagem = async (
       r.data_fim = new Date(r.data_fim).toLocaleString();
     }
   });
-
   return linhagem;
 };
 
 const getInfoRequisitos = async (connection, subfaseId) => {
-  return await connection.any(
+  return connection.any(
     `SELECT r.descricao
       FROM macrocontrole.requisito_finalizacao AS r
       WHERE r.subfase_id = $1 ORDER BY r.ordem`,
@@ -283,7 +282,7 @@ const getInfoRequisitos = async (connection, subfaseId) => {
 };
 
 const getAtalhos = async connection => {
-  return await connection.any(
+  return connection.any(
     `SELECT descricao, ferramenta, atalho
       FROM dgeo.atalhos_qgis`
   );
@@ -333,7 +332,7 @@ const dadosProducao = async atividadeId => {
     const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId]);
 
     const info = {};
-    info.usuario_id = dadosut.usuarioId;
+    info.usuario_id = dadosut.usuario_id;
     info.usuario_nome = dadosut.nome_guerra;
 
     info.atividade = {};

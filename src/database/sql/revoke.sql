@@ -14,7 +14,7 @@ SELECT string_agg(query, ' ') AS revoke_query FROM (
 		||  pg_get_function_identity_arguments(
 			(regexp_matches(specific_name, E'.*\_([0-9]+)'))[1]::oid) || ') FROM ' || $1 || ';'  AS query
 	FROM information_schema.routine_privileges
-	WHERE grantee ~* $1
+	WHERE grantee ~* $1 AND routine_schema != 'pg_catalog'
 	UNION ALL
 	SELECT 'REVOKE ALL ON SEQUENCE ' || sequence_schema || '.' || sequence_name || ' FROM ' || $1 || ';'  AS query
 	FROM information_schema.sequences

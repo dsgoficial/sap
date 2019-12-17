@@ -17,6 +17,7 @@ db.pgp = require("pg-promise")({
 
 db.createConn = async (usuario, senha, server, port, dbname, handle = true) => {
   const connString = `postgres://${usuario}:${senha}@${server}:${port}/${dbname}`;
+  
   if (!(connString in testeDBs)) {
     testeDBs[connString] = db.pgp(connString);
     
