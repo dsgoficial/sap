@@ -154,7 +154,7 @@ const getInfoEstilos = async (connection, subfaseId) => {
 
 const getInfoRegras = async (connection, subfaseId) => {
   return connection.any(
-    `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem 
+    `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem, lr.id
       FROM macrocontrole.perfil_regras as pr
       INNER JOIN dgeo.group_rules AS gr ON gr.grupo_regra = pr.nome
       INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id

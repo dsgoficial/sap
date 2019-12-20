@@ -30,11 +30,18 @@ controller.getEstilos = async () => {
 };
 
 controller.getRegras = async () => {
-  return db.sapConn.any(`
-    SELECT gr.grupo_regra, gr.cor_rgb, lr.schema, lr.camada, lr.atributo, lr.regra, lr.descricao
+  const grupo_regras = await db.sapConn.any(`
+  SELECT gr.grupo_regra, gr.cor_rgb
+  FROM dgeo.group_rules AS gr
+  `);
+  
+  const regras = await db.sapConn.any(`
+    SELECT lr.id, gr.grupo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.descricao
     FROM dgeo.group_rules AS gr
     INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
     `);
+
+  return {grupo_regras, regras}
 };
 
 controller.getModelos = async () => {

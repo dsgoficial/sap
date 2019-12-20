@@ -15,7 +15,6 @@ if (isMaster) {
   db.createSapConn()
     .then(databaseVersion.load)
     .then(verifyAuthServer)
-    .then(createDocumentation)
     .then(startServer)
     .catch(errorHandler);
 }
