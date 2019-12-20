@@ -102,17 +102,21 @@ CREATE TABLE dgeo.layer_styles(
   CONSTRAINT unique_styles UNIQUE (f_table_schema,f_table_name,stylename)
 );
 
+CREATE TABLE dgeo.group_rules(
+  	id SERIAL NOT NULL PRIMARY KEY,
+    grupo_regra varchar(255) NOT NULL,
+    cor_rgb varchar(255) NOT NULL,
+    UNIQUE(grupo_regra)
+);
+
 CREATE TABLE dgeo.layer_rules(
 	id SERIAL NOT NULL PRIMARY KEY,
-  grupo_regra varchar(255) NOT NULL,
-  tipo_regra varchar(255) NOT NULL,
+  grupo_regra_id SMALLINT NOT NULL REFERENCES dgeo.group_rules (id),
   schema varchar(255) NOT NULL,
   camada varchar(255) NOT NULL,
   atributo varchar(255) NOT NULL,
   regra TEXT NOT NULL,
-  cor_rgb varchar(255) NOT NULL,
   descricao TEXT NOT NULL,
-  ordem INTEGER NOT NULL,
   owner varchar(255) NOT NULL,
 	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
@@ -133,7 +137,7 @@ CREATE VIEW dgeo.styles AS
 SELECT DISTINCT(stylename) AS nome FROM dgeo.layer_styles;
 
 CREATE VIEW dgeo.rules AS
-SELECT DISTINCT(grupo_regra) AS nome FROM dgeo.layer_rules;
+SELECT DISTINCT(grupo_regra) AS nome FROM dgeo.group_rules;
 
 CREATE VIEW dgeo.qgis_models AS
 SELECT nome FROM dgeo.layer_qgis_models;

@@ -154,8 +154,10 @@ const getInfoEstilos = async (connection, subfaseId) => {
 
 const getInfoRegras = async (connection, subfaseId) => {
   return connection.any(
-    `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem FROM macrocontrole.perfil_regras as pr
-      INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra = pr.nome
+    `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem 
+      FROM macrocontrole.perfil_regras as pr
+      INNER JOIN dgeo.group_rules AS gr ON gr.grupo_regra = pr.nome
+      INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
       INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
       INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
       WHERE pr.subfase_id = $1 AND pc.subfase_id = $1`,
@@ -191,7 +193,7 @@ const getInfoMonitoramento = async (connection, subfaseId) => {
 
 const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
   return connection.any(
-    `SELECT i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
+    `SELECT i.id, i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
       FROM macrocontrole.insumo AS i
       INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
       WHERE iut.unidade_trabalho_id = $1`,

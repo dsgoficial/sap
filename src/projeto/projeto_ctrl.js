@@ -30,7 +30,11 @@ controller.getEstilos = async () => {
 };
 
 controller.getRegras = async () => {
-  return db.sapConn.any(`SELECT * FROM dgeo.layer_rules`);
+  return db.sapConn.any(`
+    SELECT gr.grupo_regra, gr.cor_rgb, lr.schema, lr.camada, lr.atributo, lr.regra, lr.descricao
+    FROM dgeo.group_rules AS gr
+    INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
+    `);
 };
 
 controller.getModelos = async () => {
@@ -89,12 +93,28 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
   });
 };
 
-controller.grava_regras = async (regras, usuarioId) => {
+controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
   const dataGravacao = new Date();
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none(`TRUNCATE dgeo.layer_rules RESTART IDENTITY`);
+    await t.none(`TRUNCATE dgeo.group_rules RESTART IDENTITY CASCADE`);
+
+    const tableGroup = new db.pgp.helpers.TableName({
+      table: "group_rules",
+      schema: "dgeo"
+    });
+    const csGroup = new db.pgp.helpers.ColumnSet(
+      [
+        "grupo_regra",
+        "cor_rgb"
+      ],
+      { table: tableGroup }
+    );
+    const queryGroup = db.pgp.helpers.insert(grupoRegras, csGroup) + 'RETURNING id, grupo_regra';
+
+    const grupos = await t.any(queryGroup);
 
     const table = new db.pgp.helpers.TableName({
       table: "layer_rules",
@@ -103,15 +123,12 @@ controller.grava_regras = async (regras, usuarioId) => {
 
     const cs = new db.pgp.helpers.ColumnSet(
       [
-        "grupo_regra",
-        "tipo_regra",
+        "grupo_regra_id",
         "schema",
         "camada",
         "atributo",
         "regra",
-        "cor_rgb",
         "descricao",
-        "ordem",
         "owner",
         "update_time"
       ],
@@ -120,14 +137,14 @@ controller.grava_regras = async (regras, usuarioId) => {
 
     const values = [];
     regras.forEach(d => {
+      const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra)
+
       values.push({
-        grupo_regra: d.grupo_regra,
-        tipo_regra: d.tipo_regra,
+        grupo_regra_id: grupoRegra.id,
         schema: d.schema,
         camada: d.camada,
         atributo: d.atributo,
         regra: d.regra,
-        cor_rgb: d.cor_rgb,
         descricao: d.descricao,
         ordem: d.ordem,
         owner: usuarioPostoNome,
@@ -141,7 +158,7 @@ controller.grava_regras = async (regras, usuarioId) => {
   });
 };
 
-controller.grava_modelos = async (modelos, usuarioId) => {
+controller.gravaModelos = async (modelos, usuarioId) => {
   const dataGravacao = new Date();
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
@@ -175,7 +192,7 @@ controller.grava_modelos = async (modelos, usuarioId) => {
   });
 };
 
-controller.grava_menus = async (menus, usuarioId) => {
+controller.gravaMenus = async (menus, usuarioId) => {
   const dataGravacao = new Date();
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);

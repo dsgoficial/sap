@@ -24,6 +24,12 @@ const authorization = async (usuario, senha) => {
 
     return response.data.success || false;
   } catch (e) {
+    if("response" in e && "data" in e.response){
+      throw new AppError(
+        e.response.data.message,
+        e.response.status
+      );
+    }
     throw new AppError(
       "Erro ao se comunicar com o servidor de autenticação",
       httpCode.InternalError

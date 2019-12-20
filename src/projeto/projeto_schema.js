@@ -66,17 +66,19 @@ models.regras = Joi.object().keys({
     .items(
       Joi.object().keys({
         grupo_regra: Joi.string().required(),
-        tipo_regra: Joi.string().required(),
         schema: Joi.string().required(),
         camada: Joi.string().required(),
         atributo: Joi.string().required(),
         regra: Joi.string().required(),
-        cor_rgb: Joi.string().required(),
-        descricao: Joi.string().required(),
-        ordem: Joi.number()
-          .integer()
-          .strict()
-          .required()
+        descricao: Joi.string().required()
+      })
+    )
+    .required(),
+    grupo_regras: Joi.array()
+    .items(
+      Joi.object().keys({
+        grupo_regra: Joi.string().required(),
+        cor_rgb: Joi.string().required()
       })
     )
     .required()

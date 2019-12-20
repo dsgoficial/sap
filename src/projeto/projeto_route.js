@@ -77,7 +77,7 @@ router.post(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.regras }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaRegras(req.body.regras, req.body.usuarioId);
+    await projetoCtrl.gravaRegras(req.body.regras, req.body.grupo_regras, req.body.usuarioId);
 
     const msg = "Regras gravados com sucesso";
 
