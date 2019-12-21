@@ -1,14 +1,14 @@
-"use strict";
+'use strict'
 
-const Joi = require("joi");
+const Joi = require('joi')
 
-const models = {};
+const models = {}
 
 models.idParams = Joi.object().keys({
   id: Joi.string()
     .regex(/^[0-9]+$/)
     .required()
-});
+})
 
 models.usuarios = Joi.object().keys({
   usuarios: Joi.array()
@@ -31,7 +31,7 @@ models.usuarios = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.estilos = Joi.object().keys({
   estilos: Joi.array()
@@ -44,12 +44,12 @@ models.estilos = Joi.object().keys({
         styleqml: Joi.string().required(),
         stylesld: Joi.string().required(),
         ui: Joi.string()
-          .allow("", null)
+          .allow('', null)
           .required()
       })
     )
     .required()
-});
+})
 
 models.menus = Joi.object().keys({
   menus: Joi.array()
@@ -60,7 +60,7 @@ models.menus = Joi.object().keys({
       })
     )
     .required()
-});
+})
 
 models.regras = Joi.object().keys({
   regras: Joi.array()
@@ -83,7 +83,7 @@ models.regras = Joi.object().keys({
       })
     )
     .required()
-});
+})
 
 models.qgisModels = Joi.object().keys({
   modelos: Joi.array()
@@ -95,7 +95,7 @@ models.qgisModels = Joi.object().keys({
       })
     )
     .required()
-});
+})
 
 models.atividadeCriarRevisao = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
@@ -106,7 +106,7 @@ models.atividadeCriarRevisao = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.atividadeCriarRevcorr = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
@@ -117,7 +117,7 @@ models.atividadeCriarRevcorr = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.unidadeTrabalhoLote = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
@@ -132,7 +132,7 @@ models.unidadeTrabalhoLote = Joi.object().keys({
     .integer()
     .strict()
     .required()
-});
+})
 
 models.listaAtividades = Joi.object().keys({
   atividades_ids: Joi.array()
@@ -143,7 +143,7 @@ models.listaAtividades = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.unidadeTrabalhoEtapa = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
@@ -158,14 +158,14 @@ models.unidadeTrabalhoEtapa = Joi.object().keys({
     .integer()
     .strict()
     .required()
-});
+})
 
 models.gerenciadorFME = Joi.object().keys({
   servidor: Joi.string().required(),
   porta: Joi.number()
     .strict()
     .required()
-});
+})
 
 models.camadasIds = Joi.object().keys({
   camadas_ids: Joi.array()
@@ -177,7 +177,7 @@ models.camadasIds = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.camadas = Joi.object().keys({
   camadas: Joi.array()
@@ -193,7 +193,7 @@ models.camadas = Joi.object().keys({
       })
     )
     .min(1)
-});
+})
 
 models.camadasAtualizacao = Joi.object().keys({
   camadas: Joi.array()
@@ -213,7 +213,7 @@ models.camadasAtualizacao = Joi.object().keys({
       })
     )
     .min(1)
-});
+})
 
 models.perfilFMEIds = Joi.object().keys({
   perfil_fme_ids: Joi.array()
@@ -225,7 +225,7 @@ models.perfilFMEIds = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.perfisFME = Joi.object().keys({
   perfis_fme: Joi.array()
@@ -253,7 +253,7 @@ models.perfisFME = Joi.object().keys({
       })
     )
     .min(1)
-});
+})
 
 models.perfilFMEAtualizacao = Joi.object().keys({
   perfis_fme: Joi.array()
@@ -285,6 +285,6 @@ models.perfilFMEAtualizacao = Joi.object().keys({
       })
     )
     .min(1)
-});
+})
 
-module.exports = models;
+module.exports = models

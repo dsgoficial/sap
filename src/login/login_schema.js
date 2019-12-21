@@ -1,15 +1,15 @@
-"use strict";
+'use strict'
 
-const Joi = require("joi");
+const Joi = require('joi')
 
-const models = {};
+const models = {}
 
 models.login = Joi.object().keys({
   usuario: Joi.string().required(),
   senha: Joi.string().required(),
-  cliente: Joi.string().valid('qgis','browser').required(),
-  plugins: Joi.when('cliente', { 
-    is: 'qgis', 
+  cliente: Joi.string().valid('qgis', 'browser').required(),
+  plugins: Joi.when('cliente', {
+    is: 'qgis',
     then: Joi.array().items(
       Joi.object({
         nome: Joi.string().required(),
@@ -18,11 +18,11 @@ models.login = Joi.object().keys({
     ).required(),
     otherwise: Joi.forbidden()
   }),
-  qgis: Joi.when('cliente', { 
-    is: 'qgis', 
+  qgis: Joi.when('cliente', {
+    is: 'qgis',
     then: Joi.string().required(),
-    otherwise: Joi.forbidden() 
+    otherwise: Joi.forbidden()
   })
-});
+})
 
-module.exports = models;
+module.exports = models

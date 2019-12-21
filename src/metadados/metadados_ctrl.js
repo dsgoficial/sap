@@ -1,26 +1,26 @@
-"use strict";
+'use strict'
 
-const nunjucks = require("nunjucks");
+const nunjucks = require('nunjucks')
 
-const qr = require("qr-image");
+const qr = require('qr-image')
 
-const { db } = require("../database");
+const { db } = require('../database')
 
-const { AppError, httpCode } = require("../utils");
+const { AppError, httpCode } = require('../utils')
 
-const controller = {};
+const controller = {}
 
-const xmlTemplate = {};
+const xmlTemplate = {}
 
-//TODO read files sync and nunjucks.compile
-//path.join(__dirname, "templates", "NOME")
-xmlTemplate["1"] = "template_carta_topo_vetorial.xml";
-xmlTemplate["2"] = "template_carta_topo_matricial.xml";
-xmlTemplate["3"] = "template_carta_ortoimagem.xml";
-xmlTemplate["4"] = "template_ortoimagem.xml";
-xmlTemplate["5"] = "template_mds.xml";
-xmlTemplate["6"] = "template_mdt.xml";
-xmlTemplate["7"] = "template_carta_tematica.xml";
+// TODO read files sync and nunjucks.compile
+// path.join(__dirname, "templates", "NOME")
+xmlTemplate['1'] = 'template_carta_topo_vetorial.xml'
+xmlTemplate['2'] = 'template_carta_topo_matricial.xml'
+xmlTemplate['3'] = 'template_carta_ortoimagem.xml'
+xmlTemplate['4'] = 'template_ortoimagem.xml'
+xmlTemplate['5'] = 'template_mds.xml'
+xmlTemplate['6'] = 'template_mdt.xml'
+xmlTemplate['7'] = 'template_carta_tematica.xml'
 
 controller.getMetadado = async uuid => {
   return db.sapConn.task(async t => {
@@ -35,12 +35,12 @@ controller.getMetadado = async uuid => {
       INNER JOIN metadado.informacoes_produto AS ip ON ip.linha_producao_id = lp.id
       WHERE p.uuid = $1`,
       [uuid]
-    );
+    )
     if (!produto) {
       throw new AppError(
-        "Erro ao retornar metadados. Produto não encontrado",
+        'Erro ao retornar metadados. Produto não encontrado',
         httpCode.BadRequest
-      );
+      )
     }
 
     const producao = await t.any(
@@ -63,49 +63,49 @@ controller.getMetadado = async uuid => {
       WHERE p.uuid = $1 GROUP BY p.id, ut.fase_id;
       `,
       [uuid]
-    );
+    )
 
     const finalizado = producao.every(v => {
-      return v.data_fim;
-    });
+      return v.data_fim
+    })
     if (!finalizado) {
       throw new AppError(
-        "Erro ao retornar metadados. Produto não está finalizado",
+        'Erro ao retornar metadados. Produto não está finalizado',
         httpCode.BadRequest
-      );
+      )
     }
 
-    const palavras_chave = await db.sapConn.any(
+    const palavrasChave = await db.sapConn.any(
       `SELECT pc.nome AS palavra_chave, tpc.nome AS tipo_palavra_chave
       FROM metadado.palavra_chave AS pc
       INNER JOIN metadado.tipo_palavra_chave_id AS tpc ON tpc.code = pc.tipo_palavra_chave_id
       INNER JOIN macrocontrole.produto AS p ON p.id = pc.produto_id
       WHERE p.uuid = $1`,
       [uuid]
-    );
+    )
 
-    const template = xmlTemplate[produto.tipo_produto_id];
+    const template = xmlTemplate[produto.tipo_produto_id]
 
-    const dados = produto;
-    const d = new Date();
-    dados.data_metadado = d.toISOString().split("T")[0];
-    dados.palavras_chave = palavras_chave;
+    const dados = produto
+    const d = new Date()
+    dados.data_metadado = d.toISOString().split('T')[0]
+    dados.palavras_chave = palavrasChave
 
-    //responsavel metadado
-    //documento linhagem
-    //insumo interno
-    //informacoes de producao nivel fase
-    //responsavel cada fase
-    //metodologias
+    // responsavel metadado
+    // documento linhagem
+    // insumo interno
+    // informacoes de producao nivel fase
+    // responsavel cada fase
+    // metodologias
 
-    return template.render(dados);
-  });
-};
+    return template.render(dados)
+  })
+}
 
 controller.getQRCode = async (host, nome) => {
-  const url = `${host}/acompanhamento/linha_producao/${nome}`;
+  const url = `${host}/acompanhamento/linha_producao/${nome}`
 
-  return qr.image(url, { type: "svg" });
-};
+  return qr.image(url, { type: 'svg' })
+}
 
-module.exports = controller;
+module.exports = controller

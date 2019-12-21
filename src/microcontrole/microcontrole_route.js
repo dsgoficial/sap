@@ -1,18 +1,18 @@
-"use strict";
+'use strict'
 
-const express = require("express");
+const express = require('express')
 
-const { schemaValidation, asyncHandler, httpCode } = require("../utils");
+const { schemaValidation, asyncHandler, httpCode } = require('../utils')
 
-const { verifyLogin } = require("../login");
+const { verifyLogin } = require('../login')
 
-const microcontroleCtrl = require("./microcontrole_ctrl");
-const microcontroleSchema = require("./microcontrole_schema");
+const microcontroleCtrl = require('./microcontrole_ctrl')
+const microcontroleSchema = require('./microcontrole_schema')
 
-const router = express.Router();
+const router = express.Router()
 
 router.post(
-  "/feicao",
+  '/feicao',
   verifyLogin,
   schemaValidation({ body: microcontroleSchema.feicao }),
   asyncHandler(async (req, res, next) => {
@@ -21,16 +21,16 @@ router.post(
       req.body.usuario_id,
       req.body.data,
       req.body.dados
-    );
+    )
 
-    const msg = "Informações de produção de feição armazenadas com sucesso";
+    const msg = 'Informações de produção de feição armazenadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/apontamento",
+  '/apontamento',
   verifyLogin,
   schemaValidation({ body: microcontroleSchema.apontamento }),
   asyncHandler(async (req, res, next) => {
@@ -39,17 +39,17 @@ router.post(
       req.body.usuario_id,
       req.body.data,
       req.body.dados
-    );
+    )
 
     const msg =
-      "Informações de produção de apontamento armazenadas com sucesso";
+      'Informações de produção de apontamento armazenadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/tela",
+  '/tela',
   verifyLogin,
   schemaValidation({ body: microcontroleSchema.tela }),
   asyncHandler(async (req, res, next) => {
@@ -57,16 +57,16 @@ router.post(
       req.body.atividade_id,
       req.body.usuario_id,
       req.body.dados
-    );
+    )
 
-    const msg = "Informações de tela armazenadas com sucesso";
+    const msg = 'Informações de tela armazenadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/comportamento",
+  '/comportamento',
   verifyLogin,
   schemaValidation({ body: microcontroleSchema.comportamento }),
   asyncHandler(async (req, res, next) => {
@@ -74,12 +74,12 @@ router.post(
       req.body.atividade_id,
       req.body.usuario_id,
       req.body.dados
-    );
+    )
 
-    const msg = "Informações de ação armazenadas com sucesso";
+    const msg = 'Informações de ação armazenadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
-module.exports = router;
+module.exports = router

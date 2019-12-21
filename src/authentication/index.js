@@ -1,6 +1,6 @@
-"use strict";
+'use strict'
 
 module.exports = {
-  authenticateUser: require("./authenticate_user"),
-  verifyAuthServer: require("./verify_server")
-};
+  authenticateUser: require('./authenticate_user'),
+  verifyAuthServer: require('./verify_server')
+}

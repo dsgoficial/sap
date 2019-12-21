@@ -1,5 +1,5 @@
-"use strict";
+'use strict'
 
 module.exports = {
-  metadadosRoute: require("./metadados_route")
-};
+  metadadosRoute: require('./metadados_route')
+}

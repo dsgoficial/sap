@@ -1,5 +1,5 @@
-"use strict";
+'use strict'
 
 module.exports = {
-  microcontroleRoute: require("./microcontrole_route")
-};
+  microcontroleRoute: require('./microcontrole_route')
+}

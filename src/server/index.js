@@ -1,6 +1,6 @@
-"use strict";
+'use strict'
 
 module.exports = {
-  cluster: require("./cluster"),
-  startServer: require("./start_server")
-};
+  cluster: require('./cluster'),
+  startServer: require('./start_server')
+}

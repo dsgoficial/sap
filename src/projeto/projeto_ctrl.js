@@ -1,19 +1,19 @@
-"use strict";
+'use strict'
 
-const { db } = require("../database");
+const { db } = require('../database')
 
-const { AppError, httpCode } = require("../utils");
+const { AppError, httpCode } = require('../utils')
 
-const qgisProject = require("./qgis_project");
+const qgisProject = require('./qgis_project')
 
-const { managePermissions } = require("../database");
+const { managePermissions } = require('../database')
 
 const {
   checkFMEConnection,
   validadeParameters
-} = require("../gerenciador_fme");
+} = require('../gerenciador_fme')
 
-const controller = {};
+const controller = {}
 
 const getUsuarioNomeById = async usuarioId => {
   const usuario = await db.sapConn.one(
@@ -21,71 +21,71 @@ const getUsuarioNomeById = async usuarioId => {
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
     WHERE u.id = $<usuarioId>`,
     { usuarioId }
-  );
-  return usuario.posto_nome;
-};
+  )
+  return usuario.posto_nome
+}
 
 controller.getEstilos = async () => {
   return db.sapConn
     .any(`SELECT f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, ui, owner, update_time
-   FROM dgeo.layer_styles`);
-};
+   FROM dgeo.layer_styles`)
+}
 
 controller.getRegras = async () => {
-  const grupo_regras = await db.sapConn.any(`
+  const grupoRegras = await db.sapConn.any(`
   SELECT gr.grupo_regra, gr.cor_rgb
   FROM dgeo.group_rules AS gr
-  `);
+  `)
 
   const regras = await db.sapConn.any(`
     SELECT lr.id, gr.grupo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.descricao, lr.owner, lr.update_time
     FROM dgeo.group_rules AS gr
     INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
-    `);
+    `)
 
-  return { grupo_regras, regras };
-};
+  return { grupo_regras: grupoRegras, regras }
+}
 
 controller.getModelos = async () => {
   return db.sapConn.any(
-    `SELECT nome, descricao, model_xml, owner, update_time FROM dgeo.layer_qgis_models`
-  );
-};
+    'SELECT nome, descricao, model_xml, owner, update_time FROM dgeo.layer_qgis_models'
+  )
+}
 
 controller.getMenus = async () => {
   return db.sapConn.any(
-    `SELECT id, definicao_menu, owner, update_time FROM dgeo.layer_menus`
-  );
-};
+    'SELECT id, definicao_menu, owner, update_time FROM dgeo.layer_menus'
+  )
+}
 
 controller.gravaEstilos = async (estilos, usuarioId) => {
-  const dataGravacao = new Date();
+  const dataGravacao = new Date()
   await db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
-    await t.none(`TRUNCATE dgeo.layer_styles RESTART IDENTITY`);
+    await t.none('TRUNCATE dgeo.layer_styles RESTART IDENTITY')
 
     const table = new db.pgp.helpers.TableName({
-      table: "layer_styles",
-      schema: "dgeo"
-    });
+      table: 'layer_styles',
+      schema: 'dgeo'
+    })
 
     const cs = new db.pgp.helpers.ColumnSet(
       [
-        "f_table_schema",
-        "f_table_name",
-        "f_geometry_column",
-        "stylename",
-        "styleqml",
-        "stylesld",
-        "ui",
-        "owner",
-        "update_time"
+        'f_table_schema',
+        'f_table_name',
+        'f_geometry_column',
+        'stylename',
+        'styleqml',
+        'stylesld',
+        'ui',
+        'owner',
+        'update_time'
       ],
       { table }
-    );
+    )
 
-    const values = [];
+    const values = []
     estilos.forEach(d => {
       values.push({
         f_table_schema: d.f_table_schema,
@@ -97,57 +97,57 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
         ui: d.ui,
         owner: usuarioPostoNome,
         update_time: dataGravacao
-      });
-    });
+      })
+    })
 
-    const query = db.pgp.helpers.insert(values, cs);
+    const query = db.pgp.helpers.insert(values, cs)
 
-    await t.none(query);
-  });
-};
+    await t.none(query)
+  })
+}
 
 controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
-  const dataGravacao = new Date();
+  const dataGravacao = new Date()
   await db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
-    await t.none(`TRUNCATE dgeo.layer_rules RESTART IDENTITY`);
-    await t.none(`TRUNCATE dgeo.group_rules RESTART IDENTITY CASCADE`);
+    await t.none('TRUNCATE dgeo.layer_rules RESTART IDENTITY')
+    await t.none('TRUNCATE dgeo.group_rules RESTART IDENTITY CASCADE')
 
     const tableGroup = new db.pgp.helpers.TableName({
-      table: "group_rules",
-      schema: "dgeo"
-    });
-    const csGroup = new db.pgp.helpers.ColumnSet(["grupo_regra", "cor_rgb"], {
+      table: 'group_rules',
+      schema: 'dgeo'
+    })
+    const csGroup = new db.pgp.helpers.ColumnSet(['grupo_regra', 'cor_rgb'], {
       table: tableGroup
-    });
+    })
     const queryGroup =
-      db.pgp.helpers.insert(grupoRegras, csGroup) + "RETURNING id, grupo_regra";
+      db.pgp.helpers.insert(grupoRegras, csGroup) + 'RETURNING id, grupo_regra'
 
-    const grupos = await t.any(queryGroup);
+    const grupos = await t.any(queryGroup)
 
     const table = new db.pgp.helpers.TableName({
-      table: "layer_rules",
-      schema: "dgeo"
-    });
+      table: 'layer_rules',
+      schema: 'dgeo'
+    })
 
     const cs = new db.pgp.helpers.ColumnSet(
       [
-        "grupo_regra_id",
-        "schema",
-        "camada",
-        "atributo",
-        "regra",
-        "descricao",
-        "owner",
-        "update_time"
+        'grupo_regra_id',
+        'schema',
+        'camada',
+        'atributo',
+        'regra',
+        'descricao',
+        'owner',
+        'update_time'
       ],
       { table }
-    );
+    )
 
-    const values = [];
+    const values = []
     regras.forEach(d => {
-      const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra);
+      const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra)
 
       values.push({
         grupo_regra_id: grupoRegra.id,
@@ -159,33 +159,33 @@ controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
         ordem: d.ordem,
         owner: usuarioPostoNome,
         update_time: dataGravacao
-      });
-    });
+      })
+    })
 
-    const query = db.pgp.helpers.insert(values, cs);
+    const query = db.pgp.helpers.insert(values, cs)
 
-    await t.none(query);
-  });
-};
+    await t.none(query)
+  })
+}
 
 controller.gravaModelos = async (modelos, usuarioId) => {
-  const dataGravacao = new Date();
+  const dataGravacao = new Date()
   await db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
-    await t.none(`TRUNCATE dgeo.layer_qgis_models RESTART IDENTITY`);
+    await t.none('TRUNCATE dgeo.layer_qgis_models RESTART IDENTITY')
 
     const table = new db.pgp.helpers.TableName({
-      table: "layer_qgis_models",
-      schema: "dgeo"
-    });
+      table: 'layer_qgis_models',
+      schema: 'dgeo'
+    })
 
     const cs = new db.pgp.helpers.ColumnSet(
-      ["nome", "descricao", "model_xml", "owner", "update_time"],
+      ['nome', 'descricao', 'model_xml', 'owner', 'update_time'],
       { table }
-    );
+    )
 
-    const values = [];
+    const values = []
     modelos.forEach(d => {
       values.push({
         nome: d.nome,
@@ -193,83 +193,100 @@ controller.gravaModelos = async (modelos, usuarioId) => {
         model_xml: d.model_xml,
         owner: usuarioPostoNome,
         update_time: dataGravacao
-      });
-    });
+      })
+    })
 
-    const query = db.pgp.helpers.insert(values, cs);
+    const query = db.pgp.helpers.insert(values, cs)
 
-    await t.none(query);
-  });
-};
+    await t.none(query)
+  })
+}
 
 controller.gravaMenus = async (menus, usuarioId) => {
-  const dataGravacao = new Date();
+  const dataGravacao = new Date()
   await db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
-    await t.none(`TRUNCATE dgeo.layer_menus RESTART IDENTITY`);
+    await t.none('TRUNCATE dgeo.layer_menus RESTART IDENTITY')
 
     const table = new db.pgp.helpers.TableName({
-      table: "layer_menus",
-      schema: "dgeo"
-    });
+      table: 'layer_menus',
+      schema: 'dgeo'
+    })
 
     const cs = new db.pgp.helpers.ColumnSet(
-      ["nome_menu", "definicao_menu", "owner", "update_time"],
+      ['nome_menu', 'definicao_menu', 'owner', 'update_time'],
       { table }
-    );
+    )
 
-    const values = [];
+    const values = []
     menus.forEach(d => {
       values.push({
         nome_menu: d.nome_menu,
         definicao_menu: d.definicao_menu,
         owner: usuarioPostoNome,
         update_time: dataGravacao
-      });
-    });
+      })
+    })
 
-    const query = db.pgp.helpers.insert(values, cs);
+    const query = db.pgp.helpers.insert(values, cs)
 
-    await t.none(query);
-  });
-};
+    await t.none(query)
+  })
+}
 
 controller.getProject = async () => {
-  return qgisProject;
-};
+  return qgisProject
+}
 
-controller.criaUsuarios = async ({
-  nome,
-  nome_guerra,
-  tipo_turno_id,
-  tipo_posto_grad_id,
-  uuid
-}) => {
-  await db.sapConn.none(
-    `INSERT INTO dgeo.usuario(nome, nome_guerra, administrador, ativo, tipo_turno_id, tipo_posto_grad_id, uuid)
-  VALUES ($<nome>, $<nome_guerra>, FALSE, TRUE, $<tipo_turno_id>, $<tipo_posto_grad_id>, $<uuid>`,
-    { nome, nome_guerra, tipo_turno_id, tipo_posto_grad_id, uuid }
-  );
-};
+controller.criaUsuarios = async usuarios => {
+  const table = new db.pgp.helpers.TableName({
+    table: 'usuario',
+    schema: 'dgeo'
+  })
+
+  const cs = new db.pgp.helpers.ColumnSet(
+    ['nome', 'nome_guerra', 'administrador', 'ativo', 'tipo_turno_id', 'tipo_posto_grad_id', 'uuid'],
+    {
+      table
+    }
+  )
+
+  const camadas = []
+  usuarios.forEach(u => {
+    camadas.push({
+      nome: usuarios.nome,
+      nome_guerra: usuarios.nome_guerra,
+      administrador: false,
+      ativo: true,
+      tipo_turno_id: usuarios.tipo_turno_id,
+      tipo_posto_grad_id: usuarios.tipo_posto_grad_id,
+      uuid: usuarios.uuid
+    })
+  })
+
+  const query = db.pgp.helpers.insert(camadas, cs)
+
+  db.sapConn.none(query)
+}
 
 controller.getBancoDados = async () => {
   return db.sapConn.any(
-    `SELECT nome, servidor, porta FROM macrocontrole.banco_dados`
-  );
-};
+    'SELECT nome, servidor, porta FROM macrocontrole.banco_dados'
+  )
+}
 
 controller.getUsuarios = async () => {
   return db.sapConn.any(
     `SELECT u.id, u.uuid, tpg.nome_abrev || ' ' || u.nome_guerra AS nome
     FROM dgeo.usuario AS u INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id WHERE u.ativo IS TRUE`
-  );
-};
+  )
+}
 
 controller.criaRevisao = async unidadeTrabalhoIds => {
   await db.sapConn.tx(async t => {
-    for (let unidadeTrabalhoId of unidadeTrabalhoIds) {
-      //refactor to batch
+    for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
+      // refactor to batch
       const ordemEtapa = await t.one(
         `SELECT ut.subfase_id, max(e.ordem) AS ordem 
         FROM macrocontrole.unidade_trabalho AS ut
@@ -277,7 +294,7 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
         WHERE ut.id = $<unidadeTrabalhoId>
         GROUP BY ut.subfase_id`,
         { unidadeTrabalhoId }
-      );
+      )
       const etapaRev = await t.oneOrNone(
         `SELECT e.id FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
@@ -286,7 +303,7 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
         ORDER BY e.ordem
         LIMIT 1`,
         { unidadeTrabalhoId }
-      );
+      )
       const etapaCorr = await t.oneOrNone(
         `SELECT e.id FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
@@ -295,12 +312,12 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
         ORDER BY e.ordem
         LIMIT 1`,
         { unidadeTrabalhoId }
-      );
-      let ids;
+      )
+      let ids
       if (etapaRev && etapaCorr) {
-        ids = [];
-        ids.push(etapaRev);
-        ids.push(etapaCorr);
+        ids = []
+        ids.push(etapaRev)
+        ids.push(etapaCorr)
       } else {
         // cria novas etapas
         ids = await t.any(
@@ -313,7 +330,7 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
             ordem1: ordemEtapa.ordem + 1,
             ordem2: ordemEtapa.ordem + 2
           }
-        );
+        )
       }
       await t.none(
         `
@@ -321,15 +338,15 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
       VALUES ($<idRev>,$<unidadeTrabalhoId>,1),($<idCorr>,$<unidadeTrabalhoId>,1)
       `,
         { idRev: ids[0].id, idCorr: ids[1].id, unidadeTrabalhoId }
-      );
+      )
     }
-  });
-};
+  })
+}
 
 controller.criaRevcorr = async unidadeTrabalhoIds => {
   await db.sapConn.tx(async t => {
-    for (let unidadeTrabalhoId of unidadeTrabalhoIds) {
-      //refactor to batch
+    for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
+      // refactor to batch
       const ordemEtapa = await t.one(
         `SELECT ut.subfase_id, max(e.ordem) AS ordem 
         FROM macrocontrole.unidade_trabalho AS ut
@@ -337,7 +354,7 @@ controller.criaRevcorr = async unidadeTrabalhoIds => {
         WHERE ut.id = $<unidadeTrabalhoId>
         GROUP BY ut.subfase_id`,
         { unidadeTrabalhoId }
-      );
+      )
       const etapaRevcorr = await t.oneOrNone(
         `SELECT e.id FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
@@ -346,7 +363,7 @@ controller.criaRevcorr = async unidadeTrabalhoIds => {
         ORDER BY e.ordem
         LIMIT 1`,
         { unidadeTrabalhoId }
-      );
+      )
       const revcorr =
         etapaRevcorr ||
         (await t.one(
@@ -355,21 +372,21 @@ controller.criaRevcorr = async unidadeTrabalhoIds => {
         VALUES(4,$<subfaseId>,$<ordem>) RETURNING id
         `,
           { subfaseId: ordemEtapa.subfase_id, ordem: ordemEtapa.ordem + 1 }
-        ));
+        ))
       await t.none(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
       VALUES ($<idRevCorr>,$<unidadeTrabalhoId>,1)
       `,
         { idRevCorr: revcorr.id, unidadeTrabalhoId }
-      );
+      )
     }
-  });
-};
+  })
+}
 
 controller.getLotes = async () => {
-  return db.sapConn.any(`SELECT id, nome FROM macrocontrole.lote`);
-};
+  return db.sapConn.any('SELECT id, nome FROM macrocontrole.lote')
+}
 
 controller.unidadeTrabalhoLote = async (unidadeTrabalhoIds, lote) => {
   return db.sapConn.none(
@@ -377,8 +394,8 @@ controller.unidadeTrabalhoLote = async (unidadeTrabalhoIds, lote) => {
     SET lote = $<lote>
     WHERE id in ($<unidadeTrabalhoIds:csv>)`,
     { unidadeTrabalhoIds, lote }
-  );
-};
+  )
+}
 
 controller.deletaAtividades = async atividadeIds => {
   return db.sapConn.none(
@@ -387,8 +404,8 @@ controller.deletaAtividades = async atividadeIds => {
   WHERE id in ($<atividadeIds:csv>) AND tipo_situacao IN (1,3)
   `,
     { atividadeIds }
-  );
-};
+  )
+}
 
 controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
   const result = await db.sapConn.result(
@@ -403,55 +420,55 @@ controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
   WHERE ut.id IN ($<unidadeTrabalhoIds:csv>) AND e.id = $<etapaId> AND a.id IS NULL
   `,
     { unidadeTrabalhoIds, etapaId }
-  );
-  if (!result.rowCount || result.rowCount != 1) {
+  )
+  if (!result.rowCount || result.rowCount !== 1) {
     throw new AppError(
-      "As atividades não podem ser criadas pois já existem.",
+      'As atividades não podem ser criadas pois já existem.',
       httpCode.BadRequest
-    );
+    )
   }
-};
+}
 
 controller.getProjetos = async () => {
   return db.sapConn.any(
-    `SELECT id, nome, finalizado FROM macrocontrole.projeto`
-  );
-};
+    'SELECT id, nome, finalizado FROM macrocontrole.projeto'
+  )
+}
 
 controller.getLinhasProducao = async () => {
   return db.sapConn.any(
-    `SELECT id, nome, projeto_id, tipo_produto_id FROM macrocontrole.linha_producao`
-  );
-};
+    'SELECT id, nome, projeto_id, tipo_produto_id FROM macrocontrole.linha_producao'
+  )
+}
 
 controller.getFases = async () => {
   return db.sapConn.any(
     `SELECT f.id, tf.nome, f.tipo_fase_id, f.linha_producao_id, f.ordem
     FROM macrocontrole.fase AS f
     INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id`
-  );
-};
+  )
+}
 
 controller.getSubfases = async () => {
   return db.sapConn.any(
-    `SELECT id, nome, fase_id, ordem, observacao FROM macrocontrole.subfase`
-  );
-};
+    'SELECT id, nome, fase_id, ordem, observacao FROM macrocontrole.subfase'
+  )
+}
 
 controller.getEtapas = async () => {
   return db.sapConn.any(
     `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, e.ordem, e.observacao
     FROM macrocontrole.etapa AS e
     INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id`
-  );
-};
+  )
+}
 
 controller.getGerenciadorFME = async () => {
   return db.sapConn.any(
     `SELECT id, servidor, porta
     FROM dgeo.gerenciador_fme`
-  );
-};
+  )
+}
 
 controller.criaGerenciadorFME = async (servidor, porta) => {
   return db.sapConn.task(async t => {
@@ -459,20 +476,20 @@ controller.criaGerenciadorFME = async (servidor, porta) => {
       `SELECT id FROM dgeo.gerenciador_fme
       WHERE servidor = $<servidor> AND porta = $<porta>`,
       { servidor, porta }
-    );
+    )
     if (exists) {
-      throw new AppError("O servidor já está cadastrado", httpCode.BadRequest);
+      throw new AppError('O servidor já está cadastrado', httpCode.BadRequest)
     }
 
-    await checkFMEConnection(servidor, porta);
+    await checkFMEConnection(servidor, porta)
 
     return t.any(
       `INSERT INTO dgeo.gerenciador_fme(servidor, porta)
       VALUES ($<servidor>, $<porta>)`,
       { servidor, porta }
-    );
-  });
-};
+    )
+  })
+}
 
 controller.atualizaGerenciadorFME = async (id, servidor, porta) => {
   return db.sapConn.task(async t => {
@@ -480,24 +497,24 @@ controller.atualizaGerenciadorFME = async (id, servidor, porta) => {
       `SELECT id FROM dgeo.gerenciador_fme
       WHERE id = $<id>`,
       { id }
-    );
+    )
     if (!exists) {
       throw new AppError(
-        "O id informado não corresponde a um servidor do Gerenciador do FME",
+        'O id informado não corresponde a um servidor do Gerenciador do FME',
         httpCode.BadRequest
-      );
+      )
     }
 
-    await checkFMEConnection(servidor, porta);
+    await checkFMEConnection(servidor, porta)
 
     return t.any(
       `UPDATE dgeo.gerenciador_fme
       SET servidor = $<servidor>, porta =$<porta>
       where id = $<id>`,
       { id, servidor, porta }
-    );
-  });
-};
+    )
+  })
+}
 
 controller.deletaGerenciadorFME = async id => {
   return db.sapConn.task(async t => {
@@ -505,40 +522,40 @@ controller.deletaGerenciadorFME = async id => {
       `SELECT id FROM dgeo.gerenciador_fme
       WHERE id = $<id>`,
       { id }
-    );
+    )
     if (!exists) {
       throw new AppError(
-        "O id informado não corresponde a um servidor do Gerenciador do FME",
+        'O id informado não corresponde a um servidor do Gerenciador do FME',
         httpCode.BadRequest
-      );
+      )
     }
 
     const existsAssociation = await t.any(
       `SELECT id FROM macrocontrole.perfil_fme 
       WHERE gerenciador_fme_id = $<id>`,
       { id }
-    );
+    )
     if (existsAssociation) {
       throw new AppError(
-        "O servidor possui rotinas do fme associadas em perfil_fme",
+        'O servidor possui rotinas do fme associadas em perfil_fme',
         httpCode.BadRequest
-      );
+      )
     }
 
     return t.any(
       `DELETE FROM dgeo.gerenciador_fme
       WHERE id = $<id>`,
       { id }
-    );
-  });
-};
+    )
+  })
+}
 
 controller.getCamadas = async () => {
   return db.sapConn.any(
     `SELECT id, schema, nome, alias, documentacao
     FROM macrocontrole.camada`
-  );
-};
+  )
+}
 
 controller.deleteCamadas = async camadasIds => {
   return db.sapConn.task(async t => {
@@ -546,44 +563,44 @@ controller.deleteCamadas = async camadasIds => {
       `SELECT id FROM macrocontrole.camada
       WHERE id in ($<camadasIds:csv>)`,
       { camadasIds }
-    );
+    )
     if (!exists) {
       throw new AppError(
-        "Os ids informados não correspondem a uma camada",
+        'Os ids informados não correspondem a uma camada',
         httpCode.BadRequest
-      );
+      )
     }
 
     const existsAssociationAtributo = await t.any(
       `SELECT id FROM macrocontrole.atributo 
       WHERE camada_id in ($<camadasIds:csv>)`,
       { camadasIds }
-    );
+    )
     if (existsAssociationAtributo) {
       throw new AppError(
-        "A camada possui atributos associados",
+        'A camada possui atributos associados',
         httpCode.BadRequest
-      );
+      )
     }
     const existsAssociationPerfil = await t.any(
       `SELECT id FROM macrocontrole.perfil_propriedades_camada 
       WHERE camada_id in ($<camadasIds:csv>)`,
       { camadasIds }
-    );
+    )
     if (existsAssociationPerfil) {
       throw new AppError(
-        "A camada possui perfil propriedades camadas associados",
+        'A camada possui perfil propriedades camadas associados',
         httpCode.BadRequest
-      );
+      )
     }
 
     return t.any(
       `DELETE FROM macrocontrole.camada
       WHERE id IN ($<camadasIds:csv>)`,
       { camadasIds }
-    );
-  });
-};
+    )
+  })
+}
 
 controller.atualizaCamadas = async camadas => {
   return db.sapConn.tx(async t => {
@@ -591,16 +608,16 @@ controller.atualizaCamadas = async camadas => {
       `SELECT id FROM macrocontrole.camada
       WHERE id in ($<camadasIds:csv>)`,
       { camadasIds: camadas.map(c => c.id) }
-    );
+    )
     if (!exists) {
       throw new AppError(
-        "Os ids informado não correspondem a uma camada",
+        'Os ids informado não correspondem a uma camada',
         httpCode.BadRequest
-      );
+      )
     }
-    const query = [];
+    const query = []
     camadas.forEach(c => {
-      const { id, schema, nome, alias, documentacao } = c;
+      const { id, schema, nome, alias, documentacao } = c
 
       query.push(
         t.any(
@@ -609,40 +626,40 @@ controller.atualizaCamadas = async camadas => {
           where id = $<id>`,
           { id, schema, nome, alias, documentacao }
         )
-      );
-    });
+      )
+    })
 
-    await t.batch(query);
+    await t.batch(query)
 
-    //update all permissions
-    await managePermissions.revokeAndGrantAllExecution();
-  });
-};
+    // update all permissions
+    await managePermissions.revokeAndGrantAllExecution()
+  })
+}
 
 controller.criaCamadas = async camadas => {
   const table = new db.pgp.helpers.TableName({
-    table: "camada",
-    schema: "macrocontrole"
-  });
+    table: 'camada',
+    schema: 'macrocontrole'
+  })
 
   const cs = new db.pgp.helpers.ColumnSet(
-    ["schema", "nome", "alias", "documentacao"],
+    ['schema', 'nome', 'alias', 'documentacao'],
     {
       table
     }
-  );
+  )
 
-  const query = db.pgp.helpers.insert(camadas, cs);
+  const query = db.pgp.helpers.insert(camadas, cs)
 
-  db.sapConn.none(query);
-};
+  db.sapConn.none(query)
+}
 
 controller.getPerfilFME = async () => {
   return db.sapConn.any(
     `SELECT id, gerenciador_fme_id, rotina, requisito_finalizacao, gera_falso_positivo, subfase_id
     FROM macrocontrole.perfil_fme`
-  );
-};
+  )
+}
 
 controller.deletePerfilFME = async perfilFMEIds => {
   return db.sapConn.task(async t => {
@@ -650,20 +667,20 @@ controller.deletePerfilFME = async perfilFMEIds => {
       `SELECT id FROM macrocontrole.perfil_fme
       WHERE id in ($<perfilFMEIds:csv>)`,
       { perfilFMEIds }
-    );
+    )
     if (!exists) {
       throw new AppError(
-        "Os ids informados não correspondem a um perfil fme",
+        'Os ids informados não correspondem a um perfil fme',
         httpCode.BadRequest
-      );
+      )
     }
     return t.any(
       `DELETE FROM macrocontrole.perfil_fme
       WHERE id IN ($<perfilFMEIds:csv>)`,
       { perfilFMEIds }
-    );
-  });
-};
+    )
+  })
+}
 
 controller.atualizaPerfilFME = async perfilFME => {
   return db.sapConn.tx(async t => {
@@ -671,80 +688,68 @@ controller.atualizaPerfilFME = async perfilFME => {
       `SELECT id FROM macrocontrole.perfil_fme
       WHERE id in ($<perfilFMEIds:csv>)`,
       { perfilFMEIds: perfilFME.map(c => c.id) }
-    );
+    )
     if (!exists) {
       throw new AppError(
-        "Os ids informados não correspondem a um perfil fme",
+        'Os ids informados não correspondem a um perfil fme',
         httpCode.BadRequest
-      );
+      )
     }
-    const query = [];
+    const query = []
     perfilFME.forEach(c => {
-      const {
-        id,
-        gerenciador_fme_id,
-        rotina,
-        requisito_finalizacao,
-        gera_falso_positivo,
-        subfase_id
-      } = c;
-
       query.push(
         t.any(
           `UPDATE macrocontrole.perfil_fme
-          SET gerenciador_fme_id = $<gerenciador_fme_id>, rotina = $<rotina>, requisito_finalizacao = $<requisito_finalizacao>, gera_falso_positivo = $<gera_falso_positivo>,
-          subfase_id = $<subfase_id>
+          SET gerenciador_fme_id = $<gerenciadorFmeId>, rotina = $<rotina>, requisito_finalizacao = $<requisitoFinalizacao>, gera_falso_positivo = $<geraFalsoPositivo>,
+          subfase_id = $<subfaseId>
           where id = $<id>`,
           {
-            id,
-            gerenciador_fme_id,
-            rotina,
-            requisito_finalizacao,
-            gera_falso_positivo,
-            subfase_id
+            id: c.id,
+            gerenciadorFmeId: c.gerenciador_fme_id,
+            rotina: c.rotina,
+            requisitoFinalizacao: c.requisito_finalizacao,
+            geraFalsoPositivo: c.gera_falso_positivo,
+            subfaseId: c.subfase_id
           }
         )
-      );
-    });
+      )
+    })
 
     const rotinasFME = perfilFME.map(c => {
-      return { servidor: c.gerenciador_fme_id, rotina: c.rotina };
-    });
-    await validadeParameters(rotinasFME);
+      return { servidor: c.gerenciador_fme_id, rotina: c.rotina }
+    })
+    await validadeParameters(rotinasFME)
 
-    await t.batch(query);
-  });
-};
+    await t.batch(query)
+  })
+}
 
 controller.criaPerfilFME = async perfilFME => {
   const table = new db.pgp.helpers.TableName({
-    table: "perfil_fme",
-    schema: "macrocontrole"
-  });
+    table: 'perfil_fme',
+    schema: 'macrocontrole'
+  })
 
   const cs = new db.pgp.helpers.ColumnSet(
     [
-      "gerenciador_fme_id",
-      "rotina",
-      "requisito_finalizacao",
-      "gera_falso_positivo",
-      "subfase_id"
+      'gerenciador_fme_id',
+      'rotina',
+      'requisito_finalizacao',
+      'gera_falso_positivo',
+      'subfase_id'
     ],
     {
       table
     }
-  );
+  )
 
   const rotinasFME = perfilFME.map(c => {
-    return { servidor: c.gerenciador_fme_id, rotina: c.rotina };
-  });
-  await validadeParameters(rotinasFME);
+    return { servidor: c.gerenciador_fme_id, rotina: c.rotina }
+  })
+  await validadeParameters(rotinasFME)
 
-  for (let r of perfilFME) {
-  }
+  const query = db.pgp.helpers.insert(perfilFME, cs)
 
-  const query = db.pgp.helpers.insert(perfilFME, cs);
-
-  db.sapConn.none(query);
-};
-module.exports = controller;
+  db.sapConn.none(query)
+}
+module.exports = controller

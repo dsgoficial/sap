@@ -1,30 +1,30 @@
-"use strict";
+'use strict'
 
-const Joi = require("joi");
+const Joi = require('joi')
 
-const models = {};
+const models = {}
 
 models.idParams = Joi.object().keys({
   id: Joi.string()
     .regex(/^[0-9]+$/)
     .required()
-});
+})
 
 models.mesParam = Joi.object().keys({
   mes: Joi.string()
     .regex(/^(1|2|3|4|5|6|7|8|9|10|11|12)$/)
     .required()
-});
+})
 
 models.anoParam = Joi.object().keys({
   ano: Joi.string()
     .regex(/^202[0-9]$/)
     .required()
-});
+})
 
 models.finalizadoQuery = Joi.object().keys({
-  finalizado: Joi.string().valid("true", "false")
-});
+  finalizado: Joi.string().valid('true', 'false')
+})
 
 models.mvtParams = Joi.object().keys({
   nome: Joi.string().required(),
@@ -37,11 +37,11 @@ models.mvtParams = Joi.object().keys({
   z: Joi.number()
     .integer()
     .required()
-});
+})
 
 models.diasQuery = Joi.object().keys({
   dias: Joi.string().regex(/^[0-9]+$/)
-});
+})
 
 models.perdaRecursoHumano = Joi.object().keys({
   perda_recurso_humano: Joi.array().items(
@@ -63,6 +63,6 @@ models.perdaRecursoHumano = Joi.object().keys({
   )
     .required()
     .min(1)
-});
+})
 
-module.exports = models;
+module.exports = models

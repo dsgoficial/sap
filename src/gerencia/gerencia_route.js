@@ -1,34 +1,34 @@
-"use strict";
+'use strict'
 
-const express = require("express");
+const express = require('express')
 
-const { schemaValidation, asyncHandler, httpCode } = require("../utils");
+const { schemaValidation, asyncHandler, httpCode } = require('../utils')
 
-const { verifyAdmin } = require("../login");
+const { verifyAdmin } = require('../login')
 
-const gerenciaCtrl = require("./gerencia_ctrl");
-const gerenciaSchema = require("./gerencia_schema");
+const gerenciaCtrl = require('./gerencia_ctrl')
+const gerenciaSchema = require('./gerencia_schema')
 
-const router = express.Router();
+const router = express.Router()
 
 router.get(
-  "/atividade/:id",
+  '/atividade/:id',
   verifyAdmin,
   schemaValidation({ params: gerenciaSchema.idParams }),
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAtividade(
       req.params.id,
-      req.body.usuarioId //gerenteId
-    );
+      req.body.usuarioId // gerenteId
+    )
 
-    const msg = dados ? "Atividade retornada" : "Atividade não encontrada";
+    const msg = dados ? 'Atividade retornada' : 'Atividade não encontrada'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/atividade/usuario/:id",
+  '/atividade/usuario/:id',
   verifyAdmin,
   schemaValidation({
     params: gerenciaSchema.idParams,
@@ -38,103 +38,103 @@ router.get(
     const dados = await gerenciaCtrl.getAtividadeUsuario(
       req.params.id,
       req.query.proxima,
-      req.body.usuarioId //gerenteId
-    );
-    const msg = dados ? "Atividade retornada" : "Usuário não possui atividade";
+      req.body.usuarioId // gerenteId
+    )
+    const msg = dados ? 'Atividade retornada' : 'Usuário não possui atividade'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/perfil_producao",
+  '/perfil_producao',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getPerfilProducao();
+    const dados = await gerenciaCtrl.getPerfilProducao()
 
-    const msg = "Perfis de produção retornados";
+    const msg = 'Perfis de produção retornados'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.post(
-  "/unidade_trabalho/disponivel",
+  '/unidade_trabalho/disponivel',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.unidadeTrabalhoDisponivel }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.unidadeTrabalhoDisponivel(
       req.body.unidade_trabalho_ids,
       req.body.disponivel
-    );
+    )
 
     const msg =
-      "Atributo disponível das unidades de trabalho atualizado com sucesso";
+      'Atributo disponível das unidades de trabalho atualizado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/atividade/pausar",
+  '/atividade/pausar',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadePausar }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.pausaAtividade(req.body.unidade_trabalho_ids);
+    await gerenciaCtrl.pausaAtividade(req.body.unidade_trabalho_ids)
 
-    const msg = "Atividade pausada com sucesso";
+    const msg = 'Atividade pausada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/atividade/reiniciar",
+  '/atividade/reiniciar',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeReiniciar }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.reiniciaAtividade(req.body.unidade_trabalho_ids);
+    await gerenciaCtrl.reiniciaAtividade(req.body.unidade_trabalho_ids)
 
-    const msg = "Atividade reiniciada com sucesso";
+    const msg = 'Atividade reiniciada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/atividade/voltar",
+  '/atividade/voltar',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeVoltar }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.voltaAtividade(
       req.body.atividade_ids,
       req.body.manter_usuarios
-    );
+    )
 
-    const msg = "Atividade voltou para etapa anterior com sucesso";
+    const msg = 'Atividade voltou para etapa anterior com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/atividade/avancar",
+  '/atividade/avancar',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeAvancar }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.avancaAtividade(
       req.body.atividade_ids,
       req.body.concluida
-    );
+    )
 
-    const msg = "Atividade avançou para próxima etapa com sucesso";
+    const msg = 'Atividade avançou para próxima etapa com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/fila_prioritaria",
+  '/fila_prioritaria',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.filaPrioritaria }),
   asyncHandler(async (req, res, next) => {
@@ -142,16 +142,16 @@ router.post(
       req.body.atividade_ids,
       req.body.usuario_prioridade_id,
       req.body.prioridade
-    );
+    )
 
-    const msg = "Fila prioritaria criada com sucesso";
+    const msg = 'Fila prioritaria criada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/fila_prioritaria_grupo",
+  '/fila_prioritaria_grupo',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.filaPrioritariaGrupo }),
   asyncHandler(async (req, res, next) => {
@@ -159,16 +159,16 @@ router.post(
       req.body.atividade_ids,
       req.body.perfil_producao_id,
       req.body.prioridade
-    );
+    )
 
-    const msg = "Fila prioritaria grupo criada com sucesso";
+    const msg = 'Fila prioritaria grupo criada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/observacao",
+  '/observacao',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.observacao }),
   asyncHandler(async (req, res, next) => {
@@ -179,29 +179,29 @@ router.post(
       req.body.observacao_subfase,
       req.body.observacao_unidade_trabalho,
       req.body.lote
-    );
+    )
 
-    const msg = "Observação criada com sucesso";
+    const msg = 'Observação criada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.get(
-  "/atividade/:id/observacao",
+  '/atividade/:id/observacao',
   verifyAdmin,
   schemaValidation({ params: gerenciaSchema.idParams }),
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getObservacao(req.params.id);
+    const dados = await gerenciaCtrl.getObservacao(req.params.id)
 
-    const msg = "Observações retornadas com sucesso";
+    const msg = 'Observações retornadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/view_acompanhamento",
+  '/view_acompanhamento',
   verifyAdmin,
   schemaValidation({
     query: gerenciaSchema.emAndamentoQuery
@@ -209,40 +209,40 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getViewsAcompanhamento(
       req.query.em_andamento
-    );
+    )
 
-    const msg = "Views de acompanhamento retornadas com sucesso";
+    const msg = 'Views de acompanhamento retornadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.put(
-  "/atividades_bloqueadas",
+  '/atividades_bloqueadas',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.atualizaAtividadesBloqueadas();
+    await gerenciaCtrl.atualizaAtividadesBloqueadas()
 
-    const msg = "View Atividades Bloqueadas atualizada com sucesso";
+    const msg = 'View Atividades Bloqueadas atualizada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.put(
-  "/atividade/permissoes",
+  '/atividade/permissoes',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.redefinirPermissoes();
+    await gerenciaCtrl.redefinirPermissoes()
 
-    const msg = "Permissões das atividades em execução redefinidas";
+    const msg = 'Permissões das atividades em execução redefinidas'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.post(
-  "/banco_dados/revogar_permissoes",
+  '/banco_dados/revogar_permissoes',
   verifyAdmin,
   schemaValidation({
     body: gerenciaSchema.bancoDados
@@ -252,12 +252,12 @@ router.post(
       req.body.servidor,
       req.body.porta,
       req.body.banco
-    );
+    )
 
-    const msg = "Permissões do banco revogadas com sucesso";
+    const msg = 'Permissões do banco revogadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
-module.exports = router;
+module.exports = router

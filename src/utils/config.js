@@ -1,29 +1,29 @@
-"use strict";
+'use strict'
 
-const dotenv = require("dotenv");
-const Joi = require("joi");
-const fs = require("fs");
+const dotenv = require('dotenv')
+const Joi = require('joi')
+const fs = require('fs')
 
-const AppError = require("./App_error");
-const errorHandler = require("./error_handler");
+const AppError = require('./App_error')
+const errorHandler = require('./error_handler')
 
 const configFile =
-  process.env.NODE_ENV === "test" ? "config_testing.env" : "config.env";
+  process.env.NODE_ENV === 'test' ? 'config_testing.env' : 'config.env'
 
 if (!fs.existsSync(configFile)) {
   errorHandler(
     new AppError(
-      `Arquivo de configuração não encontrado. Configure o serviço primeiro.`
+      'Arquivo de configuração não encontrado. Configure o serviço primeiro.'
     )
-  );
+  )
 }
 
 dotenv.config({
   path: configFile
-});
+})
 
-const VERSION = "2.0.0";
-const MIN_DATABASE_VERSION = "2.0.0";
+const VERSION = '2.0.0'
+const MIN_DATABASE_VERSION = '2.0.0'
 
 const configSchema = Joi.object().keys({
   PORT: Joi.number()
@@ -42,7 +42,7 @@ const configSchema = Joi.object().keys({
     .required(),
   VERSION: Joi.string().required(),
   MIN_DATABASE_VERSION: Joi.string().required()
-});
+})
 
 /**
  * Objeto de configuração
@@ -71,22 +71,22 @@ const config = {
   AUTH_SERVER: process.env.AUTH_SERVER,
   VERSION,
   MIN_DATABASE_VERSION
-};
+}
 
 const { error } = configSchema.validate(config, {
   abortEarly: false
-});
+})
 if (error) {
-  const { details } = error;
-  const message = details.map(i => i.message).join(",");
+  const { details } = error
+  const message = details.map(i => i.message).join(',')
 
   errorHandler(
     new AppError(
-      `Arquivo de configuração inválido. Configure novamente o serviço.`,
+      'Arquivo de configuração inválido. Configure novamente o serviço.',
       null,
       message
     )
-  );
+  )
 }
 
-module.exports = config;
+module.exports = config

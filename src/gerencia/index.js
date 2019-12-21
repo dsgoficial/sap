@@ -1,5 +1,5 @@
-"use strict";
+'use strict'
 
 module.exports = {
-  gerenciaRoute: require("./gerencia_route")
-};
+  gerenciaRoute: require('./gerencia_route')
+}

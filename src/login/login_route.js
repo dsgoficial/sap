@@ -1,13 +1,13 @@
-"use strict";
+'use strict'
 
-const express = require("express");
+const express = require('express')
 
-const { schemaValidation, asyncHandler, httpCode } = require("../utils");
+const { schemaValidation, asyncHandler, httpCode } = require('../utils')
 
-const loginCtrl = require("./login_ctrl");
-const loginSchema = require("./login_schema");
+const loginCtrl = require('./login_ctrl')
+const loginSchema = require('./login_schema')
 
-const router = express.Router();
+const router = express.Router()
 
 /**
  * @swagger
@@ -72,7 +72,7 @@ const router = express.Router();
  *                 description: Token de login
  */
 router.post(
-  "/",
+  '/',
   schemaValidation({ body: loginSchema.login }),
   asyncHandler(async (req, res, next) => {
     const { token, administrador } = await loginCtrl.login(
@@ -81,15 +81,15 @@ router.post(
       req.body.cliente,
       req.body.plugins,
       req.body.qgis
-    );
+    )
 
     return res.sendJsonAndLog(
       true,
-      "Usuário autenticado com sucesso",
+      'Usuário autenticado com sucesso',
       httpCode.Created,
       { token, administrador }
-    );
+    )
   })
-);
+)
 
-module.exports = router;
+module.exports = router

@@ -1,4 +1,4 @@
-"use strict";
+'use strict'
 
 /**
  * Objeto com os códigos HTTP
@@ -23,6 +23,6 @@ const httpCode = {
   Forbidden: 403,
   NotFound: 404,
   InternalError: 500
-};
+}
 
-module.exports = httpCode;
+module.exports = httpCode

@@ -1,7 +1,7 @@
-"use strict";
+'use strict'
 
-const path = require("path");
-const { sqlFile } = require("../database");
+const path = require('path')
+const { sqlFile } = require('../database')
 
 /**
  * Returns the full path of a file
@@ -9,15 +9,15 @@ const { sqlFile } = require("../database");
  * @returns {string} Full path of a file
  */
 const fp = p => {
-  return path.join(__dirname, "sql", p);
-};
+  return path.join(__dirname, 'sql', p)
+}
 
 module.exports = {
-  calculaFilaPrioritaria: sqlFile.createPS(fp("calcula_fila_prioritaria.sql")),
+  calculaFilaPrioritaria: sqlFile.createPS(fp('calcula_fila_prioritaria.sql')),
   calculaFilaPrioritariaGrupo: sqlFile.createPS(
-    fp("calcula_fila_prioritaria_grupo.sql")
+    fp('calcula_fila_prioritaria_grupo.sql')
   ),
-  calculaFilaPausada: sqlFile.createPS(fp("calcula_fila_pausada.sql")),
-  calculaFila: sqlFile.createPS(fp("calcula_fila.sql")),
-  retornaDadosProducao: sqlFile.createPS(fp("retorna_dados_producao.sql"))
-};
+  calculaFilaPausada: sqlFile.createPS(fp('calcula_fila_pausada.sql')),
+  calculaFila: sqlFile.createPS(fp('calcula_fila.sql')),
+  retornaDadosProducao: sqlFile.createPS(fp('retorna_dados_producao.sql'))
+}

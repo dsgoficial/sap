@@ -1,5 +1,5 @@
-"use strict";
+'use strict'
 
 module.exports = {
-  projetoRoute: require("./projeto_route")
-};
+  projetoRoute: require('./projeto_route')
+}

@@ -1,48 +1,48 @@
-"use strict";
+'use strict'
 
 const {
   errorHandler,
   config: { DB_USER, DB_PASSWORD, DB_SERVER, DB_PORT, DB_NAME }
-} = require("../utils");
+} = require('../utils')
 
-const promise = require("bluebird");
+const promise = require('bluebird')
 
-const testeDBs = {};
+const testeDBs = {}
 
-const db = {};
+const db = {}
 
-db.pgp = require("pg-promise")({
+db.pgp = require('pg-promise')({
   promiseLib: promise
-});
+})
 
 db.createConn = async (usuario, senha, server, port, dbname, handle = true) => {
-  const connString = `postgres://${usuario}:${senha}@${server}:${port}/${dbname}`;
-  
+  const connString = `postgres://${usuario}:${senha}@${server}:${port}/${dbname}`
+
   if (!(connString in testeDBs)) {
-    testeDBs[connString] = db.pgp(connString);
-    
+    testeDBs[connString] = db.pgp(connString)
+
     await testeDBs[connString]
       .connect()
-      .then(function(obj) {
-        obj.done(); // success, release connection;
+      .then(function (obj) {
+        obj.done() // success, release connection;
       })
-      .catch(function(e){
-        if(!handle){
-          throw new Error();
+      .catch(function (e) {
+        if (!handle) {
+          throw new Error()
         }
         errorHandler(e)
-      });
-    }
-    
-    return testeDBs[connString];
+      })
+  }
+
+  return testeDBs[connString]
 }
 
 db.testConn = async (usuario, senha, server, port, dbname) => {
-  try{
+  try {
     await db.createConn(usuario, senha, server, port, dbname, false)
 
     return true
-  } catch(e){
+  } catch (e) {
     return false
   }
 }
@@ -51,9 +51,8 @@ db.createAdminConn = async (server, port, dbname) => {
   return db.createConn(DB_USER, DB_PASSWORD, server, port, dbname)
 }
 
-
 db.createSapConn = async () => {
-  db.sapConn = await db.createAdminConn(DB_SERVER, DB_PORT, DB_NAME);
+  db.sapConn = await db.createAdminConn(DB_SERVER, DB_PORT, DB_NAME)
 }
 
-module.exports = db;
+module.exports = db

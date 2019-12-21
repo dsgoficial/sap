@@ -1,28 +1,28 @@
-"use strict";
+'use strict'
 
-const db = require("./db");
+const db = require('./db')
 
-const { createPS } = require("./sql_file");
+const { createPS } = require('./sql_file')
 
-const path = require("path");
+const path = require('path')
 
-const revokeSQL = createPS(path.join(__dirname, "sql", "revoke.sql"));
+const revokeSQL = createPS(path.join(__dirname, 'sql', 'revoke.sql'))
 const revokeAllUsersSQL = createPS(
-  path.join(__dirname, "sql", "revoke_all_users.sql")
-);
+  path.join(__dirname, 'sql', 'revoke_all_users.sql')
+)
 
-const managePermissions = {};
+const managePermissions = {}
 
 managePermissions.revokeAllDb = async (servidor, porta, banco) => {
-  const conn = await db.createAdminConn(servidor, porta, banco);
+  const conn = await db.createAdminConn(servidor, porta, banco)
 
-  const query = await conn.oneOrNone(revokeAllUsersSQL);
+  const query = await conn.oneOrNone(revokeAllUsersSQL)
   if (!query) {
-    return null;
+    return null
   }
 
-  return connection.none(query.revoke_query);
-};
+  return conn.none(query.revoke_query)
+}
 
 managePermissions.revokeAndGrantAllExecution = async () => {
   const dbInfos = await db.sapConn.any(
@@ -35,29 +35,29 @@ managePermissions.revokeAndGrantAllExecution = async () => {
         INNER JOIN dgeo.login_temporario AS lt
         ON lt.usuario_id = a.usuario_id AND lt.servidor = bd.servidor AND lt.porta = bd.porta
         WHERE a.tipo_situacao_id = 2`
-  );
+  )
 
   if (!dbInfos) {
-    return null;
+    return null
   }
-  for (let info of dbInfos) {
-    const conn = await db.createAdminConn(info.servidor, info.porta, info.nome);
-    await managePermissions.revokeAllPermissionsUser(info.login, conn);
+  for (const info of dbInfos) {
+    const conn = await db.createAdminConn(info.servidor, info.porta, info.nome)
+    await managePermissions.revokeAllPermissionsUser(info.login, conn)
     await managePermissions.grantPermissionsUser(
       info.atividade_id,
       info.login,
       conn
-    );
+    )
   }
-};
+}
 
 managePermissions.revokeAllPermissionsUser = async (login, connection) => {
-  const query = await connection.oneOrNone(revokeSQL, [login]);
+  const query = await connection.oneOrNone(revokeSQL, [login])
   if (!query) {
-    return null;
+    return null
   }
-  return connection.none(query.revoke_query);
-};
+  return connection.none(query.revoke_query)
+}
 
 managePermissions.grantPermissionsUser = async (
   atividadeId,
@@ -78,144 +78,144 @@ managePermissions.grantPermissionsUser = async (
         INNER JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id
         WHERE a.id = $<atividadeId>`,
     { atividadeId }
-  );
-  if (!grantInfo || grantInfo.length == 0) {
-    return null;
+  )
+  if (!grantInfo || grantInfo.length === 0) {
+    return null
   }
 
   await connection.tx(async t => {
-    const dbName = grantInfo[0].db_nome;
-    await t.none(`GRANT CONNECT ON DATABASE $<dbName:name> TO $<login:name>;`, {
+    const dbName = grantInfo[0].db_nome
+    await t.none('GRANT CONNECT ON DATABASE $<dbName:name> TO $<login:name>;', {
       dbName,
       login
-    });
+    })
 
     const schemasSQL = grantInfo
       .map(v => v.schema)
       .filter((v, i, array) => array.indexOf(v) === i)
       .map(v => `GRANT USAGE ON SCHEMA ${v} TO ${login};`)
-      .join(" ")
+      .join(' ')
 
-    await t.none(schemasSQL);
+    await t.none(schemasSQL)
 
-    let camadas;
-    const tipoEtapa = grantInfo[0].tipo_etapa_id;
+    let camadas
+    const tipoEtapa = grantInfo[0].tipo_etapa_id
 
     if (tipoEtapa === 1 || tipoEtapa === 4) {
-      //Execução ou RevCorr
+      // Execução ou RevCorr
       camadas = grantInfo
-        .filter(v => v.camada_apontamento == false)
+        .filter(v => v.camada_apontamento === false)
         .map(v => `${v.schema}.${v.nome_camada}`)
-        .filter((v, i, array) => array.indexOf(v) === i);
+        .filter((v, i, array) => array.indexOf(v) === i)
     }
 
     if (tipoEtapa === 2 || tipoEtapa === 3) {
-      //Revisão e Correção
+      // Revisão e Correção
       camadas = grantInfo
         .map(v => `${v.schema}.${v.nome_camada}`)
-        .filter((v, i, array) => array.indexOf(v) === i);
+        .filter((v, i, array) => array.indexOf(v) === i)
     }
 
     if (tipoEtapa === 3) {
-      //Correção
+      // Correção
       const camadasApontamentoSQL = grantInfo
-        .filter(v => v.camada_apontamento == true)
+        .filter(v => v.camada_apontamento === true)
         .filter((v, i, array) => array.indexOf(v) === i)
         .map(
           v =>
             `GRANT SELECT ON ${v.schema}.${v.nome_camada} TO ${login}; GRANT UPDATE(${v.atributo_justificativa_apontamento}, ${v.atributo_situacao_correcao}) ON ${v.schema}.${v.nome_camada} TO ${login};`
         )
-        .join(" ")
+        .join(' ')
 
-      await t.none(camadasApontamentoSQL);
+      await t.none(camadasApontamentoSQL)
 
       const outrasCamadasSQL = grantInfo
-        .filter(v => v.camada_apontamento == false)
+        .filter(v => v.camada_apontamento === false)
         .filter((v, i, array) => array.indexOf(v) === i)
         .map(
           v =>
             `GRANT SELECT, INSERT, DELETE, UPDATE ON ${v.schema}.${v.nome_camada} TO ${login};`
         )
-        .join(" ")
+        .join(' ')
 
-      await t.none(outrasCamadasSQL);
+      await t.none(outrasCamadasSQL)
     } else {
       const camadasSql = camadas.map(
         v =>
           `GRANT SELECT, INSERT, DELETE, UPDATE ON ${v} TO ${login};`
       )
-      .join(" ")
+        .join(' ')
 
-      await t.none(camadasSql);
+      await t.none(camadasSql)
     }
 
     const enableRLS = camadas
       .map(v => `ALTER TABLE ${v} ENABLE ROW LEVEL SECURITY;`)
-      .join(" ")
+      .join(' ')
 
-    await t.none(enableRLS);
+    await t.none(enableRLS)
 
-    let createPolicy;
-    const geom = grantInfo[0].geom;
+    let createPolicy
+    const geom = grantInfo[0].geom
 
     if (tipoEtapa === 1 || tipoEtapa === 4 || tipoEtapa === 2) {
-      //Execução, Revisão, RevCorr POLICY
+      // Execução, Revisão, RevCorr POLICY
       createPolicy = camadas
         .map(v => {
-          let policyName = `policy_${login}_${v.replace(".", "_")}`;
-          let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`;
+          const policyName = `policy_${login}_${v.replace('.', '_')}`
+          let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`
           if (v.atributo_filtro_subfase) {
-            const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`;
-            spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`;
+            const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`
+            spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`
           }
-          return `CREATE POLICY sel${policyName} ON ${v} FOR SELECT TO ${login} USING (TRUE); CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`;
+          return `CREATE POLICY sel${policyName} ON ${v} FOR SELECT TO ${login} USING (TRUE); CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
         })
-        .join(" ");
+        .join(' ')
     }
 
     if (tipoEtapa === 3) {
-      //Correção
-      let flagPolicy = grantInfo
-        .filter(v => v.camada_apontamento == true)
+      // Correção
+      const flagPolicy = grantInfo
+        .filter(v => v.camada_apontamento === true)
         .map(v => `${v.schema}.${v.nome_camada}`)
         .filter((v, i, array) => array.indexOf(v) === i)
         .map(v => {
-          let policyName = `flagpolicy_${login}_${v.replace(".", "_")}`;
-          let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`;
+          const policyName = `flagpolicy_${login}_${v.replace('.', '_')}`
+          let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`
           if (v.atributo_filtro_subfase) {
-            const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`;
-            spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`;
+            const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`
+            spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`
           }
-          return `CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`;
+          return `CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
         })
-        .join(" ");
+        .join(' ')
 
-      let otherPolicy = grantInfo
-        .filter(v => v.camada_apontamento == false)
+      const otherPolicy = grantInfo
+        .filter(v => v.camada_apontamento === false)
         .map(v => `${v.schema}.${v.nome_camada}`)
         .filter((v, i, array) => array.indexOf(v) === i)
         .map(v => {
-          let policyName = `otherpolicy_${login}_${v.replace(".", "_")}`;
-          let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`;
+          const policyName = `otherpolicy_${login}_${v.replace('.', '_')}`
+          let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`
           if (v.atributo_filtro_subfase) {
-            const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`;
-            spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`;
+            const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`
+            spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`
           }
-          return `CREATE POLICY sel${policyName} ON ${v} FOR SELECT TO ${login} USING (TRUE); CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`;
+          return `CREATE POLICY sel${policyName} ON ${v} FOR SELECT TO ${login} USING (TRUE); CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
         })
-        .join(" ");
+        .join(' ')
 
-      createPolicy = `${flagPolicy} ${otherPolicy}`;
+      createPolicy = `${flagPolicy} ${otherPolicy}`
     }
 
-    await t.none(createPolicy);
+    await t.none(createPolicy)
 
     await t.none(
-      `GRANT USAGE ON SCHEMA PUBLIC TO $<login:name>; GRANT SELECT ON ALL TABLES IN SCHEMA public TO $<login:name>;`,
+      'GRANT USAGE ON SCHEMA PUBLIC TO $<login:name>; GRANT SELECT ON ALL TABLES IN SCHEMA public TO $<login:name>;',
       { login }
-    );
+    )
 
-    //grant select sequenciador
+    // grant select sequenciador
     const sequenceSQL = await t.oneOrNone(
       `SELECT string_agg(query, ' ') AS grant_sequence FROM (
             SELECT 'GRANT USAGE, SELECT ON SEQUENCE ' || replace(replace(column_default, '''::regclass)',''), 'nextval(''','') || ' TO ' || $<login> || ';' AS query
@@ -224,12 +224,12 @@ managePermissions.grantPermissionsUser = async (
             AND column_default ~ 'nextval'
             ) AS foo;`,
       { camadas, login }
-    );
+    )
     if (sequenceSQL) {
-      await t.none(sequenceSQL.grant_sequence);
+      await t.none(sequenceSQL.grant_sequence)
     }
 
-    //grant trigger function
+    // grant trigger function
     const triggerSQL = await t.oneOrNone(
       `SELECT string_agg(query, ' ') AS grant_trigger FROM (
                 SELECT 'GRANT EXECUTE ON FUNCTION ' || routine_schema || '.' || routine_name || '(' || 
@@ -242,7 +242,7 @@ managePermissions.grantPermissionsUser = async (
                 WHERE info_t.event_object_schema || '.' || info_t.event_object_table IN ($<camadas:csv>)
             ) AS foo;`,
       { camadas, login }
-    );
+    )
     const triggerSchema = await t.oneOrNone(
       `SELECT string_agg(query, ' ') AS grant_trigger FROM (
                 SELECT 'GRANT USAGE ON SCHEMA ' || routine_schema || ' TO ' || $<login> || ';' AS query
@@ -253,16 +253,16 @@ managePermissions.grantPermissionsUser = async (
                 WHERE info_t.event_object_schema || '.' || info_t.event_object_table IN ($<camadas:csv>)
             ) AS foo;`,
       { camadas, login }
-    );
+    )
 
     if (triggerSQL) {
-      await t.none(triggerSQL.grant_trigger);
+      await t.none(triggerSQL.grant_trigger)
     }
     if (triggerSchema) {
-      await t.none(triggerSchema.grant_trigger);
+      await t.none(triggerSchema.grant_trigger)
     }
 
-    //grant select nos dominios relacionados
+    // grant select nos dominios relacionados
     const fkSQL = await t.oneOrNone(
       `SELECT string_agg(query, ' ') AS grant_fk FROM (
                 SELECT 'GRANT SELECT ON ' || ccu.table_schema || '.' || ccu.table_name || ' TO ' || $<login> || ';' AS query
@@ -272,7 +272,7 @@ managePermissions.grantPermissionsUser = async (
                 AND tc.constraint_type = 'FOREIGN KEY'
             ) AS foo;`,
       { camadas, login }
-    );
+    )
 
     const fkSchema = await t.oneOrNone(
       `SELECT string_agg(query, ' ') AS grant_fk FROM (
@@ -283,14 +283,14 @@ managePermissions.grantPermissionsUser = async (
                 AND tc.constraint_type = 'FOREIGN KEY'
             ) AS foo;`,
       { camadas, login }
-    );
+    )
     if (fkSQL) {
-      await t.none(fkSQL.grant_fk);
+      await t.none(fkSQL.grant_fk)
     }
     if (fkSchema) {
-      await t.none(fkSchema.grant_fk);
+      await t.none(fkSchema.grant_fk)
     }
-  });
-};
+  })
+}
 
-module.exports = managePermissions;
+module.exports = managePermissions

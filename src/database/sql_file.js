@@ -1,8 +1,8 @@
-"use strict";
+'use strict'
 
-const { QueryFile, PreparedStatement: PS } = require("pg-promise");
+const { QueryFile, PreparedStatement: PS } = require('pg-promise')
 
-const { AppError, errorHandler } = require("../utils");
+const { AppError, errorHandler } = require('../utils')
 
 /**
  * Lê arquivo SQL e retorna QueryFile para uso no pgPromise
@@ -10,13 +10,13 @@ const { AppError, errorHandler } = require("../utils");
  * @returns {QueryFile} Retorna objeto QueryFile do pgPromise
  */
 const readSqlFile = file => {
-  const qf = new QueryFile(file, { minify: true });
+  const qf = new QueryFile(file, { minify: true })
 
   if (qf.error) {
-    throw new AppError("Erro carregando os arquivos SQL", null, qf.error);
+    throw new AppError('Erro carregando os arquivos SQL', null, qf.error)
   }
-  return qf;
-};
+  return qf
+}
 
 /**
  * Cria um PreparedStatement para uso no pgPromise
@@ -25,12 +25,12 @@ const readSqlFile = file => {
  */
 const createPS = sql => {
   try {
-    const psName = sql.split(/.*[\/|\\]/)[1].replace(".sql", "");
+    const psName = sql.split(/.*[\/|\\]/)[1].replace('.sql', '')
 
-    return new PS({ name: psName, text: readSqlFile(sql) });
+    return new PS({ name: psName, text: readSqlFile(sql) })
   } catch (e) {
-    errorHandler(e);
+    errorHandler(e)
   }
-};
+}
 
-module.exports = {readSqlFile, createPS};
+module.exports = { readSqlFile, createPS }

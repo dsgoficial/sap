@@ -1,8 +1,8 @@
-"use strict";
+'use strict'
 
-const Joi = require("joi");
+const Joi = require('joi')
 
-const models = {};
+const models = {}
 
 models.feicao = Joi.object().keys({
   atividade_id: Joi.number()
@@ -23,11 +23,11 @@ models.feicao = Joi.object().keys({
           .required(),
         comprimento: Joi.number()
           .strict()
-          .when("operacao", { is: 1, then: Joi.required() }),
+          .when('operacao', { is: 1, then: Joi.required() }),
         vertices: Joi.number()
           .integer()
           .strict()
-          .when("operacao", { is: 1, then: Joi.required() }),
+          .when('operacao', { is: 1, then: Joi.required() }),
         camada_id: Joi.number()
           .integer()
           .strict()
@@ -36,7 +36,7 @@ models.feicao = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.apontamento = Joi.object().keys({
   atividade_id: Joi.number()
@@ -56,7 +56,7 @@ models.apontamento = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.tela = Joi.object().keys({
   atividade_id: Joi.number()
@@ -86,7 +86,7 @@ models.tela = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.comportamento = Joi.object().keys({
   atividade_id: Joi.number()
@@ -102,6 +102,6 @@ models.comportamento = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
-module.exports = models;
+module.exports = models

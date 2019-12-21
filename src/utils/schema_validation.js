@@ -1,7 +1,7 @@
-"use strict";
+'use strict'
 
-const AppError = require("./App_error");
-const httpCode = require("./http_code");
+const AppError = require('./App_error')
+const httpCode = require('./http_code')
 
 /**
  * Retorna objeto de erro da validação realizada pelo middleware do Joi
@@ -11,15 +11,15 @@ const httpCode = require("./http_code");
  * @returns {AppError} Objeto de erro da validação
  */
 const validationError = (error, context) => {
-  const { details } = error;
-  const message = details.map(i => i.message).join(",");
+  const { details } = error
+  const message = details.map(i => i.message).join(',')
 
   return new AppError(
     `Erro de validação dos ${context}. Mensagem de erro: ${message}`,
     httpCode.BadRequest,
     message
-  );
-};
+  )
+}
 
 /**
  *
@@ -39,31 +39,31 @@ const middleware = ({
     if (querySchema) {
       const { error } = querySchema.validate(req.query, {
         abortEarly: false
-      });
+      })
       if (error) {
-        return next(validationError(error, "Query"));
+        return next(validationError(error, 'Query'))
       }
     }
     if (paramsSchema) {
       const { error } = paramsSchema.validate(req.params, {
         abortEarly: false
-      });
+      })
       if (error) {
-        return next(validationError(error, "Parâmetros"));
+        return next(validationError(error, 'Parâmetros'))
       }
     }
     if (bodySchema) {
       const { error } = bodySchema.validate(req.body, {
         stripUnknown: true,
         abortEarly: false
-      });
+      })
       if (error) {
-        return next(validationError(error, "Dados"));
+        return next(validationError(error, 'Dados'))
       }
     }
 
-    return next();
-  };
-};
+    return next()
+  }
+}
 
-module.exports = middleware;
+module.exports = middleware

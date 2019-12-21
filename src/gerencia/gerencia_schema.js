@@ -1,22 +1,22 @@
-"use strict";
+'use strict'
 
-const Joi = require("joi");
+const Joi = require('joi')
 
-const models = {};
+const models = {}
 
 models.idParams = Joi.object().keys({
   id: Joi.string()
     .regex(/^[0-9]+$/)
     .required()
-});
+})
 
 models.proximaQuery = Joi.object().keys({
-  proxima: Joi.string().valid("true", "false")
-});
+  proxima: Joi.string().valid('true', 'false')
+})
 
 models.emAndamentoQuery = Joi.object().keys({
-  em_andamento: Joi.string().valid("true", "false")
-});
+  em_andamento: Joi.string().valid('true', 'false')
+})
 
 models.unidadeTrabalhoDisponivel = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
@@ -28,7 +28,7 @@ models.unidadeTrabalhoDisponivel = Joi.object().keys({
     .required()
     .min(1),
   disponivel: Joi.boolean().required()
-});
+})
 
 models.atividadePausar = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
@@ -39,7 +39,7 @@ models.atividadePausar = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.atividadeReiniciar = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
@@ -50,7 +50,7 @@ models.atividadeReiniciar = Joi.object().keys({
     )
     .required()
     .min(1)
-});
+})
 
 models.filaPrioritaria = Joi.object().keys({
   atividade_ids: Joi.array()
@@ -69,7 +69,7 @@ models.filaPrioritaria = Joi.object().keys({
     .integer()
     .strict()
     .required()
-});
+})
 
 models.filaPrioritariaGrupo = Joi.object().keys({
   atividade_ids: Joi.array()
@@ -88,7 +88,7 @@ models.filaPrioritariaGrupo = Joi.object().keys({
     .integer()
     .strict()
     .required()
-});
+})
 
 models.observacao = Joi.object().keys({
   atividade_ids: Joi.array()
@@ -100,21 +100,21 @@ models.observacao = Joi.object().keys({
     .required()
     .min(1),
   observacao_atividade: Joi.string()
-    .allow("", null)
+    .allow('', null)
     .required(),
   observacao_etapa: Joi.string()
-    .allow("", null)
+    .allow('', null)
     .required(),
   observacao_subfase: Joi.string()
-    .allow("", null)
+    .allow('', null)
     .required(),
   observacao_unidade_trabalho: Joi.string()
-    .allow("", null)
+    .allow('', null)
     .required(),
   observacao_lote: Joi.string()
-    .allow("", null)
+    .allow('', null)
     .required()
-});
+})
 
 models.atividadeVoltar = Joi.object().keys({
   atividade_ids: Joi.array()
@@ -128,7 +128,7 @@ models.atividadeVoltar = Joi.object().keys({
   manter_usuarios: Joi.boolean()
     .strict()
     .required()
-});
+})
 
 models.atividadeAvancar = Joi.object().keys({
   atividade_ids: Joi.array()
@@ -142,7 +142,7 @@ models.atividadeAvancar = Joi.object().keys({
   concluida: Joi.boolean()
     .strict()
     .required()
-});
+})
 
 models.bancoDados = Joi.object().keys({
   servidor: Joi.string().required(),
@@ -151,6 +151,6 @@ models.bancoDados = Joi.object().keys({
     .strict()
     .required(),
   banco: Joi.string().required()
-});
+})
 
-module.exports = models;
+module.exports = models
