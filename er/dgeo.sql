@@ -12,7 +12,7 @@ CREATE TABLE dgeo.usuario(
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
   tipo_turno_id SMALLINT NOT NULL REFERENCES dominio.tipo_turno (code),
   tipo_posto_grad_id SMALLINT NOT NULL REFERENCES dominio.tipo_posto_grad (code),
-  uuid UUID NOT NULL UNIQUE DEFAULT uuid_generate_v4()
+  uuid UUID NOT NULL UNIQUE
 );
 
 CREATE TABLE dgeo.login_temporario(
