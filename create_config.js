@@ -58,7 +58,7 @@ const verifyLoginAuthServer = async (servidor, usuario, senha) => {
 
     return response.data.success || false;
   } catch (e) {
-    throw new Error("Erro ao se comunicar com o servidor de autenticação")
+    throw new Error("Erro ao se comunicar com o servidor de autenticação");
   }
 };
 
@@ -304,6 +304,8 @@ const createConfig = async () => {
     console.log(
       "Arquivo de configuração (config.env) criado com sucesso!".blue
     );
+
+    require("./create_documentation");
   } catch (e) {
     handleError(e);
   }

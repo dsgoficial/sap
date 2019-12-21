@@ -12,6 +12,7 @@
     "npm": ">=5.4.2"
   },
   "scripts": {
+    "create-docs": "node create_documentation.js",
     "dev": "nodemon src/index.js",
     "dev-multicore": "nodemon src/index.js --multicore",
     "dev-https": "nodemon src/index.js --https",

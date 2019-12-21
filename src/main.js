@@ -8,7 +8,7 @@ if (isMaster) {
   setupWorkerProcesses();
 } else {
   const { errorHandler } = require("./utils");
-  const { startServer, createDocumentation } = require("./server");
+  const { startServer } = require("./server");
   const { db, databaseVersion } = require("./database");
   const { verifyAuthServer } = require("./authentication");
 

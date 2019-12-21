@@ -175,7 +175,8 @@ INSERT INTO dominio.tipo_configuracao (code, nome) VALUES
 (2, 'DSGTools - Mão livre'),
 (3, 'DSGTools - Seletor Genérico'),
 (4, 'DSGTools - Ângulo Reto'),
-(5, 'DSGTools - Informação Raster');
+(5, 'DSGTools - Informação Raster'),
+(6, 'Escala minima para aquisição');
 
 CREATE TABLE dominio.tipo_problema(
 	code SERIAL NOT NULL PRIMARY KEY,

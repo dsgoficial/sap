@@ -26,7 +26,9 @@ const getUsuarioNomeById = async usuarioId => {
 };
 
 controller.getEstilos = async () => {
-  return db.sapConn.any(`SELECT * FROM dgeo.layer_styles`);
+  return db.sapConn
+    .any(`SELECT f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, ui, owner, update_time
+   FROM dgeo.layer_styles`);
 };
 
 controller.getRegras = async () => {
@@ -34,22 +36,26 @@ controller.getRegras = async () => {
   SELECT gr.grupo_regra, gr.cor_rgb
   FROM dgeo.group_rules AS gr
   `);
-  
+
   const regras = await db.sapConn.any(`
-    SELECT lr.id, gr.grupo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.descricao
+    SELECT lr.id, gr.grupo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.descricao, lr.owner, lr.update_time
     FROM dgeo.group_rules AS gr
     INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
     `);
 
-  return {grupo_regras, regras}
+  return { grupo_regras, regras };
 };
 
 controller.getModelos = async () => {
-  return db.sapConn.any(`SELECT * FROM dgeo.layer_qgis_models`);
+  return db.sapConn.any(
+    `SELECT nome, descricao, model_xml, owner, update_time FROM dgeo.layer_qgis_models`
+  );
 };
 
 controller.getMenus = async () => {
-  return db.sapConn.any(`SELECT * FROM dgeo.layer_menus`);
+  return db.sapConn.any(
+    `SELECT id, definicao_menu, owner, update_time FROM dgeo.layer_menus`
+  );
 };
 
 controller.gravaEstilos = async (estilos, usuarioId) => {
@@ -112,14 +118,11 @@ controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
       table: "group_rules",
       schema: "dgeo"
     });
-    const csGroup = new db.pgp.helpers.ColumnSet(
-      [
-        "grupo_regra",
-        "cor_rgb"
-      ],
-      { table: tableGroup }
-    );
-    const queryGroup = db.pgp.helpers.insert(grupoRegras, csGroup) + 'RETURNING id, grupo_regra';
+    const csGroup = new db.pgp.helpers.ColumnSet(["grupo_regra", "cor_rgb"], {
+      table: tableGroup
+    });
+    const queryGroup =
+      db.pgp.helpers.insert(grupoRegras, csGroup) + "RETURNING id, grupo_regra";
 
     const grupos = await t.any(queryGroup);
 
@@ -144,7 +147,7 @@ controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
 
     const values = [];
     regras.forEach(d => {
-      const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra)
+      const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra);
 
       values.push({
         grupo_regra_id: grupoRegra.id,
@@ -212,7 +215,7 @@ controller.gravaMenus = async (menus, usuarioId) => {
     });
 
     const cs = new db.pgp.helpers.ColumnSet(
-      ["nome_menu", "definicao_menu", "ordem_menu", "owner", "update_time"],
+      ["nome_menu", "definicao_menu", "owner", "update_time"],
       { table }
     );
 
@@ -221,7 +224,6 @@ controller.gravaMenus = async (menus, usuarioId) => {
       values.push({
         nome_menu: d.nome_menu,
         definicao_menu: d.definicao_menu,
-        ordem_menu: d.ordem_menu,
         owner: usuarioPostoNome,
         update_time: dataGravacao
       });

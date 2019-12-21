@@ -82,7 +82,6 @@ CREATE TABLE dgeo.layer_menus(
 	  id SERIAL NOT NULL PRIMARY KEY,
     nome text NOT NULL,
     definicao_menu text NOT NULL,
-    ordem_menu text NOT NULL,
     owner varchar(255) NOT NULL,
 	  update_time timestamp without time zone NOT NULL DEFAULT now(),
     CONSTRAINT unique_menus UNIQUE (nome)

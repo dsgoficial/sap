@@ -233,7 +233,6 @@ CREATE TABLE macrocontrole.atributo(
 CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id SMALLINT NOT NULL REFERENCES macrocontrole.camada (id),
-	escala_trabalho INTEGER,
 	atributo_filtro_subfase VARCHAR(255),
 	camada_apontamento BOOLEAN NOT NULL DEFAULT FALSE,
 	atributo_situacao_correcao VARCHAR(255),

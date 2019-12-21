@@ -685,7 +685,6 @@
                                 {
                                     "camada": "infra_via_deslocamento_l",
                                     "schema": "edgv",
-                                    "escala_trabalho": 4000,
                                     "atributo_filtro_subfase": null,
                                     "camada_apontamento": false,
                                     "atributo_situacao_correcao": null,

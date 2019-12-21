@@ -30,7 +30,7 @@ const app = express();
 //Add sendJsonAndLog to res object
 app.use(sendJsonAndLogMiddleware);
 
-app.use(bodyParser.json({limit: '50mb'})); //parsear POST em JSON
+app.use(bodyParser.json({ limit: "50mb" })); //parsear POST em JSON
 app.use(hpp()); //protection against parameter polution
 
 //CORS middleware
@@ -73,7 +73,7 @@ app.get("/", (req, res, next) => {
 app.use("/api_docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //Serve JSDocs
-app.use("/js_docs", express.static(path.join(__dirname, "js_docs")));
+app.use("/js_docs", express.static(path.join(__dirname, "../js_docs")));
 
 //Handle missing URL
 app.use((req, res, next) => {

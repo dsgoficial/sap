@@ -43,7 +43,9 @@ models.estilos = Joi.object().keys({
         stylename: Joi.string().required(),
         styleqml: Joi.string().required(),
         stylesld: Joi.string().required(),
-        ui: Joi.string().allow('', null).required()
+        ui: Joi.string()
+          .allow("", null)
+          .required()
       })
     )
     .required()
@@ -54,8 +56,7 @@ models.menus = Joi.object().keys({
     .items(
       Joi.object().keys({
         nome_menu: Joi.string().required(),
-        definicao_menu: Joi.string().required(),
-        ordem_menu: Joi.string().required()
+        definicao_menu: Joi.string().required()
       })
     )
     .required()
@@ -74,7 +75,7 @@ models.regras = Joi.object().keys({
       })
     )
     .required(),
-    grupo_regras: Joi.array()
+  grupo_regras: Joi.array()
     .items(
       Joi.object().keys({
         grupo_regra: Joi.string().required(),
@@ -186,7 +187,9 @@ models.camadas = Joi.object().keys({
         schema: Joi.string().required(),
         nome: Joi.string().required(),
         alias: Joi.string().required(),
-        documentacao: Joi.string().uri().required()
+        documentacao: Joi.string()
+          .uri()
+          .required()
       })
     )
     .min(1)
@@ -204,7 +207,9 @@ models.camadasAtualizacao = Joi.object().keys({
         schema: Joi.string().required(),
         nome: Joi.string().required(),
         alias: Joi.string().required(),
-        documentacao: Joi.string().uri().required()
+        documentacao: Joi.string()
+          .uri()
+          .required()
       })
     )
     .min(1)

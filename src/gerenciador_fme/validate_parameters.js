@@ -12,6 +12,7 @@ const verifyParameters = parameters => {
     "dbhost",
     "dbport",
     "dbarea",
+    "dbsubfase",
     "LOG_FILE"
   ];
   return parameters.every(p => possibleParameters.includes(p));
