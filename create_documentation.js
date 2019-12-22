@@ -26,4 +26,8 @@ const buildDocumentation = async () => {
     })
 }
 
-buildDocumentation()
+if (typeof require !== 'undefined' && require.main === module) {
+  buildDocumentation()
+}
+
+module.exports = buildDocumentation
