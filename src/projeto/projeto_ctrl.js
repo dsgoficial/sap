@@ -148,7 +148,12 @@ controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
     const values = []
     regras.forEach(d => {
       const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra)
-
+      if(!grupoRegra){
+        throw new AppError(
+          'Existe uma ou mais regras com um grupo regra não definido.',
+          httpCode.BadRequest
+        )
+      }
       values.push({
         grupo_regra_id: grupoRegra.id,
         schema: d.schema,
