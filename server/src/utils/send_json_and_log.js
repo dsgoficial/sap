@@ -19,14 +19,15 @@ const truncate = dados => {
   }
 }
 const sendJsonAndLogMiddleware = (req, res, next) => {
-  res.sendJsonAndLog = (success, message, status, dados = null) => {
+  res.sendJsonAndLog = (success, message, status, dados = null, error = null) => {
     const url = req.protocol + '://' + req.get('host') + req.originalUrl
 
     logger.info(message, {
       url,
       information: truncate(req.body),
       status,
-      success
+      success,
+      error
     })
 
     const userMessage = status === 500 ? 'Erro no servidor' : message

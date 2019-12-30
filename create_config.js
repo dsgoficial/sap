@@ -10,7 +10,6 @@ const path = require('path')
 const promise = require('bluebird')
 const crypto = require('crypto')
 const axios = require('axios')
-const buildDocumentation = require('./create_documentation')
 
 const pgp = require('pg-promise')({
   promiseLib: promise
@@ -308,7 +307,6 @@ const createConfig = async () => {
       'Arquivo de configuração (config.env) criado com sucesso!'.blue
     )
 
-    buildDocumentation()
   } catch (e) {
     handleError(e)
   }

@@ -11,12 +11,12 @@ const errorHandler = (err, res = null) => {
   const errorTrace = err.errorTrace || serializeError(err) || null
 
   if (res && res.sendJsonAndLog) {
-    return res.sendJsonAndLog(false, message, statusCode)
+    return res.sendJsonAndLog(false, message, statusCode, null, errorTrace)
   }
 
   logger.error(message, {
-    information: errorTrace,
-    statusCode: statusCode,
+    error: errorTrace,
+    status: statusCode,
     success: false
   })
   // exit node with error
