@@ -7,9 +7,9 @@ const models = {}
 models.login = Joi.object().keys({
   usuario: Joi.string().required(),
   senha: Joi.string().required(),
-  cliente: Joi.string().valid('qgis', 'browser').required(),
+  cliente: Joi.string().valid('sap_fp', 'sap_fg', 'sap_web').required(),
   plugins: Joi.when('cliente', {
-    is: 'qgis',
+    is: Joi.string().regex(/^(sap_fp|sap_fg)$/),
     then: Joi.array().items(
       Joi.object({
         nome: Joi.string().required(),
@@ -19,7 +19,7 @@ models.login = Joi.object().keys({
     otherwise: Joi.forbidden()
   }),
   qgis: Joi.when('cliente', {
-    is: 'qgis',
+    is: Joi.string().regex(/^(sap_fp|sap_fg)$/),
     then: Joi.string().required(),
     otherwise: Joi.forbidden()
   })

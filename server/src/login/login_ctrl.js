@@ -109,12 +109,12 @@ controller.login = async (usuario, senha, cliente, plugins, qgis) => {
     )
   }
 
-  const verifyAuthentication = await authenticateUser(usuario, senha)
+  const verifyAuthentication = await authenticateUser(usuario, senha, cliente)
   if (!verifyAuthentication) {
     throw new AppError('Usuário ou senha inválida', httpCode.Unauthorized)
   }
 
-  if (cliente === 'qgis') {
+  if (cliente === 'sap_fp' || cliente === 'sap_fg') {
     await verificaQGIS(qgis)
 
     await verificaPlugins(plugins)
