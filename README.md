@@ -1,4 +1,4 @@
-﻿# Sistema de Apoio a Produção (SAP) v2.0
+﻿# Sistema de Apoio a Produção (SAP)
 
 Serviço em Node.js para gerenciamento da produção cartográfica.
 
@@ -11,16 +11,23 @@ As vantagens são:
 * Centralização das informações de produção, como data de ínicio, data de fim e quem realizou a atividade
 * Acompanhamento gráfico da produção
 * Monitoramento da produção por feição, apontamentos ou tela (microcontrole da produção)
-* Possibilidade de trabalho em banco de dados geoespaciais contínuo, apresentando somente o subconjunto necessário dos dados para o operadoro
+* Possibilidade de trabalho em banco de dados geoespaciais contínuo, apresentando somente o subconjunto necessário dos dados para o operador
 * Geração de metadados compatíveis com a ET-PCDG
 * Integração com [DSGDocs](https://github.com/1cgeo/dsgdocs)
 * Integração com [Gerenciador do FME](https://github.com/1cgeo/gerenciador_fme)
 * Integração com [DSGTools](https://github.com/dsgoficial/DsgTools)
 
-Para maiores informações verifique a [Wiki](https://github.com/1cgeo/sap/wiki)
+Para sua utilização é necessária a utilização do [Serviço de Autenticação](https://github.com/1cgeo/auth_server)
 
 Para o cliente web verifique [SAP Dashboard](https://github.com/1cgeo/sap_dashboard)
 
 Para acesso ao cliente QGIS do usuário verifique [Ferramentas de Produção](https://github.com/1cgeo/Ferramentas_Producao)
 
 Para acesso ao cliente QGIS do gerente verifique [Ferramentas de Gerencia](https://github.com/1cgeo/Ferramentas_Gerencia)
+
+Para maiores informações verifique a [Wiki](https://github.com/1cgeo/sap/wiki)
+
+## Releases
+
+* [v1.1.1](https://github.com/1cgeo/sap/tree/1.1.1)
+
