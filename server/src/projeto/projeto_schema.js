@@ -25,7 +25,7 @@ models.usuarios = Joi.object().keys({
           .strict()
           .required(),
         uuid: Joi.string()
-          .guid()
+          .guid({ version: 'uuidv4' })
           .required()
       })
     )

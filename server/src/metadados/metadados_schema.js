@@ -6,7 +6,7 @@ const models = {}
 
 models.uuidParams = Joi.object().keys({
   uuid: Joi.string()
-    .guid()
+    .guid({ version: 'uuidv4' })
     .required()
 })
 
