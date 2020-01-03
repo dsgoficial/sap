@@ -540,7 +540,7 @@ CREATE TABLE macrocontrole.perda_recurso_humano(
  	usuario_id SMALLINT NOT NULL REFERENCES dgeo.usuario (id),
  	tipo_perda_recurso_humano_id SMALLINT NOT NULL REFERENCES dominio.tipo_perda_recurso_humano (code),
 	horas REAL,
-	data DATE NOT NULL,
+	data timestamp with time zone NOT NULL,
 	observacao TEXT
 );
 
