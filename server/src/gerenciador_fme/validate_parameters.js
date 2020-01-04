@@ -12,10 +12,10 @@ const verifyParameters = parameters => {
     'dbhost',
     'dbport',
     'dbarea',
-    'dbsubfase',
+    'sapsubfase',
     'LOG_FILE'
   ]
-  return parameters.every(p => possibleParameters.includes(p))
+  return parameters.every(p => possibleParameters.some(pp => p.includes(pp)))
 }
 
 const getRotinas = async servidorId => {
@@ -25,21 +25,19 @@ const getRotinas = async servidorId => {
     `,
     { servidorId }
   )
-  if (!servidorId) {
+  if (!serverInfo) {
     throw new AppError(
       'Gerenciador do FME informado não está cadastrado no SAP.',
       httpCode.BadRequest
     )
   }
   try {
-    const serverurl = `${serverInfo.servidor}:${serverInfo.porta}/workspaces/version?last=true`
+    const serverurl = `${serverInfo.servidor}:${serverInfo.porta}/rotinas`
     const response = await axios.get(serverurl)
-    const test =
-      !response ||
+    if (!response ||
       response.status !== 200 ||
       !('data' in response) ||
-      !('dados' in response.data)
-    if (test) {
+      !('dados' in response.data)) {
       throw new Error()
     }
     return response.data.dados
@@ -62,10 +60,10 @@ const validadeParameters = async rotinas => {
     dadosServidores[s] = await getRotinas(s)
   }
 
-  rotinas.forEach(e => {
-    if (!verifyParameters(dadosServidores[e.servidor].parameters)) {
+  rotinas.forEach(r => {
+    if (!verifyParameters(dadosServidores[r.servidor].parametros)) {
       throw new AppError(
-        `A rotina ${e.rotina} não é compatível com o SAP. Verifique seus parâmetros`,
+        `A rotina ${r.rotina} não é compatível com o SAP. Verifique seus parâmetros`,
         httpCode.BadRequest
       )
     }

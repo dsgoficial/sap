@@ -8,12 +8,11 @@ const checkFMEConnection = async (servidor, porta) => {
   try {
     const serverurl = `${servidor}:${porta}`
     const response = await axios.get(serverurl)
-    const test =
-      !response ||
+
+    if (!response ||
       response.status !== 200 ||
       !('data' in response) ||
-      response.data.message !== 'Serviço do Gerenciador do FME operacional'
-    if (test) {
+      response.data.message !== 'Serviço do Gerenciador do FME operacional') {
       throw new Error()
     }
   } catch (e) {
