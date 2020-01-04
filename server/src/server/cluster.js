@@ -22,16 +22,16 @@ const setupWorkerProcesses = () => {
     for (let i = 0; i < numCores; i++) {
       const newCluster = cluster.fork()
 
-      newCluster.on('message', function (message) {
+      newCluster.on('message', message => {
         logger.info(`Worker message: ${message}`, { message })
       })
     }
-    cluster.on('online', function (worker) {
+    cluster.on('online', worker => {
       logger.info(`Worker ${worker.process.pid} iniciado`, {
         worker_pid: worker.process.pid
       })
     })
-    cluster.on('exit', function (worker, code, signal) {
+    cluster.on('exit', (worker, code, signal) => {
       logger.error(
         `Worker ${worker.process.pid} morreu com código ${code} e sinal ${signal}`,
         {

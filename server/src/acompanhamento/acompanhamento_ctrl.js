@@ -85,14 +85,10 @@ const activityStatistics = activityFixed => {
     activityFixed[dia].statistics.media_inatividade =
       notActive / parts['0'].length
     activityFixed[dia].statistics.max_atividade = parts['1'].reduce(
-      function (a, b) {
-        return Math.max(a, b)
-      }
+      (a, b) => Math.max(a, b)
     )
     activityFixed[dia].statistics.max_inatividade = parts['0'].reduce(
-      function (a, b) {
-        return Math.max(a, b)
-      }
+      (a, b) => Math.max(a, b)
     )
   }
   return activityFixed

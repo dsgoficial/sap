@@ -23,10 +23,10 @@ db.createConn = async (usuario, senha, server, port, dbname, handle = true) => {
 
     await testeDBs[connString]
       .connect()
-      .then(function (obj) {
+      .then(obj => {
         obj.done() // success, release connection;
       })
-      .catch(function (e) {
+      .catch(e => {
         if (!handle) {
           throw new Error()
         }

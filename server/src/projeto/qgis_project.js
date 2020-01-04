@@ -7,7 +7,7 @@ const {
 const fs = require('fs')
 const path = require('path')
 
-const qgisProject = (function () {
+const qgisProject = (() => {
   return fs
     .readFileSync(
       path.resolve('./src/templates/sap_config_template.qgs'),

@@ -52,7 +52,7 @@ app.use(limiter)
 routes(app)
 
 // prevent browser from request favicon
-app.get('/favicon.ico', function (req, res) {
+app.get('/favicon.ico', (req, res) => {
   res.status(httpCode.NoContent)
 })
 
