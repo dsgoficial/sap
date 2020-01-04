@@ -5,8 +5,7 @@ const Joi = require('joi')
 const models = {}
 
 models.idParams = Joi.object().keys({
-  id: Joi.string()
-    .regex(/^[0-9]+$/)
+  id: Joi.number().integer()
     .required()
 })
 
@@ -40,7 +39,7 @@ models.mvtParams = Joi.object().keys({
 })
 
 models.diasQuery = Joi.object().keys({
-  dias: Joi.string().regex(/^[0-9]+$/)
+  dias: Joi.number().integer()
 })
 
 models.perdaRecursoHumano = Joi.object().keys({

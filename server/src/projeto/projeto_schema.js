@@ -5,8 +5,7 @@ const Joi = require('joi')
 const models = {}
 
 models.idParams = Joi.object().keys({
-  id: Joi.string()
-    .regex(/^[0-9]+$/)
+  id: Joi.number().integer()
     .required()
 })
 
