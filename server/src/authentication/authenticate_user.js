@@ -33,7 +33,8 @@ const authorization = async (usuario, senha, cliente) => {
     }
     throw new AppError(
       'Erro ao se comunicar com o servidor de autenticação',
-      httpCode.InternalError
+      httpCode.InternalError,
+      e
     )
   }
 }

@@ -18,7 +18,9 @@ const checkFMEConnection = async (servidor, porta) => {
     }
   } catch (e) {
     throw new AppError(
-      'Erro ao se comunicar com o servidor do gerenciador do FME'
+      'Erro ao se comunicar com o servidor do gerenciador do FME',
+      null,
+      e
     )
   }
 }
