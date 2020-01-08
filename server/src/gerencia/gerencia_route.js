@@ -18,7 +18,7 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAtividade(
       req.params.id,
-      req.body.usuarioId // gerenteId
+      req.usuarioId // gerenteId
     )
 
     const msg = dados ? 'Atividade retornada' : 'Atividade não encontrada'
@@ -38,7 +38,7 @@ router.get(
     const dados = await gerenciaCtrl.getAtividadeUsuario(
       req.params.id,
       req.query.proxima,
-      req.body.usuarioId // gerenteId
+      req.usuarioId // gerenteId
     )
     const msg = dados ? 'Atividade retornada' : 'Usuário não possui atividade'
 

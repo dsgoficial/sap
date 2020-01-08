@@ -64,7 +64,7 @@ router.post(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.estilos }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaEstilos(req.body.estilos, req.body.usuarioId)
+    await projetoCtrl.gravaEstilos(req.body.estilos, req.usuarioId)
 
     const msg = 'Estilos gravados com sucesso'
 
@@ -77,7 +77,7 @@ router.post(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.regras }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaRegras(req.body.regras, req.body.grupo_regras, req.body.usuarioId)
+    await projetoCtrl.gravaRegras(req.body.regras, req.body.grupo_regras, req.usuarioId)
 
     const msg = 'Regras gravados com sucesso'
 
@@ -90,7 +90,7 @@ router.post(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.menus }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaMenus(req.body.menus, req.body.usuarioId)
+    await projetoCtrl.gravaMenus(req.body.menus, req.usuarioId)
 
     const msg = 'Menus gravados com sucesso'
 
@@ -103,7 +103,7 @@ router.post(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.qgisModels }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaModelos(req.body.modelos, req.body.usuarioId)
+    await projetoCtrl.gravaModelos(req.body.modelos, req.usuarioId)
 
     const msg = 'Modelos gravados com sucesso'
 

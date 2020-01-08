@@ -27,8 +27,8 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
       httpCode.Forbidden
     )
   }
-  req.body.usuarioId = decoded.id
-  req.body.administrador = true
+  req.usuarioId = decoded.id
+  req.administrador = true
 
   next()
 })

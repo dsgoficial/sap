@@ -17,7 +17,7 @@ router.post(
   schemaValidation({ body: producaoSchema.finaliza }),
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.finaliza(
-      req.body.usuarioId,
+      req.usuarioId,
       req.body.atividade_id,
       req.body.sem_correcao,
       req.body.alterar_fluxo,
@@ -35,7 +35,7 @@ router.get(
   '/verifica',
   verifyLogin,
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.verifica(req.body.usuarioId)
+    const dados = await producaoCtrl.verifica(req.usuarioId)
     const msg = dados
       ? 'Atividade em execução retornada'
       : 'Sem atividade em execução'
@@ -48,7 +48,7 @@ router.post(
   '/inicia',
   verifyLogin,
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.inicia(req.body.usuarioId)
+    const dados = await producaoCtrl.inicia(req.usuarioId)
 
     const msg = dados
       ? 'Atividade iniciada'
@@ -66,7 +66,7 @@ router.post(
     await producaoCtrl.respondeQuestionario(
       req.body.atividade_id,
       req.body.respostas,
-      req.body.usuarioId
+      req.usuarioId
     )
     const msg = 'Questionário enviado com sucesso'
 
@@ -83,7 +83,7 @@ router.post(
       req.body.atividade_id,
       req.body.tipo_problema_id,
       req.body.descricao,
-      req.body.usuarioId
+      req.usuarioId
     )
     const msg = 'Problema de atividade reportado com sucesso'
 
@@ -110,7 +110,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.retornaAtividadeAnterior(
       req.body.atividade_id,
-      req.body.usuarioId
+      req.usuarioId
     )
     const msg = 'Finalização da atividade anterior reportada com sucesso'
 
