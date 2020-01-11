@@ -77,7 +77,7 @@ const verifyLoginAuthServer = async (servidor, usuario, senha) => {
     const response = await axios.post(server, {
       usuario,
       senha,
-      aplicacao: 'fme_web'
+      aplicacao: 'sap_web'
     })
     if (
       !response ||
