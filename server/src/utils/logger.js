@@ -5,7 +5,8 @@ const DailyRotateFile = require('winston-daily-rotate-file')
 
 const fs = require('fs')
 const path = require('path')
-var logDir = './logs'
+const logDir = path.join(__dirname, '..', '..', 'logs')
+
 if (!fs.existsSync(logDir)) {
   // Create the directory if it does not exist
   fs.mkdirSync(logDir)

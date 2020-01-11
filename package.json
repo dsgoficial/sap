@@ -9,8 +9,11 @@
   },
   "scripts": {
     "install-all": "npm install && cd server && npm install && cd ../client && npm install",
-    "start-all": "concurrently \"cd server && npm run dev\" \"cd client && npm run start\"",
-    "config": "node create_config.js"
+    "config": "node create_config.js",
+    "build": "node create_build.js",
+    "create-docs": "node server/create_documentation.js",
+    "start": "pm2 start server/src/index.js --name sap",
+    "start-all-dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run start\""
   },
   "nodemonConfig": {
     "ignore": [
@@ -34,6 +37,8 @@
     "concurrently": "^5.0.2",
     "inquirer": "^7.0.1",
     "pg-promise": "^10.3.1",
-    "pgtools": "^0.3.0"
+    "pgtools": "^0.3.0",
+    "fs-extra": "^8.1.0",
+    "npm-run": "^5.0.1"
   }
 }

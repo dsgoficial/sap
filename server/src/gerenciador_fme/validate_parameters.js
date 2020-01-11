@@ -32,7 +32,7 @@ const getRotinas = async servidorId => {
     )
   }
   try {
-    const serverurl = `${serverInfo.servidor}:${serverInfo.porta}/rotinas`
+    const serverurl = `${serverInfo.servidor}:${serverInfo.porta}/api/rotinas`
     const response = await axios.get(serverurl)
     if (!response ||
       response.status !== 200 ||

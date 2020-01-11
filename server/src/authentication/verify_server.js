@@ -9,7 +9,7 @@ const {
 
 const verifyAuthServer = async () => {
   try {
-    const response = await axios.get(AUTH_SERVER)
+    const response = await axios.get(`${AUTH_SERVER}/api`)
     const test =
       !response ||
       response.status !== 200 ||

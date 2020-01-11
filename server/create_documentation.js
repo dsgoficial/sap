@@ -1,5 +1,5 @@
 'use strict'
-
+const path = require('path')
 const documentation = require('documentation')
 const streamArray = require('stream-array')
 const vfs = require('vinyl-fs')
@@ -10,10 +10,10 @@ const buildDocumentation = async () => {
   console.log('Criação da documentação do código.'.blue)
 
   return documentation
-    .build('src/**/*.js', { shallow: false })
+    .build(path.join(__dirname, 'src', '**', '*.js'), { shallow: false })
     .then(documentation.formats.html)
     .then(output => {
-      streamArray(output).pipe(vfs.dest('./src/js_docs'))
+      streamArray(output).pipe(vfs.dest(path.join(__dirname, 'src', 'js_docs')))
       console.log('Documentação criada com sucesso!'.blue)
     })
     .catch(e => {

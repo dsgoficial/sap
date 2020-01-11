@@ -13,7 +13,7 @@ const decodeJwt = (token, secret) => {
     jwt.verify(token, secret, (err, decoded) => {
       if (err) {
         reject(
-          new AppError('Falha ao autenticar token', httpCode.BadRequest, err)
+          new AppError('Falha ao autenticar token', httpCode.Unauthorized, err)
         )
       }
       resolve(decoded)

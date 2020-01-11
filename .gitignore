@@ -31,6 +31,7 @@ node_modules
 #Build generated
 dist/
 build/
+js_docs/
 
 # Serverless generated files
 .serverless/
@@ -107,10 +108,11 @@ sap_config.qgs~
 
 *.env
 
-src/js_docs/
-
 config.env
 
 sslcert
 
 test_request.http
+
+*.fmw
+

@@ -97,35 +97,35 @@ const signJWT = (data, secret) => {
   })
 }
 
-controller.login = async (usuario, senha, cliente, plugins, qgis) => {
+controller.login = async (usuario, senha, aplicacao, plugins, qgis) => {
   const usuarioDb = await db.sapConn.oneOrNone(
-    'SELECT id, administrador FROM dgeo.usuario WHERE login = $<usuario> and ativo IS TRUE',
+    'SELECT id, uuid, administrador FROM dgeo.usuario WHERE login = $<usuario> and ativo IS TRUE',
     { usuario }
   )
   if (!usuarioDb) {
     throw new AppError(
       'Usuário não autorizado para utilizar o SAP',
-      httpCode.Unauthorized
+      httpCode.BadRequest
     )
   }
 
-  const verifyAuthentication = await authenticateUser(usuario, senha, cliente)
+  const verifyAuthentication = await authenticateUser(usuario, senha, aplicacao)
   if (!verifyAuthentication) {
-    throw new AppError('Usuário ou senha inválida', httpCode.Unauthorized)
+    throw new AppError('Usuário ou senha inválida', httpCode.BadRequest)
   }
 
-  if (cliente === 'sap_fp' || cliente === 'sap_fg') {
+  if (aplicacao === 'sap_fp' || aplicacao === 'sap_fg') {
     await verificaQGIS(qgis)
 
     await verificaPlugins(plugins)
   }
-  const { id, administrador } = usuarioDb
+  const { id, administrador, uuid } = usuarioDb
 
-  const token = await signJWT({ id, administrador }, JWT_SECRET)
+  const token = await signJWT({ id, uuid, administrador }, JWT_SECRET)
 
   await gravaLogin(id)
 
-  return { token, administrador }
+  return { token, administrador, uuid }
 }
 
 module.exports = controller

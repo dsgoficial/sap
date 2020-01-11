@@ -1,4 +1,10 @@
 'use strict'
+const express = require('express')
+
+const { databaseVersion } = require('../database')
+const {
+  httpCode
+} = require('../utils')
 
 const { loginRoute } = require('../login')
 const { producaoRoute } = require('../producao')
@@ -8,19 +14,31 @@ const { projetoRoute } = require('../projeto')
 const { acompanhamentoRoute } = require('../acompanhamento')
 const { metadadosRoute } = require('../metadados')
 
-const routes = app => {
-  app.use('/login', loginRoute)
+const router = express.Router()
 
-  app.use('/distribuicao', producaoRoute)
+router.get('/', (req, res, next) => {
+  return res.sendJsonAndLog(
+    true,
+    'Sistema de Apoio a produção operacional',
+    httpCode.OK,
+    {
+      database_version: databaseVersion.nome
+    }
+  )
+})
 
-  app.use('/microcontrole', microcontroleRoute)
+router.use('/login', loginRoute)
 
-  app.use('/gerencia', gerenciaRoute)
+router.use('/distribuicao', producaoRoute)
 
-  app.use('/projeto', projetoRoute)
+router.use('/microcontrole', microcontroleRoute)
 
-  app.use('/acompanhamento', acompanhamentoRoute)
+router.use('/gerencia', gerenciaRoute)
 
-  app.use('/metadados', metadadosRoute)
-}
-module.exports = routes
+router.use('/projeto', projetoRoute)
+
+router.use('/acompanhamento', acompanhamentoRoute)
+
+router.use('/metadados', metadadosRoute)
+
+module.exports = router

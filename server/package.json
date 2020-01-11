@@ -5,11 +5,9 @@
   "scripts": {
     "create-docs": "node create_documentation.js",
     "dev": "nodemon src/index.js",
-    "dev-multicore": "nodemon src/index.js --multicore",
     "dev-https": "nodemon src/index.js --https",
-    "dev-https-multicore": "nodemon src/index.js --https --multicore",
-    "production": "pm2 start src/index.js -multicore --name sap",
-    "production-https": "pm2 start src/index.js -multicore -https --name sap-https"
+    "production": "pm2 start src/index.js --name sap",
+    "production-https": "pm2 start src/index.js --name sap-https -- --https "
   },
   "nodemonConfig": {
     "ignore": [
