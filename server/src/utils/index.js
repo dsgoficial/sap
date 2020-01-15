@@ -7,6 +7,5 @@ module.exports = {
   asyncHandler: require('./async_handler'),
   errorHandler: require('./error_handler'),
   AppError: require('./app_error'),
-  httpCode: require('./http_code'),
-  config: require('./config')
+  httpCode: require('./http_code')
 }

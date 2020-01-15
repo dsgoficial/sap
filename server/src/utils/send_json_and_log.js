@@ -1,7 +1,7 @@
 'use strict'
 
 const logger = require('./logger')
-const { VERSION } = require('./config')
+const { VERSION } = require('../config')
 
 const truncate = dados => {
   if ('senha' in dados) {

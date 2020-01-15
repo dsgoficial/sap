@@ -4,11 +4,9 @@ const { databaseVersion } = require('../database')
 
 const app = require('./app')
 
-const {
-  logger,
-  AppError,
-  config: { VERSION, PORT }
-} = require('../utils')
+const { logger, AppError } = require('../utils')
+
+const { VERSION, PORT } = require('../config')
 
 const httpsConfig = () => {
   const fs = require('fs')

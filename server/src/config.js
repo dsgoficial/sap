@@ -5,13 +5,12 @@ const Joi = require('joi')
 const fs = require('fs')
 const path = require('path')
 
-const AppError = require('./App_error')
-const errorHandler = require('./error_handler')
+const { AppError, errorHandler } = require('./utils')
 
 const configFile =
   process.env.NODE_ENV === 'test' ? 'config_testing.env' : 'config.env'
 
-const configPath = path.join(__dirname, '..', '..', configFile)
+const configPath = path.join(__dirname, '..', configFile)
 
 if (!fs.existsSync(configPath)) {
   errorHandler(

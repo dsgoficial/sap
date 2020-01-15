@@ -1,8 +1,6 @@
 'use strict'
 
-const {
-  config: { DB_NAME, DB_SERVER, DB_PORT, DB_USER, DB_PASSWORD }
-} = require('../utils')
+const { DB_NAME, DB_SERVER, DB_PORT, DB_USER, DB_PASSWORD } = require('../config')
 
 const fs = require('fs')
 const path = require('path')

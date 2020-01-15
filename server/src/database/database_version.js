@@ -4,10 +4,9 @@ const semver = require('semver')
 
 const db = require('./db')
 
-const {
-  AppError,
-  config: { MIN_DATABASE_VERSION }
-} = require('../utils')
+const { AppError } = require('../utils')
+
+const { MIN_DATABASE_VERSION } = require('../config')
 
 const dbVersion = {}
 

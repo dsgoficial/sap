@@ -2,10 +2,9 @@
 
 const axios = require('axios')
 
-const {
-  AppError,
-  config: { AUTH_SERVER }
-} = require('../utils')
+const { AppError } = require('../utils')
+
+const { AUTH_SERVER } = require('../config')
 
 const verifyAuthServer = async () => {
   try {

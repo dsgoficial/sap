@@ -2,9 +2,7 @@
 
 const { db, temporaryLogin, managePermissions } = require('../database')
 
-const {
-  config: { DB_USER, DB_PASSWORD, DB_SERVER, DB_PORT, DB_NAME }
-} = require('../utils')
+const { DB_USER, DB_PASSWORD, DB_SERVER, DB_PORT, DB_NAME } = require('../config')
 
 const { AppError, httpCode } = require('../utils')
 
