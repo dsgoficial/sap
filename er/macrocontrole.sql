@@ -535,15 +535,6 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	UNIQUE(atividade_id, perfil_producao_id)
 );
 
-CREATE TABLE macrocontrole.perda_recurso_humano(
-	id SERIAL NOT NULL PRIMARY KEY,
- 	usuario_id SMALLINT NOT NULL REFERENCES dgeo.usuario (id),
- 	tipo_perda_recurso_humano_id SMALLINT NOT NULL REFERENCES dominio.tipo_perda_recurso_humano (code),
-	horas REAL,
-	data timestamp with time zone NOT NULL,
-	observacao TEXT
-);
-
 CREATE TABLE macrocontrole.funcao_especial(
 	id SERIAL NOT NULL PRIMARY KEY,
  	usuario_id SMALLINT NOT NULL REFERENCES dgeo.usuario (id),

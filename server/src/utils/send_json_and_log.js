@@ -19,7 +19,7 @@ const truncate = dados => {
   }
 }
 const sendJsonAndLogMiddleware = (req, res, next) => {
-  res.sendJsonAndLog = (success, message, status, dados = null, error = null) => {
+  res.sendJsonAndLog = (success, message, status, dados = null, error = null, metadata = {}) => {
     const url = req.protocol + '://' + req.get('host') + req.originalUrl
 
     logger.info(message, {
@@ -35,7 +35,8 @@ const sendJsonAndLogMiddleware = (req, res, next) => {
       version: VERSION,
       success: success,
       message: userMessage,
-      dados
+      dados,
+      ...metadata
     }
 
     return res.status(status).json(jsonData)

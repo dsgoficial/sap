@@ -29,7 +29,7 @@ const createPS = sql => {
 
     return new PS({ name: psName, text: readSqlFile(sql) })
   } catch (e) {
-    errorHandler(e)
+    errorHandler.critical(e)
   }
 }
 

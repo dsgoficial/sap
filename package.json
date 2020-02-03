@@ -13,7 +13,7 @@
     "build": "node create_build.js",
     "create-docs": "node server/create_documentation.js",
     "start": "pm2 start server/src/index.js --name sap",
-    "start-all-dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run start\""
+    "start-dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run start\""
   },
   "nodemonConfig": {
     "ignore": [

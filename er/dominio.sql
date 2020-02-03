@@ -192,23 +192,4 @@ INSERT INTO dominio.tipo_problema (code, nome) VALUES
 (6, 'Problema nas rotinas'),
 (99, 'Outros');
 
-CREATE TABLE dominio.tipo_perda_recurso_humano(
-	code SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES
-(1, 'Atividades extra SAP'),
-(2, 'Atividades militares'),
-(3, 'Atividades administrativas'),
-(4, 'Problemas técnicos'),
-(5, 'Feriado'),
-(6, 'Férias'),
-(7, 'Dispensa por motivo de saúde'),
-(8, 'Dispensa como recompensa'),
-(9, 'Dispensa de atividade de campo'),
-(10, 'Designação para realizar curso / capacitação'),
-(11, 'Designação para ministrar curso / capacitação'),
-(12, 'Designação para participação em eventos');
-
 COMMIT;

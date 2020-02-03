@@ -5,7 +5,9 @@ const { serializeError } = require('serialize-error')
 const logger = require('./logger')
 const httpCode = require('./http_code')
 
-const errorHandler = (err, res = null) => {
+const errorHandler = {}
+
+errorHandler.log = (err, res = null) => {
   const statusCode = err.statusCode || httpCode.InternalError
   const message = err.message || 'Erro no servidor'
   const errorTrace = err.errorTrace || serializeError(err) || null
@@ -19,7 +21,11 @@ const errorHandler = (err, res = null) => {
     status: statusCode,
     success: false
   })
-  // exit node with error
+}
+
+errorHandler.critical = (err, res = null) => {
+  errorHandler.log(err, res)
   process.exit(1)
 }
+
 module.exports = errorHandler

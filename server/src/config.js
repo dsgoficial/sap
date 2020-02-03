@@ -5,7 +5,8 @@ const Joi = require('joi')
 const fs = require('fs')
 const path = require('path')
 
-const { AppError, errorHandler } = require('./utils')
+const AppError = require('./utils/app_error')
+const errorHandler = require('./utils/error_handler')
 
 const configFile =
   process.env.NODE_ENV === 'test' ? 'config_testing.env' : 'config.env'
@@ -13,7 +14,7 @@ const configFile =
 const configPath = path.join(__dirname, '..', configFile)
 
 if (!fs.existsSync(configPath)) {
-  errorHandler(
+  errorHandler.critical(
     new AppError(
       'Arquivo de configuração não encontrado. Configure o serviço primeiro.'
     )
@@ -82,7 +83,7 @@ if (error) {
   const { details } = error
   const message = details.map(i => i.message).join(',')
 
-  errorHandler(
+  errorHandler.critical(
     new AppError(
       'Arquivo de configuração inválido. Configure novamente o serviço.',
       null,

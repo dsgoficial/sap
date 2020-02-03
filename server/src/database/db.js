@@ -29,7 +29,7 @@ db.createConn = async (usuario, senha, server, port, dbname, handle = true) => {
         if (!handle) {
           throw new Error()
         }
-        errorHandler(e)
+        errorHandler.critical(e)
       })
   }
 
