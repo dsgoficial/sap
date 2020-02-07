@@ -6,12 +6,13 @@ CREATE SCHEMA dgeo;
 
 CREATE TABLE dgeo.usuario(
   id SERIAL NOT NULL PRIMARY KEY,
+  login VARCHAR(255) UNIQUE NOT NULL,
   nome VARCHAR(255) NOT NULL,
   nome_guerra VARCHAR(255) NOT NULL,
-  administrador BOOLEAN NOT NULL DEFAULT FALSE,
-  ativo BOOLEAN NOT NULL DEFAULT TRUE,
   tipo_turno_id SMALLINT NOT NULL REFERENCES dominio.tipo_turno (code),
   tipo_posto_grad_id SMALLINT NOT NULL REFERENCES dominio.tipo_posto_grad (code),
+  administrador BOOLEAN NOT NULL DEFAULT FALSE,
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
   uuid UUID NOT NULL UNIQUE
 );
 
