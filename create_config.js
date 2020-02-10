@@ -143,12 +143,12 @@ const givePermission = async ({
 }
 
 const insertAdminUser = async (authUserData, connection) => {
-  const { login, nome, nome_guerra: nomeGuerra, tipo_posto_grad_id: tpgId, uuid } = authUserData
+  const { login, nome, nome_guerra: nomeGuerra, tipo_posto_grad_id: tpgId, tipo_turno_id: ttId, uuid } = authUserData
 
   await connection.none(
-    `INSERT INTO dgeo.usuario (login, nome, nome_guerra, tipo_posto_grad_id, administrador, ativo, uuid) VALUES
-    ($<login>, $<nome>, $<nomeGuerra>, $<tpgId>, TRUE, TRUE, $<uuid>)`,
-    { login, nome, nomeGuerra, tpgId, uuid }
+    `INSERT INTO dgeo.usuario (login, nome, nome_guerra, tipo_posto_grad_id, tipo_turno_id, administrador, ativo, uuid) VALUES
+    ($<login>, $<nome>, $<nomeGuerra>, $<tpgId>, $<ttId>, TRUE, TRUE, $<uuid>)`,
+    { login, nome, nomeGuerra, tpgId, ttId, uuid }
   )
 }
 
