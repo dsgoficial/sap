@@ -9,7 +9,7 @@ const { getUsuariosAuth } = require('../authentication')
 const controller = {}
 
 controller.getUsuarios = async () => {
-  return db.conn.any(`
+  return db.sapConn.any(`
   SELECT u.uuid, u.login, u.nome, u.tipo_posto_grad_id, tpg.nome_abrev AS tipo_posto_grad, 
   u.tipo_turno_id, tt.nome AS tipo_turno, u.nome_guerra, u.administrador, u.ativo
   FROM dgeo.usuario AS u
@@ -19,7 +19,7 @@ controller.getUsuarios = async () => {
 }
 
 controller.atualizaUsuario = async (uuid, administrador, ativo) => {
-  const result = await db.conn.result(
+  const result = await db.sapConn.result(
     'UPDATE dgeo.usuario SET administrador = $<administrador>, ativo = $<ativo> WHERE uuid = $<uuid>',
     {
       uuid,
@@ -34,7 +34,7 @@ controller.atualizaUsuario = async (uuid, administrador, ativo) => {
 }
 
 controller.deletaUsuario = async uuid => {
-  return db.conn.tx(async t => {
+  return db.sapConn.tx(async t => {
     const adm = await t.oneOrNone(
       `SELECT uuid FROM dgeo.usuario 
       WHERE uuid = $<uuid> AND administrador IS TRUE `,
@@ -58,7 +58,7 @@ controller.deletaUsuario = async uuid => {
 controller.getUsuariosAuthServer = async cadastrados => {
   const usuariosAuth = await getUsuariosAuth()
 
-  const usuarios = await db.conn.any('SELECT u.uuid FROM dgeo.usuario AS u')
+  const usuarios = await db.sapConn.any('SELECT u.uuid FROM dgeo.usuario AS u')
 
   return usuariosAuth.filter(u => {
     return usuarios.map(r => r.uuid).indexOf(u.uuid) === -1
@@ -81,7 +81,7 @@ controller.atualizaListaUsuarios = async () => {
       valueAlias: 'Y'
     }) + 'WHERE Y.uuid::uuid = X.uuid'
 
-  return db.conn.none(query)
+  return db.sapConn.none(query)
 }
 
 controller.criaListaUsuarios = async usuarios => {
@@ -116,7 +116,7 @@ controller.criaListaUsuarios = async usuarios => {
 
   const query = db.pgp.helpers.insert(usuariosFiltrados, cs)
 
-  return db.conn.none(query)
+  return db.sapConn.none(query)
 }
 
 module.exports = controller

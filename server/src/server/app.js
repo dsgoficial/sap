@@ -69,9 +69,11 @@ app.use('/api/js_docs', express.static(path.join(__dirname, '..', 'js_docs')))
 // Serve Client
 app.use(express.static(path.join(__dirname, '..', 'build')))
 
+/**
 app.get('/*', function (req, res) {
   res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
 })
+ */
 
 app.use((req, res, next) => {
   const err = new AppError(`URL não encontrada para o método ${req.method}`, httpCode.NotFound)
