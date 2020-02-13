@@ -37,7 +37,7 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAtividadeUsuario(
       req.params.id,
-      req.query.proxima,
+      req.query.proxima === 'true',
       req.usuarioId // gerenteId
     )
     const msg = dados ? 'Atividade retornada' : 'Usuário não possui atividade'
@@ -208,7 +208,7 @@ router.get(
   }),
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getViewsAcompanhamento(
-      req.query.em_andamento
+      req.query.em_andamento === 'true'
     )
 
     const msg = 'Views de acompanhamento retornadas com sucesso'

@@ -241,50 +241,12 @@ controller.gravaMenus = async (menus, usuarioId) => {
 }
 
 controller.getProject = async () => {
-  return qgisProject
-}
-
-controller.criaUsuarios = async usuarios => {
-  const table = new db.pgp.helpers.TableName({
-    table: 'usuario',
-    schema: 'dgeo'
-  })
-
-  const cs = new db.pgp.helpers.ColumnSet(
-    ['nome', 'nome_guerra', 'administrador', 'ativo', 'tipo_turno_id', 'tipo_posto_grad_id', 'uuid'],
-    {
-      table
-    }
-  )
-
-  const camadas = []
-  usuarios.forEach(u => {
-    camadas.push({
-      nome: usuarios.nome,
-      nome_guerra: usuarios.nome_guerra,
-      administrador: false,
-      ativo: true,
-      tipo_turno_id: usuarios.tipo_turno_id,
-      tipo_posto_grad_id: usuarios.tipo_posto_grad_id,
-      uuid: usuarios.uuid
-    })
-  })
-
-  const query = db.pgp.helpers.insert(camadas, cs)
-
-  db.sapConn.none(query)
+  return { projeto: qgisProject }
 }
 
 controller.getBancoDados = async () => {
   return db.sapConn.any(
     'SELECT nome, servidor, porta FROM macrocontrole.banco_dados'
-  )
-}
-
-controller.getUsuarios = async () => {
-  return db.sapConn.any(
-    `SELECT u.id, u.uuid, tpg.nome_abrev || ' ' || u.nome_guerra AS nome
-    FROM dgeo.usuario AS u INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id WHERE u.ativo IS TRUE`
   )
 }
 

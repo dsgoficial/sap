@@ -123,19 +123,6 @@ router.get(
   })
 )
 
-router.post(
-  '/usuarios',
-  verifyAdmin,
-  schemaValidation({ body: projetoSchema.usuarios }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaUsuarios(req.body.usuarios)
-
-    const msg = 'Usuários criados com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
 router.get(
   '/banco_dados',
   verifyAdmin,
@@ -143,18 +130,6 @@ router.get(
     const dados = await projetoCtrl.getBancoDados()
 
     const msg = 'Banco de dados retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.get(
-  '/usuarios',
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getUsuarios()
-
-    const msg = 'Usuários retornados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })

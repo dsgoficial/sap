@@ -469,7 +469,7 @@ controller.getViewsAcompanhamento = async emAndamento => {
     return null
   }
   if (emAndamento) {
-    views = views.filter(v => v.finalizado === emAndamento)
+    views = views.filter(v => !v.finalizado)
   }
   const dados = {}
   dados.banco_dados = {
