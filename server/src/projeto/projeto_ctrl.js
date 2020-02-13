@@ -59,16 +59,10 @@ controller.getMenus = async () => {
 }
 
 controller.gravaEstilos = async (estilos, usuarioId) => {
-  const dataGravacao = new Date()
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
     await t.none('TRUNCATE dgeo.layer_styles RESTART IDENTITY')
-
-    const table = new db.pgp.helpers.TableName({
-      table: 'layer_styles',
-      schema: 'dgeo'
-    })
 
     const cs = new db.pgp.helpers.ColumnSet(
       [
@@ -79,28 +73,11 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
         'styleqml',
         'stylesld',
         'ui',
-        'owner',
-        'update_time'
-      ],
-      { table }
-    )
+        {name: 'owner', init: () => usuarioPostoNome},
+        {name: 'update_time', mod: ':raw', init: () => 'NOW()'}
+      ])
 
-    const values = []
-    estilos.forEach(d => {
-      values.push({
-        f_table_schema: d.f_table_schema,
-        f_table_name: d.f_table_name,
-        f_geometry_column: d.f_geometry_column,
-        stylename: d.stylename,
-        styleqml: d.styleqml,
-        stylesld: d.stylesld,
-        ui: d.ui,
-        owner: usuarioPostoNome,
-        update_time: dataGravacao
-      })
-    })
-
-    const query = db.pgp.helpers.insert(values, cs)
+    const query = db.pgp.helpers.insert(estilos, cs, {table: 'layer_styles', schema: 'dgeo'})
 
     await t.none(query)
   })
