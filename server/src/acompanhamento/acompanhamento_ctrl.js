@@ -235,11 +235,6 @@ controller.getTipoPerdaRecursoHumano = async () => {
 }
 
 controller.criaPerdaRecursoHumano = async perdaRecursoHumano => {
-  const table = new db.pgp.helpers.TableName({
-    table: 'perda_recurso_humano',
-    schema: 'macrocontrole'
-  })
-
   const cs = new db.pgp.helpers.ColumnSet(
     [
       'usuario_id',
@@ -247,13 +242,10 @@ controller.criaPerdaRecursoHumano = async perdaRecursoHumano => {
       'horas',
       'data',
       'observacao'
-    ],
-    {
-      table
-    }
+    ]
   )
 
-  const query = db.pgp.helpers.insert(perdaRecursoHumano, cs)
+  const query = db.pgp.helpers.insert(perdaRecursoHumano, cs, { table: 'perda_recurso_humano', schema: 'macrocontrole' })
 
   db.sapConn.none(query)
 }

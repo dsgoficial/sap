@@ -79,27 +79,11 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
     { updatedIdsFixed }
   )
 
-  const table = new db.pgp.helpers.TableName({
-    table: 'atividade',
-    schema: 'macrocontrole'
-  })
-
   const cs = new db.pgp.helpers.ColumnSet(
-    ['etapa_id', 'unidade_trabalho_id', 'usuario_id', 'tipo_situacao_id'],
-    { table }
+    ['etapa_id', 'unidade_trabalho_id', 'usuario_id', { name: 'tipo_situacao_id', init: () => 3 }]
   )
 
-  const values = []
-  atividades.forEach(d => {
-    values.push({
-      etapa_id: d.etapa_id,
-      unidade_trabalho_id: d.unidade_trabalho_id,
-      usuario_id: d.usuario_id,
-      tipo_situacao_id: 3
-    })
-  })
-
-  const query = db.pgp.helpers.insert(values, cs)
+  const query = db.pgp.helpers.insert(atividades, cs, { table: 'atividade', schema: 'macrocontrole' })
 
   await connection.none(query)
 
@@ -181,25 +165,12 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
       'SELECT etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE id in ($<updatedIdsFixed:csv>)',
       { updatedIdsFixed }
     )
-    const table = new db.pgp.helpers.TableName({
-      table: 'atividade',
-      schema: 'macrocontrole'
-    })
+
     const cs = new db.pgp.helpers.ColumnSet(
-      ['etapa_id', 'unidade_trabalho_id', 'tipo_situacao_id'],
-      { table }
+      ['etapa_id', 'unidade_trabalho_id', { name: 'tipo_situacao_id', init: () => 1 }]
     )
 
-    const values = []
-    atividades.forEach(d => {
-      values.push({
-        etapa_id: d.etapa_id,
-        unidade_trabalho_id: d.unidade_trabalho_id,
-        tipo_situacao_id: 1
-      })
-    })
-
-    const query = db.pgp.helpers.insert(values, cs)
+    const query = db.pgp.helpers.insert(atividades, cs, { table: 'atividade', schema: 'macrocontrole' })
 
     await t.none(query)
 

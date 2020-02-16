@@ -46,15 +46,10 @@ controller.getUsuariosAuthServer = async cadastrados => {
 controller.atualizaListaUsuarios = async () => {
   const usuariosAuth = await getUsuariosAuth()
 
-  const table = new db.pgp.helpers.TableName({
-    table: 'usuario',
-    schema: 'dgeo'
-  })
-
-  const cs = new db.pgp.helpers.ColumnSet(['?uuid', 'login', 'nome', 'nome_guerra', 'tipo_posto_grad_id', 'tipo_turno_id'], { table })
+  const cs = new db.pgp.helpers.ColumnSet(['?uuid', 'login', 'nome', 'nome_guerra', 'tipo_posto_grad_id', 'tipo_turno_id'])
 
   const query =
-    db.pgp.helpers.update(usuariosAuth, cs, null, {
+    db.pgp.helpers.update(usuariosAuth, cs, { table: 'usuario', schema: 'dgeo' }, {
       tableAlias: 'X',
       valueAlias: 'Y'
     }) + 'WHERE Y.uuid::uuid = X.uuid'
@@ -68,10 +63,6 @@ controller.criaListaUsuarios = async usuarios => {
   const usuariosFiltrados = usuariosAuth.filter(f => {
     return usuarios.indexOf(f.uuid) !== -1
   })
-  const table = new db.pgp.helpers.TableName({
-    table: 'usuario',
-    schema: 'dgeo'
-  })
 
   const cs = new db.pgp.helpers.ColumnSet(
     [
@@ -81,18 +72,12 @@ controller.criaListaUsuarios = async usuarios => {
       'nome_guerra',
       'tipo_posto_grad_id',
       'tipo_turno_id',
-      'ativo',
-      'administrador'
-    ],
-    { table }
+      { name: 'ativo', init: () => true },
+      { name: 'administrador', init: () => false }
+    ]
   )
 
-  usuariosFiltrados.forEach(d => {
-    d.ativo = true
-    d.administrador = false
-  })
-
-  const query = db.pgp.helpers.insert(usuariosFiltrados, cs)
+  const query = db.pgp.helpers.insert(usuariosFiltrados, cs, { table: 'usuario', schema: 'dgeo' })
 
   return db.sapConn.none(query)
 }

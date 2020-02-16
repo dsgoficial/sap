@@ -73,40 +73,29 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
         'styleqml',
         'stylesld',
         'ui',
-        {name: 'owner', init: () => usuarioPostoNome},
-        {name: 'update_time', mod: ':raw', init: () => 'NOW()'}
+        { name: 'owner', init: () => usuarioPostoNome },
+        { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
       ])
 
-    const query = db.pgp.helpers.insert(estilos, cs, {table: 'layer_styles', schema: 'dgeo'})
+    const query = db.pgp.helpers.insert(estilos, cs, { table: 'layer_styles', schema: 'dgeo' })
 
     await t.none(query)
   })
 }
 
 controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
-  const dataGravacao = new Date()
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
     await t.none('TRUNCATE dgeo.layer_rules RESTART IDENTITY')
     await t.none('TRUNCATE dgeo.group_rules RESTART IDENTITY CASCADE')
 
-    const tableGroup = new db.pgp.helpers.TableName({
-      table: 'group_rules',
-      schema: 'dgeo'
-    })
-    const csGroup = new db.pgp.helpers.ColumnSet(['grupo_regra', 'cor_rgb'], {
-      table: tableGroup
-    })
+    const csGroup = new db.pgp.helpers.ColumnSet(['grupo_regra', 'cor_rgb'])
+
     const queryGroup =
-      db.pgp.helpers.insert(grupoRegras, csGroup) + 'RETURNING id, grupo_regra'
+      db.pgp.helpers.insert(grupoRegras, csGroup, { table: 'group_rules', schema: 'dgeo' }) + 'RETURNING id, grupo_regra'
 
     const grupos = await t.any(queryGroup)
-
-    const table = new db.pgp.helpers.TableName({
-      table: 'layer_rules',
-      schema: 'dgeo'
-    })
 
     const cs = new db.pgp.helpers.ColumnSet(
       [
@@ -116,13 +105,11 @@ controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
         'atributo',
         'regra',
         'descricao',
-        'owner',
-        'update_time'
-      ],
-      { table }
+        { name: 'owner', init: () => usuarioPostoNome },
+        { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+      ]
     )
 
-    const values = []
     regras.forEach(d => {
       const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra)
       if (!grupoRegra) {
@@ -131,87 +118,42 @@ controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
           httpCode.BadRequest
         )
       }
-      values.push({
-        grupo_regra_id: grupoRegra.id,
-        schema: d.schema,
-        camada: d.camada,
-        atributo: d.atributo,
-        regra: d.regra,
-        descricao: d.descricao,
-        ordem: d.ordem,
-        owner: usuarioPostoNome,
-        update_time: dataGravacao
-      })
+      d.grupo_regra_id = grupoRegra.id
     })
 
-    const query = db.pgp.helpers.insert(values, cs)
+    const query = db.pgp.helpers.insert(regras, cs, { table: 'layer_rules', schema: 'dgeo' })
 
     await t.none(query)
   })
 }
 
 controller.gravaModelos = async (modelos, usuarioId) => {
-  const dataGravacao = new Date()
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
     await t.none('TRUNCATE dgeo.layer_qgis_models RESTART IDENTITY')
 
-    const table = new db.pgp.helpers.TableName({
-      table: 'layer_qgis_models',
-      schema: 'dgeo'
-    })
-
     const cs = new db.pgp.helpers.ColumnSet(
-      ['nome', 'descricao', 'model_xml', 'owner', 'update_time'],
-      { table }
+      ['nome', 'descricao', 'model_xml', { name: 'owner', init: () => usuarioPostoNome }, { name: 'update_time', mod: ':raw', init: () => 'NOW()' }]
     )
 
-    const values = []
-    modelos.forEach(d => {
-      values.push({
-        nome: d.nome,
-        descricao: d.descricao,
-        model_xml: d.model_xml,
-        owner: usuarioPostoNome,
-        update_time: dataGravacao
-      })
-    })
-
-    const query = db.pgp.helpers.insert(values, cs)
+    const query = db.pgp.helpers.insert(modelos, cs, { table: 'layer_qgis_models', schema: 'dgeo' })
 
     await t.none(query)
   })
 }
 
 controller.gravaMenus = async (menus, usuarioId) => {
-  const dataGravacao = new Date()
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
     await t.none('TRUNCATE dgeo.layer_menus RESTART IDENTITY')
 
-    const table = new db.pgp.helpers.TableName({
-      table: 'layer_menus',
-      schema: 'dgeo'
-    })
-
     const cs = new db.pgp.helpers.ColumnSet(
-      ['nome_menu', 'definicao_menu', 'owner', 'update_time'],
-      { table }
+      ['nome_menu', 'definicao_menu', { name: 'owner', init: () => usuarioPostoNome }, { name: 'update_time', mod: ':raw', init: () => 'NOW()' }]
     )
 
-    const values = []
-    menus.forEach(d => {
-      values.push({
-        nome_menu: d.nome_menu,
-        definicao_menu: d.definicao_menu,
-        owner: usuarioPostoNome,
-        update_time: dataGravacao
-      })
-    })
-
-    const query = db.pgp.helpers.insert(values, cs)
+    const query = db.pgp.helpers.insert(menus, cs, { table: 'layer_menus', schema: 'dgeo' })
 
     await t.none(query)
   })
@@ -581,19 +523,11 @@ controller.atualizaCamadas = async camadas => {
 }
 
 controller.criaCamadas = async camadas => {
-  const table = new db.pgp.helpers.TableName({
-    table: 'camada',
-    schema: 'macrocontrole'
-  })
-
   const cs = new db.pgp.helpers.ColumnSet(
-    ['schema', 'nome', 'alias', 'documentacao'],
-    {
-      table
-    }
+    ['schema', 'nome', 'alias', 'documentacao']
   )
 
-  const query = db.pgp.helpers.insert(camadas, cs)
+  const query = db.pgp.helpers.insert(camadas, cs, { table: 'camada', schema: 'macrocontrole' })
 
   db.sapConn.none(query)
 }
@@ -669,11 +603,6 @@ controller.atualizaPerfilFME = async perfilFME => {
 }
 
 controller.criaPerfilFME = async perfilFME => {
-  const table = new db.pgp.helpers.TableName({
-    table: 'perfil_fme',
-    schema: 'macrocontrole'
-  })
-
   const cs = new db.pgp.helpers.ColumnSet(
     [
       'gerenciador_fme_id',
@@ -681,10 +610,7 @@ controller.criaPerfilFME = async perfilFME => {
       'requisito_finalizacao',
       'gera_falso_positivo',
       'subfase_id'
-    ],
-    {
-      table
-    }
+    ]
   )
 
   const rotinasFME = perfilFME.map(c => {
@@ -692,7 +618,7 @@ controller.criaPerfilFME = async perfilFME => {
   })
   await validadeParameters(rotinasFME)
 
-  const query = db.pgp.helpers.insert(perfilFME, cs)
+  const query = db.pgp.helpers.insert(perfilFME, cs, { table: 'perfil_fme', schema: 'macrocontrole' })
 
   db.sapConn.none(query)
 }
