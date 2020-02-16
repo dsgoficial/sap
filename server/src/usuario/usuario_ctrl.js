@@ -33,28 +33,6 @@ controller.atualizaUsuario = async (uuid, administrador, ativo) => {
   }
 }
 
-controller.deletaUsuario = async uuid => {
-  return db.sapConn.tx(async t => {
-    const adm = await t.oneOrNone(
-      `SELECT uuid FROM dgeo.usuario 
-      WHERE uuid = $<uuid> AND administrador IS TRUE `,
-      { uuid }
-    )
-
-    if (adm) {
-      throw new AppError('Usuário com privilégio de administrador não pode ser deletado', httpCode.BadRequest)
-    }
-
-    const result = await t.result(
-      'DELETE FROM dgeo.usuario WHERE uuid = $<uuid>',
-      { uuid }
-    )
-    if (!result.rowCount || result.rowCount < 1) {
-      throw new AppError('Usuário não encontrado', httpCode.NotFound)
-    }
-  })
-}
-
 controller.getUsuariosAuthServer = async cadastrados => {
   const usuariosAuth = await getUsuariosAuth()
 

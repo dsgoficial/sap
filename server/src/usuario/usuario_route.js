@@ -54,22 +54,6 @@ router.put(
   })
 )
 
-router.delete(
-  '/:uuid',
-  verifyAdmin,
-  schemaValidation({
-    params: usuarioSchema.uuidParams
-  }),
-  asyncHandler(async (req, res, next) => {
-    await usuarioCtrl.deletaUsuario(
-      req.params.uuid
-    )
-    const msg = 'Usuário deletado com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK)
-  })
-)
-
 router.get(
   '/',
   verifyAdmin,
