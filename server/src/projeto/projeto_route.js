@@ -189,8 +189,8 @@ router.put(
   })
 )
 
-router.post(
-  '/atividades/deletar',
+router.delete(
+  '/atividades',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.listaAtividades }),
   asyncHandler(async (req, res, next) => {
@@ -203,7 +203,7 @@ router.post(
 )
 
 router.post(
-  '/atividades/criar',
+  '/atividades',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.unidadeTrabalhoEtapa }),
   asyncHandler(async (req, res, next) => {

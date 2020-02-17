@@ -203,8 +203,6 @@ models.camadasAtualizacao = Joi.object().keys({
           .integer()
           .strict()
           .required(),
-        schema: Joi.string().required(),
-        nome: Joi.string().required(),
         alias: Joi.string().required(),
         documentacao: Joi.string()
           .uri()

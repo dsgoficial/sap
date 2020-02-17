@@ -6,8 +6,6 @@ const { AppError, httpCode } = require('../utils')
 
 const qgisProject = require('./qgis_project')
 
-const { managePermissions } = require('../database')
-
 const {
   checkFMEConnection,
   validadeParameters
@@ -28,7 +26,7 @@ const getUsuarioNomeById = async usuarioId => {
 controller.getEstilos = async () => {
   return db.sapConn
     .any(`SELECT f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, ui, owner, update_time
-   FROM dgeo.layer_styles`)
+    FROM dgeo.layer_styles`)
 }
 
 controller.getRegras = async () => {
@@ -503,22 +501,19 @@ controller.atualizaCamadas = async camadas => {
     }
     const query = []
     camadas.forEach(c => {
-      const { id, schema, nome, alias, documentacao } = c
+      const { id, alias, documentacao } = c
 
       query.push(
         t.any(
           `UPDATE macrocontrole.camada
-          SET schema = $<schema>, nome = $<nome>, alias = $<alias>, documentacao = $<documentacao>
+          SET alias = $<alias>, documentacao = $<documentacao>
           where id = $<id>`,
-          { id, schema, nome, alias, documentacao }
+          { id, alias, documentacao }
         )
       )
     })
 
     await t.batch(query)
-
-    // update all permissions
-    await managePermissions.revokeAndGrantAllExecution()
   })
 }
 
@@ -534,8 +529,9 @@ controller.criaCamadas = async camadas => {
 
 controller.getPerfilFME = async () => {
   return db.sapConn.any(
-    `SELECT id, gerenciador_fme_id, rotina, requisito_finalizacao, gera_falso_positivo, subfase_id
-    FROM macrocontrole.perfil_fme`
+    `SELECT pf.id, pf.gerenciador_fme_id, pf.rotina, pf.requisito_finalizacao, pf.gera_falso_positivo, pf.subfase_id, s.nome
+    FROM macrocontrole.perfil_fme AS pf
+    INNER JOIN macrocontrole.subfase AS s ON s.id = pf.subfase_id`
   )
 }
 
