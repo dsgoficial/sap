@@ -178,7 +178,7 @@ router.post(
       req.body.observacao_etapa,
       req.body.observacao_subfase,
       req.body.observacao_unidade_trabalho,
-      req.body.lote
+      req.body.observacao_lote
     )
 
     const msg = 'Observação criada com sucesso'
