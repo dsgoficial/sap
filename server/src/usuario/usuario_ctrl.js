@@ -10,7 +10,7 @@ const controller = {}
 
 controller.getUsuarios = async () => {
   return db.sapConn.any(`
-  SELECT u.uuid, u.login, u.nome, u.tipo_posto_grad_id, tpg.nome_abrev AS tipo_posto_grad, 
+  SELECT u.id, u.uuid, u.login, u.nome, u.tipo_posto_grad_id, tpg.nome_abrev AS tipo_posto_grad, 
   u.tipo_turno_id, tt.nome AS tipo_turno, u.nome_guerra, u.administrador, u.ativo
   FROM dgeo.usuario AS u
   INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
