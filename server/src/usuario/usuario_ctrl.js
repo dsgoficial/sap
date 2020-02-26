@@ -33,6 +33,18 @@ controller.atualizaUsuario = async (uuid, administrador, ativo) => {
   }
 }
 
+controller.atualizaUsuarioLista = async usuarios => {
+  const cs = new db.pgp.helpers.ColumnSet(['?uuid', 'ativo', 'administrador'])
+
+  const query =
+    db.pgp.helpers.update(usuarios, cs, { table: 'usuario', schema: 'dgeo' }, {
+      tableAlias: 'X',
+      valueAlias: 'Y'
+    }) + 'WHERE Y.uuid::uuid = X.uuid'
+
+  return db.sapConn.none(query)
+}
+
 controller.getUsuariosAuthServer = async cadastrados => {
   const usuariosAuth = await getUsuariosAuth()
 

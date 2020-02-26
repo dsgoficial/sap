@@ -17,8 +17,18 @@ models.listaUsuario = Joi.object().keys({
 })
 
 models.updateUsuario = Joi.object().keys({
-  administrador: Joi.boolean().strict(),
-  ativo: Joi.boolean().strict()
+  administrador: Joi.boolean().strict().required(),
+  ativo: Joi.boolean().strict().required()
+})
+
+models.updateUsuarioLista = Joi.object().keys({
+  usuarios: Joi.array().items(
+    Joi.object().keys({
+      uuid: Joi.string().guid({ version: 'uuidv4' }).required(),
+      administrador: Joi.boolean().strict().required(),
+      ativo: Joi.boolean().strict().required()
+    })
+  ).required().min(1)
 })
 
 module.exports = models

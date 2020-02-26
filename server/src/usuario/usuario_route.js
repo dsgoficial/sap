@@ -80,4 +80,20 @@ router.post(
   })
 )
 
+router.put(
+  '/',
+  verifyAdmin,
+  schemaValidation({
+    body: usuarioSchema.updateUsuarioLista
+  }),
+  asyncHandler(async (req, res, next) => {
+    await usuarioCtrl.atualizaUsuarioLista(
+      req.body.usuarios
+    )
+    const msg = 'Usuários atualizado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 module.exports = router
