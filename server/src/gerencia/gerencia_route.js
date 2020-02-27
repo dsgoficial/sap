@@ -230,7 +230,7 @@ router.put(
 )
 
 router.put(
-  '/atividade/permissoes',
+  '/atividades/permissoes',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.redefinirPermissoes()
