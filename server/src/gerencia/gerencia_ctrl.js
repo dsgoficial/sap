@@ -410,12 +410,12 @@ controller.getObservacao = async atividadeId => {
 }
 
 controller.getViewsAcompanhamento = async emAndamento => {
-  let views = await db.sapConn.any(`
+  const views = await db.sapConn.any(`
     SELECT v.schema, v.nome, v.tipo, coalesce(s.nome, f.nome, lp.nome) AS projeto,
     coalesce(s.finalizado, f.finalizado, lp.finalizado) AS finalizado
     FROM (SELECT v.table_schema AS schema, v.table_name AS nome,
     regexp_replace(substring(v.table_name, '^(subfase_|fase_|linha_producao_)'), '_$', '') AS tipo,
-    substring(regexp_replace(v.table_name,'^(subfase_|fase_|linha_producao_)', ''), '^(\d+)_')::integer AS id
+    substring(regexp_replace(v.table_name,'^(subfase_|fase_|linha_producao_)', ''), '^(\\d+)_')::integer AS id
     FROM information_schema.views AS v
     WHERE v.table_schema = 'acompanhamento'
     AND substring(v.table_name, '^(subfase_|fase_|linha_producao_)') IS NOT NULL) AS v
@@ -436,9 +436,11 @@ controller.getViewsAcompanhamento = async emAndamento => {
     ) AS lp ON lp.id = v.id AND v.tipo = 'linha_producao'
     ORDER BY projeto, tipo, nome
   `)
+
   if (!views) {
     return null
   }
+  
   if (emAndamento) {
     views = views.filter(v => !v.finalizado)
   }
@@ -451,7 +453,6 @@ controller.getViewsAcompanhamento = async emAndamento => {
     senha: DB_PASSWORD
   }
   dados.views = views
-
   return dados
 }
 
