@@ -448,8 +448,10 @@ controller.deletaGerenciadorFME = async id => {
 
 controller.getCamadas = async () => {
   return db.sapConn.any(
-    `SELECT id, schema, nome, alias, documentacao
-    FROM macrocontrole.camada`
+    `SELECT c.id, c.schema, c.nome, c.alias, c.documentacao, a.id IS NOT NULL AS camada, ppc.id IS NOT NULL AS perfil
+    FROM macrocontrole.camada AS c
+    LEFT JOIN macrocontrole.atributo AS a ON a.camada_id = c.id
+    LEFT JOIN macrocontrole.perfil_propriedades_camada AS ppc ON ppc.camada_id = c.id`
   )
 }
 
@@ -472,23 +474,26 @@ controller.deleteCamadas = async camadasIds => {
       WHERE camada_id in ($<camadasIds:csv>)`,
       { camadasIds }
     )
-    if (existsAssociationAtributo) {
+    if (existsAssociationAtributo && existsAssociationAtributo.length > 0) {
       throw new AppError(
         'A camada possui atributos associados',
         httpCode.BadRequest
       )
     }
+
     const existsAssociationPerfil = await t.any(
       `SELECT id FROM macrocontrole.perfil_propriedades_camada 
       WHERE camada_id in ($<camadasIds:csv>)`,
       { camadasIds }
     )
-    if (existsAssociationPerfil) {
+    if (existsAssociationPerfil && existsAssociationPerfil.length > 0) {
       throw new AppError(
         'A camada possui perfil propriedades camadas associados',
         httpCode.BadRequest
       )
     }
+
+    console.log(existsAssociationPerfil)
 
     return t.any(
       `DELETE FROM macrocontrole.camada

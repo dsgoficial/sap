@@ -373,7 +373,7 @@ router.delete(
     body: projetoSchema.camadasIds
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deleteCamadas(req.params.camadas_ids)
+    await projetoCtrl.deleteCamadas(req.body.camadas_ids)
 
     const msg = 'Camada deletada com sucesso'
 
