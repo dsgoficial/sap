@@ -4,6 +4,8 @@ const { db } = require('../database')
 
 const { AppError, httpCode } = require('../utils')
 
+const { DB_USER, DB_PASSWORD } = require('../config')
+
 const qgisProject = require('./qgis_project')
 
 const {
@@ -166,6 +168,16 @@ controller.getBancoDados = async () => {
     'SELECT nome, servidor, porta FROM macrocontrole.banco_dados'
   )
 }
+
+controller.getLogin = async () => {
+  const dados = {
+    login: DB_USER,
+    senha: DB_PASSWORD
+  }
+  return dados
+}
+
+
 
 controller.criaRevisao = async unidadeTrabalhoIds => {
   await db.sapConn.tx(async t => {
@@ -524,7 +536,7 @@ controller.criaCamadas = async camadas => {
 
   const query = db.pgp.helpers.insert(camadas, cs, { table: 'camada', schema: 'macrocontrole' })
 
-  db.sapConn.none(query)
+  return db.sapConn.none(query)
 }
 
 controller.getPerfilFME = async () => {

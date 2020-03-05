@@ -135,6 +135,18 @@ router.get(
   })
 )
 
+router.get(
+  '/login',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getLogin()
+
+    const msg = 'Dados de login retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 router.post(
   '/atividade/criar_revisao',
   verifyAdmin,

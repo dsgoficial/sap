@@ -96,7 +96,7 @@ INSERT INTO dominio.tipo_pre_requisito (code, nome) VALUES
 (1, 'Região concluída');
 
 CREATE TABLE dominio.tipo_etapa(
-	code SERIAL NOT NULL PRIMARY KEY,
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
@@ -107,7 +107,7 @@ INSERT INTO dominio.tipo_etapa (code,nome) VALUES
 (4,'Revisão e Correção');
 
 CREATE TABLE dominio.tipo_exibicao(
-	code SERIAL NOT NULL PRIMARY KEY,
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
@@ -138,7 +138,7 @@ INSERT INTO dominio.tipo_restricao (code, nome) VALUES
 (3, 'Operadores no mesmo turno');
 
 CREATE TABLE dominio.tipo_insumo(
-	code SERIAL NOT NULL PRIMARY KEY,
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
@@ -179,7 +179,7 @@ INSERT INTO dominio.tipo_configuracao (code, nome) VALUES
 (6, 'Escala minima para aquisição');
 
 CREATE TABLE dominio.tipo_problema(
-	code SERIAL NOT NULL PRIMARY KEY,
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
@@ -193,7 +193,7 @@ INSERT INTO dominio.tipo_problema (code, nome) VALUES
 (99, 'Outros');
 
 CREATE TABLE dominio.tipo_perda_recurso_humano(	
-	code SERIAL NOT NULL PRIMARY KEY,	
+	code SMALLINT NOT NULL PRIMARY KEY,	
 	nome VARCHAR(255) NOT NULL	
 );	
 
