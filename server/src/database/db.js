@@ -46,12 +46,12 @@ db.testConn = async (usuario, senha, server, port, dbname) => {
   }
 }
 
-db.createAdminConn = async (server, port, dbname) => {
-  return db.createConn(DB_USER, DB_PASSWORD, server, port, dbname)
+db.createAdminConn = async (server, port, dbname, handle) => {
+  return db.createConn(DB_USER, DB_PASSWORD, server, port, dbname, handle)
 }
 
 db.createSapConn = async () => {
-  db.sapConn = await db.createAdminConn(DB_SERVER, DB_PORT, DB_NAME)
+  db.sapConn = await db.createAdminConn(DB_SERVER, DB_PORT, DB_NAME, true)
 }
 
 module.exports = db

@@ -287,7 +287,7 @@ controller.getLotes = async () => {
 controller.unidadeTrabalhoLote = async (unidadeTrabalhoIds, lote) => {
   return db.sapConn.none(
     `UPDATE macrocontrole.unidade_trabalho
-    SET lote = $<lote>
+    SET lote_id = $<lote>
     WHERE id in ($<unidadeTrabalhoIds:csv>)`,
     { unidadeTrabalhoIds, lote }
   )

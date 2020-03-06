@@ -14,7 +14,7 @@ const revokeAllUsersSQL = createPS(
 const managePermissions = {}
 
 managePermissions.revokeAllDb = async (servidor, porta, banco) => {
-  const conn = await db.createAdminConn(servidor, porta, banco)
+  const conn = await db.createAdminConn(servidor, porta, banco, false)
 
   const query = await conn.oneOrNone(revokeAllUsersSQL)
   if (!query) {
@@ -41,7 +41,7 @@ managePermissions.revokeAndGrantAllExecution = async () => {
     return null
   }
   for (const info of dbInfos) {
-    const conn = await db.createAdminConn(info.servidor, info.porta, info.nome)
+    const conn = await db.createAdminConn(info.servidor, info.porta, info.nome, false)
     await managePermissions.revokeAllPermissionsUser(info.login, conn)
     await managePermissions.grantPermissionsUser(
       info.atividade_id,

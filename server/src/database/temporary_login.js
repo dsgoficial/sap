@@ -115,7 +115,7 @@ const processTempUser = async (
   }
   const { servidor, porta, nome: nomeDb } = dbInfo
 
-  const conn = await db.createAdminConn(servidor, porta, nomeDb)
+  const conn = await db.createAdminConn(servidor, porta, nomeDb, false)
 
   const loginInfo = await db.sapConn.oneOrNone(
     `SELECT login, senha FROM dgeo.login_temporario 
