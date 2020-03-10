@@ -308,7 +308,7 @@ router.post(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.gerenciadorFME }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaGerenciadorFME(req.body.servidor, req.body.porta)
+    await projetoCtrl.criaGerenciadorFME(req.body.gerenciador_fme)
 
     const msg =
       'Informações dos serviços do Gerenciador do FME inseridas com sucesso'
@@ -318,17 +318,14 @@ router.post(
 )
 
 router.put(
-  '/configuracao/gerenciador_fme/:id',
+  '/configuracao/gerenciador_fme',
   verifyAdmin,
   schemaValidation({
-    params: projetoSchema.idParams,
-    body: projetoSchema.gerenciadorFME
+    body: projetoSchema.gerenciadorFMEUpdate
   }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.atualizaGerenciadorFME(
-      req.params.id,
-      req.body.servidor,
-      req.body.porta
+      req.body.gerenciador_fme
     )
 
     const msg =
@@ -339,13 +336,13 @@ router.put(
 )
 
 router.delete(
-  '/configuracao/gerenciador_fme/:id',
+  '/configuracao/gerenciador_fme',
   verifyAdmin,
   schemaValidation({
-    params: projetoSchema.idParams
+    body: projetoSchema.gerenciadorFMEIds
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaGerenciadorFME(req.params.id)
+    await projetoCtrl.deletaGerenciadorFME(req.body.servidores_id)
 
     const msg =
       'Informações dos serviços do Gerenciador do FME deletadas com sucesso'

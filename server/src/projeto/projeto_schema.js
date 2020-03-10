@@ -160,10 +160,48 @@ models.unidadeTrabalhoEtapa = Joi.object().keys({
 })
 
 models.gerenciadorFME = Joi.object().keys({
-  servidor: Joi.string().required(),
-  porta: Joi.number()
-    .strict()
+  gerenciador_fme: Joi.array()
+    .items(
+      Joi.object().keys({
+        servidor: Joi.string().required(),
+        porta: Joi.string()
+          .strict()
+          .required()
+      })
+    )
     .required()
+    .min(1)
+})
+
+models.gerenciadorFMEUpdate = Joi.object().keys({
+  gerenciador_fme: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number()
+         .integer()
+         .strict()
+         .required(),
+        servidor: Joi.string().required(),
+        porta: Joi.string()
+          .strict()
+          .required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+
+models.gerenciadorFMEIds = Joi.object().keys({
+  servidores_id: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+        .required()
+    )
+    .required()
+    .min(1)
 })
 
 models.camadasIds = Joi.object().keys({
@@ -180,8 +218,7 @@ models.camadasIds = Joi.object().keys({
 
 models.camadas = Joi.object().keys({
   camadas: Joi.array()
-    .items()
-    .required(
+    .items(
       Joi.object().keys({
         schema: Joi.string().required(),
         nome: Joi.string().required(),
@@ -190,6 +227,8 @@ models.camadas = Joi.object().keys({
           .uri()
           .required()
       })
+    )
+    .required(
     )
     .min(1)
 })

@@ -54,7 +54,7 @@ controller.getModelos = async () => {
 
 controller.getMenus = async () => {
   return db.sapConn.any(
-    'SELECT id, definicao_menu, owner, update_time FROM dgeo.layer_menus'
+    'SELECT id, nome, definicao_menu, owner, update_time FROM dgeo.layer_menus'
   )
 }
 
@@ -366,28 +366,48 @@ controller.getGerenciadorFME = async () => {
   )
 }
 
-controller.criaGerenciadorFME = async (servidor, porta) => {
-  return db.sapConn.task(async t => {
-    const exists = await t.any(
-      `SELECT id FROM dgeo.gerenciador_fme
-      WHERE servidor = $<servidor> AND porta = $<porta>`,
-      { servidor, porta }
-    )
-    if (exists) {
-      throw new AppError('O servidor já está cadastrado', httpCode.BadRequest)
+controller.criaGerenciadorFME = async servidores => {
+  return db.sapConn.tx(async t => {
+    for (const s of servidores) {
+      const exists = await t.any(
+        `SELECT id FROM dgeo.gerenciador_fme
+        WHERE servidor = $<servidor> AND porta = $<porta>`,
+        { servidor: s.servidor, porta: s.porta }
+      )
+      if (exists && exists.length > 0) {
+        throw new AppError('O servidor já está cadastrado', httpCode.BadRequest)
+      }
+
+      await checkFMEConnection(s.servidor, s.porta)
     }
 
-    await checkFMEConnection(servidor, porta)
-
-    return t.any(
-      `INSERT INTO dgeo.gerenciador_fme(servidor, porta)
-      VALUES ($<servidor>, $<porta>)`,
-      { servidor, porta }
+    const cs = new db.pgp.helpers.ColumnSet(
+      ['servidor', 'porta']
     )
+
+    const query = db.pgp.helpers.insert(servidores, cs, { table: 'gerenciador_fme', schema: 'dgeo' })
+
+    await t.none(query)
   })
 }
 
-controller.atualizaGerenciadorFME = async (id, servidor, porta) => {
+controller.atualizaGerenciadorFME = async servidores => {
+  return db.sapConn.tx(async t => {
+    for (const s of servidores) {
+      await checkFMEConnection(s.servidor, s.porta)
+    }
+    const cs = new db.pgp.helpers.ColumnSet(['?id', 'servidor', 'porta'])
+
+    const query =
+      db.pgp.helpers.update(usuarios, cs, { table: 'gerenciador_fme', schema: 'dgeo' }, {
+        tableAlias: 'X',
+        valueAlias: 'Y'
+      }) + 'WHERE Y.id = X.id'
+  
+    await t.none(query)
+  })
+
+
   return db.sapConn.task(async t => {
     const exists = await t.any(
       `SELECT id FROM dgeo.gerenciador_fme
@@ -412,12 +432,12 @@ controller.atualizaGerenciadorFME = async (id, servidor, porta) => {
   })
 }
 
-controller.deletaGerenciadorFME = async id => {
+controller.deletaGerenciadorFME = async servidoresId => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
       `SELECT id FROM dgeo.gerenciador_fme
-      WHERE id = $<id>`,
-      { id }
+      WHERE id in ($<servidoresId:csv>)`,
+      { servidoresId }
     )
     if (!exists) {
       throw new AppError(
@@ -428,8 +448,8 @@ controller.deletaGerenciadorFME = async id => {
 
     const existsAssociation = await t.any(
       `SELECT id FROM macrocontrole.perfil_fme 
-      WHERE gerenciador_fme_id = $<id>`,
-      { id }
+      WHERE gerenciador_fme_id in ($<servidoresId:csv>)`,
+      { servidoresId }
     )
     if (existsAssociation) {
       throw new AppError(
@@ -440,8 +460,8 @@ controller.deletaGerenciadorFME = async id => {
 
     return t.any(
       `DELETE FROM dgeo.gerenciador_fme
-      WHERE id = $<id>`,
-      { id }
+      WHERE id in ($<servidoresId:csv>)`,
+      { servidoresId }
     )
   })
 }
