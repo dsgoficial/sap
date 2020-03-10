@@ -399,36 +399,12 @@ controller.atualizaGerenciadorFME = async servidores => {
     const cs = new db.pgp.helpers.ColumnSet(['?id', 'servidor', 'porta'])
 
     const query =
-      db.pgp.helpers.update(usuarios, cs, { table: 'gerenciador_fme', schema: 'dgeo' }, {
+      db.pgp.helpers.update(servidores, cs, { table: 'gerenciador_fme', schema: 'dgeo' }, {
         tableAlias: 'X',
         valueAlias: 'Y'
       }) + 'WHERE Y.id = X.id'
   
     await t.none(query)
-  })
-
-
-  return db.sapConn.task(async t => {
-    const exists = await t.any(
-      `SELECT id FROM dgeo.gerenciador_fme
-      WHERE id = $<id>`,
-      { id }
-    )
-    if (!exists) {
-      throw new AppError(
-        'O id informado não corresponde a um servidor do Gerenciador do FME',
-        httpCode.BadRequest
-      )
-    }
-
-    await checkFMEConnection(servidor, porta)
-
-    return t.any(
-      `UPDATE dgeo.gerenciador_fme
-      SET servidor = $<servidor>, porta =$<porta>
-      where id = $<id>`,
-      { id, servidor, porta }
-    )
   })
 }
 
@@ -451,7 +427,7 @@ controller.deletaGerenciadorFME = async servidoresId => {
       WHERE gerenciador_fme_id in ($<servidoresId:csv>)`,
       { servidoresId }
     )
-    if (existsAssociation) {
+    if (existsAssociation && existsAssociation.length > 0) {
       throw new AppError(
         'O servidor possui rotinas do fme associadas em perfil_fme',
         httpCode.BadRequest

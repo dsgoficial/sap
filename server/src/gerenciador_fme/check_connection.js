@@ -2,7 +2,7 @@
 
 const axios = require('axios')
 
-const { AppError } = require('../utils')
+const { AppError, httpCode } = require('../utils')
 
 const checkFMEConnection = async (servidor, porta) => {
   try {
@@ -18,7 +18,7 @@ const checkFMEConnection = async (servidor, porta) => {
   } catch (e) {
     throw new AppError(
       'Erro ao se comunicar com o servidor do gerenciador do FME',
-      null,
+      httpCode.BadRequest,
       e
     )
   }
