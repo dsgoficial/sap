@@ -19,7 +19,7 @@ const verifyParameters = parameters => {
 }
 
 const getRotinas = async servidorId => {
-  const serverInfo = db.sapConn.oneOrNone(
+  const serverInfo = await db.sapConn.oneOrNone(
     `
       SELECT servidor, porta FROM dgeo.gerenciador_fme WHERE id = $<servidorId>
     `,
@@ -61,12 +61,14 @@ const validadeParameters = async rotinas => {
   }
 
   rotinas.forEach(r => {
-    if (!verifyParameters(dadosServidores[r.servidor].parametros)) {
-      throw new AppError(
-        `A rotina ${r.rotina} não é compatível com o SAP. Verifique seus parâmetros`,
-        httpCode.BadRequest
-      )
-    }
+    dadosServidores[r.servidor].forEach(v => {
+      if (!verifyParameters(v.parametros)) {
+        throw new AppError(
+          `A rotina ${r.rotina} não é compatível com o SAP. Verifique seus parâmetros`,
+          httpCode.BadRequest
+        )
+      }
+    })
   })
 }
 
