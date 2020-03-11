@@ -333,7 +333,10 @@ controller.getProjetos = async () => {
 
 controller.getLinhasProducao = async () => {
   return db.sapConn.any(
-    'SELECT id, nome, projeto_id, tipo_produto_id FROM macrocontrole.linha_producao'
+    `SELECT lp.id, lp.nome, lp.nome AS projeto, lp.projeto_id, lp.tipo_produto_id 
+    FROM macrocontrole.linha_producao AS lp
+    INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+    `
   )
 }
 
@@ -353,9 +356,10 @@ controller.getSubfases = async () => {
 
 controller.getEtapas = async () => {
   return db.sapConn.any(
-    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, e.ordem, e.observacao
+    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, s.nome AS subfase, e.ordem, e.observacao
     FROM macrocontrole.etapa AS e
-    INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id`
+    INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+    INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id`
   )
 }
 
