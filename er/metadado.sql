@@ -4,23 +4,23 @@ CREATE SCHEMA metadado;
 
 CREATE TABLE metadado.responsavel_produto(
   id SERIAL NOT NULL PRIMARY KEY,
-	usuario_id SMALLINT NOT NULL REFERENCES dgeo.usuario (id),
+	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	data_inicio timestamp with time zone NOT NULL,
 	data_fim timestamp with time zone
 );
 
 CREATE TABLE metadado.responsavel_fase(
   id SERIAL NOT NULL PRIMARY KEY,
-	usuario_id SMALLINT NOT NULL REFERENCES dgeo.usuario (id),
-  fase_id SMALLINT NOT NULL REFERENCES macrocontrole.fase (id),
+	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+  fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	data_inicio timestamp with time zone NOT NULL,
 	data_fim timestamp with time zone
 );
 
 CREATE TABLE metadado.insumo_interno(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	produto_id SMALLINT NOT NULL REFERENCES macrocontrole.produto (id),
- 	insumo_id SMALLINT NOT NULL REFERENCES macrocontrole.produto (id)
+ 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+ 	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
 
 -- Tipos de palavra chave previstos na ISO19115 / PCDG
@@ -41,7 +41,7 @@ CREATE TABLE metadado.palavra_chave(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
  	tipo_palavra_chave_id SMALLINT NOT NULL REFERENCES metadado.tipo_palavra_chave (code),
- 	produto_id SMALLINT NOT NULL REFERENCES macrocontrole.produto (id)
+ 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
 
 CREATE TABLE metadado.documento_linhagem(
@@ -54,8 +54,8 @@ CREATE TABLE metadado.documento_linhagem(
 
 CREATE TABLE metadado.documento_linhagem_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	documento_linhagem_id SMALLINT NOT NULL REFERENCES metadado.documento_linhagem (id),
- 	produto_id SMALLINT NOT NULL REFERENCES macrocontrole.produto (id)
+ 	documento_linhagem_id INTEGER NOT NULL REFERENCES metadado.documento_linhagem (id),
+ 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
 
 -- MD_ClassificationCode
@@ -109,7 +109,7 @@ INSERT INTO metadado.especificacao (code, nome) VALUES
 (4, 'ET-RDG');
 
 CREATE TABLE metadado.organizacao(
-	id SMALLINT NOT NULL PRIMARY KEY,
+	id INTEGER NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	endereco TEXT NOT NULL,
 	telefone VARCHAR(255) NOT NULL,
@@ -125,7 +125,7 @@ INSERT INTO metadado.organizacao (id, nome, endereco, telefone, site) VALUES
 
 CREATE TABLE metadado.informacoes_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	linha_producao_id SMALLINT NOT NULL REFERENCES macrocontrole.linha_producao (id),
+ 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
 	resumo TEXT,
 	proposito TEXT,
 	creditos TEXT,
@@ -133,8 +133,8 @@ CREATE TABLE metadado.informacoes_produto(
 	limitacao_acesso_id SMALLINT NOT NULL REFERENCES metadado.codigo_restricao (code),
 	restricao_uso_id SMALLINT NOT NULL REFERENCES metadado.codigo_restricao (code),
 	grau_sigilo_id SMALLINT NOT NULL REFERENCES metadado.codigo_classificacao (code),
-	organizacao_responsavel_id  SMALLINT NOT NULL REFERENCES metadado.organizacao (id),
-	organizacao_distribuicao_id  SMALLINT NOT NULL REFERENCES metadado.organizacao (id),
+	organizacao_responsavel_id  INTEGER NOT NULL REFERENCES metadado.organizacao (id),
+	organizacao_distribuicao_id  INTEGER NOT NULL REFERENCES metadado.organizacao (id),
 	datum_vertical_id SMALLINT NOT NULL REFERENCES metadado.datum_vertical (code),
 	especificacao_id SMALLINT NOT NULL REFERENCES metadado.especificacao (code),
 	declaracao_linhagem TEXT

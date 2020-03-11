@@ -18,7 +18,7 @@ CREATE TABLE dgeo.usuario(
 
 CREATE TABLE dgeo.login_temporario(
   id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id SMALLINT NOT NULL REFERENCES dgeo.usuario (id),
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
   servidor VARCHAR(255) NOT NULL,
   porta VARCHAR(255) NOT NULL,
   login VARCHAR(255) NOT NULL,
@@ -111,7 +111,7 @@ CREATE TABLE dgeo.group_rules(
 
 CREATE TABLE dgeo.layer_rules(
 	id SERIAL NOT NULL PRIMARY KEY,
-  grupo_regra_id SMALLINT NOT NULL REFERENCES dgeo.group_rules (id),
+  grupo_regra_id INTEGER NOT NULL REFERENCES dgeo.group_rules (id),
   schema varchar(255) NOT NULL,
   camada varchar(255) NOT NULL,
   atributo varchar(255) NOT NULL,

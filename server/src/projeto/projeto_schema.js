@@ -222,10 +222,10 @@ models.camadas = Joi.object().keys({
       Joi.object().keys({
         schema: Joi.string().required(),
         nome: Joi.string().required(),
-        alias: Joi.string().required(),
+        alias: Joi.string().required().allow('', null),
         documentacao: Joi.string()
           .uri()
-          .required()
+          .required().allow('', null)
       })
     )
     .required(
@@ -242,10 +242,10 @@ models.camadasAtualizacao = Joi.object().keys({
           .integer()
           .strict()
           .required(),
-        alias: Joi.string().required(),
+        alias: Joi.string().required().allow('', null),
         documentacao: Joi.string()
           .uri()
-          .required()
+          .required().allow('', null)
       })
     )
     .min(1)
