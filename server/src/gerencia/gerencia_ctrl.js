@@ -62,7 +62,7 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
   WHERE id in (
     SELECT a.id FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
-    WHERE ut.id in ($<unidadeTrabalhoIds) AND a.tipo_situacao_id = 2
+    WHERE ut.id in ($<unidadeTrabalhoIds:csv>) AND a.tipo_situacao_id = 2
     ) RETURNING id, usuario_id
   `,
     { dataFim, unidadeTrabalhoIds }
@@ -151,7 +151,7 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
     `,
       { dataFim, unidadeTrabalhoIds }
     )
-    if (updatedIds.length === 0) {
+    if (updatedIds && updatedIds.length === 0) {
       throw new AppError(
         'Unidades de trabalho não possuem atividades em execução ou pausadas',
         httpCode.NotFound
@@ -192,7 +192,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
         WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem >= e.ordem AND a_ant.tipo_situacao_id IN (2)`,
       { atividadeIds }
     )
-    if (ativEmExec) {
+    if (ativEmExec && ativEmExec.length > 0) {
       throw new AppError(
         'Não se pode voltar atividades em execução. Pause a atividade primeiro',
         httpCode.BadRequest
@@ -260,7 +260,7 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
       WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.tipo_situacao_id IN (2)`,
       { atividadeIds, comparisonOperator }
     )
-    if (ativEmExec) {
+    if (ativEmExec && ativEmExec.length > 0) {
       throw new AppError(
         'Não se pode avançar atividades em execução. Pause a atividade primeiro',
         httpCode.BadRequest
@@ -347,7 +347,7 @@ controller.criaObservacao = async (
       UPDATE macrocontrole.atividade SET
       observacao = $<observacaoAtividade> WHERE id in ($<atividadeIds:csv>)
       `,
-      [atividadeIds, observacaoAtividade]
+      {atividadeIds, observacaoAtividade}
     )
     await t.any(
       `
@@ -357,7 +357,7 @@ controller.criaObservacao = async (
         INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($<atividadeIds:csv>)
       )
       `,
-      [atividadeIds, observacaoEtapa]
+      {atividadeIds, observacaoEtapa}
     )
 
     await t.any(
@@ -368,7 +368,7 @@ controller.criaObservacao = async (
         INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($<atividadeIds:csv>)
       )
       `,
-      [atividadeIds, observacaoSubfase]
+      {atividadeIds, observacaoSubfase}
     )
 
     await t.any(
@@ -379,7 +379,7 @@ controller.criaObservacao = async (
         WHERE a.id in ($<atividadeIds:csv>)
       )
       `,
-      [atividadeIds, observacaoUnidadeTrabalho]
+      {atividadeIds, observacaoUnidadeTrabalho}
     )
 
     await t.any(

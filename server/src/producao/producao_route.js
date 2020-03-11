@@ -54,7 +54,11 @@ router.post(
       ? 'Atividade iniciada'
       : 'Sem atividades disponíveis para iniciar'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created, dados)
+    const code = dados
+    ? httpCode.Created
+    : httpCode.BadRequest
+
+    return res.sendJsonAndLog(true, msg, code, dados)
   })
 )
 

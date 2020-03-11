@@ -14,7 +14,7 @@ controller.calculaFila = async usuarioId => {
       prepared.calculaFilaPrioritaria,
       [usuarioId]
     )
-
+  
     if (filaPrioritaria) {
       return filaPrioritaria.id
     }

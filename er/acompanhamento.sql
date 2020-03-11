@@ -477,7 +477,7 @@ $BODY$
 
       view_txt := view_txt || ' FROM macrocontrole.unidade_trabalho AS ut';
       view_txt := view_txt || jointxt;
-      view_txt := view_txt || ' INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id';
+      view_txt := view_txt || ' LEFT JOIN macrocontrole.lote AS l ON l.id = ut.lote_id';
       view_txt := view_txt || ' LEFT JOIN macrocontrole.banco_dados AS bd ON bd.id = ut.banco_dados_id';
       view_txt := view_txt || ' WHERE ut.subfase_id = ' || subfase_ident;
       view_txt := view_txt || wheretxt;
@@ -574,7 +574,9 @@ $BODY$
             'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
             'aaaaaeeeeiiiiooooouuuucc________________________________');
 
-      EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.subfase_'|| OLD.id || '_' || subfase_nome_old || ' RENAME TO subfase_' || NEW.id || '_' || subfase_nome_new;
+      IF NEW.id != OLD.id OR subfase_nome_old != subfase_nome_new THEN
+        EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.subfase_'|| OLD.id || '_' || subfase_nome_old || ' RENAME TO subfase_' || NEW.id || '_' || subfase_nome_new;
+      END IF;
 
       UPDATE public.layer_styles SET f_table_name = ('subfase_'|| NEW.id || '_' || subfase_nome_new)
       WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('subfase_'|| OLD.id || '_' || subfase_nome_old) AND stylename = 'acompanhamento_subfase';
@@ -705,7 +707,9 @@ $BODY$
           FROM dominio.tipo_fase
           WHERE code = NEW.tipo_fase_id;
 
-      EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.fase_'|| OLD.id || '_' || fase_nome_old || ' RENAME TO fase_' || NEW.id || '_' || fase_nome_new;
+      IF NEW.id != OLD.id OR fase_nome_old != fase_nome_new THEN
+        EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.fase_'|| OLD.id || '_' || fase_nome_old || ' RENAME TO fase_' || NEW.id || '_' || fase_nome_new;
+      END IF;
 
       UPDATE public.layer_styles SET f_table_name = ('fase_'|| NEW.id || '_' || fase_nome_new)
       WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('fase_'|| OLD.id || '_' || fase_nome_old) AND stylename = 'acompanhamento_fase';
@@ -819,7 +823,9 @@ $BODY$
             FROM macrocontrole.linha_producao AS lp
             WHERE lp.id = NEW.id;
 
-      EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old || ' RENAME TO linha_producao_' || NEW.id || '_' || linhaproducao_nome_new;
+      IF NEW.id != OLD.id OR linhaproducao_nome_old != linhaproducao_nome_new THEN
+        EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old || ' RENAME TO linha_producao_' || NEW.id || '_' || linhaproducao_nome_new;
+      END IF;
 
       UPDATE public.layer_styles SET f_table_name = ('linha_producao_'|| NEW.id || '_' || linhaproducao_nome_new)
       WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
