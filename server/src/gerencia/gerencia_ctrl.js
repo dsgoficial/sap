@@ -123,6 +123,13 @@ controller.pausaAtividade = async unidadeTrabalhoIds => {
   })
 }
 
+controller.atualizaAtividadesBloqueadas = async () => {
+  return db.sapConn.any(
+    `REFRESH MATERIALIZED VIEW acompanhamento.atividades_bloqueadas`
+  )
+}
+
+
 controller.reiniciaAtividade = async unidadeTrabalhoIds => {
   const dataFim = new Date()
   await db.sapConn.tx(async t => {
@@ -289,6 +296,19 @@ controller.criaFilaPrioritaria = async (
   usuarioPrioridadeId,
   prioridade
 ) => {
+  const exists = await db.sapConn.any(
+    `
+    SELECT id FROM macrocontrole.fila_prioritaria WHERE atividade_id in ($<atividadeIds:csv>) AND usuario_id = $<usuarioPrioridadeId>
+     `,
+    { atividadeIds, usuarioPrioridadeId }
+  )
+  if (exists && exists.length > 0) {
+    throw new AppError(
+      'Esta atividade já está cadastrada como prioritária para este usuário',
+      httpCode.BadRequest
+    )
+  }
+
   const result = await db.sapConn.result(
     `
       INSERT INTO macrocontrole.fila_prioritaria(atividade_id, usuario_id, prioridade)
@@ -313,6 +333,20 @@ controller.criaFilaPrioritariaGrupo = async (
   perfilProducaoId,
   prioridade
 ) => {
+  const exists = await db.sapConn.any(
+    `
+    SELECT id FROM macrocontrole.fila_prioritaria_grupo WHERE atividade_id in ($<atividadeIds:csv>) AND perfil_producao_id = $<perfilProducaoId>
+     `,
+    { atividadeIds, perfilProducaoId }
+  )
+  if (exists && exists.length > 0) {
+    throw new AppError(
+      'Esta atividade já está cadastrada como prioritária para este perfil de produção',
+      httpCode.BadRequest
+    )
+  }
+
+
   const result = await db.sapConn.result(
     `
     INSERT INTO macrocontrole.fila_prioritaria_grupo(atividade_id, perfil_producao_id, prioridade)
