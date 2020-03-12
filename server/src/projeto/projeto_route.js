@@ -427,7 +427,7 @@ router.delete(
     body: projetoSchema.perfilFMEIds
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletePerfilFME(req.params.perfil_fme_ids)
+    await projetoCtrl.deletePerfilFME(req.body.perfil_fme_ids)
 
     const msg = 'Perfil FME deletado com sucesso'
 
@@ -464,5 +464,67 @@ router.put(
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 )
+
+router.delete(
+  '/insumos',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.deletaInsumos
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaInsumosAssociados(req.body.unidades_trabalho_id, req.body.grupo_insumo_id)
+
+    const msg = 'Insumos associados deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/grupo_insumo',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getGrupoInsumo()
+
+    const msg = 'Grupos de insumos retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/unidade_trabalho',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.unidadeTrabalhoId }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaUnidadeTrabalho(
+      req.body.unidade_trabalho_ids
+    )
+
+    const msg = 'Unidade de trabalho deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.delete(
+  '/revisao/:id',
+  verifyAdmin,
+  schemaValidation({
+    params: projetoSchema.idParams
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaRevisao(
+      req.params.id
+    )
+
+    const msg = 'Revisão e correção deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
+
 
 module.exports = router

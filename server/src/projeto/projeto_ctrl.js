@@ -494,8 +494,6 @@ controller.deleteCamadas = async camadasIds => {
       )
     }
 
-    console.log(existsAssociationPerfil)
-
     return t.any(
       `DELETE FROM macrocontrole.camada
       WHERE id IN ($<camadasIds:csv>)`,
@@ -636,4 +634,40 @@ controller.criaPerfilFME = async perfilFME => {
 
   db.sapConn.none(query)
 }
+
+controller.getGrupoInsumo = async () => {
+  return db.sapConn
+    .any(`SELECT id, nome
+    FROM macrocontrole.grupo_insumo`)
+}
+
+controller.deletaInsumosAssociados = async (unidadeTrabalhoId, grupoInsumoId) => {
+  if(!grupoInsumoId){
+    return db.sapConn.any(`DELETE FROM macrocontrole.insumo_unidade_trabalho
+    WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
+    `,
+    {unidadeTrabalhoId})
+  }
+
+  return db.sapConn.any(`DELETE FROM macrocontrole.insumo_unidade_trabalho
+  WHERE id in (
+    SELECT id FROM macrocontrole.insumo_unidade_trabalho AS iut
+    INNER JOIN macrocontrole.insumo AS i ON i.id = iut.insumo_id
+    WHERE i.grupo_insumo_id = $<grupoInsumoId> AND
+    unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
+  )
+  `,
+  {unidadeTrabalhoId, grupoInsumoId})
+
+}
+
+controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
+
+  return db.sapConn.any(`DELETE FROM macrocontrole.unidade_trabalho
+  WHERE id in ($<unidadeTrabalhoId:csv>)
+  `,
+  {unidadeTrabalhoId})
+
+}
+
 module.exports = controller

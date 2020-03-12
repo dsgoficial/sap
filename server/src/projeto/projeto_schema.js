@@ -323,4 +323,29 @@ models.perfilFMEAtualizacao = Joi.object().keys({
     .min(1)
 })
 
+models.atividadeCriarRevisao = Joi.object().keys({
+  unidade_trabalho_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
+    grupo_insumo_id: Joi.number()
+    .integer()
+    .strict().allow(null,'')
+})
+
+models.unidadeTrabalhoId = Joi.object().keys({
+  unidade_trabalho_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1)
+})
+
 module.exports = models
