@@ -9,6 +9,10 @@ SELECT string_agg(query, ' ') AS revoke_query FROM (
 	FROM information_schema.table_privileges
 	WHERE table_schema NOT IN ('information_schema') AND table_schema !~ '^pg_'
 	UNION ALL
+	SELECT DISTINCT 'ALTER TABLE ' || table_schema || '.' || table_name || ' DISABLE ROW LEVEL SECURITY;' AS query
+	FROM information_schema.table_privileges
+	WHERE table_schema NOT IN ('information_schema', 'public') AND table_schema !~ '^pg_'
+	UNION ALL
 	SELECT DISTINCT 'REVOKE ALL ON FUNCTION ' || routine_schema || '.' || routine_name || '(' 
 		||  pg_get_function_identity_arguments(
 			(regexp_matches(specific_name, E'.*\_([0-9]+)'))[1]::oid) || ') FROM ' || grantee || ';'  AS query

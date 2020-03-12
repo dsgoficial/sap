@@ -359,7 +359,6 @@ controller.criaObservacao = async (
       `,
       {atividadeIds, observacaoEtapa}
     )
-
     await t.any(
       `
       UPDATE macrocontrole.subfase SET
@@ -370,7 +369,6 @@ controller.criaObservacao = async (
       `,
       {atividadeIds, observacaoSubfase}
     )
-
     await t.any(
       `
       UPDATE macrocontrole.unidade_trabalho SET
@@ -381,7 +379,6 @@ controller.criaObservacao = async (
       `,
       {atividadeIds, observacaoUnidadeTrabalho}
     )
-
     await t.any(
       `
       UPDATE macrocontrole.lote SET
@@ -390,7 +387,7 @@ controller.criaObservacao = async (
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id WHERE a.id in ($<atividadeIds:csv>)
       )
       `,
-      [atividadeIds, observacaoLote]
+      {atividadeIds, observacaoLote}
     )
   })
 }
@@ -400,7 +397,7 @@ controller.getObservacao = async atividadeId => {
     `SELECT a.observacao AS observacao_atividade, ut.observacao AS observacao_unidade_trabalho,
     l.observacao AS observacao_lote, e.observacao AS observacao_etapa, sf.observacao AS observacao_subfase
     FROM macrocontrole.atividade AS a
-    INNER JOIN macrocontrole.unidade_trabalho_id AS ut ON ut.id = a.unidade_trabalho_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
     INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
     INNER JOIN macrocontrole.subfase AS sf ON sf.id = e.subfase_id

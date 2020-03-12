@@ -124,14 +124,14 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
 const getInfoMenus = async (connection, etapaCode, subfaseId) => {
   if (etapaCode === 2) {
     return connection.any(
-      `SELECT mp.nome, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
+      `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
         INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
         WHERE subfase_id = $1`,
       [subfaseId]
     )
   }
   return connection.any(
-    `SELECT mp.nome, mp.definicao_menu, mp.ordem_menu FROM macrocontrole.perfil_menu AS pm
+    `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
         INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
         WHERE subfase_id = $1 and not menu_revisao`,
     [subfaseId]
@@ -151,7 +151,7 @@ const getInfoEstilos = async (connection, subfaseId) => {
 
 const getInfoRegras = async (connection, subfaseId) => {
   return connection.any(
-    `SELECT lr.tipo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra, lr.cor_rgb, lr.descricao, lr.ordem, lr.id
+    `SELECT lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra_id, lr.descricao,  gr.cor_rgb, gr.grupo_regra, lr.id
       FROM macrocontrole.perfil_regras as pr
       INNER JOIN dgeo.group_rules AS gr ON gr.grupo_regra = pr.nome
       INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
@@ -579,13 +579,13 @@ controller.inicia = async usuarioId => {
     }
 
     await t.none(
-      `DELETE FROM macrocontrole.filaPrioritaria
+      `DELETE FROM macrocontrole.fila_prioritaria
           WHERE atividade_id IN (
           SELECT id from macrocontrole.atividade WHERE id = $<prioridade>)`,
       { prioridade }
     )
     await t.none(
-      `DELETE FROM macrocontrole.filaPrioritaria_grupo
+      `DELETE FROM macrocontrole.fila_prioritaria_grupo
           WHERE atividade_id IN (
           SELECT id from macrocontrole.atividade WHERE id = $<prioridade>)`,
       { prioridade }
