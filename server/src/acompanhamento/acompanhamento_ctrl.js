@@ -99,7 +99,7 @@ controller.getAcaoUsuario = async (usuarioId, days) => {
     `
       WITH datas AS (
         SELECT ma.data
-        FROM microcontrole.monitoramento_acao AS ma
+        FROM microcontrole.monitoramento_comportamento AS ma
         INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
         WHERE a.usuario_id = $1 AND ma.data::date > NOW()::date - interval '$2:raw day'
         ORDER BY data
@@ -119,7 +119,7 @@ controller.getAcaoUsuario = async (usuarioId, days) => {
   const minMaxPoints = await db.sapConn.any(
     `
       SELECT to_char(ma.data::date, 'YYYY-MM-DD') AS dia, to_char(min(ma.data), 'YYYY-MM-DD HH24:MI:00') as min_data, to_char(max(ma.data), 'YYYY-MM-DD HH24:MI:00') as max_data, tpg.nome_abrev || ' ' || u.nome_guerra as usuario
-      FROM microcontrole.monitoramento_acao AS ma
+      FROM microcontrole.monitoramento_comportamento AS ma
       INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
       INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
       INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
@@ -139,7 +139,7 @@ controller.getAcaoEmExecucao = async () => {
     `
       WITH datas AS (
         SELECT a.usuario_id, ma.data
-        FROM microcontrole.monitoramento_acao AS ma
+        FROM microcontrole.monitoramento_comportamento AS ma
         INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
         WHERE a.tipo_situacao_id = 2 AND ma.data::date = NOW()::date
         ORDER BY data
@@ -158,7 +158,7 @@ controller.getAcaoEmExecucao = async () => {
   const minMaxPoints = await db.sapConn.any(
     `
       SELECT u.id AS usuario_id, to_char(ma.data::date, 'YYYY-MM-DD') AS dia, to_char(min(ma.data), 'YYYY-MM-DD HH24:MI:00') as min_data, to_char(max(ma.data), 'YYYY-MM-DD HH24:MI:00') as max_data, tpg.nome_abrev || ' ' || u.nome_guerra as usuario
-      FROM microcontrole.monitoramento_acao AS ma
+      FROM microcontrole.monitoramento_comportamento AS ma
       INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
       INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
       INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id

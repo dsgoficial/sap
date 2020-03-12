@@ -473,7 +473,7 @@ BEGIN
 		SELECT data_inicio AS data FROM macrocontrole.atividade WHERE id = i
 		UNION
 		(SELECT data
-		FROM microcontrole.monitoramento_acao AS ma
+		FROM microcontrole.monitoramento_comportamento AS ma
 		INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
 		WHERE ma.atividade_id = i AND a.data_inicio < ma.data AND a.data_fim > ma.data
 		ORDER BY data)

@@ -62,8 +62,8 @@ CREATE INDEX monitoramento_tela_idx
     (data DESC)
     TABLESPACE pg_default;
 
-CREATE INDEX monitoramento_comportamento_data_idx ON microcontrole.monitoramento_comportamento USING BRIN (data) WITH (pages_per_range = 128);
-CREATE INDEX monitoramento_comportamento_atividade_id_idx ON microcontrole.monitoramento_comportamento (atividade_id);
+CREATE INDEX monitoramento_tela_data_idx ON microcontrole.monitoramento_tela USING BRIN (data) WITH (pages_per_range = 128);
+CREATE INDEX monitoramento_tela_atividade_id_idx ON microcontrole.monitoramento_tela (atividade_id);
 
 CREATE TABLE microcontrole.monitoramento_comportamento(
   id SERIAL NOT NULL PRIMARY KEY,
