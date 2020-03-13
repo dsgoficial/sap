@@ -524,6 +524,24 @@ router.delete(
   })
 )
 
+router.post(
+  '/unidade_trabalho/copiar',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.unidadeTrabalhoCopiar
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.copiarUnidadeTrabalho(
+      req.body.unidade_trabalho_ids,
+      req.body.etapa_ids,
+      req.body.associar_insumos
+    )
+
+    const msg = 'Revisão e correção deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
 
 
 

@@ -348,4 +348,26 @@ models.unidadeTrabalhoId = Joi.object().keys({
     .min(1)
 })
 
+models.unidadeTrabalhoCopiar = Joi.object().keys({
+  unidade_trabalho_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
+    etapa_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .required()
+    .min(1),
+   associar_insumos: Joi.boolean().required()
+})
+
+
+
 module.exports = models

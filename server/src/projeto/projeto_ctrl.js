@@ -670,4 +670,42 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
 
 }
 
+controller.deletaRevisao = async revisaoId => {
+
+  const idCorr = await t.oneOrNone(
+    `SELECT e.id FROM macrocontrole.etapa AS e
+    INNER JOIN macrocontrole.etapa AS e_prox ON e_prox.ordem = e.ordem + 1 AND e.subfase_id = e_prox.subfase_id
+    WHERE e.id = $<revisaoId> AND e.tipo_etapa_id = 2 AND e_prox.tipo_etapa_id = 3
+    LIMIT 1`,
+    { revisaoId }
+  )
+
+  if(!idCorr){
+    throw new AppError(
+      'A atividade de revisão e sua correção não foram encontradas.',
+      httpCode.BadRequest
+    )
+  }
+
+  return db.sapConn.any(`DELETE FROM macrocontrole.etapa
+  WHERE id IN ($<revisaoId>, $<correcaoId>)
+  `,
+  {revisaoId, correcaoId: idCorr.id}
+  )
+}
+
+controller.copiarUnidadeTrabalho = async (unidadeTrabalhoIds, etapaIds, associarInsumos) => {
+
+  db.sapConn.any(`
+  INSERT INTO macrocontrole.unidade_trabalho
+  `,
+  {revisaoId, correcaoId: idCorr.id}
+  )
+
+  if(associarInsumos){
+
+  }
+
+}
+
 module.exports = controller
