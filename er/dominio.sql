@@ -211,4 +211,17 @@ INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES
 (11, 'Designação para ministrar curso / capacitação'),	
 (12, 'Designação para participação em eventos');
 
+
+CREATE TABLE dominio.estrategia_associacao(	
+	code SMALLINT NOT NULL PRIMARY KEY,	
+	nome VARCHAR(255) NOT NULL	
+);	
+
+INSERT INTO dominio.estrategia_associacao (code, nome) VALUES	
+(1, 'Centroide da unidade de trabalho contido no insumo'),	
+(2, 'Centroide do insumo contido na unidade de trabalho'),	
+(3, 'Interseção entre insumo e unidade de trabalho'),
+(4, 'Sobreposição entre insumo e unidade de trabalho'),
+(5, 'Associar insumo a todas as unidades de trabalho');
+
 COMMIT;
