@@ -814,7 +814,7 @@ controller.criaProdutos = async (produtos, linhaProducaoId) => {
   ]);
 
   produtos.forEach(p => {
-    p.geom = `st_geomfromewkt(${p.geom})`
+    p.geom = `st_geomfromewkt('${p.geom}')`
   })
 
   const query = db.pgp.helpers.insert(produtos, cs, {
@@ -840,7 +840,7 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, subfaseId) => {
   ]);
 
   unidadesTrabalho.forEach(p => {
-    p.geom = `st_geomfromewkt(${p.geom})`
+    p.geom = `st_geomfromewkt('${p.geom}')`
   })
 
   const query = db.pgp.helpers.insert(unidadesTrabalho, cs, {

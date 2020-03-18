@@ -545,7 +545,7 @@ router.post(
   }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.associaInsumos(
-      req.body.unidades_trabalho_id,
+      req.body.unidade_trabalho_ids,
       req.body.grupo_insumo_id,
       req.body.estrategia_id,
       req.body.caminho_padrao

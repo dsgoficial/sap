@@ -375,7 +375,7 @@ models.unidadeTrabalhoCopiar = Joi.object().keys({
 });
 
 models.associaInsumos = Joi.object().keys({
-  unidades_trabalho_id: Joi.array()
+  unidade_trabalho_ids: Joi.array()
     .items(
       Joi.number()
         .integer()
