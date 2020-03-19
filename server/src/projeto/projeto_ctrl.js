@@ -350,33 +350,57 @@ controller.getProjetos = async () => {
 
 controller.getLinhasProducao = async () => {
   return db.sapConn.any(
-    `SELECT lp.id, lp.nome, lp.nome AS projeto, lp.projeto_id, lp.tipo_produto_id 
+    `SELECT lp.id, lp.nome, p.nome AS projeto, lp.projeto_id, p.finalizado, lp.tipo_produto_id,
+    tp.nome AS tipo_produto
     FROM macrocontrole.linha_producao AS lp
     INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
     `
   );
 };
 
 controller.getFases = async () => {
   return db.sapConn.any(
-    `SELECT f.id, tf.nome, f.tipo_fase_id, f.linha_producao_id, f.ordem
+    `SELECT f.id, tf.nome, f.tipo_fase_id, f.linha_producao_id, f.ordem,
+    lp.nome AS linha_producao, p.nome AS projeto, p.finalizado,
+    tp.nome AS tipo_produto
     FROM macrocontrole.fase AS f
-    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id`
+    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+    INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
+    INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id`
   );
 };
 
 controller.getSubfases = async () => {
   return db.sapConn.any(
-    "SELECT id, nome, fase_id, ordem, observacao FROM macrocontrole.subfase"
+    `SELECT s.id, s.nome, s.fase_id, s.ordem, s.observacao,
+    tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
+    lp.nome AS linha_producao, p.nome AS projeto, p.finalizado,
+    tp.nome AS tipo_produto
+    FROM macrocontrole.subfase AS s
+    INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+    INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
+    INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id`
   );
 };
 
 controller.getEtapas = async () => {
   return db.sapConn.any(
     `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, s.nome AS subfase, e.ordem, e.observacao
+    tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
+    lp.nome AS linha_producao, p.nome AS projeto, p.finalizado,
+    tp.nome AS tipo_produto
     FROM macrocontrole.etapa AS e
     INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-    INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id`
+    INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
+    INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+    INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
+    INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id`
   );
 };
 
