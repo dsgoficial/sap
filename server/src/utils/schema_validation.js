@@ -1,6 +1,6 @@
 'use strict'
 
-const AppError = require('./App_error')
+const AppError = require('./app_error')
 const httpCode = require('./http_code')
 
 /**
