@@ -153,7 +153,7 @@ CREATE VIEW acompanhamento.lotes AS
 SELECT l.id, l.nome, l.prioridade, count(ut.id) AS unidades_trabalho, ST_Collect(ut.geom) AS geom
 FROM macrocontrole.lote AS l
 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = l.id
-GROUP BY l.id
+GROUP BY l.id;
 
 
 CREATE VIEW acompanhamento.atividades_em_execucao AS

@@ -39,7 +39,7 @@
     "inquirer": "^7.1.0",
     "pg-promise": "^10.4.4",
     "pgtools": "^0.3.0",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.0.0",
     "npm-run": "^5.0.1"
   }
 }
