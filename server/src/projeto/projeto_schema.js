@@ -224,11 +224,10 @@ models.camadas = Joi.object().keys({
         nome: Joi.string().required(),
         alias: Joi.string()
           .required()
-          .allow("", null),
+          .allow(""),
         documentacao: Joi.string()
-          .uri()
           .required()
-          .allow("", null)
+          .allow("")
       })
     )
     .required()
@@ -245,11 +244,10 @@ models.camadasAtualizacao = Joi.object().keys({
           .required(),
         alias: Joi.string()
           .required()
-          .allow("", null),
+          .allow(""),
         documentacao: Joi.string()
-          .uri()
           .required()
-          .allow("", null)
+          .allow("")
       })
     )
     .required()
@@ -361,6 +359,7 @@ models.unidadeTrabalhoCopiar = Joi.object().keys({
         .integer()
         .strict()
     )
+    .unique()
     .required()
     .min(1),
   etapa_ids: Joi.array()
@@ -369,9 +368,31 @@ models.unidadeTrabalhoCopiar = Joi.object().keys({
         .integer()
         .strict()
     )
+    .unique()
     .required()
     .min(1),
   associar_insumos: Joi.boolean().required()
+});
+
+models.associaInsumos = Joi.object().keys({
+  unidade_trabalho_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .unique()
+    .required()
+    .min(1),
+    grupo_insumo_id: Joi.number()
+        .integer()
+        .strict()
+        .required(),
+    estrategia_id: Joi.number()
+        .integer()
+        .strict()
+        .required(),
+    caminho_padrao: Joi.string().required().allow("")
 });
 
 models.produtos = Joi.object().keys({
@@ -398,6 +419,43 @@ models.produtos = Joi.object().keys({
     .required()
     .min(1),
   linha_producao_id: Joi.number()
+    .integer()
+    .strict()
+    .required()
+});
+
+models.unidadesTrabalho = Joi.object().keys({
+  unidades_trabalho: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string()
+          .required()
+          .allow(""),
+        epsg: Joi.string()
+          .required()
+          .allow(""),
+        observacao: Joi.string()
+          .required()
+          .allow(""),
+        geom: Joi.string().required(),
+        banco_dados_id: Joi.number()
+          .integer()
+          .strict()
+          .required(),
+        lote_id: Joi.number()
+          .integer()
+          .strict()
+          .required(),
+        disponivel: Joi.boolean().required(),
+        prioridade: Joi.number()
+        .integer()
+        .strict()
+        .required()
+      })
+    )
+    .required()
+    .min(1),
+    subfase_id: Joi.number()
     .integer()
     .strict()
     .required()

@@ -527,7 +527,7 @@ controller.finaliza = async (
         { atividadeId }
       )
 
-      if (!result.rowCount || result.rowCount !== 1) {
+      if (!result.rowCount || result.rowCount === 0) {
         throw new AppError('Erro ao bloquear correção')
       }
     }

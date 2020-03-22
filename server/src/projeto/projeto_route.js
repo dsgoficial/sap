@@ -525,6 +525,38 @@ router.delete(
   })
 );
 
+router.get(
+  "/estrategia_associacao",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getEstrategiaAssociacao();
+
+    const msg = "Estratégias retornadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.post(
+  "/unidade_trabalho/insumos",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.associaInsumos
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.associaInsumos(
+      req.body.unidade_trabalho_ids,
+      req.body.grupo_insumo_id,
+      req.body.estrategia_id,
+      req.body.caminho_padrao
+    );
+
+    const msg = "Produtos criados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
 router.post(
   "/unidade_trabalho/copiar",
   verifyAdmin,
@@ -538,7 +570,25 @@ router.post(
       req.body.associar_insumos
     );
 
-    const msg = "Revisão e correção deletadas com sucesso";
+    const msg = "Unidades de trabalho copiadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
+router.post(
+  "/unidade_trabalho",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.unidadesTrabalho
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaUnidadeTrabalho(
+      req.body.unidades_trabalho,
+      req.body.subfase_id
+    );
+
+    const msg = "Unidades de trabalho criadas com sucesso";
 
     return res.sendJsonAndLog(true, msg, httpCode.OK);
   })

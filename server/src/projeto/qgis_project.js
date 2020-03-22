@@ -8,7 +8,7 @@ const path = require('path')
 const qgisProject = (() => {
   return fs
     .readFileSync(
-      path.resolve('./src/templates/sap_config_template.qgs'),
+      path.resolve('./server/src/templates/sap_config_template.qgs'),
       'utf-8'
     )
     .replace(/{{DATABASE}}/g, DB_NAME)
