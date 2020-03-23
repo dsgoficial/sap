@@ -389,7 +389,7 @@ controller.getSubfases = async () => {
 
 controller.getEtapas = async () => {
   return db.sapConn.any(
-    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, s.nome AS subfase, e.ordem, e.observacao
+    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, s.nome AS subfase, e.ordem, e.observacao,
     tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
     lp.nome AS linha_producao, p.nome AS projeto, p.finalizado,
     tp.nome AS tipo_produto
@@ -712,24 +712,53 @@ controller.deletaInsumosAssociados = async (
 
   return db.sapConn.any(
     `DELETE FROM macrocontrole.insumo_unidade_trabalho
-  WHERE id in (
-    SELECT id FROM macrocontrole.insumo_unidade_trabalho AS iut
-    INNER JOIN macrocontrole.insumo AS i ON i.id = iut.insumo_id
-    WHERE i.grupo_insumo_id = $<grupoInsumoId> AND
-    unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
-  )
+    WHERE id in (
+      SELECT iut.id FROM macrocontrole.insumo_unidade_trabalho AS iut
+      INNER JOIN macrocontrole.insumo AS i ON i.id = iut.insumo_id
+      WHERE i.grupo_insumo_id = $<grupoInsumoId> AND
+      unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
+    )
   `,
     { unidadeTrabalhoId, grupoInsumoId }
   );
 };
 
 controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
-  return db.sapConn.any(
-    `DELETE FROM macrocontrole.unidade_trabalho
-  WHERE id in ($<unidadeTrabalhoId:csv>)
-  `,
-    { unidadeTrabalhoId }
-  );
+  return db.sapConn.tx(async t => {
+    const atividadeAssociada = await t.oneOrNone(
+      `SELECT a.id FROM macrocontrole.atividade AS a
+      WHERE a.unidade_trabalho_id in ($<unidadeTrabalhoId:csv>) AND a.tipo_situacao_id != 1
+      LIMIT 1`,
+      { unidadeTrabalhoId }
+    );
+    if (atividadeAssociada) {
+      throw new AppError(
+        "Uma das unidades de trabalho possui atividades iniciadas associadas",
+        httpCode.BadRequest
+      );
+    }
+
+    t.any(
+      `DELETE FROM macrocontrole.insumo_unidade_trabalho
+      WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
+    `,
+      { unidadeTrabalhoId }
+    );
+
+    t.any(
+      `DELETE FROM macrocontrole.atividade
+      WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
+    `,
+      { unidadeTrabalhoId }
+    );
+
+    return t.any(
+      `DELETE FROM macrocontrole.unidade_trabalho
+      WHERE id in ($<unidadeTrabalhoId:csv>)
+    `,
+      { unidadeTrabalhoId }
+    );
+  });
 };
 
 controller.deletaRevisao = async revisaoId => {
@@ -762,32 +791,35 @@ controller.copiarUnidadeTrabalho = async (
   associarInsumos
 ) => {
   return db.sapConn.tx(async t => {
-    const subfase = await t.oneOrNone("SELECT subfase_id FROM macrocontrole.etapa WHERE id = $1", [etapaIds[0]]);
+    const subfase = await t.oneOrNone(
+      "SELECT subfase_id FROM macrocontrole.etapa WHERE id = $1",
+      [etapaIds[0]]
+    );
 
     if (!subfase) {
-      throw new AppError(
-        "Etapa não encontrada",
-        httpCode.BadRequest
-      );
+      throw new AppError("Etapa não encontrada", httpCode.BadRequest);
     }
-    const utOldNew = []
+    const utOldNew = [];
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
-        const unidadeTrabalho = await t.oneOrNone(`
+      const unidadeTrabalho = await t.oneOrNone(
+        `
           INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, banco_dados_id, subfase_id, lote_id, disponivel, prioridade)
           SELECT nome, geom, epsg, banco_dados_id, $<subfaseId> AS subfase_id, lote_id, disponivel, prioridade
           FROM macrocontrole.unidade_trabalho
           WHERE id = $<unidadeTrabalhoIds>
           RETURNING id
-        `, {subfaseId: subfase.id, unidadeTrabalhoId})
+        `,
+        { subfaseId: subfase.id, unidadeTrabalhoId }
+      );
 
-        utOldNew.push({unidadeTrabalhoId: unidadeTrabalho.id})
+      utOldNew.push({ unidadeTrabalhoId: unidadeTrabalho.id });
     }
-    const dados = []
+    const dados = [];
     etapaIds.forEach(e => {
       Object.keys(utOldNew).forEach(u => {
-        dados.push({etapa_id: e, unidade_trabalho_id: u})
-      })
-    })
+        dados.push({ etapa_id: e, unidade_trabalho_id: u });
+      });
+    });
 
     const cs = new db.pgp.helpers.ColumnSet([
       "etapa_id",
@@ -802,31 +834,37 @@ controller.copiarUnidadeTrabalho = async (
 
     await t.none(query);
 
-    if(associarInsumos){
-      const insumos = await t.any("SELECT unidade_trabalho_id, insumo_id, caminho_padrao FROM macrocontrole.insumo_unidade_trabalho WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)", {unidadeTrabalhoId});
-      const dadosInsumos = []
+    if (associarInsumos) {
+      const insumos = await t.any(
+        "SELECT unidade_trabalho_id, insumo_id, caminho_padrao FROM macrocontrole.insumo_unidade_trabalho WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)",
+        { unidadeTrabalhoId }
+      );
+      const dadosInsumos = [];
       insumos.forEach(i => {
-        dadosInsumos.push({insumo_id: i.insumo_id, unidade_trabalho_id: utOldNew[i.unidade_trabalho_id], caminho_padrao: i.caminho_padrao})
-      })
+        dadosInsumos.push({
+          insumo_id: i.insumo_id,
+          unidade_trabalho_id: utOldNew[i.unidade_trabalho_id],
+          caminho_padrao: i.caminho_padrao
+        });
+      });
 
       const cs = new db.pgp.helpers.ColumnSet([
         "insumo_id",
         "unidade_trabalho_id",
         "caminho_padrao"
       ]);
-  
+
       const query = db.pgp.helpers.insert(dadosInsumos, cs, {
         table: "insumo_unidade_trabalho",
         schema: "macrocontrole"
       });
-  
+
       await t.none(query);
     }
   });
 };
 
 controller.criaProdutos = async (produtos, linhaProducaoId) => {
-
   const cs = new db.pgp.helpers.ColumnSet([
     "uuid",
     "nome",
@@ -838,8 +876,8 @@ controller.criaProdutos = async (produtos, linhaProducaoId) => {
   ]);
 
   produtos.forEach(p => {
-    p.geom = `st_geomfromewkt('${p.geom}')`
-  })
+    p.geom = `st_geomfromewkt('${p.geom}')`;
+  });
 
   const query = db.pgp.helpers.insert(produtos, cs, {
     table: "produto",
@@ -850,7 +888,6 @@ controller.criaProdutos = async (produtos, linhaProducaoId) => {
 };
 
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, subfaseId) => {
-
   const cs = new db.pgp.helpers.ColumnSet([
     "nome",
     "epsg",
@@ -864,8 +901,8 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, subfaseId) => {
   ]);
 
   unidadesTrabalho.forEach(p => {
-    p.geom = `st_geomfromewkt('${p.geom}')`
-  })
+    p.geom = `st_geomfromewkt('${p.geom}')`;
+  });
 
   const query = db.pgp.helpers.insert(unidadesTrabalho, cs, {
     table: "unidade_trabalho",
@@ -875,70 +912,85 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, subfaseId) => {
   return db.sapConn.none(query);
 };
 
-controller.associaInsumos = async (unidadesTrabalhoIs, grupoInsumoId, estrategiaId, caminhoPadrao) => {
-//(1, 'Centroide da unidade de trabalho contido no insumo'),	
-//(2, 'Centroide do insumo contido na unidade de trabalho'),	
-//(3, 'Interseção entre insumo e unidade de trabalho'),
-//(4, 'Sobreposição entre insumo e unidade de trabalho'),
-//(5, 'Associar insumo a todas as unidades de trabalho');
-switch(estrategiaId) {
-  case 1:
-      await db.sapConn.none(`
+controller.associaInsumos = async (
+  unidadesTrabalhoIs,
+  grupoInsumoId,
+  estrategiaId,
+  caminhoPadrao
+) => {
+  //(1, 'Centroide da unidade de trabalho contido no insumo'),
+  //(2, 'Centroide do insumo contido na unidade de trabalho'),
+  //(3, 'Interseção entre insumo e unidade de trabalho'),
+  //(4, 'Sobreposição entre insumo e unidade de trabalho'),
+  //(5, 'Associar insumo a todas as unidades de trabalho');
+  switch (estrategiaId) {
+    case 1:
+      await db.sapConn.none(
+        `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(ut.geom), i.geom)
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
-      `, {unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao});
+      `,
+        { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
+      );
       break;
-  case 2:
-      await db.sapConn.none(`
+    case 2:
+      await db.sapConn.none(
+        `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(i.geom), ut.geom)
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
-      `, {unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao});
+      `,
+        { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
+      );
       break;
-  case 3:
-      await db.sapConn.none(`
+    case 3:
+      await db.sapConn.none(
+        `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(i.geom, ut.geom)
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
-      `, {unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao});
+      `,
+        { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
+      );
       break;
-  case 4:
-      await db.sapConn.none(`
+    case 4:
+      await db.sapConn.none(
+        `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_relate(ut.geom, i.geom, '2********')
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
-      `, {unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao});
+      `,
+        { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
+      );
       break;
-  case 5:
-      await db.sapConn.none(`
+    case 5:
+      await db.sapConn.none(
+        `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         CROSS JOIN macrocontrole.insumo AS i
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
-      `, {unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao});
-      break;
-  default:
-      throw new AppError(
-        "Estratégia inválida",
-        httpCode.BadRequest
+      `,
+        { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
       );
-}
-
+      break;
+    default:
+      throw new AppError("Estratégia inválida", httpCode.BadRequest);
+  }
 };
 
 controller.getEstrategiaAssociacao = async () => {
-  return db.sapConn
-    .any(`SELECT code, nome FROM dominio.estrategia_associacao`);
+  return db.sapConn.any(`SELECT code, nome FROM dominio.estrategia_associacao`);
 };
 
 module.exports = controller;
