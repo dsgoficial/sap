@@ -395,6 +395,22 @@ models.associaInsumos = Joi.object().keys({
     caminho_padrao: Joi.string().required().allow("")
 });
 
+models.deletaInsumos = Joi.object().keys({
+  unidade_trabalho_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .strict()
+    )
+    .unique()
+    .required()
+    .min(1),
+    grupo_insumo_id: Joi.number()
+        .integer()
+        .strict()
+        .required()
+});
+
 models.produtos = Joi.object().keys({
   produtos: Joi.array()
     .items(

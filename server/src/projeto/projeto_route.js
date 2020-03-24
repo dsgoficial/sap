@@ -475,7 +475,7 @@ router.delete(
   }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.deletaInsumosAssociados(
-      req.body.unidades_trabalho_id,
+      req.body.unidade_trabalho_ids,
       req.body.grupo_insumo_id
     );
 

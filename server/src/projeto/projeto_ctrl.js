@@ -704,7 +704,7 @@ controller.deletaInsumosAssociados = async (
   if (!grupoInsumoId) {
     return db.sapConn.any(
       `DELETE FROM macrocontrole.insumo_unidade_trabalho
-    WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
+       WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
     `,
       { unidadeTrabalhoId }
     );
@@ -763,7 +763,7 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
 
 controller.deletaRevisao = async revisaoId => {
   const idCorr = await db.sapConn.oneOrNone(
-    `SELECT e.id FROM macrocontrole.etapa AS e
+    `SELECT e_prox.id FROM macrocontrole.etapa AS e
     INNER JOIN macrocontrole.etapa AS e_prox ON e_prox.ordem = e.ordem + 1 AND e.subfase_id = e_prox.subfase_id
     WHERE e.id = $<revisaoId> AND e.tipo_etapa_id = 2 AND e_prox.tipo_etapa_id = 3
     LIMIT 1`,
@@ -779,7 +779,7 @@ controller.deletaRevisao = async revisaoId => {
 
   return db.sapConn.any(
     `DELETE FROM macrocontrole.etapa
-  WHERE id IN ($<revisaoId>, $<correcaoId>)
+     WHERE id IN ($<revisaoId>, $<correcaoId>)
   `,
     { revisaoId, correcaoId: idCorr.id }
   );
