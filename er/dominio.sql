@@ -153,6 +153,19 @@ INSERT INTO dominio.tipo_insumo (code, nome) VALUES
 (8, 'XYZ Tiles'),
 (9, 'Download via HTTP');
 
+CREATE TABLE dominio.tipo_dado_producao(
+	code SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO dominio.tipo_dado_producao (code, nome) VALUES
+(1, 'Dado não controlado pelo SAP'),
+(2, 'Banco de dados PostGIS com controle de permissões'),
+(3, 'Banco de dados PostGIS'),
+(4, 'Backup de banco de dados PostGIS via Google Drive'),
+(5, 'Geopackage via rede'),
+(6, 'Shapefile via rede');
+
 CREATE TABLE dominio.tipo_situacao(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255)

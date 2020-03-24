@@ -384,15 +384,17 @@ models.associaInsumos = Joi.object().keys({
     .unique()
     .required()
     .min(1),
-    grupo_insumo_id: Joi.number()
-        .integer()
-        .strict()
-        .required(),
-    estrategia_id: Joi.number()
-        .integer()
-        .strict()
-        .required(),
-    caminho_padrao: Joi.string().required().allow("")
+  grupo_insumo_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  estrategia_id: Joi.number()
+    .integer()
+    .strict()
+    .required(),
+  caminho_padrao: Joi.string()
+    .required()
+    .allow("")
 });
 
 models.deletaInsumos = Joi.object().keys({
@@ -405,10 +407,10 @@ models.deletaInsumos = Joi.object().keys({
     .unique()
     .required()
     .min(1),
-    grupo_insumo_id: Joi.number()
-        .integer()
-        .strict()
-        .required()
+  grupo_insumo_id: Joi.number()
+    .integer()
+    .strict()
+    .required()
 });
 
 models.produtos = Joi.object().keys({
@@ -454,7 +456,7 @@ models.unidadesTrabalho = Joi.object().keys({
           .required()
           .allow(""),
         geom: Joi.string().required(),
-        banco_dados_id: Joi.number()
+        dado_producao_id: Joi.number()
           .integer()
           .strict()
           .required(),
@@ -464,14 +466,14 @@ models.unidadesTrabalho = Joi.object().keys({
           .required(),
         disponivel: Joi.boolean().required(),
         prioridade: Joi.number()
-        .integer()
-        .strict()
-        .required()
+          .integer()
+          .strict()
+          .required()
       })
     )
     .required()
     .min(1),
-    subfase_id: Joi.number()
+  subfase_id: Joi.number()
     .integer()
     .strict()
     .required()

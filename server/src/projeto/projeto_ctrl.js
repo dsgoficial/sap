@@ -184,7 +184,20 @@ controller.getProject = async () => {
 
 controller.getBancoDados = async () => {
   return db.sapConn.any(
-    "SELECT nome, servidor, porta FROM macrocontrole.banco_dados"
+    `SELECT nome, split_part(configuracao_producao, ':', 1) AS servidor,
+    split_part(configuracao_producao, ':', 2) AS porta,
+    FROM macrocontrole.dado_producao WHERE tipo_dado_producao_id IN (1,2)`
+  );
+};
+
+controller.getDadoProducao = async () => {
+  return db.sapConn.any(
+    `SELECT dp.id, dp.nome, dp.tipo_dado_producao_id, tdp.nome AS tipo_dado_producao,
+    configuracao_producao, dp.tipo_dado_finalizacao_id, tdf.nome AS tipo_dado_finalizacao,
+    configuracao_finalizacao
+    FROM macrocontrole.dado_producao AS dp
+    INNER JOIN dominio.tipo_dado_producao AS tdp On tdp.code = dp.tipo_dado_producao_id
+    INNER JOIN dominio.tipo_dado_producao AS tdf On tdf.code = dp.tipo_dado_finalizacao_id`
   );
 };
 
@@ -803,8 +816,8 @@ controller.copiarUnidadeTrabalho = async (
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
       const unidadeTrabalho = await t.oneOrNone(
         `
-          INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, banco_dados_id, subfase_id, lote_id, disponivel, prioridade)
-          SELECT nome, geom, epsg, banco_dados_id, $<subfaseId> AS subfase_id, lote_id, disponivel, prioridade
+          INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, lote_id, disponivel, prioridade)
+          SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, lote_id, disponivel, prioridade
           FROM macrocontrole.unidade_trabalho
           WHERE id = $<unidadeTrabalhoIds>
           RETURNING id
@@ -891,7 +904,7 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, subfaseId) => {
   const cs = new db.pgp.helpers.ColumnSet([
     "nome",
     "epsg",
-    "banco_dados_id",
+    "dado_producao_id",
     "lote_id",
     { name: "subfase_id", init: () => subfaseId },
     "disponivel",

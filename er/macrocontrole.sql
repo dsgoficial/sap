@@ -254,12 +254,13 @@ CREATE TABLE macrocontrole.perfil_model_qgis(
 	UNIQUE(nome,subfase_id)
 );
 
-CREATE TABLE macrocontrole.banco_dados(
+CREATE TABLE macrocontrole.dado_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	servidor VARCHAR(255) NOT NULL,
-	porta VARCHAR(255) NOT NULL,
-	UNIQUE(nome,servidor,porta)
+	tipo_dado_producao_id SMALLINT NOT NULL REFERENCES dominio.tipo_dado_producao (code),
+	configuracao_producao VARCHAR(255) NOT NULL,
+	tipo_dado_finalizacao_id SMALLINT REFERENCES dominio.tipo_dado_producao (code),
+	configuracao_finalizacao VARCHAR(255)
 );
 
 CREATE TABLE macrocontrole.perfil_monitoramento(
@@ -326,7 +327,7 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	nome VARCHAR(255) NOT NULL,
     geom geometry(POLYGON, 4326) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
-	banco_dados_id INTEGER REFERENCES macrocontrole.banco_dados (id),
+	dado_producao_id INTEGER NOT NULL REFERENCES macrocontrole.dado_producao (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,

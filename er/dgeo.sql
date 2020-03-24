@@ -19,11 +19,10 @@ CREATE TABLE dgeo.usuario(
 CREATE TABLE dgeo.login_temporario(
   id SERIAL NOT NULL PRIMARY KEY,
   usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-  servidor VARCHAR(255) NOT NULL,
-  porta VARCHAR(255) NOT NULL,
+  configuracao VARCHAR(255) NOT NULL,
   login VARCHAR(255) NOT NULL,
   senha VARCHAR(255) NOT NULL,
-  UNIQUE(login,servidor,porta)
+  UNIQUE(login,configuracao)
 );
 
 CREATE TABLE dgeo.plugin(

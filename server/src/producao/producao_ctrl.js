@@ -1,57 +1,56 @@
-'use strict'
+"use strict";
 
-const { db, temporaryLogin } = require('../database')
+const { db, temporaryLogin } = require("../database");
 
-const { AppError, httpCode } = require('../utils')
+const { AppError, httpCode } = require("../utils");
 
-const prepared = require('./prepared_statements')
+const prepared = require("./prepared_statements");
 
-const controller = {}
+const controller = {};
 
 controller.calculaFila = async usuarioId => {
   const prioridade = await db.sapConn.task(async t => {
-    const filaPrioritaria = await t.oneOrNone(
-      prepared.calculaFilaPrioritaria,
-      [usuarioId]
-    )
-  
+    const filaPrioritaria = await t.oneOrNone(prepared.calculaFilaPrioritaria, [
+      usuarioId
+    ]);
+
     if (filaPrioritaria) {
-      return filaPrioritaria.id
+      return filaPrioritaria.id;
     }
 
     const filaPrioritariaGrupo = await t.oneOrNone(
       prepared.calculaFilaPrioritariaGrupo,
       [usuarioId]
-    )
+    );
 
     if (filaPrioritariaGrupo) {
-      return filaPrioritariaGrupo.id
+      return filaPrioritariaGrupo.id;
     }
 
     const cartasPausadas = await t.oneOrNone(prepared.calculaFilaPausada, [
       usuarioId
-    ])
+    ]);
 
     if (cartasPausadas) {
-      return cartasPausadas.id
+      return cartasPausadas.id;
     }
 
     const prioridadeOperador = await t.oneOrNone(prepared.calculaFila, [
       usuarioId
-    ])
+    ]);
 
     if (prioridadeOperador) {
-      return prioridadeOperador.id
+      return prioridadeOperador.id;
     }
 
-    return null
-  })
-  return prioridade
-}
+    return null;
+  });
+  return prioridade;
+};
 
 const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
-  let camadas
-  let atributos
+  let camadas;
+  let atributos;
 
   if (etapaCode === 1 || etapaCode === 4) {
     camadas = await connection.any(
@@ -60,7 +59,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1 and not pc.camada_apontamento`,
       [subfaseId]
-    )
+    );
     atributos = await connection.any(
       `SELECT a.nome, a.alias, c.nome as camada, c.schema
         FROM macrocontrole.atributo AS a
@@ -68,7 +67,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1 and not pc.camada_apontamento`,
       [subfaseId]
-    )
+    );
   } else {
     camadas = await connection.any(
       `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
@@ -76,7 +75,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1`,
       [subfaseId]
-    )
+    );
     atributos = await connection.any(
       `SELECT a.nome, a.alias, c.nome as camada, c.schema
         FROM macrocontrole.atributo AS a
@@ -84,42 +83,42 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1`,
       [subfaseId]
-    )
+    );
   }
 
-  const result = []
+  const result = [];
 
   camadas.forEach(r => {
-    const aux = { nome: r.nome, schema: r.schema }
+    const aux = { nome: r.nome, schema: r.schema };
     if (r.alias) {
-      aux.alias = r.alias
+      aux.alias = r.alias;
     }
     if (r.documentacao) {
-      aux.documentacao = r.documentacao
+      aux.documentacao = r.documentacao;
     }
     if (r.atributo_filtro_subfase) {
-      aux.atributo_filtro_subfase = r.atributo_filtro_subfase
+      aux.atributo_filtro_subfase = r.atributo_filtro_subfase;
     }
     if (r.camada_apontamento) {
-      aux.camada_apontamento = r.camada_apontamento
-      aux.atributo_situacao_correcao = r.atributo_situacao_correcao
+      aux.camada_apontamento = r.camada_apontamento;
+      aux.atributo_situacao_correcao = r.atributo_situacao_correcao;
       aux.atributo_justificativa_apontamento =
-        r.atributo_justificativa_apontamento
+        r.atributo_justificativa_apontamento;
     }
-    const auxAtt = []
+    const auxAtt = [];
     atributos.forEach(a => {
       if (a.camada === r.nome && a.schema === r.schema) {
-        auxAtt.push({ nome: a.nome, alias: a.alias })
+        auxAtt.push({ nome: a.nome, alias: a.alias });
       }
-    })
+    });
     if (auxAtt.length > 0) {
-      aux.atributos = auxAtt
+      aux.atributos = auxAtt;
     }
-    result.push(aux)
-  })
+    result.push(aux);
+  });
 
-  return result
-}
+  return result;
+};
 
 const getInfoMenus = async (connection, etapaCode, subfaseId) => {
   if (etapaCode === 2) {
@@ -128,15 +127,15 @@ const getInfoMenus = async (connection, etapaCode, subfaseId) => {
         INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
         WHERE subfase_id = $1`,
       [subfaseId]
-    )
+    );
   }
   return connection.any(
     `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
         INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
         WHERE subfase_id = $1 and not menu_revisao`,
     [subfaseId]
-  )
-}
+  );
+};
 
 const getInfoEstilos = async (connection, subfaseId) => {
   return connection.any(
@@ -146,8 +145,8 @@ const getInfoEstilos = async (connection, subfaseId) => {
       INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
       WHERE pe.subfase_id = $1 AND pc.subfase_id = $1`,
     [subfaseId]
-  )
-}
+  );
+};
 
 const getInfoRegras = async (connection, subfaseId) => {
   return connection.any(
@@ -159,8 +158,8 @@ const getInfoRegras = async (connection, subfaseId) => {
       INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
       WHERE pr.subfase_id = $1 AND pc.subfase_id = $1`,
     [subfaseId]
-  )
-}
+  );
+};
 
 const getInfoFME = async (connection, subfaseId) => {
   return connection.any(
@@ -168,15 +167,15 @@ const getInfoFME = async (connection, subfaseId) => {
     INNER JOIN dgeo.gerenciador_fme AS gf ON gf.id = pf.gerenciador_fme_id
     WHERE subfase_id = $<subfaseId>`,
     { subfaseId }
-  )
-}
+  );
+};
 
 const getInfoConfigQGIS = async (connection, subfaseId) => {
   return connection.any(
-    'SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId>',
+    "SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId>",
     { subfaseId }
-  )
-}
+  );
+};
 
 const getInfoMonitoramento = async (connection, subfaseId) => {
   return connection.any(
@@ -185,8 +184,8 @@ const getInfoMonitoramento = async (connection, subfaseId) => {
       INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
       WHERE subfase_id = $1`,
     [subfaseId]
-  )
-}
+  );
+};
 
 const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
   return connection.any(
@@ -195,8 +194,8 @@ const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
       INNER JOIN macrocontrole.insumo_unidade_trabalho AS iut ON i.id = iut.insumo_id
       WHERE iut.unidade_trabalho_id = $1`,
     [unidadeTrabalhoId]
-  )
-}
+  );
+};
 
 const getInfoModelsQGIS = async (connection, subfaseId) => {
   return connection.any(
@@ -205,8 +204,8 @@ const getInfoModelsQGIS = async (connection, subfaseId) => {
       INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.nome = lqm.nome
       WHERE pmq.subfase_id = $1`,
     [subfaseId]
-  )
-}
+  );
+};
 
 const getInfoLinhagem = async (
   connection,
@@ -215,10 +214,10 @@ const getInfoLinhagem = async (
   etapaCode
 ) => {
   const perfilLinhagem = await connection.oneOrNone(
-    'SELECT tipo_exibicao_id FROM macrocontrole.perfil_linhagem WHERE subfase_id = $1 LIMIT 1',
+    "SELECT tipo_exibicao_id FROM macrocontrole.perfil_linhagem WHERE subfase_id = $1 LIMIT 1",
     [subfaseId]
-  )
-  let linhagem
+  );
+  let linhagem;
   if (
     perfilLinhagem &&
     ((perfilLinhagem.tipo_exibicao_id === 2 && etapaCode === 2) ||
@@ -241,7 +240,7 @@ const getInfoLinhagem = async (
         ORDER BY etapa.ordem, a_ant.data_fim
         `,
       [atividadeId]
-    )
+    );
   } else {
     linhagem = await connection.any(
       `SELECT a_ant.data_inicio, a_ant.data_fim,
@@ -258,18 +257,18 @@ const getInfoLinhagem = async (
         ORDER BY etapa.ordem, a_ant.data_fim
         `,
       [atividadeId]
-    )
+    );
   }
   linhagem.forEach(r => {
     if (r.data_inicio) {
-      r.data_inicio = new Date(r.data_inicio).toLocaleString()
+      r.data_inicio = new Date(r.data_inicio).toLocaleString();
     }
     if (r.data_fim) {
-      r.data_fim = new Date(r.data_fim).toLocaleString()
+      r.data_fim = new Date(r.data_fim).toLocaleString();
     }
-  })
-  return linhagem
-}
+  });
+  return linhagem;
+};
 
 const getInfoRequisitos = async (connection, subfaseId) => {
   return connection.any(
@@ -277,15 +276,15 @@ const getInfoRequisitos = async (connection, subfaseId) => {
       FROM macrocontrole.requisito_finalizacao AS r
       WHERE r.subfase_id = $1 ORDER BY r.ordem`,
     [subfaseId]
-  )
-}
+  );
+};
 
 const getAtalhos = async connection => {
   return connection.any(
     `SELECT descricao, ferramenta, atalho
       FROM dgeo.atalhos_qgis`
-  )
-}
+  );
+};
 
 const getInfoQuestionario = async (connection, subfaseId) => {
   const questionario = await connection.any(
@@ -297,114 +296,116 @@ const getInfoQuestionario = async (connection, subfaseId) => {
     WHERE q.subfase_id = $1 
     ORDER BY p.ordem, o.ordem`,
     [subfaseId]
-  )
+  );
 
-  const result = {}
-  result.perguntas = []
-  const perguntas = {}
+  const result = {};
+  result.perguntas = [];
+  const perguntas = {};
   questionario.forEach(i => {
-    result.nome = i.nome_questionario
+    result.nome = i.nome_questionario;
 
     if (!(i.pergunta_id in perguntas)) {
       perguntas[i.pergunta_id] = {
         pergunta_id: i.pergunta_id,
         pergunta: i.pergunta
-      }
-      perguntas[i.pergunta_id].opcoes = []
+      };
+      perguntas[i.pergunta_id].opcoes = [];
     }
 
     perguntas[i.pergunta_id].opcoes.push({
       opcao_id: i.opcao_id,
       opcao: i.opcao
-    })
-  })
+    });
+  });
 
   for (const key of perguntas) {
-    result.perguntas.push(perguntas[key])
+    result.perguntas.push(perguntas[key]);
   }
 
-  return result
-}
+  return result;
+};
 
 const dadosProducao = async atividadeId => {
   const results = await db.sapConn.task(async t => {
-    const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId])
+    const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId]);
 
-    const info = {}
-    info.usuario_id = dadosut.usuario_id
-    info.usuario_nome = dadosut.nome_guerra
+    const info = {};
+    info.usuario_id = dadosut.usuario_id;
+    info.usuario_nome = dadosut.nome_guerra;
 
-    info.atividade = {}
-    info.atividade.id = atividadeId
-    info.atividade.epsg = dadosut.epsg
-    info.atividade.observacao_atividade = dadosut.observacao_atividade
-    info.atividade.observacao_etapa = dadosut.observacao_etapa
-    info.atividade.observacao_subfase = dadosut.observacao_subfase
+    info.atividade = {};
+    info.atividade.id = atividadeId;
+    info.atividade.epsg = dadosut.epsg;
+    info.atividade.observacao_atividade = dadosut.observacao_atividade;
+    info.atividade.observacao_etapa = dadosut.observacao_etapa;
+    info.atividade.observacao_subfase = dadosut.observacao_subfase;
     info.atividade.observacao_unidade_trabalho =
-      dadosut.observacao_unidade_trabalho
-    info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome
-    info.atividade.geom = dadosut.unidade_trabalho_geom
-    info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id
-    info.atividade.fase_id = dadosut.fase_id
-    info.atividade.etapa_id = dadosut.etapa_id
-    info.atividade.tipo_etapa_id = dadosut.tipo_etapa_id
+      dadosut.observacao_unidade_trabalho;
+    info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
+    info.atividade.geom = dadosut.unidade_trabalho_geom;
+    info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
+    info.atividade.fase_id = dadosut.fase_id;
+    info.atividade.etapa_id = dadosut.etapa_id;
+    info.atividade.tipo_etapa_id = dadosut.tipo_etapa_id;
     info.atividade.nome =
       dadosut.subfase_nome +
-      ' - ' +
+      " - " +
       dadosut.etapa_nome +
-      ' - ' +
-      dadosut.unidade_trabalho_nome
-    info.atividade.banco_dados = {
-      nome: dadosut.nome_bd,
-      servidor: dadosut.servidor,
-      porta: dadosut.porta
-    }
+      " - " +
+      dadosut.unidade_trabalho_nome;
+    info.atividade.dado_producao = {
+      nome: dadosut.dado_producao_nome,
+      configuracao_producao: dadosut.configuracao_producao,
+      tipo_dado_producao_id: dadosut.tipo_dado_producao_id,
+      tipo_dado_finalizacao_id: dadosut.tipo_dado_finalizacao_id,
+      configuracao_finalizacao: dadosut.configuracao_finalizacao
+    };
 
     info.atividade.camadas = await getInfoCamadas(
       t,
       dadosut.etapa_code,
       dadosut.subfase_id
-    )
+    );
 
     info.atividade.menus = await getInfoMenus(
       t,
       dadosut.etapa_code,
       dadosut.subfase_id
-    )
+    );
 
-    info.atividade.estilos = await getInfoEstilos(t, dadosut.subfase_id)
+    info.atividade.estilos = await getInfoEstilos(t, dadosut.subfase_id);
 
-    info.atividade.regras = await getInfoRegras(t, dadosut.subfase_id)
+    info.atividade.regras = await getInfoRegras(t, dadosut.subfase_id);
 
-    info.atividade.fme = await getInfoFME(t, dadosut.subfase_id)
+    info.atividade.fme = await getInfoFME(t, dadosut.subfase_id);
 
     info.atividade.configuracao_qgis = await getInfoConfigQGIS(
       t,
       dadosut.subfase_id
-    )
+    );
 
     info.atividade.monitoramento = await getInfoMonitoramento(
       t,
       dadosut.subfase_id
-    )
+    );
 
     info.atividade.insumos = await getInfoInsumos(
       t,
       dadosut.unidade_trabalho_id
-    )
+    );
 
-    info.atividade.models_qgis = await getInfoModelsQGIS(t, dadosut.subfase_id)
+    info.atividade.models_qgis = await getInfoModelsQGIS(t, dadosut.subfase_id);
 
     info.atividade.linhagem = await getInfoLinhagem(
       t,
       dadosut.subfase_id,
       atividadeId,
       dadosut.etapa_code
-    )
+    );
 
-    info.atividade.requisitos = await getInfoRequisitos(t, dadosut.subfase_id)
+    info.atividade.requisitos = await getInfoRequisitos(t, dadosut.subfase_id);
 
-    info.atividade.atalhos = await getAtalhos(t)
+    info.atividade.atalhos = await getAtalhos(t);
 
     /*
     info.atividade.questionario = await getInfoQuestionario(
@@ -412,25 +413,25 @@ const dadosProducao = async atividadeId => {
       dadosut.subfase_id
     );
     */
-    return info
-  })
+    return info;
+  });
 
-  return results
-}
+  return results;
+};
 
 controller.getDadosAtividade = async (
   atividadeId,
   usuarioId,
   resetPassword = false
 ) => {
-  const dados = await dadosProducao(atividadeId)
+  const dados = await dadosProducao(atividadeId);
   dados.login_info = await temporaryLogin.getLogin(
     atividadeId,
     usuarioId,
     resetPassword
-  )
-  return dados
-}
+  );
+  return dados;
+};
 
 controller.verifica = async usuarioId => {
   const emAndamento = await db.sapConn.oneOrNone(
@@ -440,9 +441,9 @@ controller.verifica = async usuarioId => {
       WHERE a.usuario_id = $<usuarioId> AND ut.disponivel IS TRUE AND a.tipo_situacao_id = 2
       LIMIT 1`,
     { usuarioId }
-  )
+  );
   if (!emAndamento) {
-    return null
+    return null;
   }
 
   // Medida de segurança para tornar outras atividades que estão em execução como pausadas
@@ -451,10 +452,10 @@ controller.verifica = async usuarioId => {
        tipo_situacao_id = 3 
        WHERE tipo_situacao_id = 2 AND usuario_id = $<usuarioId> AND id != $<emAndamentoId>`,
     { usuarioId, emAndamentoId: emAndamento.id }
-  )
+  );
 
-  return controller.getDadosAtividade(emAndamento.id, usuarioId)
-}
+  return controller.getDadosAtividade(emAndamento.id, usuarioId);
+};
 
 controller.finaliza = async (
   usuarioId,
@@ -464,7 +465,7 @@ controller.finaliza = async (
   infoEdicao,
   observacaoProximaAtividade
 ) => {
-  const dataFim = new Date()
+  const dataFim = new Date();
   await db.sapConn.tx(async t => {
     // Usuário é passado como uma medida de segurança para garantir que quem está finalizando é o usuário da atividade
     const result = await t.result(
@@ -472,13 +473,13 @@ controller.finaliza = async (
         data_fim = $<dataFim>, tipo_situacao_id = 4, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($<atividadeId>), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($<atividadeId>)
         WHERE id = $<atividadeId> AND usuario_id = $<usuarioId> AND tipo_situacao_id in (2)`,
       { dataFim, atividadeId, usuarioId }
-    )
+    );
 
     if (!result.rowCount || result.rowCount !== 1) {
       throw new AppError(
-        'Erro ao finalizar atividade. Atividade não encontrada ou não corresponde a este operador',
+        "Erro ao finalizar atividade. Atividade não encontrada ou não corresponde a este operador",
         httpCode.BadRequest
-      )
+      );
     }
 
     if (observacaoProximaAtividade) {
@@ -495,13 +496,13 @@ controller.finaliza = async (
             LIMIT 1
           )`,
         { atividadeId, observacaoProximaAtividade }
-      )
+      );
 
       if (!obsResult.rowCount || obsResult.rowCount !== 1) {
         throw new AppError(
-          'Erro ao finalizar atividade. Não foi encontrada uma próxima atividade para preencher a observação.',
+          "Erro ao finalizar atividade. Não foi encontrada uma próxima atividade para preencher a observação.",
           httpCode.BadRequest
-        )
+        );
       }
     }
 
@@ -525,10 +526,10 @@ controller.finaliza = async (
             where arev.id=$<atividadeId>
           )`,
         { atividadeId }
-      )
+      );
 
       if (!result.rowCount || result.rowCount === 0) {
-        throw new AppError('Erro ao bloquear correção')
+        throw new AppError("Erro ao bloquear correção");
       }
     }
     if (alterarFluxo) {
@@ -540,7 +541,7 @@ controller.finaliza = async (
         WHERE a.id = $<atividadeId>
         `,
         { atividadeId, alterarFluxo }
-      )
+      );
       await t.none(
         `
         UPDATE macrocontrole.unidade_trabalho SET
@@ -551,31 +552,31 @@ controller.finaliza = async (
         )
         `,
         { atividadeId }
-      )
+      );
     }
 
-    await temporaryLogin.resetPassword(atividadeId, usuarioId)
-  })
-}
+    await temporaryLogin.resetPassword(atividadeId, usuarioId);
+  });
+};
 
 controller.inicia = async usuarioId => {
-  const dataInicio = new Date()
-  const prioridade = await controller.calculaFila(usuarioId)
+  const dataInicio = new Date();
+  const prioridade = await controller.calculaFila(usuarioId);
   if (!prioridade) {
-    return null
+    return null;
   }
   await db.sapConn.tx(async t => {
     const verify = await t.oneOrNone(
       `SELECT id FROM macrocontrole.atividade
       WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 2`,
       { usuarioId }
-    )
+    );
 
     if (verify) {
       throw new AppError(
-        'O usuário já possui atividades em andamento',
+        "O usuário já possui atividades em andamento",
         httpCode.BadRequest
-      )
+      );
     }
 
     await t.none(
@@ -583,42 +584,42 @@ controller.inicia = async usuarioId => {
           WHERE atividade_id IN (
           SELECT id from macrocontrole.atividade WHERE id = $<prioridade>)`,
       { prioridade }
-    )
+    );
     await t.none(
       `DELETE FROM macrocontrole.fila_prioritaria_grupo
           WHERE atividade_id IN (
           SELECT id from macrocontrole.atividade WHERE id = $<prioridade>)`,
       { prioridade }
-    )
+    );
     const result = await t.result(
       `UPDATE macrocontrole.atividade SET
           data_inicio = $<dataInicio>, tipo_situacao_id = 2, usuario_id = $<usuarioId>
           WHERE id = $<prioridade> and tipo_situacao_id IN (1,3)`,
       { dataInicio, prioridade, usuarioId }
-    )
+    );
 
     if (!result.rowCount) {
-      throw new AppError('Não pode iniciar a tarefa selecionada para a fila')
+      throw new AppError("Não pode iniciar a tarefa selecionada para a fila");
     }
-  })
+  });
 
-  return controller.getDadosAtividade(prioridade, usuarioId, true)
-}
+  return controller.getDadosAtividade(prioridade, usuarioId, true);
+};
 
 controller.respondeQuestionario = async (atividadeId, respostas, usuarioId) => {
-  const dataQuestionario = new Date()
+  const dataQuestionario = new Date();
   await db.sapConn.tx(async t => {
     const verify = await t.oneOrNone(
       `SELECT id FROM macrocontrole.atividade
       WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 2 AND atividade_id = $<atividadeId>`,
       { usuarioId, atividadeId }
-    )
+    );
 
     if (!verify) {
       throw new AppError(
-        'Questionário deve ser respondido de uma atividade em execução pelo usuário',
+        "Questionário deve ser respondido de uma atividade em execução pelo usuário",
         httpCode.BadRequest
-      )
+      );
     }
 
     const respostaQuestionario = await t.one(
@@ -626,8 +627,8 @@ controller.respondeQuestionario = async (atividadeId, respostas, usuarioId) => {
       INSERT INTO avaliacao.resposta_questionario(data, atividade_id) VALUES($<dataQuestionario>,$<atividadeId>) RETURNING id
       `,
       { dataQuestionario, atividadeId }
-    )
-    const queries = []
+    );
+    const queries = [];
     respostas.forEach(r => {
       queries.push(
         t.none(
@@ -641,11 +642,11 @@ controller.respondeQuestionario = async (atividadeId, respostas, usuarioId) => {
             respostaQuestionarioId: respostaQuestionario.id
           }
         )
-      )
-    })
-    return t.batch(queries)
-  })
-}
+      );
+    });
+    return t.batch(queries);
+  });
+};
 
 controller.problemaAtividade = async (
   atividadeId,
@@ -653,7 +654,7 @@ controller.problemaAtividade = async (
   descricao,
   usuarioId
 ) => {
-  const dataFim = new Date()
+  const dataFim = new Date();
   await db.sapConn.tx(async t => {
     const result = await t.result(
       `
@@ -662,12 +663,12 @@ controller.problemaAtividade = async (
       WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId>
       `,
       { dataFim, atividadeId, usuarioId }
-    )
+    );
     if (!result.rowCount) {
       throw new AppError(
-        'Não foi possível de reportar problema, atividade não encontrada ou não corresponde a uma atividade em execução do usuário',
+        "Não foi possível de reportar problema, atividade não encontrada ou não corresponde a uma atividade em execução do usuário",
         httpCode.BadRequest
-      )
+      );
     }
     const atividade = await t.one(
       `SELECT a.etapa_id, a.unidade_trabalho_id, ST_AsText(ut.geom) AS geom
@@ -675,7 +676,7 @@ controller.problemaAtividade = async (
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
       WHERE id = $<atividadeId>`,
       { atividadeId }
-    )
+    );
 
     const newId = await t.one(
       `
@@ -687,7 +688,7 @@ controller.problemaAtividade = async (
         unidadeTrabalhoId: atividade.unidade_trabalho_id,
         usuarioId: usuarioId
       }
-    )
+    );
     await t.any(
       `
       INSERT INTO macrocontrole.problema_atividade(atividade_id, unidade_trabalho_id, tipo_problema_id, descricao, data, resolvido, geom)
@@ -700,7 +701,7 @@ controller.problemaAtividade = async (
         descricao,
         geom: `SRID=4326;${atividade.geom}`
       }
-    )
+    );
     await t.any(
       `
         UPDATE macrocontrole.unidade_trabalho SET
@@ -708,26 +709,26 @@ controller.problemaAtividade = async (
         WHERE id = $<unidadeTrabalhoId>
         `,
       { unidadeTrabalhoId: atividade.unidade_trabalho_id }
-    )
+    );
 
-    await temporaryLogin.resetPassword(atividadeId, usuarioId)
-  })
-}
+    await temporaryLogin.resetPassword(atividadeId, usuarioId);
+  });
+};
 
 controller.getTipoProblema = async () => {
   const tipoProblema = await db.sapConn.any(
-    'SELECT code, nome FROM dominio.tipo_problema'
-  )
-  const dados = []
+    "SELECT code, nome FROM dominio.tipo_problema"
+  );
+  const dados = [];
   tipoProblema.forEach(p => {
-    dados.push({ tipo_problema_id: p.code, tipo_problema: p.nome })
-  })
-  return dados
-}
+    dados.push({ tipo_problema_id: p.code, tipo_problema: p.nome });
+  });
+  return dados;
+};
 
 controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
   await db.sapConn.tx(async t => {
-    const dataFim = new Date()
+    const dataFim = new Date();
     const result = await t.result(
       `
       UPDATE macrocontrole.atividade SET
@@ -735,12 +736,12 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
       WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId>
       `,
       { dataFim, atividadeId, usuarioId }
-    )
+    );
     if (!result.rowCount) {
       throw new AppError(
-        'Não foi possível de reportar problema, atividade não encontrada ou não corresponde a uma atividade em execução do usuário',
+        "Não foi possível de reportar problema, atividade não encontrada ou não corresponde a uma atividade em execução do usuário",
         httpCode.BadRequest
-      )
+      );
     }
     const atividade = await t.one(
       `SELECT a.etapa_id, a.unidade_trabalho_id, ST_AsText(ut.geom) AS geom
@@ -748,7 +749,7 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
       WHERE id = $<atividadeId>`,
       { atividadeId }
-    )
+    );
 
     await t.none(
       `
@@ -760,7 +761,7 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
         unidadeTrabalhoId: atividade.unidade_trabalho_id,
         usuarioId: usuarioId
       }
-    )
+    );
 
     await t.none(
       `
@@ -771,7 +772,7 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
         LIMIT 1
       )`,
       { usuarioId }
-    )
+    );
 
     await t.none(
       `
@@ -784,10 +785,10 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
         LIMIT 1
       )`,
       { usuarioId }
-    )
+    );
 
-    await temporaryLogin.resetPassword(atividadeId, usuarioId)
-  })
-}
+    await temporaryLogin.resetPassword(atividadeId, usuarioId);
+  });
+};
 
-module.exports = controller
+module.exports = controller;

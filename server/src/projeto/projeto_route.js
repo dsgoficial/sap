@@ -140,6 +140,18 @@ router.get(
 );
 
 router.get(
+  "/dado_producao",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getDadoProducao();
+
+    const msg = "Dados de producão retornados";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.get(
   "/login",
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
