@@ -143,8 +143,8 @@ CREATE TABLE dominio.tipo_insumo(
 );
 
 INSERT INTO dominio.tipo_insumo (code, nome) VALUES
-(1, 'Arquivo (download)'),
-(2, 'Arquivo (via rede)'),
+(1, 'Arquivo (cópia via rede)'),
+(2, 'Arquivo (aberto via rede)'),
 (3, 'Banco de dados PostGIS'),
 (4, 'Insumo físico'),
 (5, 'URL'),
