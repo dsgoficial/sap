@@ -941,7 +941,7 @@ controller.associaInsumos = async (
       await db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
-        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(ut.geom), i.geom)
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
@@ -953,7 +953,7 @@ controller.associaInsumos = async (
       await db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
-        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(i.geom), ut.geom)
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
@@ -965,7 +965,7 @@ controller.associaInsumos = async (
       await db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
-        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(i.geom, ut.geom)
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
@@ -977,7 +977,7 @@ controller.associaInsumos = async (
       await db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
-        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_relate(ut.geom, i.geom, '2********')
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
@@ -989,7 +989,7 @@ controller.associaInsumos = async (
       await db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
-        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, '$<caminhoPadrao>' AS caminho_padrao
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         CROSS JOIN macrocontrole.insumo AS i
         WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
