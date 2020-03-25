@@ -885,7 +885,7 @@ controller.criaProdutos = async (produtos, linhaProducaoId) => {
     "inom",
     "escala",
     { name: "linha_producao_id", init: () => linhaProducaoId },
-    "geom"
+    { name: "geom", mod: ':raw'}
   ]);
 
   produtos.forEach(p => {
@@ -910,7 +910,7 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, subfaseId) => {
     "disponivel",
     "prioridade",
     "observacao",
-    "geom"
+    { name: "geom", mod: ':raw'}
   ]);
 
   unidadesTrabalho.forEach(p => {
