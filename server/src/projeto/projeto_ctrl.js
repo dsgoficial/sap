@@ -819,7 +819,7 @@ controller.copiarUnidadeTrabalho = async (
           INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, lote_id, disponivel, prioridade)
           SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, lote_id, disponivel, prioridade
           FROM macrocontrole.unidade_trabalho
-          WHERE id = $<unidadeTrabalhoIds>
+          WHERE id = $<unidadeTrabalhoId>
           RETURNING id
         `,
         { subfaseId: subfase.id, unidadeTrabalhoId }
