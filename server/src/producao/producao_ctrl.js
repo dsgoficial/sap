@@ -57,7 +57,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
       `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase
         FROM macrocontrole.perfil_propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
-        WHERE pc.subfase_id = $1 and not pc.camada_apontamento`,
+        WHERE pc.subfase_id = $1 and pc.camada_apontamento IS FALSE`,
       [subfaseId]
     );
     atributos = await connection.any(
@@ -65,7 +65,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
         FROM macrocontrole.atributo AS a
         INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = a.camada_id
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
-        WHERE pc.subfase_id = $1 and not pc.camada_apontamento`,
+        WHERE pc.subfase_id = $1 and pc.camada_apontamento IS FALSE`,
       [subfaseId]
     );
   } else {
@@ -339,6 +339,7 @@ const dadosProducao = async atividadeId => {
     info.atividade.observacao_atividade = dadosut.observacao_atividade;
     info.atividade.observacao_etapa = dadosut.observacao_etapa;
     info.atividade.observacao_subfase = dadosut.observacao_subfase;
+    info.atividade.observacao_lote = dadosut.observacao_lote;
     info.atividade.observacao_unidade_trabalho =
       dadosut.observacao_unidade_trabalho;
     info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome;
@@ -363,13 +364,13 @@ const dadosProducao = async atividadeId => {
 
     info.atividade.camadas = await getInfoCamadas(
       t,
-      dadosut.etapa_code,
+      dadosut.tipo_etapa_id,
       dadosut.subfase_id
     );
 
     info.atividade.menus = await getInfoMenus(
       t,
-      dadosut.etapa_code,
+      dadosut.tipo_etapa_id,
       dadosut.subfase_id
     );
 
@@ -400,7 +401,7 @@ const dadosProducao = async atividadeId => {
       t,
       dadosut.subfase_id,
       atividadeId,
-      dadosut.etapa_code
+      dadosut.tipo_etapa_id
     );
 
     info.atividade.requisitos = await getInfoRequisitos(t, dadosut.subfase_id);
