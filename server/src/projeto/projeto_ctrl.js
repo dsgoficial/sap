@@ -822,7 +822,7 @@ controller.copiarUnidadeTrabalho = async (
           WHERE id = $<unidadeTrabalhoId>
           RETURNING id
         `,
-        { subfaseId: subfase.id, unidadeTrabalhoId }
+        { subfaseId: subfase.subfase_id, unidadeTrabalhoId }
       );
 
       utOldNew.push({ unidadeTrabalhoId: unidadeTrabalho.id });
@@ -885,7 +885,7 @@ controller.criaProdutos = async (produtos, linhaProducaoId) => {
     "inom",
     "escala",
     { name: "linha_producao_id", init: () => linhaProducaoId },
-    { name: "geom", mod: ':raw'}
+    { name: "geom", mod: ":raw" }
   ]);
 
   produtos.forEach(p => {
@@ -910,7 +910,7 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, subfaseId) => {
     "disponivel",
     "prioridade",
     "observacao",
-    { name: "geom", mod: ':raw'}
+    { name: "geom", mod: ":raw" }
   ]);
 
   unidadesTrabalho.forEach(p => {

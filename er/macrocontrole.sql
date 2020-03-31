@@ -171,6 +171,7 @@ CREATE TABLE macrocontrole.perfil_fme(
 	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	ordem INTEGER NOT NULL,
 	UNIQUE(gerenciador_fme_id,rotina,subfase_id)
 );
 
@@ -251,6 +252,7 @@ CREATE TABLE macrocontrole.perfil_model_qgis(
 	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	ordem INTEGER NOT NULL,
 	UNIQUE(nome,subfase_id)
 );
 

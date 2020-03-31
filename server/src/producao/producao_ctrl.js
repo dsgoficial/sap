@@ -163,7 +163,7 @@ const getInfoRegras = async (connection, subfaseId) => {
 
 const getInfoFME = async (connection, subfaseId) => {
   return connection.any(
-    `SELECT gf.servidor, gf.porta, pf.rotina, pf.gera_falso_positivo, pf.requisito_finalizacao FROM macrocontrole.perfil_fme AS pf
+    `SELECT gf.servidor, gf.porta, pf.rotina, pf.gera_falso_positivo, pf.requisito_finalizacao, pf.ordem FROM macrocontrole.perfil_fme AS pf
     INNER JOIN dgeo.gerenciador_fme AS gf ON gf.id = pf.gerenciador_fme_id
     WHERE subfase_id = $<subfaseId>`,
     { subfaseId }
@@ -199,7 +199,7 @@ const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
 
 const getInfoModelsQGIS = async (connection, subfaseId) => {
   return connection.any(
-    `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo, pmq.requisito_finalizacao
+    `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo, pmq.requisito_finalizacao, pmq.ordem
       FROM macrocontrole.perfil_model_qgis AS pmq
       INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.nome = lqm.nome
       WHERE pmq.subfase_id = $1`,
