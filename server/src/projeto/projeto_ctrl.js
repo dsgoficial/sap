@@ -827,12 +827,14 @@ controller.copiarUnidadeTrabalho = async (
 
       utOldNew[unidadeTrabalhoId] = unidadeTrabalho.id;
     }
+    console.log(utOldNew);
     const dados = [];
     etapaIds.forEach(e => {
-      Object.keys(utOldNew).forEach(u => {
+      Object.values(utOldNew).forEach(u => {
         const aux = {};
         aux.etapa_id = e;
         aux.unidade_trabalho_id = +u;
+        console.log(aux);
         dados.push(aux);
       });
     });
