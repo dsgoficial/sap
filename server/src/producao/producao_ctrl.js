@@ -346,6 +346,7 @@ const dadosProducao = async atividadeId => {
     info.atividade.geom = dadosut.unidade_trabalho_geom;
     info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
     info.atividade.fase_id = dadosut.fase_id;
+    info.atividade.subfase_id = dadosut.subfase_id;
     info.atividade.etapa_id = dadosut.etapa_id;
     info.atividade.tipo_etapa_id = dadosut.tipo_etapa_id;
     info.atividade.nome =

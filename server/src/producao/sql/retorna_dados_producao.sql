@@ -1,7 +1,7 @@
 /*
     Retorna oa dados de produção correspondentes a atividade
 */
-SELECT a.unidade_trabalho_id, a.etapa_id, u.id as usuario_id, u.nome_guerra, s.id as subfase_id, s.nome as subfase_nome, ut.epsg, 
+SELECT a.unidade_trabalho_id, a.etapa_id, e.subfase_id, u.id as usuario_id, u.nome_guerra, s.id as subfase_id, s.nome as subfase_nome, ut.epsg, 
 ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom, s.fase_id,
 ut.nome as unidade_trabalho_nome, dp.nome AS dado_producao_nome, dp.configuracao_producao, 
 dp.tipo_dado_producao_id, dp.tipo_dado_finalizacao_id, dp.configuracao_finalizacao,
