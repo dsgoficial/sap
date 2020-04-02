@@ -827,14 +827,12 @@ controller.copiarUnidadeTrabalho = async (
 
       utOldNew[unidadeTrabalhoId] = unidadeTrabalho.id;
     }
-    console.log(utOldNew);
     const dados = [];
     etapaIds.forEach(e => {
       Object.values(utOldNew).forEach(u => {
         const aux = {};
         aux.etapa_id = e;
         aux.unidade_trabalho_id = +u;
-        console.log(aux);
         dados.push(aux);
       });
     });
@@ -854,8 +852,8 @@ controller.copiarUnidadeTrabalho = async (
 
     if (associarInsumos) {
       const insumos = await t.any(
-        "SELECT unidade_trabalho_id, insumo_id, caminho_padrao FROM macrocontrole.insumo_unidade_trabalho WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)",
-        { unidadeTrabalhoId }
+        "SELECT unidade_trabalho_id, insumo_id, caminho_padrao FROM macrocontrole.insumo_unidade_trabalho WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>)",
+        { unidadeTrabalhoIds }
       );
       const dadosInsumos = [];
       insumos.forEach(i => {
