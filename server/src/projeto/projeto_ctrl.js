@@ -812,7 +812,7 @@ controller.copiarUnidadeTrabalho = async (
     if (!subfase) {
       throw new AppError("Etapa não encontrada", httpCode.BadRequest);
     }
-    const utOldNew = [];
+    const utOldNew = {};
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
       const unidadeTrabalho = await t.oneOrNone(
         `
@@ -825,12 +825,15 @@ controller.copiarUnidadeTrabalho = async (
         { subfaseId: subfase.subfase_id, unidadeTrabalhoId }
       );
 
-      utOldNew.push({ unidadeTrabalhoId: unidadeTrabalho.id });
+      utOldNew[unidadeTrabalhoId] = unidadeTrabalho.id;
     }
     const dados = [];
     etapaIds.forEach(e => {
       Object.keys(utOldNew).forEach(u => {
-        dados.push({ etapa_id: e, unidade_trabalho_id: u });
+        const aux = {};
+        aux.etapa_id = e;
+        aux.unidade_trabalho_id = +u;
+        dados.push(aux);
       });
     });
 
