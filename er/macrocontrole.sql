@@ -260,8 +260,8 @@ CREATE TABLE macrocontrole.dado_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	tipo_dado_producao_id SMALLINT NOT NULL REFERENCES dominio.tipo_dado_producao (code),
-	configuracao_producao VARCHAR(255) NOT NULL,
-	tipo_dado_finalizacao_id SMALLINT REFERENCES dominio.tipo_dado_producao (code),
+	configuracao_producao VARCHAR(255),
+	tipo_dado_finalizacao_id SMALLINT NOT NULL REFERENCES dominio.tipo_dado_finalizacao (code),
 	configuracao_finalizacao VARCHAR(255)
 );
 
