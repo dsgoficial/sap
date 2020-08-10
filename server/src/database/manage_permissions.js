@@ -85,17 +85,17 @@ managePermissions.grantPermissionsUser = async (
     return null;
   }
 
-  await connection.tx(async t => {
+  await connection.tx(async (t) => {
     const dbName = grantInfo[0].db_nome;
     await t.none("GRANT CONNECT ON DATABASE $<dbName:name> TO $<login:name>;", {
       dbName,
-      login
+      login,
     });
 
     const schemasSQL = grantInfo
-      .map(v => v.schema)
+      .map((v) => v.schema)
       .filter((v, i, array) => array.indexOf(v) === i)
-      .map(v => `GRANT USAGE ON SCHEMA ${v} TO ${login};`)
+      .map((v) => `GRANT USAGE ON SCHEMA ${v} TO ${login};`)
       .join(" ");
 
     await t.none(schemasSQL);
@@ -106,25 +106,25 @@ managePermissions.grantPermissionsUser = async (
     if (tipoEtapa === 1 || tipoEtapa === 4) {
       // Execução ou RevCorr
       camadas = grantInfo
-        .filter(v => v.camada_apontamento === false)
-        .map(v => `${v.schema}.${v.nome_camada}`)
+        .filter((v) => v.camada_apontamento === false)
+        .map((v) => `${v.schema}.${v.nome_camada}`)
         .filter((v, i, array) => array.indexOf(v) === i);
     }
 
     if (tipoEtapa === 2 || tipoEtapa === 3) {
       // Revisão e Correção
       camadas = grantInfo
-        .map(v => `${v.schema}.${v.nome_camada}`)
+        .map((v) => `${v.schema}.${v.nome_camada}`)
         .filter((v, i, array) => array.indexOf(v) === i);
     }
 
     if (tipoEtapa === 3) {
       // Correção
       const camadasApontamentoSQL = grantInfo
-        .filter(v => v.camada_apontamento === true)
+        .filter((v) => v.camada_apontamento === true)
         .filter((v, i, array) => array.indexOf(v) === i)
         .map(
-          v =>
+          (v) =>
             `GRANT SELECT ON ${v.schema}.${v.nome_camada} TO ${login}; GRANT UPDATE(${v.atributo_justificativa_apontamento}, ${v.atributo_situacao_correcao}) ON ${v.schema}.${v.nome_camada} TO ${login};`
         )
         .join(" ");
@@ -132,10 +132,10 @@ managePermissions.grantPermissionsUser = async (
       await t.none(camadasApontamentoSQL);
 
       const outrasCamadasSQL = grantInfo
-        .filter(v => v.camada_apontamento === false)
+        .filter((v) => v.camada_apontamento === false)
         .filter((v, i, array) => array.indexOf(v) === i)
         .map(
-          v =>
+          (v) =>
             `GRANT SELECT, INSERT, DELETE, UPDATE ON ${v.schema}.${v.nome_camada} TO ${login};`
         )
         .join(" ");
@@ -143,14 +143,14 @@ managePermissions.grantPermissionsUser = async (
       await t.none(outrasCamadasSQL);
     } else {
       const camadasSql = camadas
-        .map(v => `GRANT SELECT, INSERT, DELETE, UPDATE ON ${v} TO ${login};`)
+        .map((v) => `GRANT SELECT, INSERT, DELETE, UPDATE ON ${v} TO ${login};`)
         .join(" ");
 
       await t.none(camadasSql);
     }
 
     const enableRLS = camadas
-      .map(v => `ALTER TABLE ${v} ENABLE ROW LEVEL SECURITY;`)
+      .map((v) => `ALTER TABLE ${v} ENABLE ROW LEVEL SECURITY;`)
       .join(" ");
 
     await t.none(enableRLS);
@@ -161,7 +161,7 @@ managePermissions.grantPermissionsUser = async (
     if (tipoEtapa === 1 || tipoEtapa === 4 || tipoEtapa === 2) {
       // Execução, Revisão, RevCorr POLICY
       createPolicy = camadas
-        .map(v => {
+        .map((v) => {
           const policyName = `policy_${login}_${v.replace(".", "_")}`;
           let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`;
           if (v.atributo_filtro_subfase) {
@@ -176,10 +176,10 @@ managePermissions.grantPermissionsUser = async (
     if (tipoEtapa === 3) {
       // Correção
       const flagPolicy = grantInfo
-        .filter(v => v.camada_apontamento === true)
-        .map(v => `${v.schema}.${v.nome_camada}`)
+        .filter((v) => v.camada_apontamento === true)
+        .map((v) => `${v.schema}.${v.nome_camada}`)
         .filter((v, i, array) => array.indexOf(v) === i)
-        .map(v => {
+        .map((v) => {
           const policyName = `flagpolicy_${login}_${v.replace(".", "_")}`;
           let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`;
           if (v.atributo_filtro_subfase) {
@@ -191,10 +191,10 @@ managePermissions.grantPermissionsUser = async (
         .join(" ");
 
       const otherPolicy = grantInfo
-        .filter(v => v.camada_apontamento === false)
-        .map(v => `${v.schema}.${v.nome_camada}`)
+        .filter((v) => v.camada_apontamento === false)
+        .map((v) => `${v.schema}.${v.nome_camada}`)
         .filter((v, i, array) => array.indexOf(v) === i)
-        .map(v => {
+        .map((v) => {
           const policyName = `otherpolicy_${login}_${v.replace(".", "_")}`;
           let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`;
           if (v.atributo_filtro_subfase) {
@@ -210,10 +210,11 @@ managePermissions.grantPermissionsUser = async (
 
     await t.none(createPolicy);
 
+    /**
     await t.none(
       "GRANT USAGE ON SCHEMA PUBLIC TO $<login:name>; GRANT SELECT ON ALL TABLES IN SCHEMA public TO $<login:name>;",
       { login }
-    );
+    ); */
 
     // grant select sequenciador
     const sequenceSQL = await t.oneOrNone(

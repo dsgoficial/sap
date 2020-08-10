@@ -7,7 +7,7 @@ const {
   DB_PASSWORD,
   DB_SERVER,
   DB_PORT,
-  DB_NAME
+  DB_NAME,
 } = require("../config");
 
 const { AppError, httpCode } = require("../utils");
@@ -77,7 +77,7 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
     return false;
   }
   const updatedIdsFixed = [];
-  updatedIds.forEach(u => {
+  updatedIds.forEach((u) => {
     updatedIdsFixed.push(u.id);
   });
   const atividades = await connection.any(
@@ -89,12 +89,12 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
     "etapa_id",
     "unidade_trabalho_id",
     "usuario_id",
-    { name: "tipo_situacao_id", init: () => 3 }
+    { name: "tipo_situacao_id", init: () => 3 },
   ]);
 
   const query = db.pgp.helpers.insert(atividades, cs, {
     table: "atividade",
-    schema: "macrocontrole"
+    schema: "macrocontrole",
   });
 
   await connection.none(query);
@@ -110,7 +110,7 @@ controller.unidadeTrabalhoDisponivel = async (
   unidadeTrabalhoIds,
   disponivel
 ) => {
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     await t.none(
       `UPDATE macrocontrole.unidade_trabalho
       SET disponivel = $<disponivel>
@@ -123,8 +123,8 @@ controller.unidadeTrabalhoDisponivel = async (
   });
 };
 
-controller.pausaAtividade = async unidadeTrabalhoIds => {
-  await db.sapConn.tx(async t => {
+controller.pausaAtividade = async (unidadeTrabalhoIds) => {
+  await db.sapConn.tx(async (t) => {
     const changed = await pausaAtividadeMethod(unidadeTrabalhoIds, t);
     if (!changed) {
       throw new AppError(
@@ -141,9 +141,9 @@ controller.atualizaAtividadesBloqueadas = async () => {
   );
 };
 
-controller.reiniciaAtividade = async unidadeTrabalhoIds => {
+controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
   const dataFim = new Date();
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     const usersResetPassword = await t.any(
       `
       SELECT DISTINCT ON (ut.id) a.id, a.usuario_id FROM macrocontrole.atividade AS a
@@ -176,7 +176,7 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
       );
     }
     const updatedIdsFixed = [];
-    updatedIds.forEach(u => {
+    updatedIds.forEach((u) => {
       updatedIdsFixed.push(u.id);
     });
     const atividades = await t.any(
@@ -187,12 +187,12 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
     const cs = new db.pgp.helpers.ColumnSet([
       "etapa_id",
       "unidade_trabalho_id",
-      { name: "tipo_situacao_id", init: () => 1 }
+      { name: "tipo_situacao_id", init: () => 1 },
     ]);
 
     const query = db.pgp.helpers.insert(atividades, cs, {
       table: "atividade",
-      schema: "macrocontrole"
+      schema: "macrocontrole",
     });
 
     await t.none(query);
@@ -205,7 +205,7 @@ controller.reiniciaAtividade = async unidadeTrabalhoIds => {
 
 controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
   const dataFim = new Date();
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
         FROM macrocontrole.atividade AS a
@@ -236,7 +236,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
       { atividadeIds, dataFim }
     );
     const ids = [];
-    atividadesUpdates.forEach(i => {
+    atividadesUpdates.forEach((i) => {
       ids.push(i.id);
     });
     if (ids.length === 0) {
@@ -273,7 +273,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
 controller.avancaAtividade = async (atividadeIds, concluida) => {
   const comparisonOperator = concluida ? "<=" : "=";
 
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
       FROM macrocontrole.atividade AS a
@@ -286,6 +286,38 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
     if (ativEmExec && ativEmExec.length > 0) {
       throw new AppError(
         "Não se pode avançar atividades em execução. Pause a atividade primeiro",
+        httpCode.BadRequest
+      );
+    }
+    const ativEmFila = await t.any(
+      `SELECT a_ant.id
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.fila_prioritaria AS fp ON fp.atividade_id = a_ant.id
+      INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+      INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+      WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem`,
+      { atividadeIds, comparisonOperator }
+    );
+    if (ativEmFila && ativEmFila.length > 0) {
+      throw new AppError(
+        "Não se pode avançar atividades em fila prioritária. Remover da fila primeiro",
+        httpCode.BadRequest
+      );
+    }
+    const ativEmFilaGrupo = await t.any(
+      `SELECT a_ant.id
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.fila_prioritaria_grupo AS fpg ON fpg.atividade_id = a_ant.id
+      INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+      INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+      WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem`,
+      { atividadeIds, comparisonOperator }
+    );
+    if (ativEmFilaGrupo && ativEmFilaGrupo.length > 0) {
+      throw new AppError(
+        "Não se pode avançar atividades em fila prioritária de grupo. Remover da fila primeiro",
         httpCode.BadRequest
       );
     }
@@ -390,7 +422,7 @@ controller.criaObservacao = async (
   observacaoUnidadeTrabalho,
   observacaoLote
 ) => {
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     await t.any(
       `
       UPDATE macrocontrole.atividade SET
@@ -441,7 +473,7 @@ controller.criaObservacao = async (
   });
 };
 
-controller.getObservacao = async atividadeId => {
+controller.getObservacao = async (atividadeId) => {
   return db.sapConn.any(
     `SELECT a.observacao AS observacao_atividade, ut.observacao AS observacao_unidade_trabalho,
     l.observacao AS observacao_lote, e.observacao AS observacao_etapa, sf.observacao AS observacao_subfase
@@ -455,7 +487,7 @@ controller.getObservacao = async atividadeId => {
   );
 };
 
-controller.getViewsAcompanhamento = async emAndamento => {
+controller.getViewsAcompanhamento = async (emAndamento) => {
   let views = await db.sapConn.any(`
     SELECT v.schema, v.nome, v.tipo, coalesce(s.nome, f.nome, lp.nome) AS projeto,
     coalesce(s.finalizado, f.finalizado, lp.finalizado) AS finalizado
@@ -488,7 +520,7 @@ controller.getViewsAcompanhamento = async emAndamento => {
   }
 
   if (emAndamento) {
-    views = views.filter(v => !v.finalizado);
+    views = views.filter((v) => !v.finalizado);
   }
   const dados = {};
   dados.banco_dados = {
@@ -496,7 +528,7 @@ controller.getViewsAcompanhamento = async emAndamento => {
     servidor: DB_SERVER,
     porta: DB_PORT,
     login: DB_USER,
-    senha: DB_PASSWORD
+    senha: DB_PASSWORD,
   };
   dados.views = views;
   return dados;

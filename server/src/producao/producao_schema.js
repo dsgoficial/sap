@@ -1,18 +1,15 @@
-'use strict'
+"use strict";
 
-const Joi = require('joi')
+const Joi = require("joi");
 
-const models = {}
+const models = {};
 
 models.finaliza = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
+  atividade_id: Joi.number().integer().strict().required(),
   sem_correcao: Joi.boolean().strict(),
   alterar_fluxo: Joi.string().valid(
-    'Necessita nova revisão',
-    'Não é necessário uma nova revisão'
+    "Necessita nova revisão",
+    "Não é necessário uma nova revisão"
   ),
   info_edicao: Joi.object().keys({
     nome_carta: Joi.string().required(),
@@ -20,56 +17,38 @@ models.finaliza = Joi.object().keys({
       .items(
         Joi.object().keys({
           palavra_chave: Joi.string().required(),
-          tipo_palavra_chave: Joi.number()
-            .integer()
-            .strict()
-            .required()
-        }))
+          tipo_palavra_chave: Joi.number().integer().strict().required(),
+        })
+      )
+      .unique("palavra_chave")
       .required()
-      .min(1)
+      .min(1),
   }),
-  observacao_proxima_atividade: Joi.string()
-})
+  observacao_proxima_atividade: Joi.string(),
+});
 
 models.respostaQuestionario = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
+  atividade_id: Joi.number().integer().strict().required(),
   respostas: Joi.array()
     .items(
       Joi.object().keys({
-        pergunta_id: Joi.number()
-          .integer()
-          .strict()
-          .required(),
-        opcao_id: Joi.number()
-          .integer()
-          .strict()
-          .required()
+        pergunta_id: Joi.number().integer().strict().required(),
+        opcao_id: Joi.number().integer().strict().required(),
       })
     )
+    .unique("pergunta_id")
     .required()
-    .min(1)
-})
+    .min(1),
+});
 
 models.problemaAtividade = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  tipo_problema_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  descricao: Joi.string().required()
-})
+  atividade_id: Joi.number().integer().strict().required(),
+  tipo_problema_id: Joi.number().integer().strict().required(),
+  descricao: Joi.string().required(),
+});
 
 models.atividadeId = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
-    .required()
-})
+  atividade_id: Joi.number().integer().strict().required(),
+});
 
-module.exports = models
+module.exports = models;
