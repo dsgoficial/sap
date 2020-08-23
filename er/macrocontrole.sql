@@ -36,14 +36,12 @@ CREATE INDEX produto_geom
     (geom)
     TABLESPACE pg_default;
 
--- Associa uma fase prevista no BDGEx ao projeto
--- as combinações (tipo_fase, linha_producao_id) são unicos
 CREATE TABLE macrocontrole.fase(
     id SERIAL NOT NULL PRIMARY KEY,
     tipo_fase_id SMALLINT NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
     ordem INTEGER NOT NULL, -- as fases são ordenadas dentro de uma linha de produção de um projeto
-    UNIQUE (linha_producao_id, tipo_fase_id)
+    UNIQUE (linha_producao_id, tipo_fase_id) -- as combinações (tipo_fase, linha_producao_id) são unicos
 );
 
 --Meta anual estabelecida no PIT de uma fase
@@ -54,18 +52,15 @@ CREATE TABLE macrocontrole.fase(
 --    fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
 --);
 
--- Unidade de produção do controle de produção
--- as combinações (nome,fase_id) são unicos
 CREATE TABLE macrocontrole.subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	ordem INTEGER NOT NULL, -- as subfases são ordenadas dentre de uma fase. Isso não impede o paralelismo de subfases. É uma ordenação para apresentação
 	observacao text,
-	UNIQUE (nome, fase_id)
+	UNIQUE (nome, fase_id) -- as combinações (nome,fase_id) são unicos
 );
 
---restrição para as subfases serem do mesmo projeto
 CREATE TABLE macrocontrole.pre_requisito_subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_pre_requisito_id SMALLINT NOT NULL REFERENCES dominio.tipo_pre_requisito (code),
@@ -73,41 +68,6 @@ CREATE TABLE macrocontrole.pre_requisito_subfase(
 	subfase_posterior_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(subfase_anterior_id, subfase_posterior_id)
 );
-
--- Constraint
-CREATE OR REPLACE FUNCTION macrocontrole.verifica_pre_requisito_subfase()
-  RETURNS trigger AS
-$BODY$
-    DECLARE nr_erro integer;
-    BEGIN
-
-	SELECT count(*) into nr_erro from macrocontrole.pre_requisito_subfase AS prs
-	INNER JOIN macrocontrole.subfase AS s1 ON s1.id = prs.subfase_anterior_id
-	INNER JOIN macrocontrole.fase AS f1 ON f1.id = s1.fase_id
-	INNER JOIN macrocontrole.linha_producao AS l1 ON l1.id = f1.linha_producao_id
-	INNER JOIN macrocontrole.subfase AS s2 ON s2.id = prs.subfase_posterior_id
-	INNER JOIN macrocontrole.fase AS f2 ON f2.id = s2.fase_id
-	INNER JOIN macrocontrole.linha_producao AS l2 ON l2.id = f2.linha_producao_id
-	WHERE l1.projeto_id != l2.projeto_id;
-
-	IF nr_erro > 0 THEN
-		RAISE EXCEPTION 'O pré requisito deve ser entre subfases do mesmo projeto.';
-	END IF;
-
-	RETURN NEW;
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION macrocontrole.verifica_pre_requisito_subfase()
-  OWNER TO postgres;
-
-CREATE TRIGGER verifica_pre_requisito_subfase
-BEFORE UPDATE OR INSERT ON macrocontrole.pre_requisito_subfase
-FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.verifica_pre_requisito_subfase();
-
---
 
 CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -160,7 +120,7 @@ FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
 CREATE TABLE macrocontrole.requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
-    ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma etapa
+    ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma subfase
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
@@ -186,31 +146,40 @@ CREATE TABLE macrocontrole.perfil_configuracao_qgis(
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
+	estilo_nome varchar(255) NOT NULL REFERENCES dgeo.layer_styles (stylename),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
+	grupo_regra_id INTEGER NOT NULL REFERENCES dgeo.group_rules (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
+	menu_id INTEGER NOT NULL REFERENCES dgeo.layer_menus (id),
 	menu_revisao BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(nome,subfase_id)
+);
+
+CREATE TABLE macrocontrole.perfil_model_qgis(
+	id SERIAL NOT NULL PRIMARY KEY,
+	qgis_model_id INTEGER NOT NULL REFERENCES dgeo.layer_qgis_models (id),
+	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
+	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	ordem INTEGER NOT NULL,
 	UNIQUE(nome,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_exibicao_id SMALLINT NOT NULL REFERENCES dominio.tipo_exibicao (code),
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	atributos_linhagem TEXT,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 	UNIQUE(subfase_id)
 );
 
@@ -246,16 +215,6 @@ CREATE TABLE macrocontrole.perfil_propriedades_camada(
 	UNIQUE(camada_id, subfase_id)
 );
 
-CREATE TABLE macrocontrole.perfil_model_qgis(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
-	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	ordem INTEGER NOT NULL,
-	UNIQUE(nome,subfase_id)
-);
-
 CREATE TABLE macrocontrole.dado_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
@@ -280,43 +239,6 @@ CREATE TABLE macrocontrole.restricao_etapa(
 	UNIQUE(etapa_anterior_id, etapa_posterior_id)	
 );
 
--- Constraint
-CREATE OR REPLACE FUNCTION macrocontrole.verifica_restricao_etapa()
-  RETURNS trigger AS
-$BODY$
-    DECLARE nr_erro integer;
-    BEGIN
-
-	SELECT count(*) into nr_erro from macrocontrole.restricao_etapa AS re
-	INNER JOIN macrocontrole.etapa AS e1 ON e1.id = re.etapa_anterior_id
-	INNER JOIN macrocontrole.subfase AS s1 ON s1.id = e1.subfase_id
-	INNER JOIN macrocontrole.fase AS f1 ON f1.id = s1.fase_id
-	INNER JOIN macrocontrole.linha_producao AS l1 ON l1.id = f1.linha_producao_id
-	INNER JOIN macrocontrole.etapa AS e2 ON e2.id = re.etapa_posterior_id
-	INNER JOIN macrocontrole.subfase AS s2 ON s2.id = e2.subfase_id
-	INNER JOIN macrocontrole.fase AS f2 ON f2.id = s2.fase_id
-	INNER JOIN macrocontrole.linha_producao AS l2 ON l2.id = f2.linha_producao_id
-	WHERE l1.projeto_id != l2.projeto_id;
-
-	IF nr_erro > 0 THEN
-		RAISE EXCEPTION 'A restrição deve ser entre etapas do mesmo projeto.';
-	END IF;
-
-	RETURN NEW;
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION macrocontrole.verifica_restricao_etapa()
-  OWNER TO postgres;
-
-CREATE TRIGGER verifica_restricao_etapa
-BEFORE UPDATE OR INSERT ON macrocontrole.restricao_etapa
-FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.verifica_restricao_etapa();
-
---
-
 CREATE TABLE macrocontrole.lote(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
@@ -327,7 +249,6 @@ CREATE TABLE macrocontrole.lote(
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-    geom geometry(POLYGON, 4326) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	dado_producao_id INTEGER NOT NULL REFERENCES macrocontrole.dado_producao (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
@@ -335,6 +256,7 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	prioridade INTEGER NOT NULL,
 	observacao text,
+    geom geometry(POLYGON, 4326) NOT NULL,
 	UNIQUE (nome, subfase_id)
 );
 
@@ -425,83 +347,6 @@ CREATE TRIGGER atividade_verifica_subfase
 BEFORE UPDATE OR INSERT ON macrocontrole.atividade
 FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
 
---
-
-CREATE OR REPLACE FUNCTION macrocontrole.tempo_execucao_estimativa(i integer) RETURNS integer AS $$
-DECLARE
-   tempo_minutos integer;
-BEGIN
- WITH datas AS (
-        SELECT a.id, COUNT (DISTINCT data_login::date) as nr_dias 
-        FROM macrocontrole.atividade AS a
-        INNER JOIN acompanhamento.login AS l ON l.usuario_id = a.usuario_id
-        WHERE a.id = i
-        AND l.data_login::date >= a.data_inicio::date AND l.data_login::date <= a.data_fim::date
-		GROUP BY a.id
-        ),
-		cte AS (
-        SELECT a.id,
-        CASE 
-        WHEN data_fim::date = data_inicio::date
-        THEN 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio )
-        WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) < 12
-        THEN 0
-        WHEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + DATE_PART('hour', data_fim  - data_inicio ) <= 18
-        THEN 24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) +DATE_PART('seconds', data_fim - data_inicio )/60  - 12*60
-        ELSE
-        24*60*DATE_PART('day', data_fim  - data_inicio ) + 60*DATE_PART('hour', data_fim  - data_inicio ) + DATE_PART('minute', data_fim - data_inicio ) - 18*60
-        END AS minutos,
-        CASE
-        WHEN d.nr_dias > 2
-        THEN (d.nr_dias - 2 )*6*60
-        ELSE 0
-        END AS minutos_dias
-        FROM macrocontrole.atividade AS a
-        INNER JOIN datas AS d ON d.id = a.id
-        )
-        SELECT (minutos + minutos_dias) INTO tempo_minutos
-        FROM cte;
-
-        RETURN tempo_minutos;
-END;
-$$ LANGUAGE plpgsql;
-ALTER FUNCTION macrocontrole.tempo_execucao_estimativa(integer)
-  OWNER TO postgres;
-
-CREATE OR REPLACE FUNCTION macrocontrole.tempo_execucao_microcontrole(i integer) RETURNS integer AS $$
-DECLARE
-   tempo_minutos integer;
-BEGIN
-		WITH datas AS (
-		SELECT data_inicio AS data FROM macrocontrole.atividade WHERE id = i
-		UNION
-		(SELECT data
-		FROM microcontrole.monitoramento_comportamento AS ma
-		INNER JOIN macrocontrole.atividade AS a ON a.id = ma.atividade_id
-		WHERE ma.atividade_id = i AND a.data_inicio < ma.data AND a.data_fim > ma.data
-		ORDER BY data)
-		UNION 
-		SELECT data_fim AS data FROM macrocontrole.atividade WHERE id = i
-		)
-		, dl AS (
-		SELECT data, LAG(data,1) OVER(ORDER BY data) AS previous_data
-		FROM datas
-		)
-		SELECT 
-		round(SUM(CASE 
-		WHEN data::date = previous_data::date AND (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60) < 5
-		THEN (60*DATE_PART('hour', data  - previous_data ) + DATE_PART('minute', data - previous_data ) + DATE_PART('seconds', data - previous_data )/60)
-		ELSE 0
-    END)) INTO tempo_minutos
-		FROM dl WHERE data IS NOT NULL AND previous_data IS NOT NULL;
-
-        RETURN tempo_minutos;
-END;
-$$ LANGUAGE plpgsql;
-ALTER FUNCTION macrocontrole.tempo_execucao_microcontrole(integer)
-  OWNER TO postgres;
---
-
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
   	nome VARCHAR(255) NOT NULL UNIQUE
@@ -538,6 +383,7 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	UNIQUE(atividade_id, perfil_producao_id)
 );
 
+-- passar para serviço rh
 CREATE TABLE macrocontrole.perda_recurso_humano(	
 	id SERIAL NOT NULL PRIMARY KEY,	
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),	
@@ -546,7 +392,7 @@ CREATE TABLE macrocontrole.perda_recurso_humano(
 	data timestamp with time zone NOT NULL,	
 	observacao TEXT	
 );
-
+-- passar para serviço rh
 CREATE TABLE macrocontrole.funcao_especial(
 	id SERIAL NOT NULL PRIMARY KEY,
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),

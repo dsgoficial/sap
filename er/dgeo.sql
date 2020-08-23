@@ -129,16 +129,4 @@ CREATE TABLE dgeo.layer_qgis_models(
 	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
-CREATE VIEW dgeo.menus AS
-SELECT nome FROM dgeo.layer_menus;
-
-CREATE VIEW dgeo.styles AS
-SELECT DISTINCT(stylename) AS nome FROM dgeo.layer_styles;
-
-CREATE VIEW dgeo.rules AS
-SELECT DISTINCT(grupo_regra) AS nome FROM dgeo.group_rules;
-
-CREATE VIEW dgeo.qgis_models AS
-SELECT nome FROM dgeo.layer_qgis_models;
-
 COMMIT;

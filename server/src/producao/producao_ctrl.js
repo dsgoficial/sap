@@ -8,10 +8,10 @@ const prepared = require("./prepared_statements");
 
 const controller = {};
 
-controller.calculaFila = async usuarioId => {
-  const prioridade = await db.sapConn.task(async t => {
+controller.calculaFila = async (usuarioId) => {
+  const prioridade = await db.sapConn.task(async (t) => {
     const filaPrioritaria = await t.oneOrNone(prepared.calculaFilaPrioritaria, [
-      usuarioId
+      usuarioId,
     ]);
 
     if (filaPrioritaria) {
@@ -28,7 +28,7 @@ controller.calculaFila = async usuarioId => {
     }
 
     const cartasPausadas = await t.oneOrNone(prepared.calculaFilaPausada, [
-      usuarioId
+      usuarioId,
     ]);
 
     if (cartasPausadas) {
@@ -36,7 +36,7 @@ controller.calculaFila = async usuarioId => {
     }
 
     const prioridadeOperador = await t.oneOrNone(prepared.calculaFila, [
-      usuarioId
+      usuarioId,
     ]);
 
     if (prioridadeOperador) {
@@ -88,7 +88,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
 
   const result = [];
 
-  camadas.forEach(r => {
+  camadas.forEach((r) => {
     const aux = { nome: r.nome, schema: r.schema };
     if (r.alias) {
       aux.alias = r.alias;
@@ -106,7 +106,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
         r.atributo_justificativa_apontamento;
     }
     const auxAtt = [];
-    atributos.forEach(a => {
+    atributos.forEach((a) => {
       if (a.camada === r.nome && a.schema === r.schema) {
         auxAtt.push({ nome: a.nome, alias: a.alias });
       }
@@ -124,14 +124,14 @@ const getInfoMenus = async (connection, etapaCode, subfaseId) => {
   if (etapaCode === 2) {
     return connection.any(
       `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
-        INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
+        INNER JOIN dgeo.layer_menus AS mp On mp.id = pm.menu_id
         WHERE subfase_id = $1`,
       [subfaseId]
     );
   }
   return connection.any(
     `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
-        INNER JOIN dgeo.layer_menus AS mp On mp.nome = pm.nome
+        INNER JOIN dgeo.layer_menus AS mp On mp.id = pm.menu_id
         WHERE subfase_id = $1 and not menu_revisao`,
     [subfaseId]
   );
@@ -140,7 +140,7 @@ const getInfoMenus = async (connection, etapaCode, subfaseId) => {
 const getInfoEstilos = async (connection, subfaseId) => {
   return connection.any(
     `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
-      INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
+      INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.estilo_nome
       INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
       INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
       WHERE pe.subfase_id = $1 AND pc.subfase_id = $1`,
@@ -152,7 +152,7 @@ const getInfoRegras = async (connection, subfaseId) => {
   return connection.any(
     `SELECT lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra_id, lr.descricao,  gr.cor_rgb, gr.grupo_regra, lr.id
       FROM macrocontrole.perfil_regras as pr
-      INNER JOIN dgeo.group_rules AS gr ON gr.grupo_regra = pr.nome
+      INNER JOIN dgeo.group_rules AS gr ON gr.id = pr.grupo_regra_id
       INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
       INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
       INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
@@ -201,7 +201,7 @@ const getInfoModelsQGIS = async (connection, subfaseId) => {
   return connection.any(
     `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo, pmq.requisito_finalizacao, pmq.ordem
       FROM macrocontrole.perfil_model_qgis AS pmq
-      INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.nome = lqm.nome
+      INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.qgis_model_id = lqm.id
       WHERE pmq.subfase_id = $1`,
     [subfaseId]
   );
@@ -259,7 +259,7 @@ const getInfoLinhagem = async (
       [atividadeId]
     );
   }
-  linhagem.forEach(r => {
+  linhagem.forEach((r) => {
     if (r.data_inicio) {
       r.data_inicio = new Date(r.data_inicio).toLocaleString();
     }
@@ -279,54 +279,15 @@ const getInfoRequisitos = async (connection, subfaseId) => {
   );
 };
 
-const getAtalhos = async connection => {
+const getAtalhos = async (connection) => {
   return connection.any(
     `SELECT descricao, ferramenta, atalho
       FROM dgeo.atalhos_qgis`
   );
 };
 
-const getInfoQuestionario = async (connection, subfaseId) => {
-  const questionario = await connection.any(
-    `SELECT q.nome AS nome_questionario, p.id AS pergunta_id, p.texto AS pergunta,
-    o.id AS opcao_id, o.texto AS opcao
-    FROM avaliacao.questionario AS q
-    INNER JOIN avaliacao.pergunta AS p ON p.questionario_id = q.id
-    INNER JOIN avaliacao.opcao AS o ON o.pergunta_id = p.id
-    WHERE q.subfase_id = $1 
-    ORDER BY p.ordem, o.ordem`,
-    [subfaseId]
-  );
-
-  const result = {};
-  result.perguntas = [];
-  const perguntas = {};
-  questionario.forEach(i => {
-    result.nome = i.nome_questionario;
-
-    if (!(i.pergunta_id in perguntas)) {
-      perguntas[i.pergunta_id] = {
-        pergunta_id: i.pergunta_id,
-        pergunta: i.pergunta
-      };
-      perguntas[i.pergunta_id].opcoes = [];
-    }
-
-    perguntas[i.pergunta_id].opcoes.push({
-      opcao_id: i.opcao_id,
-      opcao: i.opcao
-    });
-  });
-
-  for (const key of perguntas) {
-    result.perguntas.push(perguntas[key]);
-  }
-
-  return result;
-};
-
-const dadosProducao = async atividadeId => {
-  const results = await db.sapConn.task(async t => {
+const dadosProducao = async (atividadeId) => {
+  const results = await db.sapConn.task(async (t) => {
     const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId]);
 
     const info = {};
@@ -360,7 +321,7 @@ const dadosProducao = async atividadeId => {
       configuracao_producao: dadosut.configuracao_producao,
       tipo_dado_producao_id: dadosut.tipo_dado_producao_id,
       tipo_dado_finalizacao_id: dadosut.tipo_dado_finalizacao_id,
-      configuracao_finalizacao: dadosut.configuracao_finalizacao
+      configuracao_finalizacao: dadosut.configuracao_finalizacao,
     };
 
     info.atividade.camadas = await getInfoCamadas(
@@ -409,12 +370,6 @@ const dadosProducao = async atividadeId => {
 
     info.atividade.atalhos = await getAtalhos(t);
 
-    /*
-    info.atividade.questionario = await getInfoQuestionario(
-      t,
-      dadosut.subfase_id
-    );
-    */
     return info;
   });
 
@@ -435,7 +390,7 @@ controller.getDadosAtividade = async (
   return dados;
 };
 
-controller.verifica = async usuarioId => {
+controller.verifica = async (usuarioId) => {
   const emAndamento = await db.sapConn.oneOrNone(
     `SELECT a.id
       FROM macrocontrole.atividade AS a
@@ -468,7 +423,7 @@ controller.finaliza = async (
   observacaoProximaAtividade
 ) => {
   const dataFim = new Date();
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     // Usuário é passado como uma medida de segurança para garantir que quem está finalizando é o usuário da atividade
     const result = await t.result(
       `UPDATE macrocontrole.atividade SET
@@ -561,13 +516,13 @@ controller.finaliza = async (
   });
 };
 
-controller.inicia = async usuarioId => {
+controller.inicia = async (usuarioId) => {
   const dataInicio = new Date();
   const prioridade = await controller.calculaFila(usuarioId);
   if (!prioridade) {
     return null;
   }
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     const verify = await t.oneOrNone(
       `SELECT id FROM macrocontrole.atividade
       WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 2`,
@@ -610,7 +565,7 @@ controller.inicia = async usuarioId => {
 
 controller.respondeQuestionario = async (atividadeId, respostas, usuarioId) => {
   const dataQuestionario = new Date();
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     const verify = await t.oneOrNone(
       `SELECT id FROM macrocontrole.atividade
       WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 2 AND atividade_id = $<atividadeId>`,
@@ -631,7 +586,7 @@ controller.respondeQuestionario = async (atividadeId, respostas, usuarioId) => {
       { dataQuestionario, atividadeId }
     );
     const queries = [];
-    respostas.forEach(r => {
+    respostas.forEach((r) => {
       queries.push(
         t.none(
           `
@@ -641,7 +596,7 @@ controller.respondeQuestionario = async (atividadeId, respostas, usuarioId) => {
           {
             perguntaId: r.pergunta_id,
             opcaoId: r.opcao_id,
-            respostaQuestionarioId: respostaQuestionario.id
+            respostaQuestionarioId: respostaQuestionario.id,
           }
         )
       );
@@ -657,7 +612,7 @@ controller.problemaAtividade = async (
   usuarioId
 ) => {
   const dataFim = new Date();
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     const result = await t.result(
       `
       UPDATE macrocontrole.atividade SET
@@ -688,7 +643,7 @@ controller.problemaAtividade = async (
       {
         etapaId: atividade.etapa_id,
         unidadeTrabalhoId: atividade.unidade_trabalho_id,
-        usuarioId: usuarioId
+        usuarioId: usuarioId,
       }
     );
     await t.any(
@@ -701,7 +656,7 @@ controller.problemaAtividade = async (
         unidadeTrabalhoId: atividade.unidade_trabalho_id,
         tipoProblemaId,
         descricao,
-        geom: `SRID=4326;${atividade.geom}`
+        geom: `SRID=4326;${atividade.geom}`,
       }
     );
     await t.any(
@@ -722,14 +677,14 @@ controller.getTipoProblema = async () => {
     "SELECT code, nome FROM dominio.tipo_problema"
   );
   const dados = [];
-  tipoProblema.forEach(p => {
+  tipoProblema.forEach((p) => {
     dados.push({ tipo_problema_id: p.code, tipo_problema: p.nome });
   });
   return dados;
 };
 
 controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
-  await db.sapConn.tx(async t => {
+  await db.sapConn.tx(async (t) => {
     const dataFim = new Date();
     const result = await t.result(
       `
@@ -761,7 +716,7 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
       {
         etapaId: atividade.etapa_id,
         unidadeTrabalhoId: atividade.unidade_trabalho_id,
-        usuarioId: usuarioId
+        usuarioId: usuarioId,
       }
     );
 
