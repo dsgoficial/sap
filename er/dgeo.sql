@@ -120,6 +120,7 @@ CREATE TABLE dgeo.layer_rules(
 	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
+
 CREATE TABLE dgeo.layer_qgis_models(
 	id SERIAL NOT NULL PRIMARY KEY,
   nome varchar(255) NOT NULL UNIQUE,

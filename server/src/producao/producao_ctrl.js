@@ -140,7 +140,7 @@ const getInfoMenus = async (connection, etapaCode, subfaseId) => {
 const getInfoEstilos = async (connection, subfaseId) => {
   return connection.any(
     `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
-      INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.estilo_nome
+      INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
       INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
       INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
       WHERE pe.subfase_id = $1 AND pc.subfase_id = $1`,

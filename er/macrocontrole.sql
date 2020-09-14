@@ -146,7 +146,7 @@ CREATE TABLE macrocontrole.perfil_configuracao_qgis(
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	estilo_nome varchar(255) NOT NULL REFERENCES dgeo.layer_styles (stylename),
+	nome varchar(255) NOT NULL,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(nome,subfase_id)
 );
@@ -155,7 +155,7 @@ CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
 	grupo_regra_id INTEGER NOT NULL REFERENCES dgeo.group_rules (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(nome,subfase_id)
+	UNIQUE(grupo_regra_id,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(
@@ -163,7 +163,7 @@ CREATE TABLE macrocontrole.perfil_menu(
 	menu_id INTEGER NOT NULL REFERENCES dgeo.layer_menus (id),
 	menu_revisao BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(nome,subfase_id)
+	UNIQUE(menu_id,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_model_qgis(
@@ -173,13 +173,13 @@ CREATE TABLE macrocontrole.perfil_model_qgis(
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	ordem INTEGER NOT NULL,
-	UNIQUE(nome,subfase_id)
+	UNIQUE(qgis_model_id,subfase_id)
 );
 
 CREATE TABLE macrocontrole.perfil_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_exibicao_id SMALLINT NOT NULL REFERENCES dominio.tipo_exibicao (code),
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(subfase_id)
 );
 
