@@ -38,14 +38,14 @@ CREATE TABLE dgeo.versao_qgis(
   CHECK (versao_minima ~ '^\d+(\.\d+){0,2}$')
 );
 
-CREATE TABLE dgeo.atalhos_qgis(
+CREATE TABLE dgeo.qgis_shortcuts(
   id SERIAL NOT NULL PRIMARY KEY,
   descricao VARCHAR(255) NOT NULL,
   ferramenta VARCHAR(255) NOT NULL,
   atalho VARCHAR(255) NOT NULL
 );
 
-INSERT INTO dgeo.atalhos_qgis (ferramenta, descricao, atalho) VALUES
+INSERT INTO dgeo.qgis_shortcuts (ferramenta, descricao, atalho) VALUES
 ('Merge Selected Features', 'Mesclar feições selecionadas', 'M'),
 ('Split Features', 'Quebrar Feições', 'C'),
 ('Identify Features', 'Identificar feições', 'I'),
@@ -78,7 +78,7 @@ CREATE TABLE dgeo.gerenciador_fme(
   UNIQUE(servidor,porta)
 );
 
-CREATE TABLE dgeo.layer_menus(
+CREATE TABLE dgeo.qgis_menus(
 	  id SERIAL NOT NULL PRIMARY KEY,
     nome text NOT NULL,
     definicao_menu text NOT NULL,
@@ -121,7 +121,7 @@ CREATE TABLE dgeo.layer_rules(
 );
 
 
-CREATE TABLE dgeo.layer_qgis_models(
+CREATE TABLE dgeo.qgis_models(
 	id SERIAL NOT NULL PRIMARY KEY,
   nome varchar(255) NOT NULL UNIQUE,
   descricao TEXT NOT NULL,

@@ -124,14 +124,14 @@ const getInfoMenus = async (connection, etapaCode, subfaseId) => {
   if (etapaCode === 2) {
     return connection.any(
       `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
-        INNER JOIN dgeo.layer_menus AS mp On mp.id = pm.menu_id
+        INNER JOIN dgeo.qgis_menus AS mp On mp.id = pm.menu_id
         WHERE subfase_id = $1`,
       [subfaseId]
     );
   }
   return connection.any(
     `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
-        INNER JOIN dgeo.layer_menus AS mp On mp.id = pm.menu_id
+        INNER JOIN dgeo.qgis_menus AS mp On mp.id = pm.menu_id
         WHERE subfase_id = $1 and not menu_revisao`,
     [subfaseId]
   );
@@ -201,7 +201,7 @@ const getInfoModelsQGIS = async (connection, subfaseId) => {
   return connection.any(
     `SELECT pmq.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo, pmq.requisito_finalizacao, pmq.ordem
       FROM macrocontrole.perfil_model_qgis AS pmq
-      INNER JOIN dgeo.layer_qgis_models AS lqm ON pmq.qgis_model_id = lqm.id
+      INNER JOIN dgeo.qgis_models AS lqm ON pmq.qgis_model_id = lqm.id
       WHERE pmq.subfase_id = $1`,
     [subfaseId]
   );
@@ -282,7 +282,7 @@ const getInfoRequisitos = async (connection, subfaseId) => {
 const getAtalhos = async (connection) => {
   return connection.any(
     `SELECT descricao, ferramenta, atalho
-      FROM dgeo.atalhos_qgis`
+      FROM dgeo.qgis_shortcuts`
   );
 };
 

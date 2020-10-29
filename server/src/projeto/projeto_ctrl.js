@@ -48,13 +48,13 @@ controller.getRegras = async () => {
 
 controller.getModelos = async () => {
   return db.sapConn.any(
-    "SELECT nome, descricao, model_xml, owner, update_time FROM dgeo.layer_qgis_models"
+    "SELECT nome, descricao, model_xml, owner, update_time FROM dgeo.qgis_models"
   );
 };
 
 controller.getMenus = async () => {
   return db.sapConn.any(
-    "SELECT id, nome, definicao_menu, owner, update_time FROM dgeo.layer_menus"
+    "SELECT id, nome, definicao_menu, owner, update_time FROM dgeo.qgis_menus"
   );
 };
 
@@ -137,7 +137,7 @@ controller.gravaModelos = async (modelos, usuarioId) => {
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
-    await t.none("TRUNCATE dgeo.layer_qgis_models RESTART IDENTITY");
+    await t.none("TRUNCATE dgeo.qgis_models RESTART IDENTITY");
 
     const cs = new db.pgp.helpers.ColumnSet([
       "nome",
@@ -148,7 +148,7 @@ controller.gravaModelos = async (modelos, usuarioId) => {
     ]);
 
     const query = db.pgp.helpers.insert(modelos, cs, {
-      table: "layer_qgis_models",
+      table: "qgis_models",
       schema: "dgeo"
     });
 
@@ -160,7 +160,7 @@ controller.gravaMenus = async (menus, usuarioId) => {
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
-    await t.none("TRUNCATE dgeo.layer_menus RESTART IDENTITY");
+    await t.none("TRUNCATE dgeo.qgis_menus RESTART IDENTITY");
 
     const cs = new db.pgp.helpers.ColumnSet([
       "nome_menu",
@@ -170,7 +170,7 @@ controller.gravaMenus = async (menus, usuarioId) => {
     ]);
 
     const query = db.pgp.helpers.insert(menus, cs, {
-      table: "layer_menus",
+      table: "qgis_menus",
       schema: "dgeo"
     });
 

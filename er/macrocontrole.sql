@@ -160,7 +160,7 @@ CREATE TABLE macrocontrole.perfil_regras(
 
 CREATE TABLE macrocontrole.perfil_menu(
 	id SERIAL NOT NULL PRIMARY KEY,
-	menu_id INTEGER NOT NULL REFERENCES dgeo.layer_menus (id),
+	menu_id INTEGER NOT NULL REFERENCES dgeo.qgis_menus (id),
 	menu_revisao BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	UNIQUE(menu_id,subfase_id)
@@ -168,7 +168,7 @@ CREATE TABLE macrocontrole.perfil_menu(
 
 CREATE TABLE macrocontrole.perfil_model_qgis(
 	id SERIAL NOT NULL PRIMARY KEY,
-	qgis_model_id INTEGER NOT NULL REFERENCES dgeo.layer_qgis_models (id),
+	qgis_model_id INTEGER NOT NULL REFERENCES dgeo.qgis_models (id),
 	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
