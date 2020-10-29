@@ -42,7 +42,9 @@ CREATE TABLE dgeo.qgis_shortcuts(
   id SERIAL NOT NULL PRIMARY KEY,
   descricao VARCHAR(255) NOT NULL,
   ferramenta VARCHAR(255) NOT NULL,
-  atalho VARCHAR(255) NOT NULL
+  atalho VARCHAR(255) NOT NULL,
+  owner varchar(255) NOT NULL,
+	update_time timestamp without time zone NOT NULL DEFAULT now(),
 );
 
 INSERT INTO dgeo.qgis_shortcuts (ferramenta, descricao, atalho) VALUES
