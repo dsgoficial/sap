@@ -33,7 +33,7 @@ controller.getEstilos = async () => {
 
 controller.getRegras = async () => {
   const grupoRegras = await db.sapConn.any(`
-  SELECT gr.id, gr.grupo_regra, gr.cor_rgb
+  SELECT gr.id, gr.grupo_regra, gr.cor_rgb, gr.ordem
   FROM dgeo.group_rules AS gr
   `);
 

@@ -107,6 +107,7 @@ CREATE TABLE dgeo.group_rules(
   	id SERIAL NOT NULL PRIMARY KEY,
     grupo_regra varchar(255) NOT NULL,
     cor_rgb varchar(255) NOT NULL,
+    ordem integer NOT NULL,
     UNIQUE(grupo_regra)
 );
 
