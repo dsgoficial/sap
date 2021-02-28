@@ -31,7 +31,7 @@
     "url": "https://github.com/1cgeo/sap/issues"
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "bluebird": "^3.7.2",
     "colors": "^1.4.0",
@@ -41,6 +41,7 @@
     "npm-check-updates": "^7.0.3",
     "npm-run": "^5.0.1",
     "pg-promise": "^10.5.8",
-    "pgtools": "^0.3.0"
+    "pgtools": "^0.3.0",
+    "pm2": "^4.5.5"
   }
 }
