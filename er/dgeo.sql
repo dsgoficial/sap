@@ -43,7 +43,7 @@ CREATE TABLE dgeo.qgis_shortcuts(
   ferramenta VARCHAR(255) NOT NULL,
   atalho VARCHAR(255) NOT NULL,
   owner varchar(255) NOT NULL,
-	update_time timestamp without time zone NOT NULL DEFAULT now(),
+	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
 CREATE TABLE dgeo.gerenciador_fme(

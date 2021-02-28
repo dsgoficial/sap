@@ -161,7 +161,7 @@ CREATE TABLE dominio.tipo_dado_producao(
 INSERT INTO dominio.tipo_dado_producao (code, nome) VALUES
 (1, 'Dado não controlado pelo SAP'),
 (2, 'Banco de dados PostGIS com controle de permissões'),
-(3, 'Banco de dados PostGIS'),
+(3, 'Banco de dados PostGIS');
 --(4, 'Geopackage via rede'),
 --(5, 'Geopackage via Google Drive'),
 --(6, 'Geopackage via AWS S3');
@@ -172,7 +172,7 @@ CREATE TABLE dominio.tipo_dado_finalizacao(
 );
 
 INSERT INTO dominio.tipo_dado_finalizacao (code, nome) VALUES
-(1, 'Finalização não controlada pelo SAP'),
+(1, 'Finalização não controlada pelo SAP');
 --(2, 'Geopackage via rede'),
 --(3, 'Geopackage via Google Drive'),
 --(4, 'Geopackage via AWS S3');
