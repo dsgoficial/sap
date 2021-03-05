@@ -186,7 +186,7 @@ controller.getBancoDados = async () => {
   return db.sapConn.any(
     `SELECT nome, split_part(configuracao_producao, ':', 1) AS servidor,
     split_part(configuracao_producao, ':', 2) AS porta
-    FROM macrocontrole.dado_producao WHERE tipo_dado_producao_id IN (1,2)`
+    FROM macrocontrole.dado_producao WHERE tipo_dado_producao_id IN (2,3)`
   );
 };
 
