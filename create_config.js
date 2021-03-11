@@ -113,7 +113,8 @@ const createDotEnv = (
 ) => {
   const secret = crypto.randomBytes(64).toString('hex')
 
-  const env = `PORT=${port}
+  const env = `NODE_TLS_REJECT_UNAUTHORIZED=0
+PORT=${port}
 DB_SERVER=${dbServer}
 DB_PORT=${dbPort}
 DB_NAME=${dbName}
