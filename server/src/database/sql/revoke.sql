@@ -8,7 +8,7 @@ SELECT string_agg(query, ' ') AS revoke_query FROM (
 	UNION ALL
 	SELECT DISTINCT 'REVOKE ALL ON TABLE ' || table_schema || '.' || table_name || ' FROM ' || $1 || ';' AS query
 	FROM information_schema.table_privileges
-	WHERE grantee ~* $1
+	WHERE grantee ~* $1 AND table_schema NOT IN ('information_schema') AND table_schema !~ '^pg_'
 	UNION ALL
 	SELECT DISTINCT 'REVOKE ALL ON FUNCTION ' || routine_schema || '.' || routine_name || '(' 
 		||  pg_get_function_identity_arguments(
@@ -21,6 +21,7 @@ SELECT string_agg(query, ' ') AS revoke_query FROM (
 	UNION ALL
 	SELECT 'REVOKE ALL ON SCHEMA ' || schema_name || ' FROM ' || $1 || ';'  AS query
 	FROM information_schema.schemata
+	WHERE schema_name NOT IN ('information_schema', 'public') AND schema_name !~ '^pg_'
 	UNION ALL
 	SELECT 'REVOKE CONNECT ON DATABASE ' || current_database() || ' FROM ' || $1 || ';' AS query
 ) AS foo;

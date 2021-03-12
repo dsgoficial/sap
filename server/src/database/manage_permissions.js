@@ -209,12 +209,7 @@ managePermissions.grantPermissionsUser = async (
     }
 
     await t.none(createPolicy);
-
-    /**
-    await t.none(
-      "GRANT USAGE ON SCHEMA PUBLIC TO $<login:name>; GRANT SELECT ON ALL TABLES IN SCHEMA public TO $<login:name>;",
-      { login }
-    ); */
+    
 
     // grant select sequenciador
     const sequenceSQL = await t.oneOrNone(

@@ -7,11 +7,11 @@ SELECT string_agg(query, ' ') AS revoke_query FROM (
 	UNION ALL
 	SELECT DISTINCT 'REVOKE ALL ON TABLE ' || table_schema || '.' || table_name || ' FROM ' || grantee || ';' AS query
 	FROM information_schema.table_privileges
-	WHERE table_schema NOT IN ('information_schema') AND table_schema !~ '^pg_'
+	WHERE table_schema NOT IN ('information_schema', 'public') AND table_schema !~ '^pg_'
 	UNION ALL
 	SELECT DISTINCT 'ALTER TABLE ' || table_schema || '.' || table_name || ' DISABLE ROW LEVEL SECURITY;' AS query
 	FROM information_schema.table_privileges
-	WHERE table_schema NOT IN ('information_schema', 'public') AND table_schema !~ '^pg_'
+	WHERE table_schema NOT IN ('information_schema', 'public', 'PUBLIC') AND table_schema !~ '^pg_'
 	UNION ALL
 	SELECT DISTINCT 'REVOKE ALL ON FUNCTION ' || routine_schema || '.' || routine_name || '(' 
 		||  pg_get_function_identity_arguments(
