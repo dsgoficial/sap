@@ -12,12 +12,10 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
 
   const decoded = await validateToken(token);
 
-  if (!("id" in decoded && decoded.id)) {
+  if (!("id" in decoded && decoded.id && "uuid" in decoded && decoded.uuid)) {
     throw new AppError("Falta informação de usuário");
   }
-  if (!("uuid" in decoded && decoded.uuid)) {
-    throw new AppError("Falta informação de usuário");
-  }
+
   const {
     administrador,
   } = await db.sapConn.oneOrNone(

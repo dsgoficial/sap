@@ -13,10 +13,7 @@ const verifyLogin = asyncHandler(async (req, res, next) => {
 
   const decoded = await validateToken(token);
 
-  if (!("id" in decoded && decoded.id)) {
-    throw new AppError("Falta informação de usuário");
-  }
-  if (!decoded.uuid) {
+  if (!("id" in decoded && decoded.id && "uuid" in decoded && decoded.uuid)) {
     throw new AppError("Falta informação de usuário");
   }
 
@@ -26,8 +23,7 @@ const verifyLogin = asyncHandler(async (req, res, next) => {
       httpCode.Unauthorized
     );
   }
-
-  const response = await db.conn.oneOrNone(
+  const response = await db.sapConn.oneOrNone(
     "SELECT ativo FROM dgeo.usuario WHERE uuid = $<usuarioUuid>",
     { usuarioUuid: decoded.uuid }
   );
