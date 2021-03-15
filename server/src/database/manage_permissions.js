@@ -221,7 +221,7 @@ managePermissions.grantPermissionsUser = async (
             ) AS foo;`,
       { camadas, login }
     );
-    if (sequenceSQL) {
+    if (sequenceSQL && sequenceSQL.grant_sequence) {
       await t.none(sequenceSQL.grant_sequence);
     }
     // grant trigger function
@@ -249,10 +249,10 @@ managePermissions.grantPermissionsUser = async (
             ) AS foo;`,
       { camadas, login }
     );
-    if (triggerSQL.grant_trigger) {
+    if (triggerSQL && triggerSQL.grant_trigger) {
       await t.none(triggerSQL.grant_trigger);
     }
-    if (triggerSchema.grant_trigger) {
+    if (triggerSQL && triggerSchema.grant_trigger) {
       await t.none(triggerSchema.grant_trigger);
     }
     // grant select nos dominios relacionados
@@ -277,10 +277,10 @@ managePermissions.grantPermissionsUser = async (
             ) AS foo;`,
       { camadas, login }
     );
-    if (fkSQL) {
+    if (fkSQL && fkSQL.grant_fk) {
       await t.none(fkSQL.grant_fk);
     }
-    if (fkSchema) {
+    if (fkSchema && fkSchema.grant_fk) {
       await t.none(fkSchema.grant_fk);
     }
   });
