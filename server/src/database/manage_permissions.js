@@ -84,14 +84,12 @@ managePermissions.grantPermissionsUser = async (
   if (!grantInfo || grantInfo.length === 0) {
     return null;
   }
-
   await connection.tx(async (t) => {
     const dbName = grantInfo[0].db_nome;
     await t.none("GRANT CONNECT ON DATABASE $<dbName:name> TO $<login:name>;", {
       dbName,
       login,
     });
-
     const schemasSQL = grantInfo
       .map((v) => v.schema)
       .filter((v, i, array) => array.indexOf(v) === i)
@@ -99,6 +97,11 @@ managePermissions.grantPermissionsUser = async (
       .join(" ");
 
     await t.none(schemasSQL);
+
+    await t.none(
+      "GRANT USAGE ON SCHEMA PUBLIC TO $<login:name>; GRANT SELECT ON public.geometry_columns TO $<login:name>;",
+      { login }
+    );
 
     let camadas;
     const tipoEtapa = grantInfo[0].tipo_etapa_id;
@@ -148,13 +151,11 @@ managePermissions.grantPermissionsUser = async (
 
       await t.none(camadasSql);
     }
-
     const enableRLS = camadas
       .map((v) => `ALTER TABLE ${v} ENABLE ROW LEVEL SECURITY;`)
       .join(" ");
 
     await t.none(enableRLS);
-
     let createPolicy;
     const geom = grantInfo[0].geom;
 
@@ -209,7 +210,6 @@ managePermissions.grantPermissionsUser = async (
     }
 
     await t.none(createPolicy);
-    
 
     // grant select sequenciador
     const sequenceSQL = await t.oneOrNone(
@@ -224,7 +224,6 @@ managePermissions.grantPermissionsUser = async (
     if (sequenceSQL) {
       await t.none(sequenceSQL.grant_sequence);
     }
-
     // grant trigger function
     const triggerSQL = await t.oneOrNone(
       `SELECT string_agg(query, ' ') AS grant_trigger FROM (
@@ -250,14 +249,12 @@ managePermissions.grantPermissionsUser = async (
             ) AS foo;`,
       { camadas, login }
     );
-
-    if (triggerSQL) {
+    if (triggerSQL.grant_trigger) {
       await t.none(triggerSQL.grant_trigger);
     }
-    if (triggerSchema) {
+    if (triggerSchema.grant_trigger) {
       await t.none(triggerSchema.grant_trigger);
     }
-
     // grant select nos dominios relacionados
     const fkSQL = await t.oneOrNone(
       `SELECT string_agg(query, ' ') AS grant_fk FROM (

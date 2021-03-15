@@ -142,7 +142,6 @@ const processTempUser = async (
     updated = true;
     await createDbUser(login, senha, conn);
   }
-
   const userConnected = await db.testConn(
     login,
     senha,
@@ -156,11 +155,9 @@ const processTempUser = async (
     updated = true;
     await updatePassword(login, senha, conn);
   }
-
   if (extendValidity) {
     await updateValidity(login, conn);
   }
-
   if (updated) {
     await updateTempLogin(usuarioId, configuracao_producao, login, senha);
     await revokeAllPermissionsUser(login, conn);
