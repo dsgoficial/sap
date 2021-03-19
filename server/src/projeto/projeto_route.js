@@ -479,6 +479,65 @@ router.put(
   })
 );
 
+
+router.get(
+  "/configuracao/perfil_modelo",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilModelo();
+
+    const msg = "Perfil Modelo QGIS retornado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.delete(
+  "/configuracao/perfil_modelo",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilModeloIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilModelo(req.body.perfil_modelo_ids);
+
+    const msg = "Perfil Modelo QGIS deletado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
+router.post(
+  "/configuracao/perfil_modelo",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfisModelo
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilModelo(req.body.perfis_modelo);
+
+    const msg = "Perfis Modelo QGIS criados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.put(
+  "/configuracao/perfil_modelo",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilModeloAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilModelo(req.body.perfis_modelo);
+
+    const msg = "Perfis Modelo QGIS atualizados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
+
 router.delete(
   "/insumos",
   verifyAdmin,

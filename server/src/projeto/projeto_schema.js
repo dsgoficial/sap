@@ -207,6 +207,14 @@ models.perfilFMEIds = Joi.object().keys({
     .min(1),
 });
 
+models.perfilModeloIds = Joi.object().keys({
+  perfil_modelo_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
+});
+
 models.perfisFME = Joi.object().keys({
   perfis_fme: Joi.array()
     .items(
@@ -223,6 +231,38 @@ models.perfisFME = Joi.object().keys({
     .min(1),
 });
 
+models.perfisModelo = Joi.object().keys({
+  perfis_modelo: Joi.array()
+    .items(
+      Joi.object().keys({
+        qgis_model_id: Joi.number().integer().strict().required(),
+        requisito_finalizacao: Joi.boolean().strict().required(),
+        gera_falso_positivo: Joi.boolean().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        ordem: Joi.number().integer().strict().required(),
+      })
+    )
+    .required()
+    .min(1),
+});
+
+models.perfisModeloAtualizacao = Joi.object().keys({
+  perfis_modelo: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        qgis_model_id: Joi.number().integer().strict().required(),
+        requisito_finalizacao: Joi.boolean().strict().required(),
+        gera_falso_positivo: Joi.boolean().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        ordem: Joi.number().integer().strict().required(),
+      })
+    )
+    .unique("id")
+    .required()
+    .min(1),
+});
+
 models.perfilFMEAtualizacao = Joi.object().keys({
   perfis_fme: Joi.array()
     .items(
@@ -233,6 +273,7 @@ models.perfilFMEAtualizacao = Joi.object().keys({
         requisito_finalizacao: Joi.boolean().strict().required(),
         gera_falso_positivo: Joi.boolean().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
+        ordem: Joi.number().integer().strict().required(),
       })
     )
     .unique("id")

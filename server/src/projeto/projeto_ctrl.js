@@ -660,7 +660,7 @@ controller.atualizaPerfilFME = async perfilFME => {
         t.any(
           `UPDATE macrocontrole.perfil_fme
           SET gerenciador_fme_id = $<gerenciadorFmeId>, rotina = $<rotina>, requisito_finalizacao = $<requisitoFinalizacao>, gera_falso_positivo = $<geraFalsoPositivo>,
-          subfase_id = $<subfaseId>
+          subfase_id = $<subfaseId>, ordem = $<ordem>
           where id = $<id>`,
           {
             id: c.id,
@@ -668,7 +668,8 @@ controller.atualizaPerfilFME = async perfilFME => {
             rotina: c.rotina,
             requisitoFinalizacao: c.requisito_finalizacao,
             geraFalsoPositivo: c.gera_falso_positivo,
-            subfaseId: c.subfase_id
+            subfaseId: c.subfase_id,
+            ordem: c.ordem
           }
         )
       );
@@ -700,6 +701,90 @@ controller.criaPerfilFME = async perfilFME => {
 
   const query = db.pgp.helpers.insert(perfilFME, cs, {
     table: "perfil_fme",
+    schema: "macrocontrole"
+  });
+
+  db.sapConn.none(query);
+};
+
+
+controller.getPerfilModelo = async () => {
+  return db.sapConn.any(
+    `SELECT pmq.id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.gera_falso_positivo, pmq.subfase_id, s.nome
+    FROM macrocontrole.perfil_model_qgis AS pmq
+    INNER JOIN macrocontrole.subfase AS s ON s.id = pmq.subfase_id`
+  );
+};
+
+controller.deletePerfilModelo = async perfilModeloIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_model_qgis
+      WHERE id in ($<perfilModeloIds:csv>)`,
+      { perfilModeloIds }
+    );
+    if (!exists) {
+      throw new AppError(
+        "Os ids informados não correspondem a um perfil modelo QGIS",
+        httpCode.BadRequest
+      );
+    }
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_model_qgis
+      WHERE id IN ($<perfilModeloIds:csv>)`,
+      { perfilModeloIds }
+    );
+  });
+};
+
+controller.atualizaPerfilModelo = async perfilModelo => {
+  return db.sapConn.tx(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_model_qgis
+      WHERE id in ($<perfilModeloIds:csv>)`,
+      { perfilModeloIds: perfilModelo.map(c => c.id) }
+    );
+    if (!exists) {
+      throw new AppError(
+        "Os ids informados não correspondem a um perfil modelo QGIS",
+        httpCode.BadRequest
+      );
+    }
+    const query = [];
+    perfilModelo.forEach(c => {
+      query.push(
+        t.any(
+          `UPDATE macrocontrole.perfil_model_qgis
+          SET qgis_model_id = $<qgisModelId>, requisito_finalizacao = $<requisitoFinalizacao>, gera_falso_positivo = $<geraFalsoPositivo>,
+          subfase_id = $<subfaseId>, ordem = $<ordem>
+          where id = $<id>`,
+          {
+            id: c.id,
+            qgisModelId: c.qgis_model_id,
+            requisitoFinalizacao: c.requisito_finalizacao,
+            geraFalsoPositivo: c.gera_falso_positivo,
+            subfaseId: c.subfase_id,
+            ordem: c.ordem
+          }
+        )
+      );
+    });
+
+    await t.batch(query);
+  });
+};
+
+controller.criaPerfilModelo = async perfilModelo => {
+  const cs = new db.pgp.helpers.ColumnSet([
+    "qgis_model_id",
+    "requisito_finalizacao",
+    "gera_falso_positivo",
+    "subfase_id",
+    "ordem"
+  ]);
+
+  const query = db.pgp.helpers.insert(perfilModelo, cs, {
+    table: "perfil_model_qgis",
     schema: "macrocontrole"
   });
 
