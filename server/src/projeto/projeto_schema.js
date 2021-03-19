@@ -216,6 +216,7 @@ models.perfisFME = Joi.object().keys({
         requisito_finalizacao: Joi.boolean().strict().required(),
         gera_falso_positivo: Joi.boolean().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
+        ordem: Joi.number().integer().strict().required(),
       })
     )
     .required()

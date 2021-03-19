@@ -689,7 +689,8 @@ controller.criaPerfilFME = async perfilFME => {
     "rotina",
     "requisito_finalizacao",
     "gera_falso_positivo",
-    "subfase_id"
+    "subfase_id",
+    "ordem"
   ]);
 
   const rotinasFME = perfilFME.map(c => {
