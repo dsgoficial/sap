@@ -614,7 +614,7 @@ controller.criaCamadas = async camadas => {
 
 controller.getPerfilFME = async () => {
   return db.sapConn.any(
-    `SELECT pf.id, pf.gerenciador_fme_id, pf.rotina, pf.requisito_finalizacao, pf.gera_falso_positivo, pf.subfase_id, s.nome
+    `SELECT pf.id, pf.gerenciador_fme_id, pf.rotina, pf.requisito_finalizacao, pf.gera_falso_positivo, pf.subfase_id, pf.ordem, s.nome
     FROM macrocontrole.perfil_fme AS pf
     INNER JOIN macrocontrole.subfase AS s ON s.id = pf.subfase_id`
   );
