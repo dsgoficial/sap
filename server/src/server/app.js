@@ -4,7 +4,7 @@ const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const helmet = require("helmet");
+//const helmet = require("helmet");
 const hpp = require("hpp");
 const rateLimit = require("express-rate-limit");
 const swaggerUi = require("swagger-ui-express");
@@ -36,7 +36,7 @@ app.use(hpp()); // protection against parameter polution
 app.use(cors());
 
 // Helmet Protection
-app.use(helmet());
+//app.use(helmet());
 app.use(noCache());
 
 const limiter = rateLimit({
