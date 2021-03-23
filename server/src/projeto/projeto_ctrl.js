@@ -48,7 +48,7 @@ controller.getRegras = async () => {
 
 controller.getModelos = async () => {
   return db.sapConn.any(
-    "SELECT nome, descricao, model_xml, owner, update_time FROM dgeo.qgis_models"
+    "SELECT id, nome, descricao, model_xml, owner, update_time FROM dgeo.qgis_models"
   );
 };
 
