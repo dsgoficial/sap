@@ -137,8 +137,6 @@ controller.gravaModelos = async (modelos, usuarioId) => {
   await db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
-    await t.none("TRUNCATE dgeo.qgis_models RESTART IDENTITY");
-
     const cs = new db.pgp.helpers.ColumnSet([
       "nome",
       "descricao",
@@ -153,6 +151,66 @@ controller.gravaModelos = async (modelos, usuarioId) => {
     });
 
     await t.none(query);
+  });
+};
+
+controller.atualizaModelos = async (modelos, usuarioId) => {
+  return await db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      "nome",
+      "descricao",
+      "model_xml",
+      { name: "owner", init: () => usuarioPostoNome },
+      { name: "update_time", mod: ":raw", init: () => "NOW()" }
+    ]);
+
+    const query =
+      db.pgp.helpers.update(
+        modelos,
+        cs,
+        { table: "qgis_models", schema: "dgeo" },
+        {
+          tableAlias: "X",
+          valueAlias: "Y"
+        }
+      ) + "WHERE Y.id = X.id";
+    await t.none(query);
+  });
+};
+
+controller.deletaModelos = async modelosId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.qgis_models
+      WHERE id in ($<modelosId:csv>)`,
+      { modelosId }
+    );
+    if (!exists) {
+      throw new AppError(
+        "O id informado não corresponde a um modelo do QGIS",
+        httpCode.BadRequest
+      );
+    }
+
+    const existsAssociation = await t.any(
+      `SELECT id FROM macrocontrole.perfil_model_qgis 
+      WHERE qgis_model_id in ($<modelosId:csv>)`,
+      { modelosId }
+    );
+    if (existsAssociation && existsAssociation.length > 0) {
+      throw new AppError(
+        "O modelo possui perfis associados",
+        httpCode.BadRequest
+      );
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.perfil_model_qgis
+      WHERE id in ($<modelosId:csv>)`,
+      { modelosId }
+    );
   });
 };
 

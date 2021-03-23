@@ -86,6 +86,27 @@ models.qgisModels = Joi.object().keys({
     .required(),
 });
 
+models.atualizaQgisModels = Joi.object().keys({
+  modelos: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        descricao: Joi.string().required(),
+        model_xml: Joi.string().required(),
+      })
+    )
+    .required(),
+});
+
+models.qgisModelsIds = Joi.object().keys({
+  qgis_models_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
+});
+
 models.atividadeCriarRevisao = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
     .items(Joi.number().integer().strict())

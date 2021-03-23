@@ -115,6 +115,33 @@ router.post(
   })
 );
 
+router.put(
+  "/modelos",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.atualizaQgisModels }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaModelos(req.body.modelos, req.usuarioId);
+
+    const msg = "Modelos atualizados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.delete(
+  "/modelos",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.qgisModelsIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaModelos(req.body.qgis_models_ids);
+
+    const msg = "Modelos gravados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+
 router.get(
   "/projeto_qgis",
   verifyAdmin,
