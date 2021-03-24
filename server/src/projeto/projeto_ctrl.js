@@ -92,7 +92,7 @@ controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
     await t.none("TRUNCATE dgeo.layer_rules RESTART IDENTITY");
     await t.none("TRUNCATE dgeo.group_rules RESTART IDENTITY CASCADE");
 
-    const csGroup = new db.pgp.helpers.ColumnSet(["grupo_regra", "cor_rgb"]);
+    const csGroup = new db.pgp.helpers.ColumnSet(["grupo_regra", "cor_rgb", "ordem"]);
 
     const queryGroup =
       db.pgp.helpers.insert(grupoRegras, csGroup, {

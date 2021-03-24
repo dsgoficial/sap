@@ -69,6 +69,7 @@ models.regras = Joi.object().keys({
       Joi.object().keys({
         grupo_regra: Joi.string().required(),
         cor_rgb: Joi.string().required(),
+        ordem: Joi.number().integer().strict().required(),
       })
     )
     .required(),
