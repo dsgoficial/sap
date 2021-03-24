@@ -100,7 +100,7 @@ models.atualizaQgisModels = Joi.object().keys({
 });
 
 models.qgisModelsIds = Joi.object().keys({
-  qgis_models_ids: Joi.array()
+  modelos_ids: Joi.array()
     .items(Joi.number().integer().strict().required())
     .unique()
     .required()
