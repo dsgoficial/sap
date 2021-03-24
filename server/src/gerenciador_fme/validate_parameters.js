@@ -70,6 +70,7 @@ const validadeParameters = async rotinas => {
       }
     })
   })
+  return true
 }
 
 module.exports = validadeParameters

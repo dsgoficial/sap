@@ -135,7 +135,7 @@ router.delete(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.deletaModelos(req.body.modelos_ids);
 
-    const msg = "Modelos gravados com sucesso";
+    const msg = "Modelos deletados com sucesso";
 
     return res.sendJsonAndLog(true, msg, httpCode.Created);
   })

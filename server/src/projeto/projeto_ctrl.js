@@ -134,7 +134,7 @@ controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
 };
 
 controller.gravaModelos = async (modelos, usuarioId) => {
-  await db.sapConn.tx(async t => {
+  return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     const cs = new db.pgp.helpers.ColumnSet([
@@ -155,10 +155,11 @@ controller.gravaModelos = async (modelos, usuarioId) => {
 };
 
 controller.atualizaModelos = async (modelos, usuarioId) => {
-  return await db.sapConn.tx(async t => {
+  return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     const cs = new db.pgp.helpers.ColumnSet([
+      "id",
       "nome",
       "descricao",
       "model_xml",
@@ -207,7 +208,7 @@ controller.deletaModelos = async modelosId => {
     }
 
     return t.any(
-      `DELETE FROM dgeo.perfil_model_qgis
+      `DELETE FROM dgeo.qgis_models
       WHERE id in ($<modelosId:csv>)`,
       { modelosId }
     );
@@ -215,7 +216,7 @@ controller.deletaModelos = async modelosId => {
 };
 
 controller.gravaMenus = async (menus, usuarioId) => {
-  await db.sapConn.tx(async t => {
+  return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
 
     await t.none("TRUNCATE dgeo.qgis_menus RESTART IDENTITY");
@@ -268,7 +269,7 @@ controller.getLogin = async () => {
 };
 
 controller.criaRevisao = async unidadeTrabalhoIds => {
-  await db.sapConn.tx(async t => {
+  return db.sapConn.tx(async t => {
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
       // refactor to batch
       const ordemEtapa = await t.one(
@@ -328,7 +329,7 @@ controller.criaRevisao = async unidadeTrabalhoIds => {
 };
 
 controller.criaRevcorr = async unidadeTrabalhoIds => {
-  await db.sapConn.tx(async t => {
+  return db.sapConn.tx(async t => {
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
       // refactor to batch
       const ordemEtapa = await t.one(
@@ -701,7 +702,7 @@ controller.deletePerfilFME = async perfilFMEIds => {
   });
 };
 
-controller.atualizaPerfilFME = async perfilFME => {
+controller.atualizaPerfilFME = async perfilFME => { //FIXME retornar mensagem de erro correta quando o usuario tenta inserir novamente o mesmo par subfase_id / rotina
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_fme
@@ -738,13 +739,20 @@ controller.atualizaPerfilFME = async perfilFME => {
     const rotinasFME = perfilFME.map(c => {
       return { servidor: c.gerenciador_fme_id, rotina: c.rotina };
     });
-    await validadeParameters(rotinasFME);
+    const parametros_ok = await validadeParameters(rotinasFME);
+    if(!parametros_ok){
+      throw new AppError(
+        "A rotina não possui os parâmetros compatíveis para o uso do SAP",
+        httpCode.BadRequest
+      );
+    }
 
     await t.batch(query);
   });
 };
 
-controller.criaPerfilFME = async perfilFME => {
+controller.criaPerfilFME = async perfilFME => { //FIXME retornar mensagem de erro correta quando o usuario tenta inserir novamente o mesmo par subfase_id / rotina
+
   const cs = new db.pgp.helpers.ColumnSet([
     "gerenciador_fme_id",
     "rotina",
@@ -757,14 +765,21 @@ controller.criaPerfilFME = async perfilFME => {
   const rotinasFME = perfilFME.map(c => {
     return { servidor: c.gerenciador_fme_id, rotina: c.rotina };
   });
-  await validadeParameters(rotinasFME);
+
+  const parametros_ok = await validadeParameters(rotinasFME);
+  if(!parametros_ok){
+    throw new AppError(
+      "A rotina não possui os parâmetros compatíveis para o uso do SAP",
+      httpCode.BadRequest
+    );
+  }
 
   const query = db.pgp.helpers.insert(perfilFME, cs, {
     table: "perfil_fme",
     schema: "macrocontrole"
   });
 
-  db.sapConn.none(query);
+  return db.sapConn.none(query);
 };
 
 
@@ -772,7 +787,7 @@ controller.getPerfilModelo = async () => {
   return db.sapConn.any(
     `SELECT pmq.id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.gera_falso_positivo, pmq.ordem, pmq.subfase_id, qm.nome, qm.descricao
     FROM macrocontrole.perfil_model_qgis AS pmq
-    INNER JOIN dgeo.qgis_model AS s ON qm.id = pmq.qgis_model_id`
+    INNER JOIN dgeo.qgis_models AS qm ON qm.id = pmq.qgis_model_id`
   );
 };
 
@@ -848,7 +863,7 @@ controller.criaPerfilModelo = async perfilModelo => {
     schema: "macrocontrole"
   });
 
-  db.sapConn.none(query);
+  return db.sapConn.none(query);
 };
 
 controller.getGrupoInsumo = async () => {
@@ -1087,7 +1102,7 @@ controller.associaInsumos = async (
   //(5, 'Associar insumo a todas as unidades de trabalho');
   switch (estrategiaId) {
     case 1:
-      await db.sapConn.none(
+      return db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
@@ -1099,7 +1114,7 @@ controller.associaInsumos = async (
       );
       break;
     case 2:
-      await db.sapConn.none(
+      return db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
@@ -1111,7 +1126,7 @@ controller.associaInsumos = async (
       );
       break;
     case 3:
-      await db.sapConn.none(
+      return db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
@@ -1123,7 +1138,7 @@ controller.associaInsumos = async (
       );
       break;
     case 4:
-      await db.sapConn.none(
+      return db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
@@ -1135,7 +1150,7 @@ controller.associaInsumos = async (
       );
       break;
     case 5:
-      await db.sapConn.none(
+      return db.sapConn.none(
         `
         INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
