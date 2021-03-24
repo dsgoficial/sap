@@ -770,7 +770,7 @@ controller.criaPerfilFME = async perfilFME => {
 
 controller.getPerfilModelo = async () => {
   return db.sapConn.any(
-    `SELECT pmq.id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.gera_falso_positivo, pmq.subfase_id, qm.nome, qm.descricao
+    `SELECT pmq.id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.gera_falso_positivo, pmq.ordem, pmq.subfase_id, qm.nome, qm.descricao
     FROM macrocontrole.perfil_model_qgis AS pmq
     INNER JOIN dgeo.qgis_model AS s ON qm.id = pmq.qgis_model_id`
   );
