@@ -133,9 +133,9 @@ router.delete(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.qgisModelsIds }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaModelos(req.body.modelos_ids);
+    await projetoCtrl.deletaModelos(req.body.qgis_models_ids);
 
-    const msg = "Modelos deletados com sucesso";
+    const msg = "Modelos gravados com sucesso";
 
     return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
@@ -563,6 +563,66 @@ router.put(
     return res.sendJsonAndLog(true, msg, httpCode.OK);
   })
 );
+
+
+
+router.get(
+  "/configuracao/perfil_regras",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilRegras();
+
+    const msg = "Perfil de Regras retornado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.delete(
+  "/configuracao/perfil_regras",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilRegrasIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilRegras(req.body.perfil_regras_ids);
+
+    const msg = "Perfil de Regras deletado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
+router.post(
+  "/configuracao/perfil_regras",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilRegras
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilRegras(req.body.perfis_regras);
+
+    const msg = "Perfis de Regras criados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.put(
+  "/configuracao/perfil_regras",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilRegrastualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilRegras(req.body.perfis_regras);
+
+    const msg = "Perfisde de Regras atualizados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
 
 
 router.delete(

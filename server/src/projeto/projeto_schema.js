@@ -237,6 +237,14 @@ models.perfilModeloIds = Joi.object().keys({
     .min(1),
 });
 
+models.perfilRegrasIds = Joi.object().keys({
+  perfil_regras_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
+});
+
 models.perfisFME = Joi.object().keys({
   perfis_fme: Joi.array()
     .items(
@@ -262,6 +270,31 @@ models.perfisModelo = Joi.object().keys({
         gera_falso_positivo: Joi.boolean().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required(),
+      })
+    )
+    .required()
+    .min(1),
+});
+
+models.perfilRegras = Joi.object().keys({
+  perfis_regras: Joi.array()
+    .items(
+      Joi.object().keys({
+        grupo_regra_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+      })
+    )
+    .required()
+    .min(1),
+});
+
+models.perfilRegrastualizacao = Joi.object().keys({
+  perfis_regras: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        grupo_regra_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
       })
     )
     .required()

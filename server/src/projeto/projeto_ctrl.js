@@ -866,6 +866,86 @@ controller.criaPerfilModelo = async perfilModelo => {
   return db.sapConn.none(query);
 };
 
+
+controller.getPerfilRegras = async () => {
+  return db.sapConn.any(
+    `SELECT pr.id, pr.grupo_regra_id, pr.subfase_id
+    FROM macrocontrole.perfil_regras AS pr`
+  );
+};
+
+controller.deletePerfilRegras = async perfilRegrasIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_regras
+      WHERE id in ($<perfilRegrasIds:csv>)`,
+      { perfilRegrasIds }
+    );
+    if (!exists) {
+      throw new AppError(
+        "Os ids informados não correspondem a um perfil de regras",
+        httpCode.BadRequest
+      );
+    }
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_regras
+      WHERE id IN ($<perfilRegrasIds:csv>)`,
+      { perfilRegrasIds }
+    );
+  });
+};
+
+controller.atualizaPerfilRegras = async perfilRegras => {
+  return db.sapConn.tx(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_regras
+      WHERE id in ($<perfilRegrasIds:csv>)`,
+      { perfilRegrasIds: perfilRegras.map(c => c.id) }
+    );
+    if (!exists) {
+      throw new AppError(
+        "Os ids informados não correspondem a um perfil de regras",
+        httpCode.BadRequest
+      );
+    }
+    const query = [];
+    perfilModelo.forEach(c => {
+      query.push(
+        t.any(
+          `UPDATE macrocontrole.perfil_regras
+          SET grupo_regra_id = $<grupoRegraId>, subfase_id = $<subfaseId>
+          where id = $<id>`,
+          {
+            id: c.id,
+            grupoRegraId: c.grupo_regra_id,
+            subfaseId: c.subfase_id
+          }
+        )
+      );
+    });
+
+    await t.batch(query);
+  });
+};
+
+controller.criaPerfilRegras = async perfilRegras => {
+  const cs = new db.pgp.helpers.ColumnSet([
+    "grupo_regra_id",
+    "subfase_id"
+  ]);
+
+  const query = db.pgp.helpers.insert(perfilRegras, cs, {
+    table: "perfil_regras",
+    schema: "macrocontrole"
+  });
+
+  return db.sapConn.none(query);
+};
+
+
+
+
+
 controller.getGrupoInsumo = async () => {
   return db.sapConn.any(`SELECT id, nome
     FROM macrocontrole.grupo_insumo`);
