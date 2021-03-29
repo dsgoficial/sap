@@ -909,7 +909,7 @@ controller.atualizaPerfilRegras = async perfilRegras => {
       );
     }
     const query = [];
-    perfilModelo.forEach(c => {
+    perfilRegras.forEach(c => {
       query.push(
         t.any(
           `UPDATE macrocontrole.perfil_regras
