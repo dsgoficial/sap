@@ -188,7 +188,7 @@ controller.deletaModelos = async modelosId => {
       WHERE id in ($<modelosId:csv>)`,
       { modelosId }
     );
-    if (!exists) {
+    if (exists && exists.length < modelosId.length) {
       throw new AppError(
         "O id informado não corresponde a um modelo do QGIS",
         httpCode.BadRequest
@@ -541,7 +541,7 @@ controller.deletaGerenciadorFME = async servidoresId => {
       WHERE id in ($<servidoresId:csv>)`,
       { servidoresId }
     );
-    if (!exists) {
+    if (exists && exists.length < servidoresId.length) {
       throw new AppError(
         "O id informado não corresponde a um servidor do Gerenciador do FME",
         httpCode.BadRequest
@@ -585,7 +585,7 @@ controller.deleteCamadas = async camadasIds => {
       WHERE id in ($<camadasIds:csv>)`,
       { camadasIds }
     );
-    if (!exists) {
+    if (exists && exists.length < camadasIds.length) {
       throw new AppError(
         "Os ids informados não correspondem a uma camada",
         httpCode.BadRequest
@@ -631,7 +631,7 @@ controller.atualizaCamadas = async camadas => {
       WHERE id in ($<camadasIds:csv>)`,
       { camadasIds: camadas.map(c => c.id) }
     );
-    if (!exists) {
+    if (exists && exists.length < camadas.length) {
       throw new AppError(
         "Os ids informado não correspondem a uma camada",
         httpCode.BadRequest
@@ -688,7 +688,7 @@ controller.deletePerfilFME = async perfilFMEIds => {
       WHERE id in ($<perfilFMEIds:csv>)`,
       { perfilFMEIds }
     );
-    if (!exists) {
+    if (exists && exists.length < perfilFMEIds.length) {
       throw new AppError(
         "Os ids informados não correspondem a um perfil fme",
         httpCode.BadRequest
@@ -709,7 +709,7 @@ controller.atualizaPerfilFME = async perfilFME => { //FIXME retornar mensagem de
       WHERE id in ($<perfilFMEIds:csv>)`,
       { perfilFMEIds: perfilFME.map(c => c.id) }
     );
-    if (!exists) {
+    if (!exists && exists.length < perfilFME.length) {
       throw new AppError(
         "Os ids informados não correspondem a um perfil fme",
         httpCode.BadRequest
@@ -798,7 +798,7 @@ controller.deletePerfilModelo = async perfilModeloIds => {
       WHERE id in ($<perfilModeloIds:csv>)`,
       { perfilModeloIds }
     );
-    if (!exists) {
+    if (!exists && exists.length < perfilModeloIds.length){
       throw new AppError(
         "Os ids informados não correspondem a um perfil modelo QGIS",
         httpCode.BadRequest
@@ -819,7 +819,7 @@ controller.atualizaPerfilModelo = async perfilModelo => {
       WHERE id in ($<perfilModeloIds:csv>)`,
       { perfilModeloIds: perfilModelo.map(c => c.id) }
     );
-    if (!exists) {
+    if (!exists && exists.length < perfilModelo.length) {
       throw new AppError(
         "Os ids informados não correspondem a um perfil modelo QGIS",
         httpCode.BadRequest
@@ -881,7 +881,7 @@ controller.deletePerfilRegras = async perfilRegrasIds => {
       WHERE id in ($<perfilRegrasIds:csv>)`,
       { perfilRegrasIds }
     );
-    if (!exists) {
+    if (!exists && exists.length < perfilRegrasIds.length) {
       throw new AppError(
         "Os ids informados não correspondem a um perfil de regras",
         httpCode.BadRequest
@@ -902,7 +902,7 @@ controller.atualizaPerfilRegras = async perfilRegras => {
       WHERE id in ($<perfilRegrasIds:csv>)`,
       { perfilRegrasIds: perfilRegras.map(c => c.id) }
     );
-    if (!exists) {
+    if (!exists && exists.length < perfilRegras.length) {
       throw new AppError(
         "Os ids informados não correspondem a um perfil de regras",
         httpCode.BadRequest
