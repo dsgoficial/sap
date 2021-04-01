@@ -624,6 +624,64 @@ router.put(
 );
 
 
+router.get(
+  "/configuracao/perfil_estilos",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilEstilos();
+
+    const msg = "Perfil de Estilos retornado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.delete(
+  "/configuracao/perfil_estilos",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilEstilosIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilEstilos(req.body.perfil_estilos_ids);
+
+    const msg = "Perfil de Estilos deletado com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
+router.post(
+  "/configuracao/perfil_estilos",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilEstilos
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilEstilos(req.body.perfis_estilos);
+
+    const msg = "Perfis de Estilos criados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.put(
+  "/configuracao/perfil_estilos",
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilEstilostualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilEstilos(req.body.perfis_estilos);
+
+    const msg = "Perfisde de Estilos atualizados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  })
+);
+
+
 
 router.delete(
   "/insumos",

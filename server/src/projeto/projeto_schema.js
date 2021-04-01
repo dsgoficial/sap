@@ -245,6 +245,14 @@ models.perfilRegrasIds = Joi.object().keys({
     .min(1),
 });
 
+models.perfilEstilosIds = Joi.object().keys({
+  perfil_estilos_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
+});
+
 models.perfisFME = Joi.object().keys({
   perfis_fme: Joi.array()
     .items(
@@ -300,6 +308,32 @@ models.perfilRegrastualizacao = Joi.object().keys({
     .required()
     .min(1),
 });
+
+models.perfilEstilos = Joi.object().keys({
+  perfis_estilos: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+      })
+    )
+    .required()
+    .min(1),
+});
+
+models.perfilEstilostualizacao = Joi.object().keys({
+  perfis_estilos: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+      })
+    )
+    .required()
+    .min(1),
+});
+
 
 models.perfisModeloAtualizacao = Joi.object().keys({
   perfis_modelo: Joi.array()

@@ -942,6 +942,80 @@ controller.criaPerfilRegras = async perfilRegras => {
   return db.sapConn.none(query);
 };
 
+controller.getPerfilEstilos = async () => {
+  return db.sapConn.any(
+    `SELECT pe.id, pe.nome, pe.subfase_id
+    FROM macrocontrole.perfil_estilo AS pe`
+  );
+};
+
+controller.deletePerfilEstilos = async perfilEstilosIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_estilo
+      WHERE id in ($<perfilEstilosIds:csv>)`,
+      { perfilEstilosIds }
+    );
+    if (!exists && exists.length < perfilEstilosIds.length) {
+      throw new AppError(
+        "Os ids informados não correspondem a um perfil de estilos",
+        httpCode.BadRequest
+      );
+    }
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_estilo
+      WHERE id IN ($<perfilEstilosIds:csv>)`,
+      { perfilEstilosIds }
+    );
+  });
+};
+
+controller.atualizaPerfilEstilos = async perfilEstilos => {
+  return db.sapConn.tx(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_estilo
+      WHERE id in ($<perfilEstilos:csv>)`,
+      { perfilEstilosIds: perfilEstilos.map(c => c.id) }
+    );
+    if (!exists && exists.length < perfilEstilos.length) {
+      throw new AppError(
+        "Os ids informados não correspondem a um perfil de estilos",
+        httpCode.BadRequest
+      );
+    }
+    const query = [];
+    perfilEstilos.forEach(c => {
+      query.push(
+        t.any(
+          `UPDATE macrocontrole.perfil_estilo
+          SET nome = $<nome>, subfase_id = $<subfaseId>
+          where id = $<id>`,
+          {
+            id: c.id,
+            nome: c.nome,
+            subfaseId: c.subfase_id
+          }
+        )
+      );
+    });
+
+    await t.batch(query);
+  });
+};
+
+controller.criaPerfilEstilos = async perfilEstilos => {
+  const cs = new db.pgp.helpers.ColumnSet([
+    "nome",
+    "subfase_id"
+  ]);
+
+  const query = db.pgp.helpers.insert(perfilEstilos, cs, {
+    table: "perfil_estilo",
+    schema: "macrocontrole"
+  });
+
+  return db.sapConn.none(query);
+};
 
 
 
