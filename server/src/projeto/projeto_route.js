@@ -12,6 +12,19 @@ const projetoSchema = require("./projeto_schema");
 const router = express.Router();
 
 router.get(
+  "/nome_estilos",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getNomeEstilos();
+
+    const msg = "Estilos retornados";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+
+router.get(
   "/estilos",
   verifyAdmin,
   asyncHandler(async (req, res, next) => {

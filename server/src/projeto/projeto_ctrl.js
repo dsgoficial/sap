@@ -25,6 +25,11 @@ const getUsuarioNomeById = async usuarioId => {
   return usuario.posto_nome;
 };
 
+controller.getNomeEstilos = async () => {
+  return db.sapConn
+    .any('SELECT DISTINCT stylename FROM dgeo.layer_styles');
+};
+
 controller.getEstilos = async () => {
   return db.sapConn
     .any(`SELECT f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, ui, owner, update_time
