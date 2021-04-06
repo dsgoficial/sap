@@ -427,7 +427,7 @@ controller.finaliza = async (
     // Usuário é passado como uma medida de segurança para garantir que quem está finalizando é o usuário da atividade
     const result = await t.result(
       `UPDATE macrocontrole.atividade SET
-        data_fim = $<dataFim>, tipo_situacao_id = 4, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($<atividadeId>), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($<atividadeId>)
+        data_fim = $<dataFim>, tipo_situacao_id = 4, tempo_execucao_microcontrole = 0, tempo_execucao_estimativa = 0
         WHERE id = $<atividadeId> AND usuario_id = $<usuarioId> AND tipo_situacao_id in (2)`,
       { dataFim, atividadeId, usuarioId }
     );
@@ -616,7 +616,7 @@ controller.problemaAtividade = async (
     const result = await t.result(
       `
       UPDATE macrocontrole.atividade SET
-      data_fim = $<dataFim>, tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($<atividadeId>), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($<atividadeId>)
+      data_fim = $<dataFim>, tipo_situacao_id = 5, tempo_execucao_microcontrole = 0, tempo_execucao_estimativa = 0
       WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId>
       `,
       { dataFim, atividadeId, usuarioId }
@@ -689,7 +689,7 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
     const result = await t.result(
       `
       UPDATE macrocontrole.atividade SET
-      data_fim = $<dataFim>, tipo_situacao_id = 5, tempo_execucao_microcontrole = macrocontrole.tempo_execucao_microcontrole($<atividadeId>), tempo_execucao_estimativa = macrocontrole.tempo_execucao_estimativa($<atividadeId>)
+      data_fim = $<dataFim>, tipo_situacao_id = 5, tempo_execucao_microcontrole = 0, tempo_execucao_estimativa = 0
       WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId>
       `,
       { dataFim, atividadeId, usuarioId }

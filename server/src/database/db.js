@@ -16,21 +16,23 @@ db.pgp = require('pg-promise')({
 
 db.createConn = async (usuario, senha, server, port, dbname, handle = true) => {
   const connString = `postgres://${usuario}:${senha}@${server}:${port}/${dbname}`
-  if (!(connString in testeDBs)) {
-    testeDBs[connString] = db.pgp(connString)
-
-    await testeDBs[connString]
-      .connect()
-      .then(obj => {
-        obj.done() // success, release connection;
-      })
-      .catch(e => {
-        if (!handle) {
-          throw new Error()
-        }
-        errorHandler.critical(e)
-      })
+  if (connString in testeDBs) {
+    return testeDBs[connString]
   }
+
+  testeDBs[connString] = db.pgp(connString)
+
+  await testeDBs[connString]
+    .connect()
+    .then(obj => {
+      obj.done() // success, release connection;
+    })
+    .catch(e => {
+      if (!handle) {
+        throw new Error()
+      }
+      errorHandler.critical(e)
+    })
 
   return testeDBs[connString]
 }
