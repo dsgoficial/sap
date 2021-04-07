@@ -14,15 +14,19 @@ db.pgp = require('pg-promise')({
   promiseLib: promise
 })
 
-db.createConn = async (usuario, senha, server, port, dbname, handle = true) => {
-  const connString = `postgres://${usuario}:${senha}@${server}:${port}/${dbname}`
-  if (connString in testeDBs) {
-    return testeDBs[connString]
+db.createConn = async (user, password, host, port, database, handle = true) => {
+  const key = `${user}@${host}:${port}/${database}`
+
+  if (key in testeDBs) {
+    const a = testeDBs[key];
+    a.cn.password = () => password; // update function->password
+    return a.db;
   }
+  const cn = { host, port, database, user, password }; 
+  const new_db = db.pgp(cn)  
+  testeDBs[key] = {db:new_db, cn}
 
-  testeDBs[connString] = db.pgp(connString)
-
-  await testeDBs[connString]
+  await new_db
     .connect()
     .then(obj => {
       obj.done() // success, release connection;
@@ -34,7 +38,7 @@ db.createConn = async (usuario, senha, server, port, dbname, handle = true) => {
       errorHandler.critical(e)
     })
 
-  return testeDBs[connString]
+  return new_db
 }
 
 db.testConn = async (usuario, senha, server, port, dbname) => {
