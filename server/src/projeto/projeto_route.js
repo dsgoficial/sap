@@ -146,7 +146,7 @@ router.delete(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.qgisModelsIds }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaModelos(req.body.qgis_models_ids);
+    await projetoCtrl.deletaModelos(req.body.modelos_ids);
 
     const msg = "Modelos gravados com sucesso";
 
