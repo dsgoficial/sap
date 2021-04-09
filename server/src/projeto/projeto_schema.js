@@ -40,6 +40,34 @@ models.estilos = Joi.object().keys({
     .required(),
 });
 
+models.estilosAtualizacao = Joi.object().keys({
+  estilos: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        f_table_schema: Joi.string().required(),
+        f_table_name: Joi.string().required(),
+        f_geometry_column: Joi.string().required(),
+        stylename: Joi.string().required(),
+        styleqml: Joi.string().required(),
+        stylesld: Joi.string().required(),
+        ui: Joi.string().allow("", null).required(),
+      })
+    )
+    .unique("id")
+    .required()
+    .min(1),
+});
+
+models.estilosIds = Joi.object().keys({
+  estilos_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
+});
+
+
 models.menus = Joi.object().keys({
   menus: Joi.array()
     .items(
@@ -51,11 +79,33 @@ models.menus = Joi.object().keys({
     .required(),
 });
 
+models.menusAtualizacao = Joi.object().keys({
+  menus: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome_menu: Joi.string().required(),
+        definicao_menu: Joi.string().required(),
+      })
+    )
+    .unique("id")
+    .required()
+    .min(1),
+});
+
+models.menusIds = Joi.object().keys({
+  menus_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
+});
+
 models.regras = Joi.object().keys({
   regras: Joi.array()
     .items(
       Joi.object().keys({
-        grupo_regra: Joi.string().required(),
+        grupo_regra_id: Joi.number().integer().strict().required(),
         schema: Joi.string().required(),
         camada: Joi.string().required(),
         atributo: Joi.string().required(),
@@ -63,17 +113,68 @@ models.regras = Joi.object().keys({
         descricao: Joi.string().required(),
       })
     )
-    .required(),
-  grupo_regras: Joi.array()
+    .required()
+});
+
+models.regrasAtualizacao = Joi.object().keys({
+  regras: Joi.array()
     .items(
       Joi.object().keys({
-        grupo_regra: Joi.string().required(),
-        cor_rgb: Joi.string().required(),
-        ordem: Joi.number().integer().strict().required(),
+        id: Joi.number().integer().strict().required(),
+        grupo_regra_id: Joi.number().integer().strict().required(),
+        schema: Joi.string().required(),
+        camada: Joi.string().required(),
+        atributo: Joi.string().required(),
+        regra: Joi.string().required(),
+        descricao: Joi.string().required(),
       })
     )
-    .required(),
+    .required()
 });
+
+models.regrasIds = Joi.object().keys({
+  regras_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
+});
+
+models.grupoRegras = Joi.object().keys({
+  grupo_regras: Joi.array()
+  .items(
+    Joi.object().keys({
+      grupo_regra: Joi.string().required(),
+      cor_rgb: Joi.string().required(),
+      ordem: Joi.number().integer().strict().required(),
+    })
+  )
+  .required(),
+});
+
+models.grupoRegrasAtualizacao = Joi.object().keys({
+  grupo_regras: Joi.array()
+  .items(
+    Joi.object().keys({
+      id: Joi.number().integer().strict().required(),
+      grupo_regra: Joi.string().required(),
+      cor_rgb: Joi.string().required(),
+      ordem: Joi.number().integer().strict().required(),
+    })
+  )
+  .unique("id")
+  .required()
+  .min(1),
+});
+
+models.grupoRegrasIds = Joi.object().keys({
+  grupo_regras_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
+});
+
 
 models.qgisModels = Joi.object().keys({
   modelos: Joi.array()

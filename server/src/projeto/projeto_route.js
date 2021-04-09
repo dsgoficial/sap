@@ -23,16 +23,55 @@ router.get(
   })
 );
 
-
 router.get(
-  "/estilos",
+  "/grupo_regras",
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getEstilos();
+    const dados = await projetoCtrl.getGrupoRegras();
 
-    const msg = "Estilos retornados";
+    const msg = "Grupo de regras retornados";
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+
+router.post(
+  "/grupo_regras",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.grupoRegras }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaGrupoRegras(req.body.grupo_regras, req.usuarioId);
+
+    const msg = "Grupo de regras gravados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.put(
+  "/grupo_regras",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.grupoRegrasAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaGrupoRegras(req.body.grupo_regras, req.usuarioId);
+
+    const msg = "Grupo de regras atualizados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.delete(
+  "/grupo_regras",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.grupoRegrasIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaGrupoRegras(req.body.grupo_regras_ids);
+
+    const msg = "Grupo de regras deletados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
 );
 
@@ -47,6 +86,47 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
   })
 );
+
+
+router.post(
+  "/regras",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.regras }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaRegras(req.body.regras, req.usuarioId);
+
+    const msg = "Regras gravadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.put(
+  "/regras",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.regrasAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaRegras(req.body.regras, req.usuarioId);
+
+    const msg = "Regras atualizadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.delete(
+  "/regras",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.regrasIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaRegras(req.body.regras_ids);
+
+    const msg = "Regras deletadas com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
 
 router.get(
   "/modelos",
@@ -73,6 +153,58 @@ router.get(
 );
 
 router.post(
+  "/menus",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.menus }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaMenus(req.body.menus, req.usuarioId);
+
+    const msg = "Menus gravados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.put(
+  "/menus",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.menusAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaMenus(req.body.menus, req.usuarioId);
+
+    const msg = "Menus atualizados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.delete(
+  "/menus",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.menusIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaMenus(req.body.menus_ids);
+
+    const msg = "Menus deletados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+
+router.get(
+  "/estilos",
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getEstilos();
+
+    const msg = "Estilos retornados";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.post(
   "/estilos",
   verifyAdmin,
   schemaValidation({ body: projetoSchema.estilos }),
@@ -80,6 +212,32 @@ router.post(
     await projetoCtrl.gravaEstilos(req.body.estilos, req.usuarioId);
 
     const msg = "Estilos gravados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.put(
+  "/estilos",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.estilosAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaEstilos(req.body.estilos, req.usuarioId);
+
+    const msg = "Estilos atualizados com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  })
+);
+
+router.delete(
+  "/estilos",
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.estilosIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaEstilos(req.body.estilos_ids);
+
+    const msg = "Estilos deletados com sucesso";
 
     return res.sendJsonAndLog(true, msg, httpCode.Created);
   })
@@ -148,7 +306,7 @@ router.delete(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.deletaModelos(req.body.modelos_ids);
 
-    const msg = "Modelos gravados com sucesso";
+    const msg = "Modelos deletados com sucesso";
 
     return res.sendJsonAndLog(true, msg, httpCode.Created);
   })

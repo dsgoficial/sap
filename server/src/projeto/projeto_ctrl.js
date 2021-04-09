@@ -32,42 +32,13 @@ controller.getNomeEstilos = async () => {
 
 controller.getEstilos = async () => {
   return db.sapConn
-    .any(`SELECT f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, ui, owner, update_time
+    .any(`SELECT id, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, ui, owner, update_time
     FROM dgeo.layer_styles`);
-};
-
-controller.getRegras = async () => {
-  const grupoRegras = await db.sapConn.any(`
-  SELECT gr.id, gr.grupo_regra, gr.cor_rgb, gr.ordem
-  FROM dgeo.group_rules AS gr
-  `);
-
-  const regras = await db.sapConn.any(`
-    SELECT lr.id, lr.grupo_regra_id, gr.grupo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.descricao, lr.owner, lr.update_time
-    FROM dgeo.group_rules AS gr
-    INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
-    `);
-
-  return { grupo_regras: grupoRegras, regras };
-};
-
-controller.getModelos = async () => {
-  return db.sapConn.any(
-    "SELECT id, nome, descricao, model_xml, owner, update_time FROM dgeo.qgis_models"
-  );
-};
-
-controller.getMenus = async () => {
-  return db.sapConn.any(
-    "SELECT id, nome, definicao_menu, owner, update_time FROM dgeo.qgis_menus"
-  );
 };
 
 controller.gravaEstilos = async (estilos, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
-
-    await t.none("TRUNCATE dgeo.layer_styles RESTART IDENTITY");
 
     const cs = new db.pgp.helpers.ColumnSet([
       "f_table_schema",
@@ -88,6 +59,258 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
 
     await t.none(query);
   });
+};
+
+controller.atualizaEstilos = async (estilos, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      "id",
+      "f_table_schema",
+      "f_table_name",
+      "f_geometry_column",
+      "stylename",
+      "styleqml",
+      "stylesld",
+      "ui",
+      { name: "owner", init: () => usuarioPostoNome },
+      { name: "update_time", mod: ":raw", init: () => "NOW()" }
+    ]);
+
+    const query =
+      db.pgp.helpers.update(
+        estilos,
+        cs,
+        { table: "layer_styles", schema: "dgeo" },
+        {
+          tableAlias: "X",
+          valueAlias: "Y"
+        }
+      ) + "WHERE Y.id = X.id";
+    await t.none(query);
+  });
+};
+
+controller.deletaEstilos = async estilosId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.layer_styles
+      WHERE id in ($<estilosId:csv>)`,
+      { estilosId }
+    );
+    if (exists && exists.length < estilosId.length) {
+      throw new AppError(
+        "O id informado não corresponde a um estilo",
+        httpCode.BadRequest
+      );
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.layer_styles
+      WHERE id in ($<estilosId:csv>)`,
+      { estilosId }
+    );
+  });
+};
+
+
+controller.getRegras = async () => {
+  return db.sapConn.any(`
+    SELECT lr.id, lr.grupo_regra_id, gr.grupo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.descricao, lr.owner, lr.update_time
+    FROM dgeo.group_rules AS gr
+    INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
+    `);
+};
+
+controller.gravaRegras = async (regras, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      "grupo_regra_id",
+      "schema",
+      "camada",
+      "atributo",
+      "regra",
+      "descricao",
+      { name: "owner", init: () => usuarioPostoNome },
+      { name: "update_time", mod: ":raw", init: () => "NOW()" }
+    ]);
+
+    const query = db.pgp.helpers.insert(regras, cs, {
+      table: "layer_rules",
+      schema: "dgeo"
+    });
+
+    await t.none(query);
+  });
+};
+
+controller.atualizaRegras = async (regras, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      "id",
+      "grupo_regra_id",
+      "schema",
+      "camada",
+      "atributo",
+      "regra",
+      "descricao",
+      { name: "owner", init: () => usuarioPostoNome },
+      { name: "update_time", mod: ":raw", init: () => "NOW()" }
+    ]);
+
+    const query =
+      db.pgp.helpers.update(
+        regras,
+        cs,
+        { table: "layer_rules", schema: "dgeo" },
+        {
+          tableAlias: "X",
+          valueAlias: "Y"
+        }
+      ) + "WHERE Y.id = X.id";
+    await t.none(query);
+  });
+};
+
+controller.deletaRegras = async regrasId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.layer_rules
+      WHERE id in ($<regrasId:csv>)`,
+      { regrasId }
+    );
+    if (exists && exists.length < regrasId.length) {
+      throw new AppError(
+        "O id informado não corresponde a regras de atributos",
+        httpCode.BadRequest
+      );
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.layer_rules
+      WHERE id in ($<regrasId:csv>)`,
+      { regrasId }
+    );
+  });
+};
+
+controller.getGrupoRegras = async () => {
+  return await db.sapConn.any(`
+  SELECT gr.id, gr.grupo_regra, gr.cor_rgb, gr.ordem
+  FROM dgeo.group_rules AS gr
+  `);
+};
+
+controller.gravaGrupoRegras = async (grupoRegras, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      "grupo_regra",
+      "cor_rgb",
+      "ordem",
+      { name: "owner", init: () => usuarioPostoNome },
+      { name: "update_time", mod: ":raw", init: () => "NOW()" }
+    ]);
+
+    const query = db.pgp.helpers.insert(grupoRegras, cs, {
+      table: "group_rules",
+      schema: "dgeo"
+    });
+
+    await t.none(query);
+  });
+};
+
+controller.atualizaGrupoRegras = async (grupoRegras, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      "id",
+      "grupo_regra",
+      "cor_rgb",
+      "ordem",
+      { name: "owner", init: () => usuarioPostoNome },
+      { name: "update_time", mod: ":raw", init: () => "NOW()" }
+    ]);
+
+    const query =
+      db.pgp.helpers.update(
+        grupoRegras,
+        cs,
+        { table: "group_rules", schema: "dgeo" },
+        {
+          tableAlias: "X",
+          valueAlias: "Y"
+        }
+      ) + "WHERE Y.id = X.id";
+    await t.none(query);
+  });
+};
+
+controller.deletaGrupoRegras = async grupoRegrasId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.group_rules
+      WHERE id in ($<grupoRegrasId:csv>)`,
+      { grupoRegrasId }
+    );
+    if (exists && exists.length < grupoRegrasId.length) {
+      throw new AppError(
+        "O id informado não corresponde a um grupo de regras",
+        httpCode.BadRequest
+      );
+    }
+
+    const existsAssociation1 = await t.any(
+      `SELECT id FROM macrocontrole.perfil_regras 
+      WHERE grupo_regra_id in ($<grupoRegrasId:csv>)`,
+      { grupoRegrasId }
+    );
+    if (existsAssociation1 && existsAssociation1.length > 0) {
+      throw new AppError(
+        "O grupo regras possui perfil de regras associadas",
+        httpCode.BadRequest
+      );
+    }
+
+    const existsAssociation2 = await t.any(
+      `SELECT id FROM dgeo.layer_rules 
+      WHERE grupo_regra_id in ($<grupoRegrasId:csv>)`,
+      { grupoRegrasId }
+    );
+    if (existsAssociation2 && existsAssociation2.length > 0) {
+      throw new AppError(
+        "O grupo regras possui regras associadas",
+        httpCode.BadRequest
+      );
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.group_rules
+      WHERE id in ($<grupoRegrasId:csv>)`,
+      { grupoRegrasId }
+    );
+  });
+};
+
+
+controller.getModelos = async () => {
+  return db.sapConn.any(
+    "SELECT id, nome, descricao, model_xml, owner, update_time FROM dgeo.qgis_models"
+  );
+};
+
+controller.getMenus = async () => {
+  return db.sapConn.any(
+    "SELECT id, nome, definicao_menu, owner, update_time FROM dgeo.qgis_menus"
+  );
 };
 
 controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
@@ -118,23 +341,25 @@ controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
       { name: "update_time", mod: ":raw", init: () => "NOW()" }
     ]);
 
-    regras.forEach(d => {
-      const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra);
-      if (!grupoRegra) {
-        throw new AppError(
-          "Existe uma ou mais regras com um grupo regra não definido.",
-          httpCode.BadRequest
-        );
-      }
-      d.grupo_regra_id = grupoRegra.id;
-    });
-
-    const query = db.pgp.helpers.insert(regras, cs, {
-      table: "layer_rules",
-      schema: "dgeo"
-    });
-
-    await t.none(query);
+    if(regras.length > 0){
+      regras.forEach(d => {
+        const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra);
+        if (!grupoRegra) {
+          throw new AppError(
+            "Existe uma ou mais regras com um grupo regra não definido.",
+            httpCode.BadRequest
+          );
+        }
+        d.grupo_regra_id = grupoRegra.id;
+      });
+  
+      const query = db.pgp.helpers.insert(regras, cs, {
+        table: "layer_rules",
+        schema: "dgeo"
+      });
+  
+      await t.none(query);
+    }
   });
 };
 
@@ -220,11 +445,10 @@ controller.deletaModelos = async modelosId => {
   });
 };
 
+
 controller.gravaMenus = async (menus, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
-
-    await t.none("TRUNCATE dgeo.qgis_menus RESTART IDENTITY");
 
     const cs = new db.pgp.helpers.ColumnSet([
       "nome_menu",
@@ -239,6 +463,54 @@ controller.gravaMenus = async (menus, usuarioId) => {
     });
 
     await t.none(query);
+  });
+};
+
+controller.atualizaMenus = async (menus, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      "id",
+      "nome_menu",
+      "definicao_menu",
+      { name: "owner", init: () => usuarioPostoNome },
+      { name: "update_time", mod: ":raw", init: () => "NOW()" }
+    ]);
+
+    const query =
+      db.pgp.helpers.update(
+        menus,
+        cs,
+        { table: "qgis_menus", schema: "dgeo" },
+        {
+          tableAlias: "X",
+          valueAlias: "Y"
+        }
+      ) + "WHERE Y.id = X.id";
+    await t.none(query);
+  });
+};
+
+controller.deletaMenus = async menusId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.qgis_menus
+      WHERE id in ($<menusId:csv>)`,
+      { menusId }
+    );
+    if (exists && exists.length < menusId.length) {
+      throw new AppError(
+        "O id informado não corresponde a um menu",
+        httpCode.BadRequest
+      );
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.qgis_menus
+      WHERE id in ($<menusId:csv>)`,
+      { menusId }
+    );
   });
 };
 
@@ -631,32 +903,22 @@ controller.deleteCamadas = async camadasIds => {
 
 controller.atualizaCamadas = async camadas => {
   return db.sapConn.tx(async t => {
-    const exists = await t.any(
-      `SELECT id FROM macrocontrole.camada
-      WHERE id in ($<camadasIds:csv>)`,
-      { camadasIds: camadas.map(c => c.id) }
-    );
-    if (exists && exists.length < camadas.length) {
-      throw new AppError(
-        "Os ids informado não correspondem a uma camada",
-        httpCode.BadRequest
-      );
-    }
-    const query = [];
-    camadas.forEach(c => {
-      const { id, alias, documentacao } = c;
+    const cs = new db.pgp.helpers.ColumnSet([
+      "alias",
+      "documentacao",
+    ]);
 
-      query.push(
-        t.any(
-          `UPDATE macrocontrole.camada
-          SET alias = $<alias>, documentacao = $<documentacao>
-          where id = $<id>`,
-          { id, alias, documentacao }
-        )
-      );
-    });
-
-    await t.batch(query);
+    const query =
+      db.pgp.helpers.update(
+        camadas,
+        cs,
+        { table: "camada", schema: "macrocontrole" },
+        {
+          tableAlias: "X",
+          valueAlias: "Y"
+        }
+      ) + "WHERE Y.id = X.id";
+    await t.none(query);
   });
 };
 
@@ -708,7 +970,7 @@ controller.deletePerfilFME = async perfilFMEIds => {
 };
 
 controller.atualizaPerfilFME = async perfilFME => { //FIXME retornar mensagem de erro correta quando o usuario tenta inserir novamente o mesmo par subfase_id / rotina
-  return db.sapConn.tx(async t => {
+  return db.sapConn.tx(async t => { //FIXME REFATORAR
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_fme
       WHERE id in ($<perfilFMEIds:csv>)`,
@@ -817,7 +1079,7 @@ controller.deletePerfilModelo = async perfilModeloIds => {
   });
 };
 
-controller.atualizaPerfilModelo = async perfilModelo => {
+controller.atualizaPerfilModelo = async perfilModelo => {//FIXME REFATORAR
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_model_qgis
@@ -900,7 +1162,7 @@ controller.deletePerfilRegras = async perfilRegrasIds => {
   });
 };
 
-controller.atualizaPerfilRegras = async perfilRegras => {
+controller.atualizaPerfilRegras = async perfilRegras => {//FIXME REFATORAR
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_regras
@@ -975,7 +1237,7 @@ controller.deletePerfilEstilos = async perfilEstilosIds => {
   });
 };
 
-controller.atualizaPerfilEstilos = async perfilEstilos => {
+controller.atualizaPerfilEstilos = async perfilEstilos => { //FIXME REFATORAR
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_estilo

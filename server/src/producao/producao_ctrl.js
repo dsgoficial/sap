@@ -631,7 +631,7 @@ controller.problemaAtividade = async (
       `SELECT a.etapa_id, a.unidade_trabalho_id, ST_AsText(ut.geom) AS geom
       FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-      WHERE id = $<atividadeId>`,
+      WHERE a.id = $<atividadeId>`,
       { atividadeId }
     );
 
