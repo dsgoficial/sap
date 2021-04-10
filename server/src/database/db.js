@@ -16,29 +16,31 @@ db.pgp = require('pg-promise')({
 
 db.createConn = async (user, password, host, port, database, handle = true) => {
   const key = `${user}@${host}:${port}/${database}`
+  const cn = { host, port, database, user, password }
+
+  let newDB
 
   if (key in testeDBs) {
-    const a = testeDBs[key];
-    a.cn.password = () => password; // update function->password
-    return a.db;
+    newDB = testeDBs[key]
+    newDB.$pool.options.password = password
+  } else {
+    newDB = db.pgp(cn)
+    testeDBs[key] = newDB
+
+    await newDB
+      .connect()
+      .then(obj => {
+        obj.done()
+      })
+      .catch(e => {
+        if (!handle) {
+          throw new Error()
+        }
+        errorHandler.critical(e)
+      })
   }
-  const cn = { host, port, database, user, password }; 
-  const new_db = db.pgp(cn)  
-  testeDBs[key] = {db:new_db, cn}
 
-  await new_db
-    .connect()
-    .then(obj => {
-      obj.done() // success, release connection;
-    })
-    .catch(e => {
-      if (!handle) {
-        throw new Error()
-      }
-      errorHandler.critical(e)
-    })
-
-  return new_db
+  return newDB
 }
 
 db.testConn = async (usuario, senha, server, port, dbname) => {
