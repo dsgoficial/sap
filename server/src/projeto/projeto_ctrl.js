@@ -213,9 +213,7 @@ controller.gravaGrupoRegras = async (grupoRegras, usuarioId) => {
     const cs = new db.pgp.helpers.ColumnSet([
       "grupo_regra",
       "cor_rgb",
-      "ordem",
-      { name: "owner", init: () => usuarioPostoNome },
-      { name: "update_time", mod: ":raw", init: () => "NOW()" }
+      "ordem"
     ]);
 
     const query = db.pgp.helpers.insert(grupoRegras, cs, {
@@ -235,9 +233,7 @@ controller.atualizaGrupoRegras = async (grupoRegras, usuarioId) => {
       "id",
       "grupo_regra",
       "cor_rgb",
-      "ordem",
-      { name: "owner", init: () => usuarioPostoNome },
-      { name: "update_time", mod: ":raw", init: () => "NOW()" }
+      "ordem"
     ]);
 
     const query =
