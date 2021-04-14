@@ -309,56 +309,6 @@ controller.getMenus = async () => {
   );
 };
 
-controller.gravaRegras = async (regras, grupoRegras, usuarioId) => {
-  return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId);
-
-    await t.none("TRUNCATE dgeo.layer_rules RESTART IDENTITY");
-    await t.none("TRUNCATE dgeo.group_rules RESTART IDENTITY CASCADE");
-
-    const csGroup = new db.pgp.helpers.ColumnSet(["grupo_regra", "cor_rgb", "ordem"]);
-
-    const queryGroup =
-      db.pgp.helpers.insert(grupoRegras, csGroup, {
-        table: "group_rules",
-        schema: "dgeo"
-      }) + "RETURNING id, grupo_regra";
-
-    const grupos = await t.any(queryGroup);
-
-    const cs = new db.pgp.helpers.ColumnSet([
-      "grupo_regra_id",
-      "schema",
-      "camada",
-      "atributo",
-      "regra",
-      "descricao",
-      { name: "owner", init: () => usuarioPostoNome },
-      { name: "update_time", mod: ":raw", init: () => "NOW()" }
-    ]);
-
-    if(regras.length > 0){
-      regras.forEach(d => {
-        const grupoRegra = grupos.find(e => e.grupo_regra === d.grupo_regra);
-        if (!grupoRegra) {
-          throw new AppError(
-            "Existe uma ou mais regras com um grupo regra não definido.",
-            httpCode.BadRequest
-          );
-        }
-        d.grupo_regra_id = grupoRegra.id;
-      });
-  
-      const query = db.pgp.helpers.insert(regras, cs, {
-        table: "layer_rules",
-        schema: "dgeo"
-      });
-  
-      await t.none(query);
-    }
-  });
-};
-
 controller.gravaModelos = async (modelos, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId);
