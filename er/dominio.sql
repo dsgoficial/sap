@@ -85,7 +85,8 @@ INSERT INTO dominio.tipo_fase (code, nome) VALUES
 (15, 'Generalização'),
 (16, 'Carregamento BDGEx Operações'),
 (17, 'Fototriangulação'),
-(18, 'Restituição');
+(18, 'Restituição'),
+(19, 'Preparo');
 
 CREATE TABLE dominio.tipo_pre_requisito(
 	code SMALLINT NOT NULL PRIMARY KEY,
