@@ -7,7 +7,7 @@ const models = {};
 models.login = Joi.object().keys({
   usuario: Joi.string().required(),
   senha: Joi.string().required(),
-  cliente: Joi.string().valid("sap_fp", "sap_fg", "sap_web").required(),
+  cliente: Joi.string().valid("sap_fp", "sap_fg", "sap").required(),
   plugins: Joi.when("cliente", {
     is: Joi.string().regex(/^(sap_fp|sap_fg)$/),
     then: Joi.array()
