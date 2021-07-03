@@ -25,7 +25,7 @@ const readSqlFile = file => {
  */
 const createPS = sql => {
   try {
-    const psName = sql.split(/.*[\/|\\]/)[1].replace('.sql', '')
+    const psName = sql.split(/.*[/|\\]/)[1].replace('.sql', '')
 
     return new PS({ name: psName, text: readSqlFile(sql) })
   } catch (e) {

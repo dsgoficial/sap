@@ -1,18 +1,18 @@
-"use strict";
+'use strict'
 
-const express = require("express");
+const express = require('express')
 
-const { schemaValidation, asyncHandler, httpCode } = require("../utils");
+const { schemaValidation, asyncHandler, httpCode } = require('../utils')
 
-const { verifyLogin } = require("../login");
+const { verifyLogin } = require('../login')
 
-const producaoCtrl = require("./producao_ctrl");
-const producaoSchema = require("./producao_schema");
+const producaoCtrl = require('./producao_ctrl')
+const producaoSchema = require('./producao_schema')
 
-const router = express.Router();
+const router = express.Router()
 
 router.post(
-  "/finaliza",
+  '/finaliza',
   verifyLogin,
   schemaValidation({ body: producaoSchema.finaliza }),
   asyncHandler(async (req, res, next) => {
@@ -23,61 +23,45 @@ router.post(
       req.body.alterar_fluxo,
       req.body.info_edicao,
       req.body.observacao_proxima_atividade
-    );
+    )
 
-    const msg = "Atividade finalizada com sucesso";
+    const msg = 'Atividade finalizada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.get(
-  "/verifica",
+  '/verifica',
   verifyLogin,
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.verifica(req.usuarioId);
+    const dados = await producaoCtrl.verifica(req.usuarioId)
     const msg = dados
-      ? "Atividade em execução retornada"
-      : "Sem atividade em execução";
+      ? 'Atividade em execução retornada'
+      : 'Sem atividade em execução'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.post(
-  "/inicia",
+  '/inicia',
   verifyLogin,
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.inicia(req.usuarioId);
+    const dados = await producaoCtrl.inicia(req.usuarioId)
 
     const msg = dados
-      ? "Atividade iniciada"
-      : "Sem atividades disponíveis para iniciar";
+      ? 'Atividade iniciada'
+      : 'Sem atividades disponíveis para iniciar'
 
-    const code = dados ? httpCode.Created : httpCode.BadRequest;
+    const code = dados ? httpCode.Created : httpCode.BadRequest
 
-    return res.sendJsonAndLog(true, msg, code, dados);
+    return res.sendJsonAndLog(true, msg, code, dados)
   })
-);
+)
 
 router.post(
-  "/resposta_questionario",
-  verifyLogin,
-  schemaValidation({ body: producaoSchema.respostaQuestionario }),
-  asyncHandler(async (req, res, next) => {
-    await producaoCtrl.respondeQuestionario(
-      req.body.atividade_id,
-      req.body.respostas,
-      req.usuarioId
-    );
-    const msg = "Questionário enviado com sucesso";
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
-  })
-);
-
-router.post(
-  "/problema_atividade",
+  '/problema_atividade',
   verifyLogin,
   schemaValidation({ body: producaoSchema.problemaAtividade }),
   asyncHandler(async (req, res, next) => {
@@ -86,38 +70,38 @@ router.post(
       req.body.tipo_problema_id,
       req.body.descricao,
       req.usuarioId
-    );
-    const msg = "Problema de atividade reportado com sucesso";
+    )
+    const msg = 'Problema de atividade reportado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.get(
-  "/tipo_problema",
+  '/tipo_problema',
   verifyLogin,
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.getTipoProblema();
+    const dados = await producaoCtrl.getTipoProblema()
 
-    const msg = "Tipos de problema retornado";
+    const msg = 'Tipos de problema retornado'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.post(
-  "/retorna_atividade_anterior",
+  '/retorna_atividade_anterior',
   verifyLogin,
   schemaValidation({ body: producaoSchema.atividadeId }),
   asyncHandler(async (req, res, next) => {
     await producaoCtrl.retornaAtividadeAnterior(
       req.body.atividade_id,
       req.usuarioId
-    );
-    const msg = "Finalização da atividade anterior reportada com sucesso";
+    )
+    const msg = 'Finalização da atividade anterior reportada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
-module.exports = router;
+module.exports = router

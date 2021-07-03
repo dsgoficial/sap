@@ -15,7 +15,7 @@ router.delete(
   '/atividades/usuario/:id',
   verifyAdmin,
   schemaValidation({
-    params: perigoSchema.idParams,
+    params: perigoSchema.idParams
   }),
   asyncHandler(async (req, res, next) => {
     const dados = await perigoCtrl.limpaAtividades(req.params.id)

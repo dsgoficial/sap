@@ -136,54 +136,6 @@
  */
 
 /**
- * @api {post} /distribuicao/resposta_questionario Envia a resposta de um questionario
- * @apiVersion 1.0.0
- * @apiName EnviaQuestionario
- * @apiGroup Distribuicao
- * @apiPermission operador
- *
- * @apiDescription Envia as respostas de um questionário referente a uma atividade
- *
- * @apiParam (Request body) {Integer} atividade_id ID da Atividade referente ao questionário
- * @apiParam (Request body) {Array} respostas Array de respostas contendo os Ids das perguntas e da opção escolhida
- * @apiParamExample {json} Input
- *     {
- *       "atividade_id": 5,
- *       "respostas": [
- *          {
- *            "pergunta_id": 1,
- *            "opcao_id": 3
- *          },
- *          {
- *            "pergunta_id": 2,
- *            "opcao_id": 2
- *          },
- *       ]
- *     }
- *
- *
- * @apiSuccessExample {json} Resposta em caso de Sucesso:
- *     HTTP/1.1 200 OK
- *     {
- *       "success": true,
- *       "message": "Questionário enviado com sucesso.",
- *     }
- *
- * @apiError JsonValidationError O objeto json não segue o padrão estabelecido.
- *
- * @apiErrorExample JsonValidationError:
- *     HTTP/1.1 400 Bad Request
- *     {
- *       "success": false,
- *       "message": "Envia questionario validation error"
- *     }
- *
- * @apiUse InvalidTokenError
- * @apiUse MissingTokenError
- *
- */
-
-/**
  * @api {post} /distribuicao/problema_atividade Envia um problema na atividade
  * @apiVersion 1.0.0
  * @apiName Enviaproblema_atividade

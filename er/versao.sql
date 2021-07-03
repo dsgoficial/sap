@@ -21,7 +21,8 @@ CREATE TABLE public.layer_styles(
   description text,
   owner varchar(255),
   ui text,
-  update_time timestamp without time zone DEFAULT now()
+  update_time timestamp without time zone DEFAULT now(),
+  type character varying
 );
 
 COMMIT;

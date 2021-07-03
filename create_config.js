@@ -165,9 +165,8 @@ const createDatabase = async (
 ) => {
   console.log('Criando Banco...')
   const postgresConnectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/postgres`
-  const postgresConn = pgp(postgresConnectionString);
-  await postgresConn.none('CREATE DATABASE $1:name', [dbName]);
-
+  const postgresConn = pgp(postgresConnectionString)
+  await postgresConn.none('CREATE DATABASE $1:name', [dbName])
 
   const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`
 

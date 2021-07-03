@@ -1,250 +1,246 @@
-"use strict";
+'use strict'
 
-const express = require("express");
+const express = require('express')
 
-const { schemaValidation, asyncHandler, httpCode } = require("../utils");
+const { schemaValidation, asyncHandler, httpCode } = require('../utils')
 
-const { verifyAdmin } = require("../login");
+const { verifyAdmin } = require('../login')
 
-const projetoCtrl = require("./projeto_ctrl");
-const projetoSchema = require("./projeto_schema");
+const projetoCtrl = require('./projeto_ctrl')
+const projetoSchema = require('./projeto_schema')
 
-const router = express.Router();
-
-router.get(
-  "/nome_estilos",
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getNomeEstilos();
-
-    const msg = "Estilos retornados";
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
-  })
-);
+const router = express.Router()
 
 router.get(
-  "/grupo_regras",
+  '/nome_estilos',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getGrupoRegras();
+    const dados = await projetoCtrl.getNomeEstilos()
 
-    const msg = "Grupo de regras retornados";
+    const msg = 'Estilos retornados'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
+router.get(
+  '/grupo_regras',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getGrupoRegras()
+
+    const msg = 'Grupo de regras retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
 
 router.post(
-  "/grupo_regras",
+  '/grupo_regras',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.grupoRegras }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaGrupoRegras(req.body.grupo_regras, req.usuarioId);
+    await projetoCtrl.gravaGrupoRegras(req.body.grupo_regras, req.usuarioId)
 
-    const msg = "Grupo de regras gravados com sucesso";
+    const msg = 'Grupo de regras gravados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/grupo_regras",
+  '/grupo_regras',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.grupoRegrasAtualizacao }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaGrupoRegras(req.body.grupo_regras, req.usuarioId);
+    await projetoCtrl.atualizaGrupoRegras(req.body.grupo_regras, req.usuarioId)
 
-    const msg = "Grupo de regras atualizados com sucesso";
+    const msg = 'Grupo de regras atualizados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.delete(
-  "/grupo_regras",
+  '/grupo_regras',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.grupoRegrasIds }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaGrupoRegras(req.body.grupo_regras_ids);
+    await projetoCtrl.deletaGrupoRegras(req.body.grupo_regras_ids)
 
-    const msg = "Grupo de regras deletados com sucesso";
+    const msg = 'Grupo de regras deletados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.get(
-  "/regras",
+  '/regras',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getRegras();
+    const dados = await projetoCtrl.getRegras()
 
-    const msg = "Regras retornadas";
+    const msg = 'Regras retornadas'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
-
+)
 
 router.post(
-  "/regras",
+  '/regras',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.regras }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaRegras(req.body.regras, req.usuarioId);
+    await projetoCtrl.gravaRegras(req.body.regras, req.usuarioId)
 
-    const msg = "Regras gravadas com sucesso";
+    const msg = 'Regras gravadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/regras",
+  '/regras',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.regrasAtualizacao }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaRegras(req.body.regras, req.usuarioId);
+    await projetoCtrl.atualizaRegras(req.body.regras, req.usuarioId)
 
-    const msg = "Regras atualizadas com sucesso";
+    const msg = 'Regras atualizadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.delete(
-  "/regras",
+  '/regras',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.regrasIds }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaRegras(req.body.regras_ids);
+    await projetoCtrl.deletaRegras(req.body.regras_ids)
 
-    const msg = "Regras deletadas com sucesso";
+    const msg = 'Regras deletadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
-
+)
 
 router.get(
-  "/modelos",
+  '/modelos',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getModelos();
+    const dados = await projetoCtrl.getModelos()
 
-    const msg = "Modelos retornados";
+    const msg = 'Modelos retornados'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/menus",
+  '/menus',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getMenus();
+    const dados = await projetoCtrl.getMenus()
 
-    const msg = "Menus retornados";
+    const msg = 'Menus retornados'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.post(
-  "/menus",
+  '/menus',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.menus }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaMenus(req.body.menus, req.usuarioId);
+    await projetoCtrl.gravaMenus(req.body.menus, req.usuarioId)
 
-    const msg = "Menus gravados com sucesso";
+    const msg = 'Menus gravados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/menus",
+  '/menus',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.menusAtualizacao }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaMenus(req.body.menus, req.usuarioId);
+    await projetoCtrl.atualizaMenus(req.body.menus, req.usuarioId)
 
-    const msg = "Menus atualizados com sucesso";
+    const msg = 'Menus atualizados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.delete(
-  "/menus",
+  '/menus',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.menusIds }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaMenus(req.body.menus_ids);
+    await projetoCtrl.deletaMenus(req.body.menus_ids)
 
-    const msg = "Menus deletados com sucesso";
+    const msg = 'Menus deletados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
-
+)
 
 router.get(
-  "/estilos",
+  '/estilos',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getEstilos();
+    const dados = await projetoCtrl.getEstilos()
 
-    const msg = "Estilos retornados";
+    const msg = 'Estilos retornados'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.post(
-  "/estilos",
+  '/estilos',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.estilos }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaEstilos(req.body.estilos, req.usuarioId);
+    await projetoCtrl.gravaEstilos(req.body.estilos, req.usuarioId)
 
-    const msg = "Estilos gravados com sucesso";
+    const msg = 'Estilos gravados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/estilos",
+  '/estilos',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.estilosAtualizacao }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaEstilos(req.body.estilos, req.usuarioId);
+    await projetoCtrl.atualizaEstilos(req.body.estilos, req.usuarioId)
 
-    const msg = "Estilos atualizados com sucesso";
+    const msg = 'Estilos atualizados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.delete(
-  "/estilos",
+  '/estilos',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.estilosIds }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaEstilos(req.body.estilos_ids);
+    await projetoCtrl.deletaEstilos(req.body.estilos_ids)
 
-    const msg = "Estilos deletados com sucesso";
+    const msg = 'Estilos deletados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/regras",
+  '/regras',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.regras }),
   asyncHandler(async (req, res, next) => {
@@ -252,610 +248,603 @@ router.post(
       req.body.regras,
       req.body.grupo_regras,
       req.usuarioId
-    );
+    )
 
-    const msg = "Regras gravados com sucesso";
+    const msg = 'Regras gravados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/menus",
+  '/menus',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.menus }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaMenus(req.body.menus, req.usuarioId);
+    await projetoCtrl.gravaMenus(req.body.menus, req.usuarioId)
 
-    const msg = "Menus gravados com sucesso";
+    const msg = 'Menus gravados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/modelos",
+  '/modelos',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.qgisModels }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaModelos(req.body.modelos, req.usuarioId);
+    await projetoCtrl.gravaModelos(req.body.modelos, req.usuarioId)
 
-    const msg = "Modelos gravados com sucesso";
+    const msg = 'Modelos gravados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/modelos",
+  '/modelos',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.atualizaQgisModels }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaModelos(req.body.modelos, req.usuarioId);
+    await projetoCtrl.atualizaModelos(req.body.modelos, req.usuarioId)
 
-    const msg = "Modelos atualizados com sucesso";
+    const msg = 'Modelos atualizados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.delete(
-  "/modelos",
+  '/modelos',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.qgisModelsIds }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaModelos(req.body.modelos_ids);
+    await projetoCtrl.deletaModelos(req.body.modelos_ids)
 
-    const msg = "Modelos deletados com sucesso";
+    const msg = 'Modelos deletados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
-
+)
 
 router.get(
-  "/projeto_qgis",
+  '/projeto_qgis',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getProject();
+    const dados = await projetoCtrl.getProject()
 
-    const msg = "Projeto do QGIS retornado com sucesso";
+    const msg = 'Projeto do QGIS retornado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/banco_dados",
+  '/banco_dados',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getBancoDados();
+    const dados = await projetoCtrl.getBancoDados()
 
-    const msg = "Banco de dados retornados";
+    const msg = 'Banco de dados retornados'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/dado_producao",
+  '/dado_producao',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getDadoProducao();
+    const dados = await projetoCtrl.getDadoProducao()
 
-    const msg = "Dados de producão retornados";
+    const msg = 'Dados de producão retornados'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/login",
+  '/login',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getLogin();
+    const dados = await projetoCtrl.getLogin()
 
-    const msg = "Dados de login retornados";
+    const msg = 'Dados de login retornados'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.post(
-  "/atividade/criar_revisao",
+  '/atividade/criar_revisao',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.atividadeCriarRevisao }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaRevisao(req.body.unidade_trabalho_ids);
+    await projetoCtrl.criaRevisao(req.body.unidade_trabalho_ids)
 
-    const msg = "Revisão criada com sucesso";
+    const msg = 'Revisão criada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/atividade/criar_revcorr",
+  '/atividade/criar_revcorr',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.atividadeCriarRevcorr }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaRevcorr(req.body.unidade_trabalho_ids);
+    await projetoCtrl.criaRevcorr(req.body.unidade_trabalho_ids)
 
-    const msg = "Revisão/Correção criada com sucesso";
+    const msg = 'Revisão/Correção criada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.get(
-  "/lote",
+  '/lote',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getLotes();
+    const dados = await projetoCtrl.getLotes()
 
-    const msg = "Lotes retornados com sucesso";
+    const msg = 'Lotes retornados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.put(
-  "/unidade_trabalho/lote",
+  '/unidade_trabalho/lote',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.unidadeTrabalhoLote }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.unidadeTrabalhoLote(
       req.body.unidade_trabalho_ids,
       req.body.lote_id
-    );
+    )
 
-    const msg = "Lote das unidades de trabalho atualizado com sucesso";
+    const msg = 'Lote das unidades de trabalho atualizado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.delete(
-  "/atividades",
+  '/atividades',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.listaAtividades }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaAtividades(req.body.atividades_ids);
+    await projetoCtrl.deletaAtividades(req.body.atividades_ids)
 
-    const msg = "Atividades pausadas ou não iniciadas deletadas com sucesso";
+    const msg = 'Atividades pausadas ou não iniciadas deletadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.post(
-  "/atividades",
+  '/atividades',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.unidadeTrabalhoEtapa }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.criaAtividades(
       req.body.unidade_trabalho_ids,
       req.body.etapa_id
-    );
+    )
 
-    const msg = "Atividades criadas com sucesso";
+    const msg = 'Atividades criadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.get(
-  "/projetos",
+  '/projetos',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getProjetos();
+    const dados = await projetoCtrl.getProjetos()
 
-    const msg = "Projetos retornados com sucesso";
+    const msg = 'Projetos retornados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/linhas_producao",
+  '/linhas_producao',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getLinhasProducao();
+    const dados = await projetoCtrl.getLinhasProducao()
 
-    const msg = "Linhas de produção retornadas com sucesso";
+    const msg = 'Linhas de produção retornadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/fases",
+  '/fases',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getFases();
+    const dados = await projetoCtrl.getFases()
 
-    const msg = "Fases retornadas com sucesso";
+    const msg = 'Fases retornadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/subfases",
+  '/subfases',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getSubfases();
+    const dados = await projetoCtrl.getSubfases()
 
-    const msg = "Subfases retornadas com sucesso";
+    const msg = 'Subfases retornadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/etapas",
+  '/etapas',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getEtapas();
+    const dados = await projetoCtrl.getEtapas()
 
-    const msg = "Etapas retornadas com sucesso";
+    const msg = 'Etapas retornadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.get(
-  "/configuracao/gerenciador_fme",
+  '/configuracao/gerenciador_fme',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getGerenciadorFME();
+    const dados = await projetoCtrl.getGerenciadorFME()
 
     const msg =
-      "Informações dos serviços do Gerenciador do FME retornadas com sucesso";
+      'Informações dos serviços do Gerenciador do FME retornadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.post(
-  "/configuracao/gerenciador_fme",
+  '/configuracao/gerenciador_fme',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.gerenciadorFME }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaGerenciadorFME(req.body.gerenciador_fme);
+    await projetoCtrl.criaGerenciadorFME(req.body.gerenciador_fme)
 
     const msg =
-      "Informações dos serviços do Gerenciador do FME inseridas com sucesso";
+      'Informações dos serviços do Gerenciador do FME inseridas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/configuracao/gerenciador_fme",
+  '/configuracao/gerenciador_fme',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.gerenciadorFMEUpdate
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaGerenciadorFME(req.body.gerenciador_fme);
+    await projetoCtrl.atualizaGerenciadorFME(req.body.gerenciador_fme)
 
     const msg =
-      "Informações dos serviços do Gerenciador do FME atualizadas com sucesso";
+      'Informações dos serviços do Gerenciador do FME atualizadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.delete(
-  "/configuracao/gerenciador_fme",
+  '/configuracao/gerenciador_fme',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.gerenciadorFMEIds
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaGerenciadorFME(req.body.servidores_id);
+    await projetoCtrl.deletaGerenciadorFME(req.body.servidores_id)
 
     const msg =
-      "Informações dos serviços do Gerenciador do FME deletadas com sucesso";
+      'Informações dos serviços do Gerenciador do FME deletadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.get(
-  "/configuracao/camadas",
+  '/configuracao/camadas',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getCamadas();
+    const dados = await projetoCtrl.getCamadas()
 
-    const msg = "Camadas retornadas com sucesso";
+    const msg = 'Camadas retornadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.delete(
-  "/configuracao/camadas",
+  '/configuracao/camadas',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.camadasIds
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deleteCamadas(req.body.camadas_ids);
+    await projetoCtrl.deleteCamadas(req.body.camadas_ids)
 
-    const msg = "Camada deletada com sucesso";
+    const msg = 'Camada deletada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.post(
-  "/configuracao/camadas",
+  '/configuracao/camadas',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.camadas
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaCamadas(req.body.camadas);
+    await projetoCtrl.criaCamadas(req.body.camadas)
 
-    const msg = "Camadas criadas com sucesso";
+    const msg = 'Camadas criadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/configuracao/camadas",
+  '/configuracao/camadas',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.camadasAtualizacao
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaCamadas(req.body.camadas);
+    await projetoCtrl.atualizaCamadas(req.body.camadas)
 
-    const msg = "Camadas atualizadas com sucesso";
+    const msg = 'Camadas atualizadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.get(
-  "/configuracao/perfil_fme",
+  '/configuracao/perfil_fme',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getPerfilFME();
+    const dados = await projetoCtrl.getPerfilFME()
 
-    const msg = "Perfil FME retornado com sucesso";
+    const msg = 'Perfil FME retornado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.delete(
-  "/configuracao/perfil_fme",
+  '/configuracao/perfil_fme',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilFMEIds
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletePerfilFME(req.body.perfil_fme_ids);
+    await projetoCtrl.deletePerfilFME(req.body.perfil_fme_ids)
 
-    const msg = "Perfil FME deletado com sucesso";
+    const msg = 'Perfil FME deletado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.post(
-  "/configuracao/perfil_fme",
+  '/configuracao/perfil_fme',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfisFME
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaPerfilFME(req.body.perfis_fme);
+    await projetoCtrl.criaPerfilFME(req.body.perfis_fme)
 
-    const msg = "Perfis FME criados com sucesso";
+    const msg = 'Perfis FME criados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/configuracao/perfil_fme",
+  '/configuracao/perfil_fme',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilFMEAtualizacao
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaPerfilFME(req.body.perfis_fme);
+    await projetoCtrl.atualizaPerfilFME(req.body.perfis_fme)
 
-    const msg = "Perfis FME atualizados com sucesso";
+    const msg = 'Perfis FME atualizados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
-
+)
 
 router.get(
-  "/configuracao/perfil_modelo",
+  '/configuracao/perfil_modelo',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getPerfilModelo();
+    const dados = await projetoCtrl.getPerfilModelo()
 
-    const msg = "Perfil Modelo QGIS retornado com sucesso";
+    const msg = 'Perfil Modelo QGIS retornado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.delete(
-  "/configuracao/perfil_modelo",
+  '/configuracao/perfil_modelo',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilModeloIds
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletePerfilModelo(req.body.perfil_modelo_ids);
+    await projetoCtrl.deletePerfilModelo(req.body.perfil_modelo_ids)
 
-    const msg = "Perfil Modelo QGIS deletado com sucesso";
+    const msg = 'Perfil Modelo QGIS deletado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.post(
-  "/configuracao/perfil_modelo",
+  '/configuracao/perfil_modelo',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfisModelo
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaPerfilModelo(req.body.perfis_modelo);
+    await projetoCtrl.criaPerfilModelo(req.body.perfis_modelo)
 
-    const msg = "Perfis Modelo QGIS criados com sucesso";
+    const msg = 'Perfis Modelo QGIS criados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/configuracao/perfil_modelo",
+  '/configuracao/perfil_modelo',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilModeloAtualizacao
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaPerfilModelo(req.body.perfis_modelo);
+    await projetoCtrl.atualizaPerfilModelo(req.body.perfis_modelo)
 
-    const msg = "Perfis Modelo QGIS atualizados com sucesso";
+    const msg = 'Perfis Modelo QGIS atualizados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
-
-
+)
 
 router.get(
-  "/configuracao/perfil_regras",
+  '/configuracao/perfil_regras',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getPerfilRegras();
+    const dados = await projetoCtrl.getPerfilRegras()
 
-    const msg = "Perfil de Regras retornado com sucesso";
+    const msg = 'Perfil de Regras retornado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.delete(
-  "/configuracao/perfil_regras",
+  '/configuracao/perfil_regras',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilRegrasIds
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletePerfilRegras(req.body.perfil_regras_ids);
+    await projetoCtrl.deletePerfilRegras(req.body.perfil_regras_ids)
 
-    const msg = "Perfil de Regras deletado com sucesso";
+    const msg = 'Perfil de Regras deletado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.post(
-  "/configuracao/perfil_regras",
+  '/configuracao/perfil_regras',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilRegras
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaPerfilRegras(req.body.perfis_regras);
+    await projetoCtrl.criaPerfilRegras(req.body.perfis_regras)
 
-    const msg = "Perfis de Regras criados com sucesso";
+    const msg = 'Perfis de Regras criados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/configuracao/perfil_regras",
+  '/configuracao/perfil_regras',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilRegrastualizacao
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaPerfilRegras(req.body.perfis_regras);
+    await projetoCtrl.atualizaPerfilRegras(req.body.perfis_regras)
 
-    const msg = "Perfisde de Regras atualizados com sucesso";
+    const msg = 'Perfisde de Regras atualizados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
-
+)
 
 router.get(
-  "/configuracao/perfil_estilos",
+  '/configuracao/perfil_estilos',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getPerfilEstilos();
+    const dados = await projetoCtrl.getPerfilEstilos()
 
-    const msg = "Perfil de Estilos retornado com sucesso";
+    const msg = 'Perfil de Estilos retornado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.delete(
-  "/configuracao/perfil_estilos",
+  '/configuracao/perfil_estilos',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilEstilosIds
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletePerfilEstilos(req.body.perfil_estilos_ids);
+    await projetoCtrl.deletePerfilEstilos(req.body.perfil_estilos_ids)
 
-    const msg = "Perfil de Estilos deletado com sucesso";
+    const msg = 'Perfil de Estilos deletado com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.post(
-  "/configuracao/perfil_estilos",
+  '/configuracao/perfil_estilos',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilEstilos
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaPerfilEstilos(req.body.perfis_estilos);
+    await projetoCtrl.criaPerfilEstilos(req.body.perfis_estilos)
 
-    const msg = "Perfis de Estilos criados com sucesso";
+    const msg = 'Perfis de Estilos criados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.put(
-  "/configuracao/perfil_estilos",
+  '/configuracao/perfil_estilos',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.perfilEstilostualizacao
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaPerfilEstilos(req.body.perfis_estilos);
+    await projetoCtrl.atualizaPerfilEstilos(req.body.perfis_estilos)
 
-    const msg = "Perfisde de Estilos atualizados com sucesso";
+    const msg = 'Perfisde de Estilos atualizados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
-
-
+)
 
 router.delete(
-  "/insumos",
+  '/insumos',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.deletaInsumos
@@ -864,68 +853,68 @@ router.delete(
     await projetoCtrl.deletaInsumosAssociados(
       req.body.unidade_trabalho_ids,
       req.body.grupo_insumo_id
-    );
+    )
 
-    const msg = "Insumos associados deletados com sucesso";
+    const msg = 'Insumos associados deletados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.get(
-  "/grupo_insumo",
+  '/grupo_insumo',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getGrupoInsumo();
+    const dados = await projetoCtrl.getGrupoInsumo()
 
-    const msg = "Grupos de insumos retornados com sucesso";
+    const msg = 'Grupos de insumos retornados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.delete(
-  "/unidade_trabalho",
+  '/unidade_trabalho',
   verifyAdmin,
   schemaValidation({ body: projetoSchema.unidadeTrabalhoId }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaUnidadeTrabalho(req.body.unidade_trabalho_ids);
+    await projetoCtrl.deletaUnidadeTrabalho(req.body.unidade_trabalho_ids)
 
-    const msg = "Unidade de trabalho deletadas com sucesso";
+    const msg = 'Unidade de trabalho deletadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.delete(
-  "/revisao/:id",
+  '/revisao/:id',
   verifyAdmin,
   schemaValidation({
     params: projetoSchema.idParams
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaRevisao(req.params.id);
+    await projetoCtrl.deletaRevisao(req.params.id)
 
-    const msg = "Revisão e correção deletadas com sucesso";
+    const msg = 'Revisão e correção deletadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.get(
-  "/estrategia_associacao",
+  '/estrategia_associacao',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getEstrategiaAssociacao();
+    const dados = await projetoCtrl.getEstrategiaAssociacao()
 
-    const msg = "Estratégias retornadas com sucesso";
+    const msg = 'Estratégias retornadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
-);
+)
 
 router.post(
-  "/unidade_trabalho/insumos",
+  '/unidade_trabalho/insumos',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.associaInsumos
@@ -936,16 +925,16 @@ router.post(
       req.body.grupo_insumo_id,
       req.body.estrategia_id,
       req.body.caminho_padrao
-    );
+    )
 
-    const msg = "Produtos criados com sucesso";
+    const msg = 'Produtos criados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
 router.post(
-  "/unidade_trabalho/copiar",
+  '/unidade_trabalho/copiar',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.unidadeTrabalhoCopiar
@@ -955,16 +944,16 @@ router.post(
       req.body.unidade_trabalho_ids,
       req.body.etapa_ids,
       req.body.associar_insumos
-    );
+    )
 
-    const msg = "Unidades de trabalho copiadas com sucesso";
+    const msg = 'Unidades de trabalho copiadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.post(
-  "/unidade_trabalho",
+  '/unidade_trabalho',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.unidadesTrabalho
@@ -973,16 +962,16 @@ router.post(
     await projetoCtrl.criaUnidadeTrabalho(
       req.body.unidades_trabalho,
       req.body.subfase_id
-    );
+    )
 
-    const msg = "Unidades de trabalho criadas com sucesso";
+    const msg = 'Unidades de trabalho criadas com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK);
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
-);
+)
 
 router.post(
-  "/produto",
+  '/produto',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.produtos
@@ -991,12 +980,12 @@ router.post(
     await projetoCtrl.criaProdutos(
       req.body.produtos,
       req.body.linha_producao_id
-    );
+    )
 
-    const msg = "Produtos criados com sucesso";
+    const msg = 'Produtos criados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created);
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
-);
+)
 
-module.exports = router;
+module.exports = router

@@ -1,38 +1,38 @@
-"use strict";
+'use strict'
 
-const { AppError, asyncHandler, httpCode } = require("../utils");
+const { AppError, asyncHandler, httpCode } = require('../utils')
 
-const { db } = require("../database");
+const { db } = require('../database')
 
-const validateToken = require("./validate_token");
+const validateToken = require('./validate_token')
 
 // middleware para verificar se o usuário é administrador
 const verifyAdmin = asyncHandler(async (req, res, next) => {
-  const token = req.headers.authorization;
+  const token = req.headers.authorization
 
-  const decoded = await validateToken(token);
+  const decoded = await validateToken(token)
 
-  if (!("id" in decoded && decoded.id && "uuid" in decoded && decoded.uuid)) {
-    throw new AppError("Falta informação de usuário");
+  if (!('id' in decoded && decoded.id && 'uuid' in decoded && decoded.uuid)) {
+    throw new AppError('Falta informação de usuário')
   }
 
   const {
-    administrador,
+    administrador
   } = await db.sapConn.oneOrNone(
-    "SELECT administrador FROM dgeo.usuario WHERE id = $<usuarioId> and ativo IS TRUE",
+    'SELECT administrador FROM dgeo.usuario WHERE id = $<usuarioId> and ativo IS TRUE',
     { usuarioId: decoded.id }
-  );
+  )
   if (!administrador) {
     throw new AppError(
-      "Usuário necessita ser um administrador",
+      'Usuário necessita ser um administrador',
       httpCode.Forbidden
-    );
+    )
   }
-  req.usuarioUuid = decoded.uuid;
-  req.usuarioId = decoded.id;
-  req.administrador = true;
+  req.usuarioUuid = decoded.uuid
+  req.usuarioId = decoded.id
+  req.administrador = true
 
-  next();
-});
+  next()
+})
 
-module.exports = verifyAdmin;
+module.exports = verifyAdmin
