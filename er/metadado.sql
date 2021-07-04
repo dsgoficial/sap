@@ -44,20 +44,6 @@ CREATE TABLE metadado.palavra_chave(
  	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
 
-CREATE TABLE metadado.documento_linhagem(
-	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	uuid text NOT NULL,
-	data TIMESTAMP WITH TIME ZONE NOT NULL,
-	link VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE metadado.documento_linhagem_produto(
-	id SERIAL NOT NULL PRIMARY KEY,
- 	documento_linhagem_id INTEGER NOT NULL REFERENCES metadado.documento_linhagem (id),
- 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
-);
-
 -- MD_ClassificationCode
 CREATE TABLE metadado.codigo_classificacao(
 	code SMALLINT NOT NULL PRIMARY KEY,

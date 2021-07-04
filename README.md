@@ -13,7 +13,6 @@ As vantagens são:
 * Monitoramento da produção por feição, apontamentos ou tela (microcontrole da produção)
 * Possibilidade de trabalho em banco de dados geoespaciais contínuo, apresentando somente o subconjunto necessário dos dados para o operador
 * Geração de metadados compatíveis com a ET-PCDG
-* Integração com [DSGDocs](https://github.com/1cgeo/dsgdocs)
 * Integração com [Gerenciador do FME](https://github.com/1cgeo/gerenciador_fme)
 * Integração com [DSGTools](https://github.com/dsgoficial/DsgTools)
 
