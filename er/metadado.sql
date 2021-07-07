@@ -81,7 +81,9 @@ CREATE TABLE metadado.datum_vertical(
 INSERT INTO metadado.datum_vertical (code, nome) VALUES
 (1, 'Datum de Imbituba - SC'),
 (2, 'Datum de Santana - AP'),
-(3, 'Marégrafo de Torres - RS');
+(3, 'Marégrafo de Torres - RS'),
+(0, 'Sem datum vertical');
+
 
 CREATE TABLE metadado.especificacao(
 	code SMALLINT NOT NULL PRIMARY KEY,
