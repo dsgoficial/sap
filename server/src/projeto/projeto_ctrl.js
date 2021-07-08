@@ -987,7 +987,7 @@ controller.criaPerfilFME = async perfilFME => { // FIXME retornar mensagem de er
 
 controller.getPerfilModelo = async () => {
   return db.sapConn.any(
-    `SELECT pmq.id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.gera_falso_positivo, pmq.ordem, pmq.subfase_id, qm.nome, qm.descricao
+    `SELECT pmq.id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.parametros, pmq.gera_falso_positivo, pmq.ordem, pmq.subfase_id, qm.nome, qm.descricao
     FROM macrocontrole.perfil_model_qgis AS pmq
     INNER JOIN dgeo.qgis_models AS qm ON qm.id = pmq.qgis_model_id`
   )
@@ -1032,12 +1032,13 @@ controller.atualizaPerfilModelo = async perfilModelo => { // FIXME REFATORAR
       query.push(
         t.any(
           `UPDATE macrocontrole.perfil_model_qgis
-          SET qgis_model_id = $<qgisModelId>, requisito_finalizacao = $<requisitoFinalizacao>, gera_falso_positivo = $<geraFalsoPositivo>,
+          SET qgis_model_id = $<qgisModelId>, parametros = $<parametros>, requisito_finalizacao = $<requisitoFinalizacao>, gera_falso_positivo = $<geraFalsoPositivo>,
           subfase_id = $<subfaseId>, ordem = $<ordem>
           where id = $<id>`,
           {
             id: c.id,
             qgisModelId: c.qgis_model_id,
+            parametros: c.parametros,
             requisitoFinalizacao: c.requisito_finalizacao,
             geraFalsoPositivo: c.gera_falso_positivo,
             subfaseId: c.subfase_id,
@@ -1054,6 +1055,7 @@ controller.atualizaPerfilModelo = async perfilModelo => { // FIXME REFATORAR
 controller.criaPerfilModelo = async perfilModelo => {
   const cs = new db.pgp.helpers.ColumnSet([
     'qgis_model_id',
+    'parametros',
     'requisito_finalizacao',
     'gera_falso_positivo',
     'subfase_id',

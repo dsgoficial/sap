@@ -199,7 +199,7 @@ const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
 
 const getInfoModelsQGIS = async (connection, subfaseId) => {
   return connection.any(
-    `SELECT lqm.nome, lqm.descricao, lqm.model_xml, pmq.gera_falso_positivo, pmq.requisito_finalizacao, pmq.ordem
+    `SELECT lqm.nome, lqm.descricao, lqm.model_xml, pmq.parametros, pmq.gera_falso_positivo, pmq.requisito_finalizacao, pmq.ordem
       FROM macrocontrole.perfil_model_qgis AS pmq
       INNER JOIN dgeo.qgis_models AS lqm ON pmq.qgis_model_id = lqm.id
       WHERE pmq.subfase_id = $1`,

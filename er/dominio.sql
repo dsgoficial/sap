@@ -72,21 +72,19 @@ INSERT INTO dominio.tipo_fase (code, nome) VALUES
 (2, 'Reambulação'),
 (3, 'Validação'),
 (4, 'Edição'),
-(5, 'Geração de área Contínua'),
-(6, 'Carregamento BDGEx'),
-(7, 'Vetorização'),
-(8, 'Avaliação imagens'),
-(9, 'Avaliação ortoimagens'),
-(10, 'Avaliação MDS'),
-(11, 'Avaliação MDT'),
-(12, 'Avaliação de dados vetoriais'),
-(13, 'Avaliação de cartas topográficas'),
-(14, 'Avaliação de fototriangulação'),
-(15, 'Generalização'),
-(16, 'Carregamento BDGEx Operações'),
-(17, 'Fototriangulação'),
-(18, 'Restituição'),
-(19, 'Preparo');
+(5, 'Disseminação'),
+(6, 'Vetorização'),
+(7, 'Avaliação imagens'),
+(8, 'Avaliação ortoimagens'),
+(9, 'Avaliação MDS'),
+(10, 'Avaliação MDT'),
+(11, 'Avaliação de dados vetoriais'),
+(12, 'Avaliação de cartas topográficas'),
+(13, 'Avaliação de fototriangulação'),
+(14, 'Generalização'),
+(15, 'Fototriangulação'),
+(16, 'Restituição'),
+(17, 'Preparo');
 
 CREATE TABLE dominio.tipo_pre_requisito(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -216,7 +214,7 @@ INSERT INTO dominio.tipo_problema (code, nome) VALUES
 (5, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida'),
 (6, 'Problema nas rotinas'),
 (99, 'Outros');
-
+/* 
 CREATE TABLE dominio.tipo_perda_recurso_humano(	
 	code SMALLINT NOT NULL PRIMARY KEY,	
 	nome VARCHAR(255) NOT NULL	
@@ -234,7 +232,7 @@ INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES
 (9, 'Dispensa de atividade de campo'),	
 (10, 'Designação para realizar curso / capacitação'),	
 (11, 'Designação para ministrar curso / capacitação'),	
-(12, 'Designação para participação em eventos');
+(12, 'Designação para participação em eventos'); */
 
 
 CREATE TABLE dominio.estrategia_associacao(	
