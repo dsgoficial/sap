@@ -384,7 +384,7 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	UNIQUE(atividade_id, perfil_producao_id)
 );
 
--- passar para serviço rh
+/* -- passar para serviço rh
 CREATE TABLE macrocontrole.perda_recurso_humano(	
 	id SERIAL NOT NULL PRIMARY KEY,	
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),	
@@ -398,7 +398,7 @@ CREATE TABLE macrocontrole.funcao_especial(
 	id SERIAL NOT NULL PRIMARY KEY,
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	funcao VARCHAR(255) NOT NULL
-);
+); */
 
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,

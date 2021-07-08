@@ -224,11 +224,6 @@ FROM (
   AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
   AND se.ordem > ee_ant.ordem
   WHERE ee.tipo_situacao_id in (1) AND u.ativo IS TRUE
-  AND u.id NOT IN (
-  	SELECT u.id from dgeo.usuario AS u
-	INNER JOIN macrocontrole.perda_recurso_humano AS prh ON prh.usuario_id = u.id
-	WHERE prh.data = now()::date
-  )
 ) AS ativ
 GROUP BY id
 HAVING (MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))) AND count(*)= 1
@@ -330,11 +325,7 @@ INNER JOIN macrocontrole.restricao_etapa AS re ON re.etapa_posterior_id = a.etap
 INNER JOIN macrocontrole.atividade AS atividade_anterior ON atividade_anterior.etapa_id = re.etapa_anterior_id AND atividade_anterior.unidade_trabalho_id = a.unidade_trabalho_id
 INNER JOIN dgeo.usuario AS u ON u.id = atividade_anterior.usuario_id
 WHERE re.tipo_restricao_id = 2 AND u.ativo IS FALSE
-AND u.id IN (
-	SELECT u.id from dgeo.usuario AS u
-	INNER JOIN macrocontrole.perda_recurso_humano AS prh ON prh.usuario_id = u.id
-	WHERE prh.data = now()::date
-)) AS foo
+) AS foo
 INNER JOIN macrocontrole.atividade AS ee ON ee.id = foo.atividade_id
 INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
