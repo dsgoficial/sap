@@ -150,7 +150,7 @@ GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.lote_id
 ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.lote_id;
 
 CREATE VIEW acompanhamento.lotes AS
-SELECT l.id, l.nome, l.prioridade, count(ut.id) AS unidades_trabalho, ST_Collect(ut.geom) AS geom
+SELECT l.id, l.nome, l.prioridade, count(ut.id) AS unidades_trabalho, ST_Collect(ut.geom)::geometry(MultiPolygon,4326) AS geom
 FROM macrocontrole.lote AS l
 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = l.id
 GROUP BY l.id;
