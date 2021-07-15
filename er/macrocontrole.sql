@@ -9,6 +9,7 @@ CREATE SCHEMA macrocontrole;
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE,
+	descricao TEXT,
 	finalizado BOOLEAN NOT NULL DEFAULT FALSE
 );
 

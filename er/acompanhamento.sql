@@ -566,7 +566,7 @@ $BODY$
             'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
             'aaaaaeeeeiiiiooooouuuucc________________________________');
 
-      IF NEW.id != OLD.id OR subfase_nome_old != subfase_nome_new THEN
+      IF subfase_nome_old != subfase_nome_new THEN
         EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.subfase_'|| OLD.id || '_' || subfase_nome_old || ' RENAME TO subfase_' || NEW.id || '_' || subfase_nome_new;
       END IF;
 
@@ -666,13 +666,9 @@ $BODY$
     IF TG_OP = 'DELETE' THEN
       linhaproducao_ident := OLD.linha_producao_id;
 
-      SELECT translate(replace(lower(tp.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-          'aaaaaeeeeiiiiooooouuuucc________________________________'),
-          f.linha_producao_id
-          INTO fase_nome_old
-          FROM dominio.tipo_fase
-          WHERE code = OLD.tipo_fase_id;
+      fase_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
 
       EXECUTE 'DROP VIEW IF EXISTS acompanhamento.fase_'|| OLD.id || '_' || fase_nome_old;
 
@@ -683,29 +679,22 @@ $BODY$
     END IF;
 
     IF TG_OP = 'UPDATE' THEN
-      SELECT translate(replace(lower(tp.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-          'aaaaaeeeeiiiiooooouuuucc________________________________'),
-          f.linha_producao_id
-          INTO fase_nome_old
-          FROM dominio.tipo_fase
-          WHERE code = OLD.tipo_fase_id;
 
-      SELECT translate(replace(lower(tp.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-          'aaaaaeeeeiiiiooooouuuucc________________________________'),
-          f.linha_producao_id
-          INTO fase_nome_new
-          FROM dominio.tipo_fase
-          WHERE code = NEW.tipo_fase_id;
+      fase_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
 
-      IF NEW.id != OLD.id OR fase_nome_old != fase_nome_new THEN
+      fase_nome_new := translate(replace(lower(NEW.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
+
+      IF fase_nome_old != fase_nome_new THEN
         EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.fase_'|| OLD.id || '_' || fase_nome_old || ' RENAME TO fase_' || NEW.id || '_' || fase_nome_new;
+
+        UPDATE public.layer_styles SET f_table_name = ('fase_'|| NEW.id || '_' || fase_nome_new)
+        WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('fase_'|| OLD.id || '_' || fase_nome_old) AND stylename = 'acompanhamento_fase';
+
       END IF;
-
-      UPDATE public.layer_styles SET f_table_name = ('fase_'|| NEW.id || '_' || fase_nome_new)
-      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('fase_'|| OLD.id || '_' || fase_nome_old) AND stylename = 'acompanhamento_fase';
-
     END IF;
 
     SELECT translate(replace(lower(lp.nome),' ', '_'),  
@@ -721,19 +710,21 @@ $BODY$
     WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome) AND stylename = 'acompanhamento_linha_producao';
 
     SELECT count(*) INTO num FROM macrocontrole.fase WHERE linha_producao_id = linhaproducao_ident;
+
     IF num > 0 THEN
       view_txt := 'CREATE VIEW acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' AS 
-      SELECT p.id, ' || linhaproducao_ident || ' AS linha_producao_id, p.nome, p.mi, p.inom, p.escala, p.geom';
+      SELECT p.id, p.uuid, p.linha_producao_id, p.nome, p.mi, p.inom, p.escala, p.geom';
 
       FOR r in SELECT f.id, tf.nome FROM macrocontrole.fase AS f
       INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
       WHERE f.linha_producao_id = linhaproducao_ident
       ORDER BY f.ordem
       LOOP
-        SELECT translate(replace(lower(r.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-          'aaaaaeeeeiiiiooooouuuucc________________________________')
-          INTO nome_fixed;
+
+      nome_fixed := translate(replace(lower(r.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
+
         view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN min(ut' || iterator || '.data_inicio)::text ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
         view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim)::text ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
 
@@ -786,14 +777,13 @@ $BODY$
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
-      SELECT translate(replace(lower(lp.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________')
-            INTO linhaproducao_nome_old
-            FROM macrocontrole.linha_producao AS lp
-            WHERE lp.id = OLD.id;
 
-    EXECUTE 'DROP VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old;
+      linhaproducao_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
+
+
+      EXECUTE 'DROP VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old;
 
       DELETE FROM public.layer_styles
       WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
@@ -801,26 +791,22 @@ $BODY$
     END IF;
 
     IF TG_OP = 'UPDATE' THEN
-      SELECT translate(replace(lower(lp.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________')
-            INTO linhaproducao_nome_old
-            FROM macrocontrole.linha_producao AS lp
-            WHERE lp.id = OLD.id;
 
-      SELECT translate(replace(lower(lp.nome),' ', '_'),  
+      linhaproducao_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
             'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________')
-            INTO linhaproducao_nome_new
-            FROM macrocontrole.linha_producao AS lp
-            WHERE lp.id = NEW.id;
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
 
-      IF NEW.id != OLD.id OR linhaproducao_nome_old != linhaproducao_nome_new THEN
+      linhaproducao_nome_new := translate(replace(lower(NEW.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
+
+      IF linhaproducao_nome_old != linhaproducao_nome_new THEN
         EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old || ' RENAME TO linha_producao_' || NEW.id || '_' || linhaproducao_nome_new;
-      END IF;
+        
+        UPDATE public.layer_styles SET f_table_name = ('linha_producao_'|| NEW.id || '_' || linhaproducao_nome_new)
+        WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
 
-      UPDATE public.layer_styles SET f_table_name = ('linha_producao_'|| NEW.id || '_' || linhaproducao_nome_new)
-      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
+      END IF;
 
     END IF;
 
@@ -838,30 +824,7 @@ ALTER FUNCTION acompanhamento.atualiza_view_acompanhamento_linha_producao()
   OWNER TO postgres;
 
 CREATE TRIGGER atualiza_view_acompanhamento_linha_producao
-AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.linha_producao
+AFTER UPDATE OR DELETE ON macrocontrole.linha_producao
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.atualiza_view_acompanhamento_linha_producao();
-
--- Adapted from
--- https://raw.githubusercontent.com/jawg/blog-resources/master/how-to-make-mvt-with-postgis/bbox.sql
-CREATE OR REPLACE FUNCTION acompanhamento.BBox(x integer, y integer, zoom integer)
-    RETURNS geometry AS
-$BODY$
-DECLARE
-    max numeric := 6378137 * pi();
-    res numeric := max * 2 / 2^zoom;
-    bbox geometry;
-BEGIN
-    return ST_Transform(ST_MakeEnvelope(
-        -max + (x * res),
-        max - (y * res),
-        -max + (x * res) + res,
-        max - (y * res) - res,
-        3857), 4326);
-END;
-$BODY$
-LANGUAGE plpgsql IMMUTABLE;
-
-ALTER FUNCTION acompanhamento.BBox(integer,integer,integer)
-  OWNER TO postgres;
 
 COMMIT;
