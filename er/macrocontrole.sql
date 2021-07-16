@@ -307,9 +307,7 @@ CREATE TABLE macrocontrole.atividade(
 	tipo_situacao_id SMALLINT NOT NULL REFERENCES dominio.tipo_situacao (code),
 	data_inicio timestamp with time zone,
 	data_fim timestamp with time zone,
-	observacao text,
-	tempo_execucao_microcontrole integer,
-	tempo_execucao_estimativa integer
+	observacao text
 );
 
 CREATE INDEX atividade_etapa_id

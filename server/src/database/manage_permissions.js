@@ -114,8 +114,8 @@ managePermissions.grantPermissionsUser = async (
         .filter((v, i, array) => array.indexOf(v) === i)
     }
 
-    if (tipoEtapa === 2 || tipoEtapa === 3) {
-      // Revisão e Correção
+    if (tipoEtapa === 2) {
+      // Revisão
       camadas = grantInfo
         .map((v) => `${v.schema}.${v.nome_camada}`)
         .filter((v, i, array) => array.indexOf(v) === i)

@@ -64,7 +64,7 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
   const updatedIds = await connection.any(
     `
   UPDATE macrocontrole.atividade SET
-  data_fim = $<dataFim>, tipo_situacao_id = 5, tempo_execucao_microcontrole = 0, tempo_execucao_estimativa = 0
+  data_fim = $<dataFim>, tipo_situacao_id = 5
   WHERE id in (
     SELECT a.id FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
@@ -158,7 +158,7 @@ controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
     const updatedIds = await t.any(
       `
     UPDATE macrocontrole.atividade SET
-    data_inicio = COALESCE(data_inicio, $<dataFim>), data_fim = COALESCE(data_fim, $<dataFim>), tipo_situacao_id = 5, tempo_execucao_microcontrole = 0, tempo_execucao_estimativa = 0
+    data_inicio = COALESCE(data_inicio, $<dataFim>), data_fim = COALESCE(data_fim, $<dataFim>), tipo_situacao_id = 5
     WHERE id in (
       SELECT DISTINCT ON (ut.id) a.id FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
@@ -224,7 +224,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
 
     const atividadesUpdates = await t.any(
       `UPDATE macrocontrole.atividade SET
-    tipo_situacao_id = 5, data_inicio = COALESCE(data_inicio, $<dataFim>), data_fim = COALESCE(data_fim, $<dataFim>), tempo_execucao_microcontrole = 0, tempo_execucao_estimativa = 0
+    tipo_situacao_id = 5, data_inicio = COALESCE(data_inicio, $<dataFim>), data_fim = COALESCE(data_fim, $<dataFim>)
     WHERE id IN (
         SELECT a_ant.id
         FROM macrocontrole.atividade AS a

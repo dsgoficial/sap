@@ -427,7 +427,7 @@ controller.finaliza = async (
     // Usuário é passado como uma medida de segurança para garantir que quem está finalizando é o usuário da atividade
     const result = await t.result(
       `UPDATE macrocontrole.atividade SET
-        data_fim = $<dataFim>, tipo_situacao_id = 4, tempo_execucao_microcontrole = 0, tempo_execucao_estimativa = 0
+        data_fim = $<dataFim>, tipo_situacao_id = 4
         WHERE id = $<atividadeId> AND usuario_id = $<usuarioId> AND tipo_situacao_id in (2)`,
       { dataFim, atividadeId, usuarioId }
     )
@@ -574,7 +574,7 @@ controller.problemaAtividade = async (
     const result = await t.result(
       `
       UPDATE macrocontrole.atividade SET
-      data_fim = $<dataFim>, tipo_situacao_id = 5, tempo_execucao_microcontrole = 0, tempo_execucao_estimativa = 0
+      data_fim = $<dataFim>, tipo_situacao_id = 5
       WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId>
       `,
       { dataFim, atividadeId, usuarioId }
@@ -647,7 +647,7 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
     const result = await t.result(
       `
       UPDATE macrocontrole.atividade SET
-      data_fim = $<dataFim>, tipo_situacao_id = 5, tempo_execucao_microcontrole = 0, tempo_execucao_estimativa = 0
+      data_fim = $<dataFim>, tipo_situacao_id = 5
       WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId>
       `,
       { dataFim, atividadeId, usuarioId }
@@ -678,15 +678,24 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
       }
     )
 
-    await t.none(
+    const atividadeId = await t.any(
       `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
         SELECT a.etapa_id, a.unidade_trabalho_id, a.usuario_id, 3 AS tipo_situacao_id FROM macrocontrole.atividade AS a
         WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 4
         ORDER BY data_fim DESC
         LIMIT 1
+      RETURNING id
       )`,
       { usuarioId }
+    )
+
+    await t.none(
+      `
+      INSERT INTO macrocontrole.fila_prioritaria(atividade_id, usuario_id, prioridade)
+        VALUES($<atividadeId>,$<usuarioId>,1)
+      )`,
+      { atividadeId: atividadeId.id, usuarioId }
     )
 
     await t.none(

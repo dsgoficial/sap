@@ -181,8 +181,7 @@ CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
 SELECT ROW_NUMBER () OVER (ORDER BY ee.data_fim DESC) AS id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, l.nome AS lote, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,  u.id AS usuario_id, 
 tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-ee.data_inicio, ee.data_fim, 
-ee.tempo_execucao_estimativa, ee.tempo_execucao_microcontrole, ut.geom
+ee.data_inicio, ee.data_fim, ut.geom
 FROM macrocontrole.atividade AS ee
 INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
 INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
@@ -520,7 +519,7 @@ CREATE TRIGGER cria_view_acompanhamento_subfase
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_subfase();
 
-CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_fase()
+CREATE OR REPLACE FUNCTION acompanhamento.atualiza_view_acompanhamento_subfase()
   RETURNS trigger AS
 $BODY$
     DECLARE view_txt text;
@@ -542,8 +541,6 @@ $BODY$
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
-      fase_ident := OLD.fase_id;
-
       subfase_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
             'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
             'aaaaaeeeeiiiiooooouuuucc________________________________');
@@ -553,8 +550,6 @@ $BODY$
       DELETE FROM public.layer_styles
       WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('subfase_'|| OLD.id || '_' || subfase_nome_old) AND stylename = 'acompanhamento_subfase';
 
-    ELSE
-      fase_ident := NEW.fase_id;
     END IF;
 
     IF TG_OP = 'UPDATE' THEN
@@ -575,62 +570,6 @@ $BODY$
 
     END IF;
 
-    SELECT translate(replace(lower(tp.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-          'aaaaaeeeeiiiiooooouuuucc________________________________'),
-          f.linha_producao_id
-          INTO fase_nome, linhaproducao_ident
-          FROM macrocontrole.fase AS f
-          INNER JOIN dominio.tipo_fase AS tp ON tp.code = f.tipo_fase_id
-          WHERE f.id = fase_ident;
-
-    EXECUTE 'DROP VIEW IF EXISTS acompanhamento.fase_'|| fase_ident || '_' || fase_nome;
-
-    DELETE FROM public.layer_styles
-    WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('fase_'|| fase_ident || '_' || fase_nome) AND stylename = 'acompanhamento_fase';
-
-    SELECT count(*) INTO num FROM macrocontrole.subfase WHERE fase_id = fase_ident;
-    IF num > 0 THEN
-
-      view_txt := 'CREATE VIEW acompanhamento.fase_' || fase_ident || '_'  || fase_nome || ' AS 
-      SELECT p.id, ' || fase_ident || ' AS fase_id, p.nome, p.mi, p.inom, p.escala, p.geom';
-
-      FOR r in SELECT s.id, s.nome FROM macrocontrole.subfase AS s
-      WHERE s.fase_id = fase_ident
-      ORDER BY s.ordem
-      LOOP
-        SELECT translate(replace(lower(r.nome),' ', '_'),  
-          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-          'aaaaaeeeeiiiiooooouuuucc________________________________')
-          INTO nome_fixed;
-
-        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN min(ut' || iterator || '.data_inicio)::text ELSE ''-'' END) AS  ' || nome_fixed || '_data_inicio';
-        view_txt := view_txt || ', (CASE WHEN min(ut' || iterator || '.id) IS NOT NULL THEN (CASE WHEN count(*) - count(ut' || iterator || '.data_fim) = 0 THEN max(ut' || iterator || '.data_fim)::text ELSE NULL END) ELSE ''-'' END) AS  ' || nome_fixed || '_data_fim';
-
-        jointxt := jointxt || ' LEFT JOIN 
-          (SELECT ut.id, ut.geom, min(a.data_inicio) as data_inicio,
-          (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
-          FROM macrocontrole.unidade_trabalho AS ut
-          INNER JOIN
-          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
-          ON a.unidade_trabalho_id = ut.id
-          WHERE ut.subfase_id = ' || r.id || '
-          GROUP BY ut.id) AS ut' || iterator || '
-          ON ut' || iterator || '.geom && p.geom AND st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
-
-        iterator := iterator + 1;
-
-      END LOOP;
-
-      view_txt := view_txt || ' FROM macrocontrole.produto AS p ';
-      view_txt := view_txt || jointxt;
-      view_txt := view_txt || ' WHERE p.linha_producao_id = ' || linhaproducao_ident || ' GROUP BY p.id;';
-
-      EXECUTE view_txt;
-      EXECUTE 'GRANT ALL ON TABLE acompanhamento.fase_' || fase_ident || '_'  || fase_nome || ' TO PUBLIC';
-
-    END IF;
-
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;
     ELSE
@@ -641,12 +580,12 @@ $BODY$
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION acompanhamento.cria_view_acompanhamento_fase()
+ALTER FUNCTION acompanhamento.atualiza_view_acompanhamento_subfase()
   OWNER TO postgres;
 
-CREATE TRIGGER cria_view_acompanhamento_fase
-AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.subfase
-FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_fase();
+CREATE TRIGGER atualiza_view_acompanhamento_subfase
+AFTER UPDATE OR DELETE ON macrocontrole.subfase
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.atualiza_view_acompanhamento_subfase();
 
 CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_linha_producao()
   RETURNS trigger AS
@@ -665,36 +604,8 @@ $BODY$
 
     IF TG_OP = 'DELETE' THEN
       linhaproducao_ident := OLD.linha_producao_id;
-
-      fase_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
-
-      EXECUTE 'DROP VIEW IF EXISTS acompanhamento.fase_'|| OLD.id || '_' || fase_nome_old;
-
-      DELETE FROM public.layer_styles
-      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('fase_'|| OLD.id || '_' || fase_nome_old) AND stylename = 'acompanhamento_fase';
     ELSE
       linhaproducao_ident := NEW.linha_producao_id;
-    END IF;
-
-    IF TG_OP = 'UPDATE' THEN
-
-      fase_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
-
-      fase_nome_new := translate(replace(lower(NEW.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
-
-      IF fase_nome_old != fase_nome_new THEN
-        EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.fase_'|| OLD.id || '_' || fase_nome_old || ' RENAME TO fase_' || NEW.id || '_' || fase_nome_new;
-
-        UPDATE public.layer_styles SET f_table_name = ('fase_'|| NEW.id || '_' || fase_nome_new)
-        WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('fase_'|| OLD.id || '_' || fase_nome_old) AND stylename = 'acompanhamento_fase';
-
-      END IF;
     END IF;
 
     SELECT translate(replace(lower(lp.nome),' ', '_'),  

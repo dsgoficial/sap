@@ -74,17 +74,11 @@ INSERT INTO dominio.tipo_fase (code, nome) VALUES
 (4, 'Edição'),
 (5, 'Disseminação'),
 (6, 'Vetorização'),
-(7, 'Avaliação imagens'),
-(8, 'Avaliação ortoimagens'),
-(9, 'Avaliação MDS'),
-(10, 'Avaliação MDT'),
-(11, 'Avaliação de dados vetoriais'),
-(12, 'Avaliação de cartas topográficas'),
-(13, 'Avaliação de fototriangulação'),
-(14, 'Generalização'),
-(15, 'Fototriangulação'),
-(16, 'Restituição'),
-(17, 'Preparo');
+(7, 'Avaliação'),
+(8, 'Generalização'),
+(9, 'Fototriangulação'),
+(10, 'Restituição'),
+(11, 'Preparo');
 
 CREATE TABLE dominio.tipo_pre_requisito(
 	code SMALLINT NOT NULL PRIMARY KEY,
