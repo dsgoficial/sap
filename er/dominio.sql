@@ -47,17 +47,26 @@ CREATE TABLE dominio.tipo_produto(
 );
 
 INSERT INTO dominio.tipo_produto (code, nome) VALUES
-(1, 'Conjunto de dados geoespaciais vetoriais'),
-(2, 'Carta Topográfica'),
+(1, 'Conjunto de dados geoespaciais vetoriais - ET-EDGV 2.1.3'),
+(2, 'Carta Topográfica - T34-700'),
 (3, 'Carta Ortoimagem'),
 (4, 'Ortoimagem'),
 (5, 'Modelo Digital de Superfície'),
 (6, 'Modelo Digital de Terreno'),
-(7, 'Carta Temática'),
-(8, 'Conjunto de dados geoespaciais vetoriais - MGCP'),
+(7, 'Conjunto de dados geoespaciais vetoriais - ET-EDGV 3.0'),
+(8, 'Conjunto de dados geoespaciais vetoriais - TRD 4'),
 (9, 'Fototriangulação'),
 (10, 'Imagem aérea/satélite'),
-(11, 'Ponto de controle');
+(11, 'Ponto de controle'),
+(12, 'Carta Topográfica - ET-RDG'),
+(13, 'Carta Temática'),
+(14, 'Mapa de unidades'),
+(15, 'Carta de trafegabilidade'),
+(16, 'Rede de transporte'),
+(17, 'Mapa de geografia humana'),
+(18, 'Levantamento topográfico'),
+(19, 'Carta ortoimagem de OM');
+
 
 -- Fase é somente para agrupar as Subfases
 -- Deve ser correspondente as fases do RTM e a fases previstas no metadado do BDGEx
@@ -78,7 +87,11 @@ INSERT INTO dominio.tipo_fase (code, nome) VALUES
 (8, 'Generalização'),
 (9, 'Fototriangulação'),
 (10, 'Restituição'),
-(11, 'Preparo');
+(11, 'Preparo'),
+(12, 'Medição de pontos de controle'),
+(13, 'Geração de ortoimagem'),
+(14, 'Geração de MDE'),
+(15, 'Levantamento topográfico');
 
 CREATE TABLE dominio.tipo_pre_requisito(
 	code SMALLINT NOT NULL PRIMARY KEY,
