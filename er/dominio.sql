@@ -73,25 +73,26 @@ INSERT INTO dominio.tipo_produto (code, nome) VALUES
 -- Adicionar outras fases do RTM
 CREATE TABLE dominio.tipo_fase(
 	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
+	nome VARCHAR(255) NOT NULL,
+	cor VARCHAR(255) NOT NULL
 );
 
-INSERT INTO dominio.tipo_fase (code, nome) VALUES
-(1, 'Digitalização'),
-(2, 'Reambulação'),
-(3, 'Validação'),
-(4, 'Edição'),
-(5, 'Disseminação'),
-(6, 'Vetorização'),
-(7, 'Avaliação'),
-(8, 'Generalização'),
-(9, 'Fototriangulação'),
-(10, 'Restituição'),
-(11, 'Preparo'),
-(12, 'Medição de pontos de controle'),
-(13, 'Geração de ortoimagem'),
-(14, 'Geração de MDE'),
-(15, 'Levantamento topográfico');
+INSERT INTO dominio.tipo_fase (code, nome, cor) VALUES
+(1, 'Digitalização', '252,141,89'),
+(2, 'Reambulação', '254,224,139'),
+(3, 'Validação', '255,255,191'),
+(4, 'Edição', '217,239,139'),
+(5, 'Disseminação', '145,207,96'),
+(6, 'Vetorização', '222,119,174'),
+(7, 'Avaliação', '175,141,195'),
+(8, 'Generalização', '224,243,248'),
+(9, 'Fototriangulação', '44,127,184'),
+(10, 'Restituição', '186,186,186'),
+(11, 'Preparo', '215,48,39'),
+(12, 'Medição de pontos de controle', '0,0,0'),
+(13, 'Geração de ortoimagem', '128,205,193'),
+(14, 'Geração de MDE', '191,129,45'),
+(15, 'Levantamento topográfico', '37,52,148');
 
 CREATE TABLE dominio.tipo_pre_requisito(
 	code SMALLINT NOT NULL PRIMARY KEY,
