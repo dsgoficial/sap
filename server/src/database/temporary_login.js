@@ -111,16 +111,16 @@ const processTempUser = async (
   if (!dbInfo) {
     return null
   }
-  const { configuracaoProducao, nome: nomeDb } = dbInfo
-  const servidor = configuracaoProducao.split(':')[0]
-  const porta = configuracaoProducao.split(':')[1]
+  const { configuracao_producao, nome: nomeDb } = dbInfo
+  const servidor = configuracao_producao.split(':')[0]
+  const porta = configuracao_producao.split(':')[1]
 
   const conn = await db.createAdminConn(servidor, porta, nomeDb, false)
 
   const loginInfo = await db.sapConn.oneOrNone(
     `SELECT login, senha FROM dgeo.login_temporario 
     WHERE usuario_id = $<usuarioId> AND configuracao = $<configuracao_producao>`,
-    { usuarioId, configuracaoProducao }
+    { usuarioId, configuracao_producao }
   )
 
   let login
@@ -159,7 +159,7 @@ const processTempUser = async (
     await updateValidity(login, conn)
   }
   if (updated) {
-    await updateTempLogin(usuarioId, configuracaoProducao, login, senha)
+    await updateTempLogin(usuarioId, configuracao_producao, login, senha)
     await revokeAllPermissionsUser(login, conn)
     if (grantPermission) {
       await grantPermissionsUser(atividadeId, login, conn)
