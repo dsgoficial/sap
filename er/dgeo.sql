@@ -41,7 +41,7 @@ CREATE TABLE dgeo.versao_qgis(
 CREATE TABLE dgeo.qgis_shortcuts(
   id SERIAL NOT NULL PRIMARY KEY,
   ferramenta VARCHAR(255) NOT NULL,
-  atalho VARCHAR(255) NOT NULL,
+  atalho VARCHAR(255),
   owner varchar(255) NOT NULL,
 	update_time timestamp without time zone NOT NULL DEFAULT now()
 );

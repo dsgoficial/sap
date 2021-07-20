@@ -34,8 +34,7 @@ CREATE TABLE macrocontrole.produto(
 
 CREATE INDEX produto_geom
     ON macrocontrole.produto USING gist
-    (geom)
-    TABLESPACE pg_default;
+    (geom);
 
 CREATE TABLE macrocontrole.fase(
     id SERIAL NOT NULL PRIMARY KEY,
@@ -268,8 +267,7 @@ CREATE INDEX unidade_trabalho_subfase_id
 
 CREATE INDEX unidade_trabalho_geom
     ON macrocontrole.unidade_trabalho USING gist
-    (geom)
-    TABLESPACE pg_default;
+    (geom);
 
 CREATE TABLE macrocontrole.grupo_insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -288,8 +286,7 @@ CREATE TABLE macrocontrole.insumo(
 
 CREATE INDEX insumo_geom
     ON macrocontrole.insumo USING gist
-    (geom)
-    TABLESPACE pg_default;
+    (geom);
 
 CREATE TABLE macrocontrole.insumo_unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -412,8 +409,7 @@ CREATE TABLE macrocontrole.problema_atividade(
 
 CREATE INDEX problema_atividade_geom
     ON macrocontrole.problema_atividade USING gist
-    (geom)
-    TABLESPACE pg_default;
+    (geom);
 
 
 CREATE TABLE macrocontrole.alteracao_fluxo(
@@ -428,7 +424,6 @@ CREATE TABLE macrocontrole.alteracao_fluxo(
 
 CREATE INDEX alteracao_fluxo_geom
     ON macrocontrole.alteracao_fluxo USING gist
-    (geom)
-    TABLESPACE pg_default;
+    (geom);
 
 COMMIT;

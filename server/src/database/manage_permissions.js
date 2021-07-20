@@ -159,55 +159,17 @@ managePermissions.grantPermissionsUser = async (
     let createPolicy
     const geom = grantInfo[0].geom
 
-    if (tipoEtapa === 1 || tipoEtapa === 4 || tipoEtapa === 2) {
-      // Execução, Revisão, RevCorr POLICY
-      createPolicy = camadas
-        .map((v) => {
-          const policyName = `policy_${login}_${v.replace('.', '_')}`
-          let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`
-          if (v.atributo_filtro_subfase) {
-            const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`
-            spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`
-          }
-          return `CREATE POLICY sel${policyName} ON ${v} FOR SELECT TO ${login} USING (TRUE); CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
-        })
-        .join(' ')
-    }
-
-    if (tipoEtapa === 3) {
-      // Correção
-      const flagPolicy = grantInfo
-        .filter((v) => v.camada_apontamento === true)
-        .map((v) => `${v.schema}.${v.nome_camada}`)
-        .filter((v, i, array) => array.indexOf(v) === i)
-        .map((v) => {
-          const policyName = `flagpolicy_${login}_${v.replace('.', '_')}`
-          let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`
-          if (v.atributo_filtro_subfase) {
-            const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`
-            spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`
-          }
-          return `CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
-        })
-        .join(' ')
-
-      const otherPolicy = grantInfo
-        .filter((v) => v.camada_apontamento === false)
-        .map((v) => `${v.schema}.${v.nome_camada}`)
-        .filter((v, i, array) => array.indexOf(v) === i)
-        .map((v) => {
-          const policyName = `otherpolicy_${login}_${v.replace('.', '_')}`
-          let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`
-          if (v.atributo_filtro_subfase) {
-            const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`
-            spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`
-          }
-          return `CREATE POLICY sel${policyName} ON ${v} FOR SELECT TO ${login} USING (TRUE); CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
-        })
-        .join(' ')
-
-      createPolicy = `${flagPolicy} ${otherPolicy}`
-    }
+    createPolicy = camadas
+      .map((v) => {
+        const policyName = `policy_${login}_${v.replace('.', '_')}`
+        let spatialConstraint = `ST_INTERSECTS(geom, ST_GEOMFROMEWKT('${geom}'))`
+        if (v.atributo_filtro_subfase) {
+          const subfaseConstraint = `${v.atributo_filtro_subfase} = ${v.subfase_id}`
+          spatialConstraint = `${spatialConstraint} AND ${subfaseConstraint}`
+        }
+        return `CREATE POLICY ${policyName} ON ${v} FOR ALL TO ${login} USING (${spatialConstraint}) WITH CHECK (${spatialConstraint});`
+      })
+      .join(' ')
 
     await t.none(createPolicy)
 
