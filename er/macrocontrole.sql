@@ -18,6 +18,7 @@ CREATE TABLE macrocontrole.linha_producao(
 	nome VARCHAR(255) NOT NULL,
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
+	descricao TEXT,
 	UNIQUE(nome,projeto_id)
 );
 
