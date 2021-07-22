@@ -21,7 +21,7 @@ SELECT string_agg(query, ' ') AS revoke_query FROM (
 	UNION ALL
 	SELECT 'REVOKE ALL ON SCHEMA ' || schema_name || ' FROM ' || $1 || ';'  AS query
 	FROM information_schema.schemata
-	WHERE schema_name NOT IN ('information_schema', 'public') AND schema_name !~ '^pg_'
+	WHERE schema_name NOT IN ('information_schema') AND schema_name !~ '^pg_'
 	UNION ALL
 	SELECT 'REVOKE CONNECT ON DATABASE ' || current_database() || ' FROM ' || $1 || ';' AS query
 ) AS foo;
