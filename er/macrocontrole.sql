@@ -9,17 +9,15 @@ CREATE SCHEMA macrocontrole;
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE,
-	descricao TEXT,
-	finalizado BOOLEAN NOT NULL DEFAULT FALSE
+	descricao TEXT
 );
 
 CREATE TABLE macrocontrole.linha_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	descricao TEXT,
-	UNIQUE(nome,projeto_id)
+	UNIQUE(nome)
 );
 
 CREATE TABLE macrocontrole.produto(
@@ -29,6 +27,7 @@ CREATE TABLE macrocontrole.produto(
 	mi VARCHAR(255),
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
+	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
 	geom geometry(POLYGON, 4326) NOT NULL
 );
@@ -41,25 +40,15 @@ CREATE TABLE macrocontrole.fase(
     id SERIAL NOT NULL PRIMARY KEY,
     tipo_fase_id SMALLINT NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
-    ordem INTEGER NOT NULL, -- as fases são ordenadas dentro de uma linha de produção de um projeto
-    UNIQUE (linha_producao_id, tipo_fase_id) -- as combinações (tipo_fase, linha_producao_id) são unicos
+    ordem INTEGER NOT NULL,
+    UNIQUE (linha_producao_id, tipo_fase_id)
 );
-
---Meta anual estabelecida no PIT de uma fase
---CREATE TABLE macrocontrole.meta_anual(
---	id SERIAL NOT NULL PRIMARY KEY,
---	meta INTEGER NOT NULL,
---    ano INTEGER NOT NULL,
---    fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
---);
 
 CREATE TABLE macrocontrole.subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
-	ordem INTEGER NOT NULL, -- as subfases são ordenadas dentre de uma fase. Isso não impede o paralelismo de subfases. É uma ordenação para apresentação
-	observacao text,
-	UNIQUE (nome, fase_id) -- as combinações (nome,fase_id) são unicos
+	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
+	UNIQUE (nome, fase_id)
 );
 
 CREATE TABLE macrocontrole.pre_requisito_subfase(
@@ -70,16 +59,15 @@ CREATE TABLE macrocontrole.pre_requisito_subfase(
 	UNIQUE(subfase_anterior_id, subfase_posterior_id)
 );
 
-CREATE TABLE macrocontrole.etapa(
+CREATE TABLE macrocontrole.etapa(--FIXME como lidar com situações de criar mais revisoes e correcoes para uma determinada unidade de trabalho? Da para resolver só com não finalizada? Da para ter estatisticas disso?
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_etapa_id SMALLINT NOT NULL REFERENCES dominio.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	ordem INTEGER NOT NULL, -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
-	observacao text,
+	ordem INTEGER NOT NULL,
 	CHECK (
 		tipo_etapa_id <> 1 or ordem = 1 -- Se tipo_etapa_id for 1 obrigatoriamente ordem tem que ser 1
 	),
-	UNIQUE (subfase_id, ordem)-- restrição para não ter ordem repetida para subfase
+	UNIQUE (subfase_id, ordem)
 );
 
 -- Constraint
@@ -116,12 +104,12 @@ CREATE TRIGGER etapa_verifica_rev_corr
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
 FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
 
---
+--FIXME Como lidar com configurações, que são atreladas a uma subfase mas podem mudar com o projeto.
 
-CREATE TABLE macrocontrole.requisito_finalizacao(
+CREATE TABLE macrocontrole.perfil_requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
-    ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma subfase
+    ordem INTEGER NOT NULL,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
 );
 
@@ -185,6 +173,13 @@ CREATE TABLE macrocontrole.perfil_linhagem(
 	UNIQUE(subfase_id)
 );
 
+CREATE TABLE macrocontrole.perfil_monitoramento(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	UNIQUE(tipo_monitoramento_id, subfase_id)
+);
+
 CREATE TABLE macrocontrole.camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	schema VARCHAR(255) NOT NULL,
@@ -202,7 +197,7 @@ CREATE TABLE macrocontrole.atributo(
 	UNIQUE(camada_id,nome)
 );
 
-CREATE TABLE macrocontrole.perfil_propriedades_camada(
+CREATE TABLE macrocontrole.propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
 	atributo_filtro_subfase VARCHAR(255),
@@ -226,14 +221,7 @@ CREATE TABLE macrocontrole.dado_producao(
 	configuracao_finalizacao VARCHAR(255)
 );
 
-CREATE TABLE macrocontrole.perfil_monitoramento(
-	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(tipo_monitoramento_id, subfase_id)
-);
-
-CREATE TABLE macrocontrole.restricao_etapa(
+CREATE TABLE macrocontrole.restricao_etapa( --FIXME repensar restricao_etapa, pois isso pode mudar entre projetos, não parece ser algo fixo da linha de produção
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_restricao_id SMALLINT NOT NULL REFERENCES dominio.tipo_restricao (code),
 	etapa_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
@@ -241,20 +229,19 @@ CREATE TABLE macrocontrole.restricao_etapa(
 	UNIQUE(etapa_anterior_id, etapa_posterior_id)	
 );
 
-CREATE TABLE macrocontrole.lote(
+CREATE TABLE macrocontrole.lote( --FIXME faz sentido ter lote por unidade de trabalho ou produto?
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
-	prioridade INTEGER NOT NULL,
-	observacao VARCHAR(255)
+	prioridade INTEGER NOT NULL
 );
 
-CREATE TABLE macrocontrole.unidade_trabalho(
+CREATE TABLE macrocontrole.unidade_trabalho( --FIXME link com projeto?
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	dado_producao_id INTEGER NOT NULL REFERENCES macrocontrole.dado_producao (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id), --FIXME trocar para projeto
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	prioridade INTEGER NOT NULL,
 	observacao text,
@@ -353,16 +340,22 @@ CREATE TABLE macrocontrole.perfil_producao(
 CREATE TABLE macrocontrole.perfil_producao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
   	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id), 
 	prioridade INTEGER NOT NULL,
 	UNIQUE (perfil_producao_id, etapa_id)
 );
 
-CREATE TABLE macrocontrole.perfil_producao_operador(
+CREATE TABLE macrocontrole.perfil_producao_operador(--FIXME talvez botar o projeto aqui em vez de tabela separada?
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
 	UNIQUE (usuario_id)
+);
+
+CREATE TABLE macrocontrole.perfil_projeto_operador(--FIXME linkar com projeto? ter uma tabela separada?
+	id SERIAL NOT NULL PRIMARY KEY,
+  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria(

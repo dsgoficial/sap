@@ -73,7 +73,7 @@ managePermissions.grantPermissionsUser = async (
         ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) AS geom,
         e.tipo_etapa_id, dp.nome AS db_nome
         FROM macrocontrole.camada AS c
-        INNER JOIN macrocontrole.perfil_propriedades_camada AS ppc ON ppc.camada_id = c.id
+        INNER JOIN macrocontrole.propriedades_camada AS ppc ON ppc.camada_id = c.id
         INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ppc.subfase_id
         INNER JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id

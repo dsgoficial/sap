@@ -662,7 +662,7 @@ controller.getFases = async () => {
 
 controller.getSubfases = async () => {
   return db.sapConn.any(
-    `SELECT s.id, s.nome, s.fase_id, s.ordem, s.observacao,
+    `SELECT s.id, s.nome, s.fase_id,
     tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
     lp.nome AS linha_producao, p.nome AS projeto, p.finalizado,
     tp.nome AS tipo_produto
@@ -677,7 +677,7 @@ controller.getSubfases = async () => {
 
 controller.getEtapas = async () => {
   return db.sapConn.any(
-    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, s.nome AS subfase, e.ordem, e.observacao,
+    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, s.nome AS subfase, e.ordem,
     tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
     lp.nome AS linha_producao, p.nome AS projeto, p.finalizado,
     tp.nome AS tipo_produto
@@ -789,7 +789,7 @@ controller.getCamadas = async () => {
     `SELECT c.id, c.schema, c.nome, c.alias, c.documentacao, COUNT(a.id) > 0 AS atributo, COUNT(ppc.id) > 0 AS perfil
     FROM macrocontrole.camada AS c
     LEFT JOIN macrocontrole.atributo AS a ON a.camada_id = c.id
-    LEFT JOIN macrocontrole.perfil_propriedades_camada AS ppc ON ppc.camada_id = c.id
+    LEFT JOIN macrocontrole.propriedades_camada AS ppc ON ppc.camada_id = c.id
     GROUP BY c.id, c.schema, c.nome, c.alias, c.documentacao`
   )
 }
@@ -821,7 +821,7 @@ controller.deleteCamadas = async camadasIds => {
     }
 
     const existsAssociationPerfil = await t.any(
-      `SELECT id FROM macrocontrole.perfil_propriedades_camada 
+      `SELECT id FROM macrocontrole.propriedades_camada 
       WHERE camada_id in ($<camadasIds:csv>)`,
       { camadasIds }
     )

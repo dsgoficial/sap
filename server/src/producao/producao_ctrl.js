@@ -55,7 +55,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
   if (etapaCode === 1 || etapaCode === 4) {
     camadas = await connection.any(
       `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase
-        FROM macrocontrole.perfil_propriedades_camada AS pc
+        FROM macrocontrole.propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1 and pc.camada_apontamento IS FALSE`,
       [subfaseId]
@@ -63,7 +63,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
     atributos = await connection.any(
       `SELECT a.nome, a.alias, c.nome as camada, c.schema
         FROM macrocontrole.atributo AS a
-        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = a.camada_id
+        INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = a.camada_id
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1 and pc.camada_apontamento IS FALSE`,
       [subfaseId]
@@ -71,7 +71,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
   } else {
     camadas = await connection.any(
       `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
-        FROM macrocontrole.perfil_propriedades_camada AS pc
+        FROM macrocontrole.propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1`,
       [subfaseId]
@@ -79,7 +79,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
     atributos = await connection.any(
       `SELECT a.nome, a.alias, c.nome as camada, c.schema
         FROM macrocontrole.atributo AS a
-        INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = a.camada_id
+        INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = a.camada_id
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1`,
       [subfaseId]
@@ -142,7 +142,7 @@ const getInfoEstilos = async (connection, subfaseId) => {
     `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
       INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
       INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
-      INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
+      INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = c.id
       WHERE pe.subfase_id = $1 AND pc.subfase_id = $1`,
     [subfaseId]
   )
@@ -155,7 +155,7 @@ const getInfoRegras = async (connection, subfaseId) => {
       INNER JOIN dgeo.group_rules AS gr ON gr.id = pr.grupo_regra_id
       INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
       INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
-      INNER JOIN macrocontrole.perfil_propriedades_camada AS pc ON pc.camada_id = c.id
+      INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = c.id
       WHERE pr.subfase_id = $1 AND pc.subfase_id = $1`,
     [subfaseId]
   )
@@ -273,7 +273,7 @@ const getInfoLinhagem = async (
 const getInfoRequisitos = async (connection, subfaseId) => {
   return connection.any(
     `SELECT r.descricao
-      FROM macrocontrole.requisito_finalizacao AS r
+      FROM macrocontrole.perfil_requisito_finalizacao AS r
       WHERE r.subfase_id = $1 ORDER BY r.ordem`,
     [subfaseId]
   )
@@ -298,9 +298,6 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.id = atividadeId
     info.atividade.epsg = dadosut.epsg
     info.atividade.observacao_atividade = dadosut.observacao_atividade
-    info.atividade.observacao_etapa = dadosut.observacao_etapa
-    info.atividade.observacao_subfase = dadosut.observacao_subfase
-    info.atividade.observacao_lote = dadosut.observacao_lote
     info.atividade.observacao_unidade_trabalho =
       dadosut.observacao_unidade_trabalho
     info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome

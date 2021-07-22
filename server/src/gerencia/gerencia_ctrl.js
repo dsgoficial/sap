@@ -417,10 +417,7 @@ controller.criaFilaPrioritariaGrupo = async (
 controller.criaObservacao = async (
   atividadeIds,
   observacaoAtividade,
-  observacaoEtapa,
-  observacaoSubfase,
-  observacaoUnidadeTrabalho,
-  observacaoLote
+  observacaoUnidadeTrabalho
 ) => {
   await db.sapConn.tx(async (t) => {
     await t.any(
@@ -432,26 +429,6 @@ controller.criaObservacao = async (
     )
     await t.any(
       `
-      UPDATE macrocontrole.etapa SET
-      observacao = $<observacaoEtapa> WHERE id in (
-        SELECT DISTINCT e.id FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($<atividadeIds:csv>)
-      )
-      `,
-      { atividadeIds, observacaoEtapa }
-    )
-    await t.any(
-      `
-      UPDATE macrocontrole.subfase SET
-      observacao = $<observacaoSubfase> WHERE id in (
-        SELECT DISTINCT e.subfase_id FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($<atividadeIds:csv>)
-      )
-      `,
-      { atividadeIds, observacaoSubfase }
-    )
-    await t.any(
-      `
       UPDATE macrocontrole.unidade_trabalho SET
       observacao = $<observacaoUnidadeTrabalho> WHERE id in (
         SELECT DISTINCT a.unidade_trabalho_id FROM macrocontrole.atividade AS a
@@ -460,28 +437,14 @@ controller.criaObservacao = async (
       `,
       { atividadeIds, observacaoUnidadeTrabalho }
     )
-    await t.any(
-      `
-      UPDATE macrocontrole.lote SET
-      observacao = $<observacaoLote> WHERE id in (
-        SELECT DISTINCT ut.lote_id FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id WHERE a.id in ($<atividadeIds:csv>)
-      )
-      `,
-      { atividadeIds, observacaoLote }
-    )
   })
 }
 
 controller.getObservacao = async (atividadeId) => {
   return db.sapConn.any(
-    `SELECT a.observacao AS observacao_atividade, ut.observacao AS observacao_unidade_trabalho,
-    l.observacao AS observacao_lote, e.observacao AS observacao_etapa, sf.observacao AS observacao_subfase
+    `SELECT a.observacao AS observacao_atividade, ut.observacao AS observacao_unidade_trabalho
     FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-    INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-    INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-    INNER JOIN macrocontrole.subfase AS sf ON sf.id = e.subfase_id
     WHERE a.id = $<atividadeId>`,
     { atividadeId }
   )

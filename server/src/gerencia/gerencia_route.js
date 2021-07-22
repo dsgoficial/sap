@@ -175,10 +175,7 @@ router.post(
     await gerenciaCtrl.criaObservacao(
       req.body.atividade_ids,
       req.body.observacao_atividade,
-      req.body.observacao_etapa,
-      req.body.observacao_subfase,
-      req.body.observacao_unidade_trabalho,
-      req.body.observacao_lote
+      req.body.observacao_unidade_trabalho
     )
 
     const msg = 'Observação criada com sucesso'
