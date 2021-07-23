@@ -2,19 +2,15 @@ BEGIN;
 
 CREATE SCHEMA metadado;
 
-CREATE TABLE metadado.responsavel_produto(
+CREATE TABLE metadado.responsavel_produto(--fixme lote
   id SERIAL NOT NULL PRIMARY KEY,
-	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-	data_inicio timestamp with time zone NOT NULL,
-	data_fim timestamp with time zone
+	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id)
 );
 
-CREATE TABLE metadado.responsavel_fase(
+CREATE TABLE metadado.responsavel_fase(--fixme lote
   id SERIAL NOT NULL PRIMARY KEY,
 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-  fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
-	data_inicio timestamp with time zone NOT NULL,
-	data_fim timestamp with time zone
+  fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
 );
 
 CREATE TABLE metadado.insumo_interno(
@@ -113,7 +109,7 @@ INSERT INTO metadado.organizacao (id, nome, endereco, telefone, site) VALUES
 
 CREATE TABLE metadado.informacoes_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
+ 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),--fixme lote
 	resumo TEXT,
 	proposito TEXT,
 	creditos TEXT,

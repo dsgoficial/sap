@@ -20,7 +20,7 @@ CREATE TABLE macrocontrole.linha_producao(
 	UNIQUE(nome)
 );
 
-CREATE TABLE macrocontrole.produto(
+CREATE TABLE macrocontrole.produto( --FIXME CRIAR LOTES DE PRODUTOS
 	id SERIAL NOT NULL PRIMARY KEY,
 	uuid text NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
 	nome VARCHAR(255),
@@ -59,7 +59,7 @@ CREATE TABLE macrocontrole.pre_requisito_subfase(
 	UNIQUE(subfase_anterior_id, subfase_posterior_id)
 );
 
-CREATE TABLE macrocontrole.etapa(--FIXME como lidar com situações de criar mais revisoes e correcoes para uma determinada unidade de trabalho? Da para resolver só com não finalizada? Da para ter estatisticas disso?
+CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_etapa_id SMALLINT NOT NULL REFERENCES dominio.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
@@ -221,7 +221,7 @@ CREATE TABLE macrocontrole.dado_producao(
 	configuracao_finalizacao VARCHAR(255)
 );
 
-CREATE TABLE macrocontrole.restricao_etapa( --FIXME repensar restricao_etapa, pois isso pode mudar entre projetos, não parece ser algo fixo da linha de produção
+CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_restricao_id SMALLINT NOT NULL REFERENCES dominio.tipo_restricao (code),
 	etapa_anterior_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
@@ -229,7 +229,7 @@ CREATE TABLE macrocontrole.restricao_etapa( --FIXME repensar restricao_etapa, po
 	UNIQUE(etapa_anterior_id, etapa_posterior_id)	
 );
 
-CREATE TABLE macrocontrole.lote( --FIXME faz sentido ter lote por unidade de trabalho ou produto?
+CREATE TABLE macrocontrole.lote( --FIXME VAI SE CHAMAR BLOCO
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
 	prioridade INTEGER NOT NULL
@@ -241,7 +241,7 @@ CREATE TABLE macrocontrole.unidade_trabalho( --FIXME link com projeto?
 	epsg VARCHAR(5) NOT NULL,
 	dado_producao_id INTEGER NOT NULL REFERENCES macrocontrole.dado_producao (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id), --FIXME trocar para projeto
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id), --FIXME trocar para BLOCO
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	prioridade INTEGER NOT NULL,
 	observacao text,
@@ -345,14 +345,14 @@ CREATE TABLE macrocontrole.perfil_producao_etapa(
 	UNIQUE (perfil_producao_id, etapa_id)
 );
 
-CREATE TABLE macrocontrole.perfil_producao_operador(--FIXME talvez botar o projeto aqui em vez de tabela separada?
+CREATE TABLE macrocontrole.perfil_producao_operador(
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
 	UNIQUE (usuario_id)
 );
 
-CREATE TABLE macrocontrole.perfil_projeto_operador(--FIXME linkar com projeto? ter uma tabela separada?
+CREATE TABLE macrocontrole.perfil_projeto_operador(--FIXME
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
