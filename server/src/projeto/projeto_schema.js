@@ -373,7 +373,7 @@ models.perfisModelo = Joi.object().keys({
     .items(
       Joi.object().keys({
         qgis_model_id: Joi.number().integer().strict().required(),
-        parametros: Joi.string().required(),
+        parametros: Joi.string().required().allow(null, ''),
         requisito_finalizacao: Joi.boolean().strict().required(),
         gera_falso_positivo: Joi.boolean().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
