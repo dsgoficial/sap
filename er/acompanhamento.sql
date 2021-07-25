@@ -57,21 +57,21 @@ WHERE u.ativo IS TRUE and l.data_login::date != now()::date
 ORDER BY l.data_login DESC;
 
 CREATE VIEW acompanhamento.quantitativo_fila_distribuicao AS
-SELECT ROW_NUMBER () OVER (ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.lote_id) AS id,
+SELECT ROW_NUMBER () OVER (ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.bloco_id) AS id,
 ativ.perfil_producao_id, pp.nome AS perfil_producao, 
 ativ.subfase_id, s.nome AS subfase,
-ativ.lote_id, l.nome AS lote,  count(*) quantidade
+ativ.bloco_id, l.nome AS bloco,  count(*) quantidade
 FROM (
-SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
+SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, bloco_id
         FROM (
-        SELECT ut.lote_id, se.subfase_id, ppo.perfil_producao_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
+        SELECT ut.bloco_id, se.subfase_id, ppo.perfil_producao_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
         FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
         INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
         INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
         INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+        INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
         LEFT JOIN
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
@@ -94,29 +94,29 @@ SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
           a_re.tipo_situacao_id IN (1, 2, 3)
         )
         ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
+        GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, bloco_id
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
 ) AS ativ
 INNER JOIN macrocontrole.perfil_producao AS pp ON pp.id = ativ.perfil_producao_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
-INNER JOIN macrocontrole.lote AS l ON l.id = ativ.lote_id
-GROUP BY ativ.perfil_producao_id, l.nome, s.nome, pp.nome, ativ.subfase_id, ativ.lote_id
-ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.lote_id;
+INNER JOIN macrocontrole.bloco AS l ON l.id = ativ.bloco_id
+GROUP BY ativ.perfil_producao_id, l.nome, s.nome, pp.nome, ativ.subfase_id, ativ.bloco_id
+ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.bloco_id;
 
 CREATE VIEW acompanhamento.quantitativo_atividades AS
-SELECT ROW_NUMBER () OVER (ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.lote_id) AS id, 
+SELECT ROW_NUMBER () OVER (ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.bloco_id) AS id, 
 ativ.etapa_id, te.nome as etapa,
 ativ.subfase_id, s.nome as subfase,
-ativ.lote_id, l.nome as lote,
+ativ.bloco_id, l.nome as bloco,
 count(*) quantidade
 FROM (
-SELECT etapa_id, unidade_trabalho_id, subfase_id, lote_id
+SELECT etapa_id, unidade_trabalho_id, subfase_id, bloco_id
         FROM (
-        SELECT ut.lote_id, se.subfase_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
+        SELECT ut.bloco_id, se.subfase_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
         FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+        INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
         LEFT JOIN
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
@@ -139,47 +139,48 @@ SELECT etapa_id, unidade_trabalho_id, subfase_id, lote_id
           a_re.tipo_situacao_id IN (1, 2, 3)
         )
         ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, subfase_id, lote_id
+        GROUP BY etapa_id, unidade_trabalho_id, subfase_id, bloco_id
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
 ) AS ativ
 INNER JOIN macrocontrole.etapa AS e ON e.id = ativ.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
-INNER JOIN macrocontrole.lote AS l ON l.id = ativ.lote_id
-GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.lote_id
-ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.lote_id;
+INNER JOIN macrocontrole.bloco AS l ON l.id = ativ.bloco_id
+GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.bloco_id
+ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.bloco_id;
 
-CREATE VIEW acompanhamento.lotes AS
-SELECT l.id, l.nome, l.prioridade, count(ut.id) AS unidades_trabalho, ST_Collect(ut.geom)::geometry(MultiPolygon,4326) AS geom
-FROM macrocontrole.lote AS l
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = l.id
-GROUP BY l.id;
+CREATE VIEW acompanhamento.blocos AS
+SELECT b.id, b.nome, b.prioridade, count(ut.id) AS unidades_trabalho, ST_Collect(ut.geom)::geometry(MultiPolygon,4326) AS geom
+FROM macrocontrole.bloco AS b
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.bloco_id = b.id
+GROUP BY b.id;
 
 CREATE VIEW acompanhamento.atividades_em_execucao AS
-SELECT ROW_NUMBER () OVER (ORDER BY ee.data_inicio) AS id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
-te.nome AS etapa_nome, l.nome AS lote, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,
+SELECT ROW_NUMBER () OVER (ORDER BY a.data_inicio) AS id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, a.id as atividade_id,
 u.id AS usuario_id, 
 tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-ee.data_inicio, ut.geom
-FROM macrocontrole.atividade AS ee
-INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
+a.data_inicio, ut.geom
+FROM macrocontrole.atividade AS a
+INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
 INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
 INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
+INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON ee.unidade_trabalho_id = ut.id
-INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
+INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-WHERE ee.tipo_situacao_id = 2 --em execucao
-ORDER BY ee.data_inicio ASC;
+INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
+WHERE a.tipo_situacao_id = 2 --em execucao
+ORDER BY a.data_inicio ASC;
 
 CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
-SELECT ROW_NUMBER () OVER (ORDER BY ee.data_fim DESC) AS id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
-te.nome AS etapa_nome, l.nome AS lote, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,  u.id AS usuario_id, 
+SELECT ROW_NUMBER () OVER (ORDER BY ee.data_fim DESC) AS id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,  u.id AS usuario_id, 
 tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
 ee.data_inicio, ee.data_fim, ut.geom
 FROM macrocontrole.atividade AS ee
@@ -189,18 +190,19 @@ INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
 INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ee.unidade_trabalho_id = ut.id
-INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
 WHERE ee.tipo_situacao_id = 4 --finalizada
 ORDER BY ee.data_fim DESC
 LIMIT 100;
 
 CREATE MATERIALIZED VIEW acompanhamento.atividades_bloqueadas AS
-SELECT row_number() OVER (ORDER BY atividade_id) as id, atividade_id, ut.id as unidade_trabalho_id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+SELECT row_number() OVER (ORDER BY atividade_id) as id, atividade_id, ut.id as unidade_trabalho_id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome, motivo, ut.geom
 FROM (
 SELECT a.id AS atividade_id, 'Atividade requer operadores distintos, porém a atividade só pode ser executada por um operador' AS motivo
@@ -244,7 +246,7 @@ SELECT a.id AS atividade_id, 'Unidade de trabalho bloqueada devido a pré requis
           FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-          INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+          INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
 		  INNER JOIN dominio.tipo_situacao AS ts ON ts.code = ee.tipo_situacao_id
           LEFT JOIN
           (
@@ -278,7 +280,7 @@ SELECT a.id AS atividade_id, 'Atividade não associada a perfil de produção ou
           FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-          INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+          INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
           LEFT JOIN
           (
             SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
@@ -306,7 +308,7 @@ SELECT a.id AS atividade_id, 'Restrição de usuários iguais e usuário não at
           FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-          INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+          INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
           LEFT JOIN
           (
             SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
@@ -333,7 +335,8 @@ INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id;
+INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id;
 
 CREATE INDEX atividades_bloqueadas_geom
     ON acompanhamento.atividades_bloqueadas USING gist
@@ -394,7 +397,7 @@ $BODY$
     SELECT count(*) INTO num FROM macrocontrole.etapa WHERE subfase_id = subfase_ident;
     IF num > 0 THEN
       view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.subfase_' || subfase_ident || '_'  || subfase_nome || ' AS 
-      SELECT ut.id, ut.subfase_id, ut.disponivel, l.nome AS lote, ut.nome, dp.nome AS dado_producao, dp.configuracao_producao, tdp.nome AS tipo_dado_producao, dp.configuracao_finalizacao, tdf.nome AS tipo_dado_finalizacao, ut.prioridade, ut.geom';
+      SELECT ut.id, ut.subfase_id, ut.disponivel, l.nome AS bloco, ut.nome, dp.nome AS dado_producao, dp.configuracao_producao, tdp.nome AS tipo_dado_producao, dp.configuracao_finalizacao, tdf.nome AS tipo_dado_finalizacao, ut.prioridade, ut.geom';
 
       exec_txt := '<symbol force_rhr="0" name="{{NUMERACAO}}" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="215,25,28,128"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol>';
       exec_andamento_txt := '<symbol force_rhr="0" name="{{NUMERACAO}}" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="215,25,28,128"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> <layer class="LinePatternFill" locked="0" enabled="1" pass="0"> <prop k="angle" v="45"/> <prop k="color" v="0,0,255,255"/> <prop k="distance" v="1"/> <prop k="distance_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="distance_unit" v="MM"/> <prop k="line_width" v="0.26"/> <prop k="line_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="line_width_unit" v="MM"/> <prop k="offset" v="0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="outline_width_unit" v="MM"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> <symbol force_rhr="0" name="@{{NUMERACAO}}@1" type="line" clip_to_extent="1" alpha="1"> <layer class="SimpleLine" locked="0" enabled="1" pass="0"> <prop k="capstyle" v="square"/> <prop k="customdash" v="5;2"/> <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="customdash_unit" v="MM"/> <prop k="draw_inside_polygon" v="0"/> <prop k="joinstyle" v="bevel"/> <prop k="line_color" v="0,0,0,255"/> <prop k="line_style" v="solid"/> <prop k="line_width" v="0.26"/> <prop k="line_width_unit" v="MM"/> <prop k="offset" v="0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="ring_filter" v="0"/> <prop k="use_custom_dash" v="0"/> <prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol> </layer> </symbol>';
@@ -467,7 +470,7 @@ $BODY$
 
       view_txt := view_txt || ' FROM macrocontrole.unidade_trabalho AS ut';
       view_txt := view_txt || jointxt;
-      view_txt := view_txt || ' LEFT JOIN macrocontrole.lote AS l ON l.id = ut.lote_id';
+      view_txt := view_txt || ' LEFT JOIN macrocontrole.bloco AS l ON l.id = ut.bloco_id';
       view_txt := view_txt || ' LEFT JOIN macrocontrole.dado_producao AS dp ON dp.id = ut.dado_producao_id';
       view_txt := view_txt || ' LEFT JOIN dominio.tipo_dado_producao AS tdp ON tdp.code = dp.tipo_dado_producao_id';
       view_txt := view_txt || ' LEFT JOIN dominio.tipo_dado_producao AS tdf ON tdf.code = dp.tipo_dado_finalizacao_id';

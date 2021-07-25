@@ -120,70 +120,70 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
   return result
 }
 
-const getInfoMenus = async (connection, etapaCode, subfaseId) => {
+const getInfoMenus = async (connection, etapaCode, subfaseId, loteId) => {
   if (etapaCode === 2) {
     return connection.any(
       `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
         INNER JOIN dgeo.qgis_menus AS mp On mp.id = pm.menu_id
-        WHERE subfase_id = $1`,
-      [subfaseId]
+        WHERE subfase_id = $1 AND lote_id = $2`,
+      [subfaseId, loteId]
     )
   }
   return connection.any(
     `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
         INNER JOIN dgeo.qgis_menus AS mp On mp.id = pm.menu_id
-        WHERE subfase_id = $1 and not menu_revisao`,
-    [subfaseId]
+        WHERE subfase_id = $1 AND lote_id = $2 AND NOT menu_revisao`,
+    [subfaseId, loteId]
   )
 }
 
-const getInfoEstilos = async (connection, subfaseId) => {
+const getInfoEstilos = async (connection, subfaseId, loteId) => {
   return connection.any(
     `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
       INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
       INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
-      INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = c.id
-      WHERE pe.subfase_id = $1 AND pc.subfase_id = $1`,
-    [subfaseId]
+      INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = c.id AND pe.subfase_id = pc.subfase_id
+      WHERE pe.subfase_id = $1 AND pe.lote_id = $2`,
+    [subfaseId, loteId]
   )
 }
 
-const getInfoRegras = async (connection, subfaseId) => {
+const getInfoRegras = async (connection, subfaseId, loteId) => {
   return connection.any(
     `SELECT lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra_id, lr.descricao,  gr.cor_rgb, gr.grupo_regra, gr.ordem, lr.id
       FROM macrocontrole.perfil_regras as pr
       INNER JOIN dgeo.group_rules AS gr ON gr.id = pr.grupo_regra_id
       INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
       INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
-      INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = c.id
-      WHERE pr.subfase_id = $1 AND pc.subfase_id = $1`,
-    [subfaseId]
+      INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = c.id AND pr.subfase_id = pc.subfase_id
+      WHERE pr.subfase_id = $1 AND pr.lote_id = $2`,
+    [subfaseId, loteId]
   )
 }
 
-const getInfoFME = async (connection, subfaseId) => {
+const getInfoFME = async (connection, subfaseId, loteId) => {
   return connection.any(
     `SELECT gf.servidor, gf.porta, pf.rotina, pf.gera_falso_positivo, pf.requisito_finalizacao, pf.ordem FROM macrocontrole.perfil_fme AS pf
     INNER JOIN dgeo.gerenciador_fme AS gf ON gf.id = pf.gerenciador_fme_id
-    WHERE subfase_id = $<subfaseId>`,
-    { subfaseId }
+    WHERE subfase_id = $<subfaseId> AND lote_id = $<loteId>`,
+    { subfaseId, loteId }
   )
 }
 
-const getInfoConfigQGIS = async (connection, subfaseId) => {
+const getInfoConfigQGIS = async (connection, subfaseId, loteId) => {
   return connection.any(
-    'SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId>',
-    { subfaseId }
+    'SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId> AND lote_id = $<loteId>',
+    { subfaseId, loteId }
   )
 }
 
-const getInfoMonitoramento = async (connection, subfaseId) => {
+const getInfoMonitoramento = async (connection, subfaseId, loteId) => {
   return connection.any(
     `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
       FROM macrocontrole.perfil_monitoramento AS pm
       INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
-      WHERE subfase_id = $1`,
-    [subfaseId]
+      WHERE subfase_id = $1 AND lote_id = $2`,
+    [subfaseId, loteId]
   )
 }
 
@@ -197,13 +197,13 @@ const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
   )
 }
 
-const getInfoModelsQGIS = async (connection, subfaseId) => {
+const getInfoModelsQGIS = async (connection, subfaseId, loteId) => {
   return connection.any(
     `SELECT lqm.nome, lqm.descricao, lqm.model_xml, pmq.parametros, pmq.gera_falso_positivo, pmq.requisito_finalizacao, pmq.ordem
       FROM macrocontrole.perfil_model_qgis AS pmq
       INNER JOIN dgeo.qgis_models AS lqm ON pmq.qgis_model_id = lqm.id
-      WHERE pmq.subfase_id = $1`,
-    [subfaseId]
+      WHERE pmq.subfase_id = $1 AND pmq.lote_id = $2`,
+    [subfaseId, loteId]
   )
 }
 
@@ -211,11 +211,12 @@ const getInfoLinhagem = async (
   connection,
   subfaseId,
   atividadeId,
-  etapaCode
+  etapaCode,
+  loteId
 ) => {
   const perfilLinhagem = await connection.oneOrNone(
-    'SELECT tipo_exibicao_id FROM macrocontrole.perfil_linhagem WHERE subfase_id = $1 LIMIT 1',
-    [subfaseId]
+    'SELECT tipo_exibicao_id FROM macrocontrole.perfil_linhagem WHERE subfase_id = $1 AND lote_id = $2 LIMIT 1',
+    [subfaseId, loteId]
   )
   let linhagem
   if (
@@ -270,12 +271,12 @@ const getInfoLinhagem = async (
   return linhagem
 }
 
-const getInfoRequisitos = async (connection, subfaseId) => {
+const getInfoRequisitos = async (connection, subfaseId, loteId) => {
   return connection.any(
     `SELECT r.descricao
       FROM macrocontrole.perfil_requisito_finalizacao AS r
-      WHERE r.subfase_id = $1 ORDER BY r.ordem`,
-    [subfaseId]
+      WHERE r.subfase_id = $1 AND r.lote_id = $2 ORDER BY r.ordem`,
+    [subfaseId, loteId]
   )
 }
 
@@ -292,6 +293,7 @@ const dadosProducao = async (atividadeId) => {
 
     const info = {}
     info.usuario_id = dadosut.usuario_id
+    info.login = dadosut.login
     info.usuario_nome = dadosut.nome_guerra
 
     info.atividade = {}
@@ -303,6 +305,7 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome
     info.atividade.geom = dadosut.unidade_trabalho_geom
     info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id
+    info.atividade.lote_id = dadosut.lote_id
     info.atividade.fase_id = dadosut.fase_id
     info.atividade.subfase_id = dadosut.subfase_id
     info.atividade.etapa_id = dadosut.etapa_id
@@ -330,23 +333,26 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.menus = await getInfoMenus(
       t,
       dadosut.tipo_etapa_id,
-      dadosut.subfase_id
+      dadosut.subfase_id,
+      dadosut.lote_id
     )
 
-    info.atividade.estilos = await getInfoEstilos(t, dadosut.subfase_id)
+    info.atividade.estilos = await getInfoEstilos(t, dadosut.subfase_id, dadosut.lote_id)
 
-    info.atividade.regras = await getInfoRegras(t, dadosut.subfase_id)
+    info.atividade.regras = await getInfoRegras(t, dadosut.subfase_id, dadosut.lote_id)
 
-    info.atividade.fme = await getInfoFME(t, dadosut.subfase_id)
+    info.atividade.fme = await getInfoFME(t, dadosut.subfase_id, dadosut.lote_id)
 
     info.atividade.configuracao_qgis = await getInfoConfigQGIS(
       t,
-      dadosut.subfase_id
+      dadosut.subfase_id,
+      dadosut.lote_id
     )
 
     info.atividade.monitoramento = await getInfoMonitoramento(
       t,
-      dadosut.subfase_id
+      dadosut.subfase_id,
+      dadosut.lote_id
     )
 
     info.atividade.insumos = await getInfoInsumos(
@@ -354,16 +360,17 @@ const dadosProducao = async (atividadeId) => {
       dadosut.unidade_trabalho_id
     )
 
-    info.atividade.models_qgis = await getInfoModelsQGIS(t, dadosut.subfase_id)
+    info.atividade.models_qgis = await getInfoModelsQGIS(t, dadosut.subfase_id, dadosut.lote_id)
 
     info.atividade.linhagem = await getInfoLinhagem(
       t,
       dadosut.subfase_id,
       atividadeId,
-      dadosut.tipo_etapa_id
+      dadosut.tipo_etapa_id,
+      dadosut.lote_id
     )
 
-    info.atividade.requisitos = await getInfoRequisitos(t, dadosut.subfase_id)
+    info.atividade.requisitos = await getInfoRequisitos(t, dadosut.subfase_id, dadosut.lote_id)
 
     info.atividade.atalhos = await getAtalhos(t)
 
@@ -675,7 +682,7 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
       }
     )
 
-    const atividadeId = await t.any(
+    const novaAtividadeId = await t.any(
       `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, usuario_id, tipo_situacao_id)
         SELECT a.etapa_id, a.unidade_trabalho_id, a.usuario_id, 3 AS tipo_situacao_id FROM macrocontrole.atividade AS a
@@ -692,7 +699,7 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
       INSERT INTO macrocontrole.fila_prioritaria(atividade_id, usuario_id, prioridade)
         VALUES($<atividadeId>,$<usuarioId>,1)
       )`,
-      { atividadeId: atividadeId.id, usuarioId }
+      { atividadeId: novaAtividadeId.id, usuarioId }
     )
 
     await t.none(

@@ -18,7 +18,7 @@ const controller = {}
 
 controller.getAtividade = async (atividadeId, gerenteId) => {
   const atividade = await db.sapConn.oneOrNone(
-    `SELECT a.etapa_id, a.unidade_trabalho_id
+    `SELECT a.id
     FROM macrocontrole.atividade AS a
     WHERE a.id = $<atividadeId>`,
     { atividadeId }
@@ -450,29 +450,25 @@ controller.getObservacao = async (atividadeId) => {
   )
 }
 
-controller.getViewsAcompanhamento = async (emAndamento) => {
+controller.getViewsAcompanhamento = async (emAndamento) => {// FIXME tem que refazer toda essa query
   let views = await db.sapConn.any(`
-    SELECT v.schema, v.nome, v.tipo, coalesce(s.nome, f.nome, lp.nome) AS projeto,
-    coalesce(s.finalizado, f.finalizado, lp.finalizado) AS finalizado
-    FROM (SELECT v.table_schema AS schema, v.table_name AS nome,
-    regexp_replace(substring(v.table_name, '^(subfase_|fase_|linha_producao_)'), '_$', '') AS tipo,
-    substring(regexp_replace(v.table_name,'^(subfase_|fase_|linha_producao_)', ''), '^(\\d+)_')::integer AS id
-    FROM information_schema.views AS v
-    WHERE v.table_schema = 'acompanhamento'
-    AND substring(v.table_name, '^(subfase_|fase_|linha_producao_)') IS NOT NULL) AS v
+    SELECT v.schema, v.nome, v.tipo, coalesce(s.nome, lp.nome) AS projeto
+    FROM (
+      SELECT v.table_schema AS schema, v.table_name AS nome,
+      regexp_replace(substring(v.table_name, '^(subfase_|linha_producao_)'), '_$', '') AS tipo,
+      substring(regexp_replace(v.table_name,'^(subfase_|linha_producao_)', ''), '^(\\d+)_')::integer AS id
+      FROM information_schema.views AS v
+      WHERE v.table_schema = 'acompanhamento'
+      AND substring(v.table_name, '^(subfase_|fase_|linha_producao_)') IS NOT NULL
+    ) AS v
     LEFT JOIN (
-      SELECT s.id, p.nome, p.finalizado FROM macrocontrole.subfase AS s
+      SELECT s.id, p.nome FROM macrocontrole.subfase AS s
         INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
         INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
         INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
     ) AS s ON s.id = v.id AND v.tipo = 'subfase'
     LEFT JOIN (
-      SELECT f.id, p.nome, p.finalizado FROM macrocontrole.fase AS f
-        INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-        INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-    ) AS f ON f.id = v.id AND v.tipo = 'fase'
-    LEFT JOIN (
-        SELECT lp.id, p.nome, p.finalizado FROM macrocontrole.linha_producao AS lp
+        SELECT lp.id, p.nome FROM macrocontrole.linha_producao AS lp
         INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
     ) AS lp ON lp.id = v.id AND v.tipo = 'linha_producao'
     ORDER BY projeto, tipo, nome

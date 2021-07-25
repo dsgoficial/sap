@@ -30,9 +30,10 @@ controller.getMetadado = async uuid => {
       ip.limitacao_acesso_id, ip.restricao_uso_id, ip.grau_sigilo_id, ip.organizacao_responsavel_id,
       ip.organizacao_distribuicao_id, ip.datum_vertical_id, ip.especificacao_id, ip.declaracao_linhagem
       FROM macrocontrole.produto AS p
+      INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id
       INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = p.linha_producao_id
-      INNER JOIN macrocontrole.projeto AS proj ON lp.projeto_id = proj.id
-      INNER JOIN metadado.informacoes_produto AS ip ON ip.linha_producao_id = lp.id
+      INNER JOIN macrocontrole.projeto AS proj ON l.projeto_id = proj.id
+      INNER JOIN metadado.informacoes_produto AS ip ON ip.lote_id = l.id
       WHERE p.uuid = $1`,
       [uuid]
     )

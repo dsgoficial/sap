@@ -20,7 +20,14 @@ CREATE TABLE macrocontrole.linha_producao(
 	UNIQUE(nome)
 );
 
-CREATE TABLE macrocontrole.produto( --FIXME CRIAR LOTES DE PRODUTOS
+CREATE TABLE macrocontrole.lote(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) UNIQUE NOT NULL,
+	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
+);
+
+CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	uuid text NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
 	nome VARCHAR(255),
@@ -28,8 +35,8 @@ CREATE TABLE macrocontrole.produto( --FIXME CRIAR LOTES DE PRODUTOS
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
-	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
-	geom geometry(POLYGON, 4326) NOT NULL
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	geom geometry(MULTIPOLYGON, 4326) NOT NULL
 );
 
 CREATE INDEX produto_geom
@@ -104,13 +111,12 @@ CREATE TRIGGER etapa_verifica_rev_corr
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
 FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
 
---FIXME Como lidar com configurações, que são atreladas a uma subfase mas podem mudar com o projeto.
-
 CREATE TABLE macrocontrole.perfil_requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
     ordem INTEGER NOT NULL,
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id)
 );
 
 CREATE TABLE macrocontrole.perfil_fme(
@@ -120,8 +126,8 @@ CREATE TABLE macrocontrole.perfil_fme(
 	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	ordem INTEGER NOT NULL,
-	UNIQUE(gerenciador_fme_id,rotina,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	ordem INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.perfil_configuracao_qgis(
@@ -129,22 +135,24 @@ CREATE TABLE macrocontrole.perfil_configuracao_qgis(
 	tipo_configuracao_id SMALLINT NOT NULL REFERENCES dominio.tipo_configuracao (code),
 	parametros TEXT,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(tipo_configuracao_id,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(tipo_configuracao_id,subfase_id,lote_id)
 );
-
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome varchar(255) NOT NULL,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(nome,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(nome,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
 	grupo_regra_id INTEGER NOT NULL REFERENCES dgeo.group_rules (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(grupo_regra_id,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(grupo_regra_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(
@@ -152,7 +160,8 @@ CREATE TABLE macrocontrole.perfil_menu(
 	menu_id INTEGER NOT NULL REFERENCES dgeo.qgis_menus (id),
 	menu_revisao BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(menu_id,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(menu_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_model_qgis(
@@ -162,22 +171,25 @@ CREATE TABLE macrocontrole.perfil_model_qgis(
 	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	ordem INTEGER NOT NULL,
-	UNIQUE(qgis_model_id,subfase_id)
+	UNIQUE(qgis_model_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_exibicao_id SMALLINT NOT NULL REFERENCES dominio.tipo_exibicao (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_monitoramento(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(tipo_monitoramento_id, subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(tipo_monitoramento_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.camada(
@@ -229,24 +241,24 @@ CREATE TABLE macrocontrole.restricao_etapa(
 	UNIQUE(etapa_anterior_id, etapa_posterior_id)	
 );
 
-CREATE TABLE macrocontrole.lote( --FIXME VAI SE CHAMAR BLOCO
+CREATE TABLE macrocontrole.bloco(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
 	prioridade INTEGER NOT NULL
 );
 
-CREATE TABLE macrocontrole.unidade_trabalho( --FIXME link com projeto?
+CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	epsg VARCHAR(5) NOT NULL,
 	dado_producao_id INTEGER NOT NULL REFERENCES macrocontrole.dado_producao (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id), --FIXME trocar para BLOCO
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	prioridade INTEGER NOT NULL,
 	observacao text,
-    geom geometry(POLYGON, 4326) NOT NULL,
-	UNIQUE (nome, subfase_id)
+    geom geometry(POLYGON, 4326) NOT NULL
 );
 
 CREATE INDEX unidade_trabalho_subfase_id
@@ -352,7 +364,7 @@ CREATE TABLE macrocontrole.perfil_producao_operador(
 	UNIQUE (usuario_id)
 );
 
-CREATE TABLE macrocontrole.perfil_projeto_operador(--FIXME
+CREATE TABLE macrocontrole.perfil_projeto_operador(
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
@@ -396,7 +408,7 @@ CREATE TABLE macrocontrole.problema_atividade(
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	tipo_problema_id SMALLINT NOT NULL REFERENCES dominio.tipo_problema (code),
 	descricao TEXT NOT NULL,
-	data  timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE,
 	geom geometry(POLYGON, 4326) NOT NULL
 );
@@ -411,7 +423,7 @@ CREATE TABLE macrocontrole.alteracao_fluxo(
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	descricao TEXT NOT NULL,
-	data  timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE,
 	geom geometry(POLYGON, 4326) NOT NULL
 );

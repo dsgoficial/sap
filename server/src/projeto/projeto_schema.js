@@ -207,29 +207,13 @@ models.qgisModelsIds = Joi.object().keys({
     .min(1)
 })
 
-models.atividadeCriarRevisao = Joi.object().keys({
-  unidade_trabalho_ids: Joi.array()
-    .items(Joi.number().integer().strict())
-    .unique()
-    .required()
-    .min(1)
-})
-
-models.atividadeCriarRevcorr = Joi.object().keys({
-  unidade_trabalho_ids: Joi.array()
-    .items(Joi.number().integer().strict())
-    .unique()
-    .required()
-    .min(1)
-})
-
-models.unidadeTrabalhoLote = Joi.object().keys({
+models.unidadeTrabalhoBloco = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
     .items(Joi.number().integer().strict())
     .unique()
     .required()
     .min(1),
-  lote_id: Joi.number().integer().strict().required()
+  bloco_id: Joi.number().integer().strict().required()
 })
 
 models.listaAtividades = Joi.object().keys({
@@ -470,15 +454,6 @@ models.perfilFMEAtualizacao = Joi.object().keys({
     .min(1)
 })
 
-models.atividadeCriarRevisao = Joi.object().keys({
-  unidade_trabalho_ids: Joi.array()
-    .items(Joi.number().integer().strict())
-    .unique()
-    .required()
-    .min(1),
-  grupo_insumo_id: Joi.number().integer().strict().allow(null, '')
-})
-
 models.unidadeTrabalhoId = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
     .items(Joi.number().integer().strict())
@@ -548,7 +523,7 @@ models.unidadesTrabalho = Joi.object().keys({
         observacao: Joi.string().required().allow(''),
         geom: Joi.string().required(),
         dado_producao_id: Joi.number().integer().strict().required(),
-        lote_id: Joi.number().integer().strict().required(),
+        bloco_id: Joi.number().integer().strict().required(),
         disponivel: Joi.boolean().required(),
         prioridade: Joi.number().integer().strict().required()
       })

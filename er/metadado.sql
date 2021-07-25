@@ -2,15 +2,11 @@ BEGIN;
 
 CREATE SCHEMA metadado;
 
-CREATE TABLE metadado.responsavel_produto(--fixme lote
+CREATE TABLE metadado.responsavel_fase(
   id SERIAL NOT NULL PRIMARY KEY,
-	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id)
-);
-
-CREATE TABLE metadado.responsavel_fase(--fixme lote
-  id SERIAL NOT NULL PRIMARY KEY,
-	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-  fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
+  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+  fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
+  lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id)
 );
 
 CREATE TABLE metadado.insumo_interno(
@@ -109,7 +105,7 @@ INSERT INTO metadado.organizacao (id, nome, endereco, telefone, site) VALUES
 
 CREATE TABLE metadado.informacoes_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),--fixme lote
+ 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	resumo TEXT,
 	proposito TEXT,
 	creditos TEXT,
@@ -121,6 +117,7 @@ CREATE TABLE metadado.informacoes_produto(
 	organizacao_distribuicao_id  INTEGER NOT NULL REFERENCES metadado.organizacao (id),
 	datum_vertical_id SMALLINT NOT NULL REFERENCES metadado.datum_vertical (code),
 	especificacao_id SMALLINT NOT NULL REFERENCES metadado.especificacao (code),
+	responsavel_produto_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	declaracao_linhagem TEXT
 );
 
