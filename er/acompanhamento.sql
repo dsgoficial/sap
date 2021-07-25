@@ -578,16 +578,17 @@ CREATE TRIGGER atualiza_view_acompanhamento_subfase
 AFTER UPDATE OR DELETE ON macrocontrole.subfase
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.atualiza_view_acompanhamento_subfase();
 
-CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_linha_producao()
+CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_lote()
   RETURNS trigger AS
 $BODY$
     DECLARE view_txt text;
     DECLARE jointxt text := '';
-    DECLARE linhaproducao_ident integer;
+    DECLARE lote_ident integer;
     DECLARE num integer;
-    DECLARE linhaproducao_nome text;
-    DECLARE fase_nome_old text;
-    DECLARE fase_nome_new text;
+    DECLARE lote_nome text;
+    DECLARE lote_nome_old text;
+    DECLARE lote_nome_new text;
+    DECLARE linhaproducao_ident integer;
     DECLARE nome_fixed text;
     DECLARE r record;
     DECLARE iterator integer := 1;
@@ -600,28 +601,59 @@ $BODY$
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
-      linhaproducao_ident := OLD.linha_producao_id;
-    ELSE
-      linhaproducao_ident := NEW.linha_producao_id;
+      lote_ident := OLD.id;
+
+      lote_nome := translate(replace(lower(OLD.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
+
+
+      EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_'|| lote_ident || '_' || lote_nome;
+
+      DELETE FROM public.layer_styles
+      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('lote_'|| lote_ident || '_' || lote_nome) AND stylename = 'acompanhamento_lote';
+
+      RETURN OLD;
     END IF;
 
-    SELECT translate(replace(lower(lp.nome),' ', '_'),  
-              'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-              'aaaaaeeeeiiiiooooouuuucc________________________________')
-              INTO linhaproducao_nome
-              FROM macrocontrole.linha_producao AS lp
-              WHERE lp.id = linhaproducao_ident;
+    IF TG_OP = 'UPDATE' THEN
+      lote_ident := NEW.id;
 
-    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome;
+      lote_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
+      lote_nome_new := translate(replace(lower(NEW.nome),' ', '_'),  
+            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+            'aaaaaeeeeiiiiooooouuuucc________________________________');
 
-    DELETE FROM public.layer_styles
-    WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome) AND stylename = 'acompanhamento_linha_producao';
+      IF lote_nome_old != lote_nome_new AND OLD.linha_producao_id = NEW.linha_producao_id AND OLD.projeto_id = NEW.projeto_id THEN
+        EXECUTE 'ALTER MATERIALIZED VIEW IF EXISTS acompanhamento.lote_'|| lote_ident || '_' || lote_nome_old || ' RENAME TO lote_' || lote_ident || '_' || lote_nome_new;
+        
+        UPDATE public.layer_styles SET f_table_name = ('lote_'|| lote_ident || '_' || lote_nome_new)
+        WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('lote_'|| lote_ident || '_' || lote_nome_old) AND stylename = 'acompanhamento_lote';
+
+        RETURN NEW;
+      END IF;
+          
+
+      EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_'|| lote_ident || '_' || lote_nome_old;
+
+      DELETE FROM public.layer_styles
+      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('lote_'|| lote_ident || '_' || lote_nome_old) AND stylename = 'acompanhamento_lote';
+
+    END IF;
+
+    lote_ident := NEW.id;
+    linhaproducao_ident := NEW.linha_producao_id;
+    lote_nome := translate(replace(lower(NEW.nome),' ', '_'),  
+          'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+          'aaaaaeeeeiiiiooooouuuucc________________________________');
 
     SELECT count(*) INTO num FROM macrocontrole.fase WHERE linha_producao_id = linhaproducao_ident;
 
     IF num > 0 THEN
-      view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' AS 
-      SELECT p.id, p.uuid, p.linha_producao_id, p.nome, p.mi, p.inom, p.escala, p.geom';
+      view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.lote_' || lote_ident || '_'  || lote_nome || ' AS 
+      SELECT p.id, p.uuid, p.nome, p.mi, p.inom, p.escala, tp.nome AS tipo_produto, p.geom';
 
       tipo_txt := '<symbol force_rhr="0" type="fill" name="{{NUMERACAO}}" alpha="1" clip_to_extent="1"><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties><layer class="SimpleFill" pass="0" enabled="1" locked="0"><Option type="Map"><Option type="QString" name="border_width_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="color" value="{{COR}},255"/><Option type="QString" name="joinstyle" value="bevel"/><Option type="QString" name="offset" value="0,0"/><Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="offset_unit" value="MM"/><Option type="QString" name="outline_color" value="0,0,0,255"/><Option type="QString" name="outline_style" value="solid"/><Option type="QString" name="outline_width" value="0.26"/><Option type="QString" name="outline_width_unit" value="MM"/><Option type="QString" name="style" value="solid"/></Option><prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="color" v="{{COR}},255"/><prop k="joinstyle" v="bevel"/><prop k="offset" v="0,0"/><prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="offset_unit" v="MM"/><prop k="outline_color" v="0,0,0,255"/><prop k="outline_style" v="solid"/><prop k="outline_width" v="0.26"/><prop k="outline_width_unit" v="MM"/><prop k="style" v="solid"/><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties></layer></symbol>';
       tipo_andamento_txt := '<symbol force_rhr="0" type="fill" name="{{NUMERACAO}}" alpha="1" clip_to_extent="1"><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties><layer class="SimpleFill" pass="0" enabled="1" locked="0"><Option type="Map"><Option type="QString" name="border_width_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="color" value="{{COR}},255"/><Option type="QString" name="joinstyle" value="bevel"/><Option type="QString" name="offset" value="0,0"/><Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="offset_unit" value="MM"/><Option type="QString" name="outline_color" value="0,0,0,255"/><Option type="QString" name="outline_style" value="solid"/><Option type="QString" name="outline_width" value="0.26"/><Option type="QString" name="outline_width_unit" value="MM"/><Option type="QString" name="style" value="solid"/></Option><prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="color" v="{{COR}},255"/><prop k="joinstyle" v="bevel"/><prop k="offset" v="0,0"/><prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="offset_unit" v="MM"/><prop k="outline_color" v="0,0,0,255"/><prop k="outline_style" v="solid"/><prop k="outline_width" v="0.26"/><prop k="outline_width_unit" v="MM"/><prop k="style" v="solid"/><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties></layer><layer class="LinePatternFill" pass="0" enabled="1" locked="0"><Option type="Map"><Option type="QString" name="angle" value="45"/><Option type="QString" name="color" value="0,0,255,255"/><Option type="QString" name="distance" value="1"/><Option type="QString" name="distance_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="distance_unit" value="MM"/><Option type="QString" name="line_width" value="0.26"/><Option type="QString" name="line_width_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="line_width_unit" value="MM"/><Option type="QString" name="offset" value="0"/><Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="offset_unit" value="MM"/><Option type="QString" name="outline_width_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="outline_width_unit" value="MM"/></Option><prop k="angle" v="45"/><prop k="color" v="0,0,255,255"/><prop k="distance" v="1"/><prop k="distance_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="distance_unit" v="MM"/><prop k="line_width" v="0.26"/><prop k="line_width_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="line_width_unit" v="MM"/><prop k="offset" v="0"/><prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="offset_unit" v="MM"/><prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="outline_width_unit" v="MM"/><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties><symbol force_rhr="0" type="line" name="@{{NUMERACAO}}@1" alpha="1" clip_to_extent="1"><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties><layer class="SimpleLine" pass="0" enabled="1" locked="0"><Option type="Map"><Option type="QString" name="align_dash_pattern" value="0"/><Option type="QString" name="capstyle" value="square"/><Option type="QString" name="customdash" value="5;2"/><Option type="QString" name="customdash_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="customdash_unit" value="MM"/><Option type="QString" name="dash_pattern_offset" value="0"/><Option type="QString" name="dash_pattern_offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="dash_pattern_offset_unit" value="MM"/><Option type="QString" name="draw_inside_polygon" value="0"/><Option type="QString" name="joinstyle" value="bevel"/><Option type="QString" name="line_color" value="0,0,0,255"/><Option type="QString" name="line_style" value="solid"/><Option type="QString" name="line_width" value="0.26"/><Option type="QString" name="line_width_unit" value="MM"/><Option type="QString" name="offset" value="0"/><Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="offset_unit" value="MM"/><Option type="QString" name="ring_filter" value="0"/><Option type="QString" name="tweak_dash_pattern_on_corners" value="0"/><Option type="QString" name="use_custom_dash" value="0"/><Option type="QString" name="width_map_unit_scale" value="3x:0,0,0,0,0,0"/></Option><prop k="align_dash_pattern" v="0"/><prop k="capstyle" v="square"/><prop k="customdash" v="5;2"/><prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="customdash_unit" v="MM"/><prop k="dash_pattern_offset" v="0"/><prop k="dash_pattern_offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="dash_pattern_offset_unit" v="MM"/><prop k="draw_inside_polygon" v="0"/><prop k="joinstyle" v="bevel"/><prop k="line_color" v="0,0,0,255"/><prop k="line_style" v="solid"/><prop k="line_width" v="0.26"/><prop k="line_width_unit" v="MM"/><prop k="offset" v="0"/><prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="offset_unit" v="MM"/><prop k="ring_filter" v="0"/><prop k="tweak_dash_pattern_on_corners" v="0"/><prop k="use_custom_dash" v="0"/><prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties></layer></symbol></layer></symbol>';
@@ -647,7 +679,7 @@ $BODY$
           INNER JOIN
           (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
           ON a.unidade_trabalho_id = ut.id
-          WHERE s.fase_id = ' || r.id || '
+          WHERE s.fase_id = ' || r.id || ' AND ut.lote_id = ' || lote_ident || '
           GROUP BY ut.id) AS ut' || iterator || '
           ON ut' || iterator || '.geom && p.geom AND st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
 
@@ -665,13 +697,13 @@ $BODY$
 
       END LOOP;
 
-      view_txt := view_txt || ' FROM macrocontrole.produto AS p ';
+      view_txt := view_txt || ' FROM macrocontrole.produto AS p INNER JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id';
       view_txt := view_txt || jointxt;
-      view_txt := view_txt || ' WHERE p.linha_producao_id = ' || linhaproducao_ident || ' GROUP BY p.id;';
+      view_txt := view_txt || ' WHERE p.lote_id = ' || lote_ident || ' GROUP BY p.id;';
 
       EXECUTE view_txt;
-      EXECUTE 'GRANT SELECT ON TABLE acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' TO PUBLIC';
-      EXECUTE 'CREATE INDEX linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || '_geom ON acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' USING gist (geom);';
+      EXECUTE 'GRANT SELECT ON TABLE acompanhamento.lote_' || lote_ident || '_'  || lote_nome || ' TO PUBLIC';
+      EXECUTE 'CREATE INDEX lote_' || lote_ident || '_'  || lote_nome || '_geom ON acompanhamento.lote_' || lote_ident || '_'  || lote_nome || ' USING gist (geom);';
 
       iterator := 2*iterator - 2;
       rules_txt := rules_txt || '<rule symbol="' ||  iterator || '" key="{' || uuid_generate_v4() ||'}" label="Concluído" filter="' || fases_concluidas_txt || ' TRUE"/>';
@@ -686,84 +718,23 @@ $BODY$
 
 
       INSERT INTO public.layer_styles(f_table_catalog, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, useasdefault, owner, ui, update_time) VALUES
-      (current_database(), 'acompanhamento', 'linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome, 'geom', 'acompanhamento_linha_producao', estilo_txt, NULL, TRUE, current_user, NULL, now());
+      (current_database(), 'acompanhamento', 'lote_'|| lote_ident || '_' || lote_nome, 'geom', 'acompanhamento_lote', estilo_txt, NULL, TRUE, current_user, NULL, now());
 
     END IF;
 
-    IF TG_OP = 'DELETE' THEN
-      RETURN OLD;
-    ELSE
-      RETURN NEW;
-    END IF;
+    RETURN NEW;
 
     END;
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION acompanhamento.cria_view_acompanhamento_linha_producao()
+ALTER FUNCTION acompanhamento.cria_view_acompanhamento_lote()
   OWNER TO postgres;
 
-CREATE TRIGGER cria_view_acompanhamento_linha_producao
-AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.fase
-FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_linha_producao();
+CREATE TRIGGER cria_view_acompanhamento_lote
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.lote
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_lote();
 
-CREATE OR REPLACE FUNCTION acompanhamento.atualiza_view_acompanhamento_linha_producao()
-  RETURNS trigger AS
-$BODY$
-    DECLARE linhaproducao_nome_old text;
-    DECLARE linhaproducao_nome_new text;
-    BEGIN
-
-    IF TG_OP = 'DELETE' THEN
-
-      linhaproducao_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
-
-
-      EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old;
-
-      DELETE FROM public.layer_styles
-      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
-
-    END IF;
-
-    IF TG_OP = 'UPDATE' THEN
-
-      linhaproducao_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
-
-      linhaproducao_nome_new := translate(replace(lower(NEW.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
-
-      IF linhaproducao_nome_old != linhaproducao_nome_new THEN
-        EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old || ' RENAME TO linha_producao_' || NEW.id || '_' || linhaproducao_nome_new;
-        
-        UPDATE public.layer_styles SET f_table_name = ('linha_producao_'|| NEW.id || '_' || linhaproducao_nome_new)
-        WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
-
-      END IF;
-
-    END IF;
-
-    IF TG_OP = 'DELETE' THEN
-      RETURN OLD;
-    ELSE
-      RETURN NEW;
-    END IF;
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION acompanhamento.atualiza_view_acompanhamento_linha_producao()
-  OWNER TO postgres;
-
-CREATE TRIGGER atualiza_view_acompanhamento_linha_producao
-AFTER UPDATE OR DELETE ON macrocontrole.linha_producao
-FOR EACH ROW EXECUTE PROCEDURE acompanhamento.atualiza_view_acompanhamento_linha_producao();
 
 
 
