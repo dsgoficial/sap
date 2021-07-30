@@ -623,9 +623,11 @@ $$
 
       INSERT INTO public.layer_styles(f_table_catalog, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, useasdefault, owner, ui, update_time) VALUES
       (current_database(), 'acompanhamento', 'lote_'|| lote_ident, 'geom', 'acompanhamento_lote', estilo_txt, NULL, TRUE, current_user, NULL, now());
+
+    END IF;
   END;
 $$
-LANGUAGE plpgsql VOLATaILE
+LANGUAGE plpgsql VOLATILE
   COST 100;
 ALTER FUNCTION acompanhamento.cria_view_acompanhamento_lote(integer, integer)
   OWNER TO postgres;
@@ -656,8 +658,6 @@ $BODY$
 
 
     PERFORM acompanhamento.cria_view_acompanhamento_lote(lote_ident, linhaproducao_ident);
-
-    END IF;
 
     RETURN NEW;
 
@@ -698,8 +698,6 @@ $BODY$
     WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('lote_'|| lote_ident) AND stylename = 'acompanhamento_lote';
 
     PERFORM acompanhamento.cria_view_acompanhamento_lote(lote_ident, linhaproducao_ident);
-
-    END IF;
 
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;

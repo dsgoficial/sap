@@ -24,7 +24,7 @@ CREATE TABLE macrocontrole.lote(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
-	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
 );
 
 CREATE TABLE macrocontrole.produto(
@@ -54,7 +54,7 @@ CREATE TABLE macrocontrole.fase(
 CREATE TABLE macrocontrole.subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
+	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	UNIQUE (nome, fase_id)
 );
 
@@ -385,22 +385,6 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 	prioridade INTEGER NOT NULL,
 	UNIQUE(atividade_id, perfil_producao_id)
 );
-
-/* -- passar para serviço rh
-CREATE TABLE macrocontrole.perda_recurso_humano(	
-	id SERIAL NOT NULL PRIMARY KEY,	
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),	
- 	tipo_perda_recurso_humano_id SMALLINT NOT NULL REFERENCES dominio.tipo_perda_recurso_humano (code),	
-	horas REAL,	
-	data timestamp with time zone NOT NULL,	
-	observacao TEXT	
-);
--- passar para serviço rh
-CREATE TABLE macrocontrole.funcao_especial(
-	id SERIAL NOT NULL PRIMARY KEY,
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-	funcao VARCHAR(255) NOT NULL
-); */
 
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
