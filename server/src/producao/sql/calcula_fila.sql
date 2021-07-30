@@ -43,6 +43,22 @@ FROM (
     SELECT a.id FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
     INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+    INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+    INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
+    INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
+    INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
+    WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 2 AND 
+    ut.geom && ut_re.geom AND
+    st_relate(ut.geom, ut_re.geom, '2********') AND
+    a_re.tipo_situacao_id IN (2) AND a.tipo_situacao_id = 1
+  )
+  AND a.id NOT IN
+  (
+    SELECT a.id FROM macrocontrole.atividade AS a
+    INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
+    INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
     INNER JOIN macrocontrole.etapa AS et ON et.id = a.etapa_id
     INNER JOIN macrocontrole.subfase AS sub ON sub.id = et.subfase_id
     INNER JOIN macrocontrole.fase AS fa ON fa.id = sub.fase_id

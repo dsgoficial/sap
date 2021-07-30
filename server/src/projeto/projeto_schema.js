@@ -31,7 +31,7 @@ models.estilos = Joi.object().keys({
         f_table_schema: Joi.string().required(),
         f_table_name: Joi.string().required(),
         f_geometry_column: Joi.string().required(),
-        stylename: Joi.string().required(),
+        stylename: Joi.number().integer().strict().required(),
         styleqml: Joi.string().required(),
         stylesld: Joi.string().required(),
         ui: Joi.string().allow('', null).required()
@@ -48,7 +48,7 @@ models.estilosAtualizacao = Joi.object().keys({
         f_table_schema: Joi.string().required(),
         f_table_name: Joi.string().required(),
         f_geometry_column: Joi.string().required(),
-        stylename: Joi.string().required(),
+        stylename: Joi.number().integer().strict().required(),
         styleqml: Joi.string().required(),
         stylesld: Joi.string().required(),
         ui: Joi.string().allow('', null).required()
@@ -397,7 +397,7 @@ models.perfilEstilos = Joi.object().keys({
   perfis_estilos: Joi.array()
     .items(
       Joi.object().keys({
-        nome: Joi.string().required(),
+        nome: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required()
       })
     )
@@ -410,7 +410,7 @@ models.perfilEstilostualizacao = Joi.object().keys({
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        nome: Joi.string().required(),
+        nome: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required()
       })
     )

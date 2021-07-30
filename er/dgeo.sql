@@ -41,6 +41,7 @@ CREATE TABLE dgeo.versao_qgis(
 CREATE TABLE dgeo.qgis_shortcuts(
   id SERIAL NOT NULL PRIMARY KEY,
   ferramenta VARCHAR(255) NOT NULL,
+  idioma VARCHAR(255) NOT NULL,
   atalho VARCHAR(255),
   owner varchar(255) NOT NULL,
 	update_time timestamp without time zone NOT NULL DEFAULT now()
@@ -62,12 +63,18 @@ CREATE TABLE dgeo.qgis_menus(
     CONSTRAINT unique_menus UNIQUE (nome)
 );
 
+CREATE TABLE dgeo.group_styles(
+  	id SERIAL NOT NULL PRIMARY KEY,
+    nome varchar(255) NOT NULL,
+    UNIQUE(nome)
+);
+
 CREATE TABLE dgeo.layer_styles(
 	id SERIAL NOT NULL PRIMARY KEY,
 	f_table_schema varchar(255) NOT NULL,
 	f_table_name varchar(255) NOT NULL,
 	f_geometry_column varchar(255) NOT NULL,
-	stylename varchar(255) NOT NULL,
+	stylename INTEGER NOT NULL REFERENCES dgeo.group_styles (id),
 	styleqml text,
   stylesld text,
 	ui text,

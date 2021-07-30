@@ -141,7 +141,7 @@ CREATE TABLE macrocontrole.perfil_configuracao_qgis(
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome varchar(255) NOT NULL,
+	nome INTEGER NOT NULL REFERENCES dgeo.group_styles (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	UNIQUE(nome,subfase_id,lote_id)

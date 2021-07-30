@@ -27,13 +27,15 @@ const getUsuarioNomeById = async usuarioId => {
 
 controller.getNomeEstilos = async () => {
   return db.sapConn
-    .any('SELECT DISTINCT stylename FROM dgeo.layer_styles')
+    .any('SELECT nome FROM dgeo.group_styles')
 }
 
 controller.getEstilos = async () => {
   return db.sapConn
-    .any(`SELECT id, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, ui, owner, update_time
-    FROM dgeo.layer_styles`)
+    .any(`SELECT ls.id, ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, gs.nome AS stylename, ls.styleqml, ls.stylesld, ls.ui, ls.owner, ls.update_time
+    FROM dgeo.layer_styles AS ls
+    INNER JOIN dgeo.group_styles AS gs ON gs.id = ls.stylename
+    `)
 }
 
 controller.gravaEstilos = async (estilos, usuarioId) => {
@@ -1067,7 +1069,7 @@ controller.atualizaPerfilEstilos = async perfilEstilos => { // FIXME REFATORAR
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_estilo
-      WHERE id in ($<perfilEstilos:csv>)`,
+      WHERE id in ($<perfilEstilosIds:csv>)`,
       { perfilEstilosIds: perfilEstilos.map(c => c.id) }
     )
     if (!exists && exists.length < perfilEstilos.length) {

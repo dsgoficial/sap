@@ -139,8 +139,9 @@ const getInfoMenus = async (connection, etapaCode, subfaseId, loteId) => {
 
 const getInfoEstilos = async (connection, subfaseId, loteId) => {
   return connection.any(
-    `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, ls.stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
+    `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, gs.nome AS stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
       INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
+      INNER JOIN dgeo.group_styles AS gs ON gs.id = ls.stylename
       INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
       INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = c.id AND pe.subfase_id = pc.subfase_id
       WHERE pe.subfase_id = $1 AND pe.lote_id = $2`,
@@ -282,7 +283,7 @@ const getInfoRequisitos = async (connection, subfaseId, loteId) => {
 
 const getAtalhos = async (connection) => {
   return connection.any(
-    `SELECT ferramenta, atalho
+    `SELECT ferramenta, idioma, atalho
       FROM dgeo.qgis_shortcuts`
   )
 }

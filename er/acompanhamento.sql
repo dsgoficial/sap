@@ -7,7 +7,7 @@ CREATE TABLE acompanhamento.login(
   usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
   data_login  timestamp with time zone NOT NULL
 );
-
+/**
 CREATE VIEW acompanhamento.usuarios_sem_atividades AS
 SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno
 FROM dgeo.usuario AS u
@@ -341,7 +341,7 @@ INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id;
 CREATE INDEX atividades_bloqueadas_geom
     ON acompanhamento.atividades_bloqueadas USING gist
     (geom);
-
+**/
 CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_subfase(subfase_ident integer, lote_ident integer)
   RETURNS void AS
 $$

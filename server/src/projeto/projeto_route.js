@@ -811,7 +811,7 @@ router.put(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.atualizaPerfilEstilos(req.body.perfis_estilos)
 
-    const msg = 'Perfisde de Estilos atualizados com sucesso'
+    const msg = 'Perfis de Estilos atualizados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
