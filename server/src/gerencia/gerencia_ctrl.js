@@ -18,7 +18,7 @@ const controller = {}
 
 controller.getAtividade = async (atividadeId, gerenteId) => {
   const atividade = await db.sapConn.oneOrNone(
-    `SELECT a.etapa_id, a.unidade_trabalho_id
+    `SELECT a.id
     FROM macrocontrole.atividade AS a
     WHERE a.id = $<atividadeId>`,
     { atividadeId }
@@ -417,10 +417,7 @@ controller.criaFilaPrioritariaGrupo = async (
 controller.criaObservacao = async (
   atividadeIds,
   observacaoAtividade,
-  observacaoEtapa,
-  observacaoSubfase,
-  observacaoUnidadeTrabalho,
-  observacaoLote
+  observacaoUnidadeTrabalho
 ) => {
   await db.sapConn.tx(async (t) => {
     await t.any(
@@ -432,26 +429,6 @@ controller.criaObservacao = async (
     )
     await t.any(
       `
-      UPDATE macrocontrole.etapa SET
-      observacao = $<observacaoEtapa> WHERE id in (
-        SELECT DISTINCT e.id FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($<atividadeIds:csv>)
-      )
-      `,
-      { atividadeIds, observacaoEtapa }
-    )
-    await t.any(
-      `
-      UPDATE macrocontrole.subfase SET
-      observacao = $<observacaoSubfase> WHERE id in (
-        SELECT DISTINCT e.subfase_id FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id WHERE a.id in ($<atividadeIds:csv>)
-      )
-      `,
-      { atividadeIds, observacaoSubfase }
-    )
-    await t.any(
-      `
       UPDATE macrocontrole.unidade_trabalho SET
       observacao = $<observacaoUnidadeTrabalho> WHERE id in (
         SELECT DISTINCT a.unidade_trabalho_id FROM macrocontrole.atividade AS a
@@ -460,28 +437,14 @@ controller.criaObservacao = async (
       `,
       { atividadeIds, observacaoUnidadeTrabalho }
     )
-    await t.any(
-      `
-      UPDATE macrocontrole.lote SET
-      observacao = $<observacaoLote> WHERE id in (
-        SELECT DISTINCT ut.lote_id FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id WHERE a.id in ($<atividadeIds:csv>)
-      )
-      `,
-      { atividadeIds, observacaoLote }
-    )
   })
 }
 
 controller.getObservacao = async (atividadeId) => {
   return db.sapConn.any(
-    `SELECT a.observacao AS observacao_atividade, ut.observacao AS observacao_unidade_trabalho,
-    l.observacao AS observacao_lote, e.observacao AS observacao_etapa, sf.observacao AS observacao_subfase
+    `SELECT a.observacao AS observacao_atividade, ut.observacao AS observacao_unidade_trabalho
     FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-    INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-    INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-    INNER JOIN macrocontrole.subfase AS sf ON sf.id = e.subfase_id
     WHERE a.id = $<atividadeId>`,
     { atividadeId }
   )
@@ -489,30 +452,13 @@ controller.getObservacao = async (atividadeId) => {
 
 controller.getViewsAcompanhamento = async (emAndamento) => {
   let views = await db.sapConn.any(`
-    SELECT v.schema, v.nome, v.tipo, coalesce(s.nome, f.nome, lp.nome) AS projeto,
-    coalesce(s.finalizado, f.finalizado, lp.finalizado) AS finalizado
-    FROM (SELECT v.table_schema AS schema, v.table_name AS nome,
-    regexp_replace(substring(v.table_name, '^(subfase_|fase_|linha_producao_)'), '_$', '') AS tipo,
-    substring(regexp_replace(v.table_name,'^(subfase_|fase_|linha_producao_)', ''), '^(\\d+)_')::integer AS id
-    FROM information_schema.views AS v
-    WHERE v.table_schema = 'acompanhamento'
-    AND substring(v.table_name, '^(subfase_|fase_|linha_producao_)') IS NOT NULL) AS v
-    LEFT JOIN (
-      SELECT s.id, p.nome, p.finalizado FROM macrocontrole.subfase AS s
-        INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
-        INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-        INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-    ) AS s ON s.id = v.id AND v.tipo = 'subfase'
-    LEFT JOIN (
-      SELECT f.id, p.nome, p.finalizado FROM macrocontrole.fase AS f
-        INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-        INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-    ) AS f ON f.id = v.id AND v.tipo = 'fase'
-    LEFT JOIN (
-        SELECT lp.id, p.nome, p.finalizado FROM macrocontrole.linha_producao AS lp
-        INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-    ) AS lp ON lp.id = v.id AND v.tipo = 'linha_producao'
-    ORDER BY projeto, tipo, nome
+  SELECT 'acompanhamento' AS schema, mat.matviewname AS nome,
+  l.id AS lote_id, l.projeto_id, l.linha_producao_id,
+  CASE WHEN mat.matviewname LIKE '%_subfase_%' THEN 'subfase' ELSE 'lote' END AS tipo
+  FROM pg_matviews AS mat
+  INNER JOIN macrocontrole.lote AS l ON l.id = substring(mat.matviewname from 6 for 1)::int
+  WHERE schemaname = 'acompanhamento' AND matviewname ~ '^lote_'
+  ORDER BY mat.matviewname;
   `)
 
   if (!views) {

@@ -7,7 +7,7 @@ CREATE TABLE acompanhamento.login(
   usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
   data_login  timestamp with time zone NOT NULL
 );
-
+/**
 CREATE VIEW acompanhamento.usuarios_sem_atividades AS
 SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno
 FROM dgeo.usuario AS u
@@ -57,21 +57,21 @@ WHERE u.ativo IS TRUE and l.data_login::date != now()::date
 ORDER BY l.data_login DESC;
 
 CREATE VIEW acompanhamento.quantitativo_fila_distribuicao AS
-SELECT ROW_NUMBER () OVER (ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.lote_id) AS id,
+SELECT ROW_NUMBER () OVER (ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.bloco_id) AS id,
 ativ.perfil_producao_id, pp.nome AS perfil_producao, 
 ativ.subfase_id, s.nome AS subfase,
-ativ.lote_id, l.nome AS lote,  count(*) quantidade
+ativ.bloco_id, l.nome AS bloco,  count(*) quantidade
 FROM (
-SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
+SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, bloco_id
         FROM (
-        SELECT ut.lote_id, se.subfase_id, ppo.perfil_producao_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
+        SELECT ut.bloco_id, se.subfase_id, ppo.perfil_producao_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
         FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
         INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
         INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
         INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+        INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
         LEFT JOIN
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
@@ -94,29 +94,29 @@ SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
           a_re.tipo_situacao_id IN (1, 2, 3)
         )
         ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, lote_id
+        GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, bloco_id
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
 ) AS ativ
 INNER JOIN macrocontrole.perfil_producao AS pp ON pp.id = ativ.perfil_producao_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
-INNER JOIN macrocontrole.lote AS l ON l.id = ativ.lote_id
-GROUP BY ativ.perfil_producao_id, l.nome, s.nome, pp.nome, ativ.subfase_id, ativ.lote_id
-ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.lote_id;
+INNER JOIN macrocontrole.bloco AS l ON l.id = ativ.bloco_id
+GROUP BY ativ.perfil_producao_id, l.nome, s.nome, pp.nome, ativ.subfase_id, ativ.bloco_id
+ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.bloco_id;
 
 CREATE VIEW acompanhamento.quantitativo_atividades AS
-SELECT ROW_NUMBER () OVER (ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.lote_id) AS id, 
+SELECT ROW_NUMBER () OVER (ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.bloco_id) AS id, 
 ativ.etapa_id, te.nome as etapa,
 ativ.subfase_id, s.nome as subfase,
-ativ.lote_id, l.nome as lote,
+ativ.bloco_id, l.nome as bloco,
 count(*) quantidade
 FROM (
-SELECT etapa_id, unidade_trabalho_id, subfase_id, lote_id
+SELECT etapa_id, unidade_trabalho_id, subfase_id, bloco_id
         FROM (
-        SELECT ut.lote_id, se.subfase_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
+        SELECT ut.bloco_id, se.subfase_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
         FROM macrocontrole.atividade AS ee
         INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+        INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
         LEFT JOIN
         (
           SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
@@ -139,47 +139,48 @@ SELECT etapa_id, unidade_trabalho_id, subfase_id, lote_id
           a_re.tipo_situacao_id IN (1, 2, 3)
         )
         ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, subfase_id, lote_id
+        GROUP BY etapa_id, unidade_trabalho_id, subfase_id, bloco_id
         HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
 ) AS ativ
 INNER JOIN macrocontrole.etapa AS e ON e.id = ativ.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
-INNER JOIN macrocontrole.lote AS l ON l.id = ativ.lote_id
-GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.lote_id
-ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.lote_id;
+INNER JOIN macrocontrole.bloco AS l ON l.id = ativ.bloco_id
+GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.bloco_id
+ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.bloco_id;
 
-CREATE VIEW acompanhamento.lotes AS
-SELECT l.id, l.nome, l.prioridade, count(ut.id) AS unidades_trabalho, ST_Collect(ut.geom)::geometry(MultiPolygon,4326) AS geom
-FROM macrocontrole.lote AS l
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = l.id
-GROUP BY l.id;
+CREATE VIEW acompanhamento.blocos AS
+SELECT b.id, b.nome, b.prioridade, count(ut.id) AS unidades_trabalho, ST_Collect(ut.geom)::geometry(MultiPolygon,4326) AS geom
+FROM macrocontrole.bloco AS b
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.bloco_id = b.id
+GROUP BY b.id;
 
 CREATE VIEW acompanhamento.atividades_em_execucao AS
-SELECT ROW_NUMBER () OVER (ORDER BY ee.data_inicio) AS id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
-te.nome AS etapa_nome, l.nome AS lote, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,
+SELECT ROW_NUMBER () OVER (ORDER BY a.data_inicio) AS id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, a.id as atividade_id,
 u.id AS usuario_id, 
 tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-ee.data_inicio, ut.geom
-FROM macrocontrole.atividade AS ee
-INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
+a.data_inicio, ut.geom
+FROM macrocontrole.atividade AS a
+INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
 INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
 INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
+INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON ee.unidade_trabalho_id = ut.id
-INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
+INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
-WHERE ee.tipo_situacao_id = 2 --em execucao
-ORDER BY ee.data_inicio ASC;
+INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
+WHERE a.tipo_situacao_id = 2 --em execucao
+ORDER BY a.data_inicio ASC;
 
 CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
-SELECT ROW_NUMBER () OVER (ORDER BY ee.data_fim DESC) AS id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
-te.nome AS etapa_nome, l.nome AS lote, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,  u.id AS usuario_id, 
+SELECT ROW_NUMBER () OVER (ORDER BY ee.data_fim DESC) AS id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,  u.id AS usuario_id, 
 tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
 ee.data_inicio, ee.data_fim, ut.geom
 FROM macrocontrole.atividade AS ee
@@ -189,18 +190,19 @@ INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
 INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
 INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ee.unidade_trabalho_id = ut.id
-INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
 INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
+INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
 WHERE ee.tipo_situacao_id = 4 --finalizada
 ORDER BY ee.data_fim DESC
 LIMIT 100;
 
 CREATE MATERIALIZED VIEW acompanhamento.atividades_bloqueadas AS
-SELECT row_number() OVER (ORDER BY atividade_id) as id, atividade_id, ut.id as unidade_trabalho_id, p.nome AS projeto_nome, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
+SELECT row_number() OVER (ORDER BY atividade_id) as id, atividade_id, ut.id as unidade_trabalho_id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
 te.nome AS etapa_nome, ut.nome AS unidade_trabalho_nome, motivo, ut.geom
 FROM (
 SELECT a.id AS atividade_id, 'Atividade requer operadores distintos, porém a atividade só pode ser executada por um operador' AS motivo
@@ -244,7 +246,7 @@ SELECT a.id AS atividade_id, 'Unidade de trabalho bloqueada devido a pré requis
           FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-          INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+          INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
 		  INNER JOIN dominio.tipo_situacao AS ts ON ts.code = ee.tipo_situacao_id
           LEFT JOIN
           (
@@ -278,7 +280,7 @@ SELECT a.id AS atividade_id, 'Atividade não associada a perfil de produção ou
           FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-          INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+          INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
           LEFT JOIN
           (
             SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
@@ -306,7 +308,7 @@ SELECT a.id AS atividade_id, 'Restrição de usuários iguais e usuário não at
           FROM macrocontrole.atividade AS ee
           INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
           INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-          INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+          INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
           LEFT JOIN
           (
             SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
@@ -333,21 +335,20 @@ INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
 INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
 INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
 INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id;
+INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id;
 
 CREATE INDEX atividades_bloqueadas_geom
     ON acompanhamento.atividades_bloqueadas USING gist
     (geom);
-
-CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_subfase()
-  RETURNS trigger AS
-$BODY$
+**/
+CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_subfase(subfase_ident integer, lote_ident integer)
+  RETURNS void AS
+$$
     DECLARE view_txt text;
     DECLARE jointxt text := '';
     DECLARE wheretxt text := '';
-    DECLARE subfase_ident integer;
     DECLARE num integer;
-    DECLARE subfase_nome text;
     DECLARE nome_fixed text;
     DECLARE r record;
     DECLARE iterator integer := 1;
@@ -371,30 +372,11 @@ $BODY$
     DECLARE cor_andamento_txt text;
     DECLARE revcor_andamento_txt text;
     DECLARE revcor_txt text;
-    BEGIN
-
-    IF TG_OP = 'DELETE' THEN
-      subfase_ident := OLD.subfase_id;
-    ELSE
-      subfase_ident := NEW.subfase_id;
-    END IF;
-
-    SELECT translate(replace(lower(s.nome),' ', '_'),  
-              'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-              'aaaaaeeeeiiiiooooouuuucc________________________________')
-              INTO subfase_nome
-              FROM macrocontrole.subfase AS s
-              WHERE s.id = subfase_ident;
-
-    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.subfase_'|| subfase_ident || '_' || subfase_nome;
-
-    DELETE FROM public.layer_styles
-    WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('subfase_'|| subfase_ident || '_' || subfase_nome) AND stylename = 'acompanhamento_subfase';
-
+  BEGIN
     SELECT count(*) INTO num FROM macrocontrole.etapa WHERE subfase_id = subfase_ident;
     IF num > 0 THEN
-      view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.subfase_' || subfase_ident || '_'  || subfase_nome || ' AS 
-      SELECT ut.id, ut.subfase_id, ut.disponivel, l.nome AS lote, ut.nome, dp.nome AS dado_producao, dp.configuracao_producao, tdp.nome AS tipo_dado_producao, dp.configuracao_finalizacao, tdf.nome AS tipo_dado_finalizacao, ut.prioridade, ut.geom';
+      view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || '  AS 
+      SELECT ut.id, ut.subfase_id, ut.disponivel, l.nome AS bloco, ut.nome, dp.nome AS dado_producao, dp.configuracao_producao, tdp.nome AS tipo_dado_producao, dp.configuracao_finalizacao, tdf.nome AS tipo_dado_finalizacao, ut.prioridade, ut.geom';
 
       exec_txt := '<symbol force_rhr="0" name="{{NUMERACAO}}" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="215,25,28,128"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol>';
       exec_andamento_txt := '<symbol force_rhr="0" name="{{NUMERACAO}}" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="215,25,28,128"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> <layer class="LinePatternFill" locked="0" enabled="1" pass="0"> <prop k="angle" v="45"/> <prop k="color" v="0,0,255,255"/> <prop k="distance" v="1"/> <prop k="distance_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="distance_unit" v="MM"/> <prop k="line_width" v="0.26"/> <prop k="line_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="line_width_unit" v="MM"/> <prop k="offset" v="0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="outline_width_unit" v="MM"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> <symbol force_rhr="0" name="@{{NUMERACAO}}@1" type="line" clip_to_extent="1" alpha="1"> <layer class="SimpleLine" locked="0" enabled="1" pass="0"> <prop k="capstyle" v="square"/> <prop k="customdash" v="5;2"/> <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="customdash_unit" v="MM"/> <prop k="draw_inside_polygon" v="0"/> <prop k="joinstyle" v="bevel"/> <prop k="line_color" v="0,0,0,255"/> <prop k="line_style" v="solid"/> <prop k="line_width" v="0.26"/> <prop k="line_width_unit" v="MM"/> <prop k="offset" v="0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="ring_filter" v="0"/> <prop k="use_custom_dash" v="0"/> <prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol> </layer> </symbol>';
@@ -467,17 +449,17 @@ $BODY$
 
       view_txt := view_txt || ' FROM macrocontrole.unidade_trabalho AS ut';
       view_txt := view_txt || jointxt;
-      view_txt := view_txt || ' LEFT JOIN macrocontrole.lote AS l ON l.id = ut.lote_id';
+      view_txt := view_txt || ' LEFT JOIN macrocontrole.bloco AS l ON l.id = ut.bloco_id';
       view_txt := view_txt || ' LEFT JOIN macrocontrole.dado_producao AS dp ON dp.id = ut.dado_producao_id';
       view_txt := view_txt || ' LEFT JOIN dominio.tipo_dado_producao AS tdp ON tdp.code = dp.tipo_dado_producao_id';
       view_txt := view_txt || ' LEFT JOIN dominio.tipo_dado_producao AS tdf ON tdf.code = dp.tipo_dado_finalizacao_id';
-      view_txt := view_txt || ' WHERE ut.subfase_id = ' || subfase_ident;
+      view_txt := view_txt || ' WHERE ut.subfase_id = ' || subfase_ident || ' AND ut.lote_id = ' || lote_ident;
       view_txt := view_txt || wheretxt;
       view_txt := view_txt || ' ORDER BY ut.prioridade;';
 
       EXECUTE view_txt;
-      EXECUTE 'GRANT SELECT ON TABLE acompanhamento.subfase_' || subfase_ident || '_'  || subfase_nome || ' TO PUBLIC';
-      EXECUTE 'CREATE INDEX subfase_' || subfase_ident || '_'  || subfase_nome || '_geom ON acompanhamento.subfase_' || subfase_ident || '_'  || subfase_nome || ' USING gist (geom);';
+      EXECUTE 'GRANT SELECT ON TABLE acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' TO PUBLIC';
+      EXECUTE 'CREATE INDEX lote_' || lote_ident || '_subfase_' || subfase_ident || '_geom ON acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' USING gist (geom);';
 
     iterator := 3*iterator - 3;
 
@@ -500,9 +482,43 @@ $BODY$
     estilo_txt := estilo_txt || '</symbols></renderer-v2><blendMode>0</blendMode><featureBlendMode>0</featureBlendMode><layerGeometryType>2</layerGeometryType></qgis>';
 
     INSERT INTO public.layer_styles(f_table_catalog, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, useasdefault, owner, ui, update_time) VALUES
-    (current_database(), 'acompanhamento', 'subfase_'|| subfase_ident || '_' || subfase_nome, 'geom', 'acompanhamento_subfase', estilo_txt, NULL, TRUE, current_user, NULL, now());
+    (current_database(), 'acompanhamento', 'lote_' || lote_ident || '_subfase_'|| subfase_ident, 'geom', 'acompanhamento_subfase', estilo_txt, NULL, TRUE, current_user, NULL, now());
 
     END IF;
+  END;
+$$
+LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.cria_view_acompanhamento_subfase(integer, integer)
+  OWNER TO postgres;
+
+
+CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_subfase()
+  RETURNS trigger AS
+$BODY$
+    DECLARE subfase_ident integer;
+    DECLARE lote_ident integer;
+    BEGIN
+
+    IF TG_OP = 'DELETE' THEN
+      subfase_ident := OLD.subfase_id;
+    ELSE
+      subfase_ident := NEW.subfase_id;
+    END IF;
+
+    SELECT l.id
+    INTO lote_ident
+    FROM macrocontrole.subfase AS s
+    INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+    INNER JOIN macrocontrole.lote AS l ON f.linha_producao_id = l.linha_producao_id
+    WHERE s.id = subfase_ident;
+
+    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || lote_ident || '_subfase_'|| subfase_ident;
+
+    DELETE FROM public.layer_styles
+    WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('lote_' || lote_ident || '_subfase_'|| subfase_ident) AND stylename = 'acompanhamento_subfase';
+
+    PERFORM acompanhamento.cria_view_acompanhamento_subfase(subfase_ident, lote_ident);
 
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;
@@ -521,104 +537,27 @@ CREATE TRIGGER cria_view_acompanhamento_subfase
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_subfase();
 
-CREATE OR REPLACE FUNCTION acompanhamento.atualiza_view_acompanhamento_subfase()
-  RETURNS trigger AS
-$BODY$
-    DECLARE subfase_nome_old text;
-    DECLARE subfase_nome_new text;
-    BEGIN
-
-    IF TG_OP = 'DELETE' THEN
-      subfase_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
-
-      EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.subfase_'|| OLD.id || '_' || subfase_nome_old;
-
-      DELETE FROM public.layer_styles
-      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('subfase_'|| OLD.id || '_' || subfase_nome_old) AND stylename = 'acompanhamento_subfase';
-
-    END IF;
-
-    IF TG_OP = 'UPDATE' THEN
-      subfase_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
-
-      subfase_nome_new := translate(replace(lower(NEW.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
-
-      IF subfase_nome_old != subfase_nome_new THEN
-        EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.subfase_'|| OLD.id || '_' || subfase_nome_old || ' RENAME TO subfase_' || NEW.id || '_' || subfase_nome_new;
-      END IF;
-
-      UPDATE public.layer_styles SET f_table_name = ('subfase_'|| NEW.id || '_' || subfase_nome_new)
-      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('subfase_'|| OLD.id || '_' || subfase_nome_old) AND stylename = 'acompanhamento_subfase';
-
-    END IF;
-
-    IF TG_OP = 'DELETE' THEN
-      RETURN OLD;
-    ELSE
-      RETURN NEW;
-    END IF;
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION acompanhamento.atualiza_view_acompanhamento_subfase()
-  OWNER TO postgres;
-
-CREATE TRIGGER atualiza_view_acompanhamento_subfase
-AFTER UPDATE OR DELETE ON macrocontrole.subfase
-FOR EACH ROW EXECUTE PROCEDURE acompanhamento.atualiza_view_acompanhamento_subfase();
-
-CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_linha_producao()
-  RETURNS trigger AS
-$BODY$
-    DECLARE view_txt text;
-    DECLARE jointxt text := '';
-    DECLARE linhaproducao_ident integer;
-    DECLARE num integer;
-    DECLARE linhaproducao_nome text;
-    DECLARE fase_nome_old text;
-    DECLARE fase_nome_new text;
-    DECLARE nome_fixed text;
-    DECLARE r record;
-    DECLARE iterator integer := 1;
-    DECLARE rules_txt text := '';
-    DECLARE estilo_txt text := '';
-    DECLARE fases_concluidas_txt text := '';
-    DECLARE symbols_txt text := '';
-    DECLARE tipo_txt text := '';
-    DECLARE tipo_andamento_txt text := '';
-    BEGIN
-
-    IF TG_OP = 'DELETE' THEN
-      linhaproducao_ident := OLD.linha_producao_id;
-    ELSE
-      linhaproducao_ident := NEW.linha_producao_id;
-    END IF;
-
-    SELECT translate(replace(lower(lp.nome),' ', '_'),  
-              'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-              'aaaaaeeeeiiiiooooouuuucc________________________________')
-              INTO linhaproducao_nome
-              FROM macrocontrole.linha_producao AS lp
-              WHERE lp.id = linhaproducao_ident;
-
-    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome;
-
-    DELETE FROM public.layer_styles
-    WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome) AND stylename = 'acompanhamento_linha_producao';
-
+CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_lote(lote_ident integer, linhaproducao_ident integer)
+  RETURNS void AS
+$$
+  DECLARE view_txt text;
+  DECLARE jointxt text := '';
+  DECLARE num integer;
+  DECLARE nome_fixed text;
+  DECLARE r record;
+  DECLARE iterator integer := 1;
+  DECLARE rules_txt text := '';
+  DECLARE estilo_txt text := '';
+  DECLARE fases_concluidas_txt text := '';
+  DECLARE symbols_txt text := '';
+  DECLARE tipo_txt text := '';
+  DECLARE tipo_andamento_txt text := '';
+  BEGIN
     SELECT count(*) INTO num FROM macrocontrole.fase WHERE linha_producao_id = linhaproducao_ident;
 
     IF num > 0 THEN
-      view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' AS 
-      SELECT p.id, p.uuid, p.linha_producao_id, p.nome, p.mi, p.inom, p.escala, p.geom';
+      view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.lote_' || lote_ident || ' AS 
+      SELECT p.id, p.uuid, p.nome, p.mi, p.inom, p.escala, tp.nome AS tipo_produto, p.geom';
 
       tipo_txt := '<symbol force_rhr="0" type="fill" name="{{NUMERACAO}}" alpha="1" clip_to_extent="1"><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties><layer class="SimpleFill" pass="0" enabled="1" locked="0"><Option type="Map"><Option type="QString" name="border_width_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="color" value="{{COR}},255"/><Option type="QString" name="joinstyle" value="bevel"/><Option type="QString" name="offset" value="0,0"/><Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="offset_unit" value="MM"/><Option type="QString" name="outline_color" value="0,0,0,255"/><Option type="QString" name="outline_style" value="solid"/><Option type="QString" name="outline_width" value="0.26"/><Option type="QString" name="outline_width_unit" value="MM"/><Option type="QString" name="style" value="solid"/></Option><prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="color" v="{{COR}},255"/><prop k="joinstyle" v="bevel"/><prop k="offset" v="0,0"/><prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="offset_unit" v="MM"/><prop k="outline_color" v="0,0,0,255"/><prop k="outline_style" v="solid"/><prop k="outline_width" v="0.26"/><prop k="outline_width_unit" v="MM"/><prop k="style" v="solid"/><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties></layer></symbol>';
       tipo_andamento_txt := '<symbol force_rhr="0" type="fill" name="{{NUMERACAO}}" alpha="1" clip_to_extent="1"><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties><layer class="SimpleFill" pass="0" enabled="1" locked="0"><Option type="Map"><Option type="QString" name="border_width_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="color" value="{{COR}},255"/><Option type="QString" name="joinstyle" value="bevel"/><Option type="QString" name="offset" value="0,0"/><Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="offset_unit" value="MM"/><Option type="QString" name="outline_color" value="0,0,0,255"/><Option type="QString" name="outline_style" value="solid"/><Option type="QString" name="outline_width" value="0.26"/><Option type="QString" name="outline_width_unit" value="MM"/><Option type="QString" name="style" value="solid"/></Option><prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="color" v="{{COR}},255"/><prop k="joinstyle" v="bevel"/><prop k="offset" v="0,0"/><prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="offset_unit" v="MM"/><prop k="outline_color" v="0,0,0,255"/><prop k="outline_style" v="solid"/><prop k="outline_width" v="0.26"/><prop k="outline_width_unit" v="MM"/><prop k="style" v="solid"/><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties></layer><layer class="LinePatternFill" pass="0" enabled="1" locked="0"><Option type="Map"><Option type="QString" name="angle" value="45"/><Option type="QString" name="color" value="0,0,255,255"/><Option type="QString" name="distance" value="1"/><Option type="QString" name="distance_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="distance_unit" value="MM"/><Option type="QString" name="line_width" value="0.26"/><Option type="QString" name="line_width_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="line_width_unit" value="MM"/><Option type="QString" name="offset" value="0"/><Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="offset_unit" value="MM"/><Option type="QString" name="outline_width_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="outline_width_unit" value="MM"/></Option><prop k="angle" v="45"/><prop k="color" v="0,0,255,255"/><prop k="distance" v="1"/><prop k="distance_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="distance_unit" v="MM"/><prop k="line_width" v="0.26"/><prop k="line_width_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="line_width_unit" v="MM"/><prop k="offset" v="0"/><prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="offset_unit" v="MM"/><prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="outline_width_unit" v="MM"/><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties><symbol force_rhr="0" type="line" name="@{{NUMERACAO}}@1" alpha="1" clip_to_extent="1"><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties><layer class="SimpleLine" pass="0" enabled="1" locked="0"><Option type="Map"><Option type="QString" name="align_dash_pattern" value="0"/><Option type="QString" name="capstyle" value="square"/><Option type="QString" name="customdash" value="5;2"/><Option type="QString" name="customdash_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="customdash_unit" value="MM"/><Option type="QString" name="dash_pattern_offset" value="0"/><Option type="QString" name="dash_pattern_offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="dash_pattern_offset_unit" value="MM"/><Option type="QString" name="draw_inside_polygon" value="0"/><Option type="QString" name="joinstyle" value="bevel"/><Option type="QString" name="line_color" value="0,0,0,255"/><Option type="QString" name="line_style" value="solid"/><Option type="QString" name="line_width" value="0.26"/><Option type="QString" name="line_width_unit" value="MM"/><Option type="QString" name="offset" value="0"/><Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/><Option type="QString" name="offset_unit" value="MM"/><Option type="QString" name="ring_filter" value="0"/><Option type="QString" name="tweak_dash_pattern_on_corners" value="0"/><Option type="QString" name="use_custom_dash" value="0"/><Option type="QString" name="width_map_unit_scale" value="3x:0,0,0,0,0,0"/></Option><prop k="align_dash_pattern" v="0"/><prop k="capstyle" v="square"/><prop k="customdash" v="5;2"/><prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="customdash_unit" v="MM"/><prop k="dash_pattern_offset" v="0"/><prop k="dash_pattern_offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="dash_pattern_offset_unit" v="MM"/><prop k="draw_inside_polygon" v="0"/><prop k="joinstyle" v="bevel"/><prop k="line_color" v="0,0,0,255"/><prop k="line_style" v="solid"/><prop k="line_width" v="0.26"/><prop k="line_width_unit" v="MM"/><prop k="offset" v="0"/><prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/><prop k="offset_unit" v="MM"/><prop k="ring_filter" v="0"/><prop k="tweak_dash_pattern_on_corners" v="0"/><prop k="use_custom_dash" v="0"/><prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/><data_defined_properties><Option type="Map"><Option type="QString" name="name" value=""/><Option name="properties"/><Option type="QString" name="type" value="collection"/></Option></data_defined_properties></layer></symbol></layer></symbol>';
@@ -644,7 +583,7 @@ $BODY$
           INNER JOIN
           (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
           ON a.unidade_trabalho_id = ut.id
-          WHERE s.fase_id = ' || r.id || '
+          WHERE s.fase_id = ' || r.id || ' AND ut.lote_id = ' || lote_ident || '
           GROUP BY ut.id) AS ut' || iterator || '
           ON ut' || iterator || '.geom && p.geom AND st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
 
@@ -662,13 +601,13 @@ $BODY$
 
       END LOOP;
 
-      view_txt := view_txt || ' FROM macrocontrole.produto AS p ';
+      view_txt := view_txt || ' FROM macrocontrole.produto AS p INNER JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id';
       view_txt := view_txt || jointxt;
-      view_txt := view_txt || ' WHERE p.linha_producao_id = ' || linhaproducao_ident || ' GROUP BY p.id;';
+      view_txt := view_txt || ' WHERE p.lote_id = ' || lote_ident || ' GROUP BY p.id;';
 
       EXECUTE view_txt;
-      EXECUTE 'GRANT SELECT ON TABLE acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' TO PUBLIC';
-      EXECUTE 'CREATE INDEX linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || '_geom ON acompanhamento.linha_producao_' || linhaproducao_ident || '_'  || linhaproducao_nome || ' USING gist (geom);';
+      EXECUTE 'GRANT SELECT ON TABLE acompanhamento.lote_' || lote_ident || ' TO PUBLIC';
+      EXECUTE 'CREATE INDEX lote_' || lote_ident || '_geom ON acompanhamento.lote_' || lote_ident || ' USING gist (geom);';
 
       iterator := 2*iterator - 2;
       rules_txt := rules_txt || '<rule symbol="' ||  iterator || '" key="{' || uuid_generate_v4() ||'}" label="Concluído" filter="' || fases_concluidas_txt || ' TRUE"/>';
@@ -683,65 +622,82 @@ $BODY$
 
 
       INSERT INTO public.layer_styles(f_table_catalog, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, useasdefault, owner, ui, update_time) VALUES
-      (current_database(), 'acompanhamento', 'linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome, 'geom', 'acompanhamento_linha_producao', estilo_txt, NULL, TRUE, current_user, NULL, now());
-
-    END IF;
-
-    IF TG_OP = 'DELETE' THEN
-      RETURN OLD;
-    ELSE
-      RETURN NEW;
-    END IF;
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
+      (current_database(), 'acompanhamento', 'lote_'|| lote_ident, 'geom', 'acompanhamento_lote', estilo_txt, NULL, TRUE, current_user, NULL, now());
+  END;
+$$
+LANGUAGE plpgsql VOLATaILE
   COST 100;
-ALTER FUNCTION acompanhamento.cria_view_acompanhamento_linha_producao()
+ALTER FUNCTION acompanhamento.cria_view_acompanhamento_lote(integer, integer)
   OWNER TO postgres;
 
-CREATE TRIGGER cria_view_acompanhamento_linha_producao
-AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.fase
-FOR EACH ROW EXECUTE PROCEDURE acompanhamento.cria_view_acompanhamento_linha_producao();
-
-CREATE OR REPLACE FUNCTION acompanhamento.atualiza_view_acompanhamento_linha_producao()
+CREATE OR REPLACE FUNCTION acompanhamento.trigger_view_acompanhamento_lote()
   RETURNS trigger AS
 $BODY$
-    DECLARE linhaproducao_nome_old text;
-    DECLARE linhaproducao_nome_new text;
+    DECLARE lote_ident integer;
+    DECLARE linhaproducao_ident integer;
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
+      lote_ident := OLD.id;
+    ELSE
+      lote_ident := NEW.id;
+    END IF;
 
-      linhaproducao_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
+    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_'|| lote_ident;
+
+    DELETE FROM public.layer_styles
+    WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('lote_'|| lote_ident) AND stylename = 'acompanhamento_lote';
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    END IF;
+
+    linhaproducao_ident := NEW.linha_producao_id;
 
 
-      EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old;
-
-      DELETE FROM public.layer_styles
-      WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
+    PERFORM acompanhamento.cria_view_acompanhamento_lote(lote_ident, linhaproducao_ident);
 
     END IF;
 
-    IF TG_OP = 'UPDATE' THEN
+    RETURN NEW;
 
-      linhaproducao_nome_old := translate(replace(lower(OLD.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.trigger_view_acompanhamento_lote()
+  OWNER TO postgres;
 
-      linhaproducao_nome_new := translate(replace(lower(NEW.nome),' ', '_'),  
-            'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-            'aaaaaeeeeiiiiooooouuuucc________________________________');
+CREATE TRIGGER trigger_view_acompanhamento_lote
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.lote
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.trigger_view_acompanhamento_lote();
 
-      IF linhaproducao_nome_old != linhaproducao_nome_new THEN
-        EXECUTE 'ALTER VIEW IF EXISTS acompanhamento.linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old || ' RENAME TO linha_producao_' || NEW.id || '_' || linhaproducao_nome_new;
-        
-        UPDATE public.layer_styles SET f_table_name = ('linha_producao_'|| NEW.id || '_' || linhaproducao_nome_new)
-        WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('linha_producao_'|| OLD.id || '_' || linhaproducao_nome_old) AND stylename = 'acompanhamento_linha_producao';
 
-      END IF;
+CREATE OR REPLACE FUNCTION acompanhamento.trigger_view_acompanhamento_lote_fase()
+  RETURNS trigger AS
+$BODY$
+    DECLARE lote_ident integer;
+    DECLARE fase_ident integer;
+    DECLARE linhaproducao_ident integer;
+    BEGIN
+
+    IF TG_OP = 'DELETE' THEN
+      fase_ident := OLD.id;
+    ELSE
+      fase_ident := NEW.id;
+    END IF;
+    SELECT l.id, l.linha_producao_id
+              INTO lote_ident, linhaproducao_ident
+              FROM macrocontrole.fase AS f
+              INNER JOIN macrocontrole.lote AS l ON f.linha_producao_id = l.linha_producao_id
+              WHERE f.id = fase_ident;
+
+    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_'|| lote_ident;
+
+    DELETE FROM public.layer_styles
+    WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('lote_'|| lote_ident) AND stylename = 'acompanhamento_lote';
+
+    PERFORM acompanhamento.cria_view_acompanhamento_lote(lote_ident, linhaproducao_ident);
 
     END IF;
 
@@ -755,23 +711,20 @@ $BODY$
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION acompanhamento.atualiza_view_acompanhamento_linha_producao()
+ALTER FUNCTION acompanhamento.trigger_view_acompanhamento_lote_fase()
   OWNER TO postgres;
 
-CREATE TRIGGER atualiza_view_acompanhamento_linha_producao
-AFTER UPDATE OR DELETE ON macrocontrole.linha_producao
-FOR EACH ROW EXECUTE PROCEDURE acompanhamento.atualiza_view_acompanhamento_linha_producao();
+CREATE TRIGGER trigger_view_acompanhamento_lote_fase
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.fase
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.trigger_view_acompanhamento_lote_fase();
 
 
-
-CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_acompanhamento()
+CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_acompanhamento_atividade()
   RETURNS trigger AS
 $BODY$
     DECLARE etapa_ident integer;
-    DECLARE subfase_nome text;
+    DECLARE lote_ident integer;
     DECLARE subfase_ident integer;
-    DECLARE linhaproducao_nome text;
-    DECLARE linhaproducao_ident integer;
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
@@ -780,25 +733,16 @@ $BODY$
       etapa_ident := NEW.etapa_id;
     END IF;
 
-    SELECT translate(replace(lower(s.nome),' ', '_'),  
-              'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-              'aaaaaeeeeiiiiooooouuuucc________________________________'), s.id
-              INTO subfase_nome, subfase_ident
-              FROM macrocontrole.subfase AS s
-              INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id
+    SELECT l.id, s.id
+              INTO lote_ident, subfase_ident
+              FROM macrocontrole.etapa AS e
+              INNER JOIN macrocontrole.subfase AS s ON e.subfase_id = s.id
+              INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+              INNER JOIN macrocontrole.lote AS l ON f.linha_producao_id = l.linha_producao_id
               WHERE e.id = etapa_ident;
 
-    SELECT translate(replace(lower(lp.nome),' ', '_'),  
-              'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
-              'aaaaaeeeeiiiiooooouuuucc________________________________'), lp.id
-              INTO linhaproducao_nome, linhaproducao_ident
-              FROM macrocontrole.linha_producao AS lp
-              INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
-              INNER JOIN macrocontrole.subfase AS s ON s.fase_id = f.id
-              WHERE s.id = subfase_ident;
-
-    EXECUTE 'REFRESH MATERIALIZED VIEW acompanhamento.subfase_'|| subfase_ident || '_' || subfase_nome;
-    EXECUTE 'REFRESH MATERIALIZED VIEW acompanhamento.linha_producao_'|| linhaproducao_ident || '_' || linhaproducao_nome;
+    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
+    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || subfase_ident;
 
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;
@@ -810,12 +754,94 @@ $BODY$
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION acompanhamento.refresh_view_acompanhamento()
+ALTER FUNCTION acompanhamento.refresh_view_acompanhamento_atividade()
   OWNER TO postgres;
 
-CREATE TRIGGER refresh_view_acompanhamento
+CREATE TRIGGER refresh_view_acompanhamento_atividade
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.atividade
-FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento();
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_atividade();
 
+CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_acompanhamento_ut_etapa()
+  RETURNS trigger AS
+$BODY$
+    DECLARE subfase_ident integer;
+    DECLARE lote_ident integer;
+    BEGIN
+
+    IF TG_OP = 'DELETE' THEN
+      subfase_ident := OLD.subfase_id;
+    ELSE
+      subfase_ident := NEW.subfase_id;
+    END IF;
+
+    SELECT l.id
+    INTO lote_ident
+    FROM macrocontrole.subfase AS s
+    INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+    INNER JOIN macrocontrole.lote AS l ON f.linha_producao_id = l.linha_producao_id
+    WHERE s.id = subfase_ident;
+
+    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
+    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || subfase_ident;
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.refresh_view_acompanhamento_ut_etapa()
+  OWNER TO postgres;
+
+CREATE TRIGGER refresh_view_acompanhamento_ut
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.unidade_trabalho
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_ut_etapa();
+
+CREATE TRIGGER refresh_view_acompanhamento_etapa
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_ut_etapa();
+
+CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_acompanhamento_subfase()
+  RETURNS trigger AS
+$BODY$
+    DECLARE subfase_ident integer;
+    DECLARE lote_ident integer;
+    BEGIN
+
+    IF TG_OP = 'DELETE' THEN
+      subfase_ident := OLD.id;
+    ELSE
+      subfase_ident := NEW.id;
+    END IF;
+
+    SELECT l.id
+    INTO lote_ident
+    FROM macrocontrole.subfase AS s
+    INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+    INNER JOIN macrocontrole.lote AS l ON f.linha_producao_id = l.linha_producao_id
+    WHERE s.id = subfase_ident;
+
+    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.refresh_view_acompanhamento_subfase()
+  OWNER TO postgres;
+
+CREATE TRIGGER refresh_view_acompanhamento_subfase
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.subfase
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_subfase();
 
 COMMIT;

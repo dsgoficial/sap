@@ -100,7 +100,8 @@ CREATE TABLE dominio.tipo_pre_requisito(
 );
 
 INSERT INTO dominio.tipo_pre_requisito (code, nome) VALUES
-(1, 'Região concluída');
+(1, 'Região concluída'),
+(2, 'Região não estar em execução');
 
 CREATE TABLE dominio.tipo_etapa(
 	code SMALLINT NOT NULL PRIMARY KEY,

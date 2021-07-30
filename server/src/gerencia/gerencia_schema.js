@@ -68,10 +68,7 @@ models.observacao = Joi.object().keys({
     .required()
     .min(1),
   observacao_atividade: Joi.string().allow('', null).required(),
-  observacao_etapa: Joi.string().allow('', null).required(),
-  observacao_subfase: Joi.string().allow('', null).required(),
-  observacao_unidade_trabalho: Joi.string().allow('', null).required(),
-  observacao_lote: Joi.string().allow('', null).required()
+  observacao_unidade_trabalho: Joi.string().allow('', null).required()
 })
 
 models.atividadeVoltar = Joi.object().keys({

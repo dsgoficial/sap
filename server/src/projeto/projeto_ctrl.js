@@ -27,13 +27,15 @@ const getUsuarioNomeById = async usuarioId => {
 
 controller.getNomeEstilos = async () => {
   return db.sapConn
-    .any('SELECT DISTINCT stylename FROM dgeo.layer_styles')
+    .any('SELECT nome FROM dgeo.group_styles')
 }
 
 controller.getEstilos = async () => {
   return db.sapConn
-    .any(`SELECT id, f_table_schema, f_table_name, f_geometry_column, stylename, styleqml, stylesld, ui, owner, update_time
-    FROM dgeo.layer_styles`)
+    .any(`SELECT ls.id, ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, gs.nome AS stylename, ls.styleqml, ls.stylesld, ls.ui, ls.owner, ls.update_time
+    FROM dgeo.layer_styles AS ls
+    INNER JOIN dgeo.group_styles AS gs ON gs.id = ls.stylename
+    `)
 }
 
 controller.gravaEstilos = async (estilos, usuarioId) => {
@@ -484,117 +486,16 @@ controller.getLogin = async () => {
   return dados
 }
 
-controller.criaRevisao = async unidadeTrabalhoIds => {
-  return db.sapConn.tx(async t => {
-    for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
-      // refactor to batch
-      const ordemEtapa = await t.one(
-        `SELECT ut.subfase_id, max(e.ordem) AS ordem 
-        FROM macrocontrole.unidade_trabalho AS ut
-        INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
-        WHERE ut.id = $<unidadeTrabalhoId>
-        GROUP BY ut.subfase_id`,
-        { unidadeTrabalhoId }
-      )
-      const etapaRev = await t.oneOrNone(
-        `SELECT e.id FROM macrocontrole.unidade_trabalho AS ut
-        INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
-        LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.etapa_id = e.id
-        WHERE ut.id = $<unidadeTrabalhoId> AND a.id IS NULL AND e.tipo_etapa_id = 2
-        ORDER BY e.ordem
-        LIMIT 1`,
-        { unidadeTrabalhoId }
-      )
-      const etapaCorr = await t.oneOrNone(
-        `SELECT e.id FROM macrocontrole.unidade_trabalho AS ut
-        INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
-        LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.etapa_id = e.id
-        WHERE ut.id = $<unidadeTrabalhoId> AND a.id IS NULL AND e.tipo_etapa_id = 3
-        ORDER BY e.ordem
-        LIMIT 1`,
-        { unidadeTrabalhoId }
-      )
-      let ids
-      if (etapaRev && etapaCorr) {
-        ids = []
-        ids.push(etapaRev)
-        ids.push(etapaCorr)
-      } else {
-        // cria novas etapas
-        ids = await t.any(
-          `
-        INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
-        VALUES(2,$<subfaseId>,$<ordem1>),(3,$<subfaseId>,$<ordem2>) RETURNING id
-        `,
-          {
-            subfaseId: ordemEtapa.subfase_id,
-            ordem1: ordemEtapa.ordem + 1,
-            ordem2: ordemEtapa.ordem + 2
-          }
-        )
-      }
-      await t.none(
-        `
-      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
-      VALUES ($<idRev>,$<unidadeTrabalhoId>,1),($<idCorr>,$<unidadeTrabalhoId>,1)
-      `,
-        { idRev: ids[0].id, idCorr: ids[1].id, unidadeTrabalhoId }
-      )
-    }
-  })
+controller.getBlocos = async () => {
+  return db.sapConn.any('SELECT id, nome FROM macrocontrole.bloco')
 }
 
-controller.criaRevcorr = async unidadeTrabalhoIds => {
-  return db.sapConn.tx(async t => {
-    for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
-      // refactor to batch
-      const ordemEtapa = await t.one(
-        `SELECT ut.subfase_id, max(e.ordem) AS ordem 
-        FROM macrocontrole.unidade_trabalho AS ut
-        INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
-        WHERE ut.id = $<unidadeTrabalhoId>
-        GROUP BY ut.subfase_id`,
-        { unidadeTrabalhoId }
-      )
-      const etapaRevcorr = await t.oneOrNone(
-        `SELECT e.id FROM macrocontrole.unidade_trabalho AS ut
-        INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
-        LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.etapa_id = e.id
-        WHERE ut.id = $<unidadeTrabalhoId> AND a.id IS NULL AND e.tipo_etapa_id = 4
-        ORDER BY e.ordem
-        LIMIT 1`,
-        { unidadeTrabalhoId }
-      )
-      const revcorr =
-        etapaRevcorr ||
-        (await t.one(
-          `
-        INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, ordem)
-        VALUES(4,$<subfaseId>,$<ordem>) RETURNING id
-        `,
-          { subfaseId: ordemEtapa.subfase_id, ordem: ordemEtapa.ordem + 1 }
-        ))
-      await t.none(
-        `
-      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
-      VALUES ($<idRevCorr>,$<unidadeTrabalhoId>,1)
-      `,
-        { idRevCorr: revcorr.id, unidadeTrabalhoId }
-      )
-    }
-  })
-}
-
-controller.getLotes = async () => {
-  return db.sapConn.any('SELECT id, nome FROM macrocontrole.lote')
-}
-
-controller.unidadeTrabalhoLote = async (unidadeTrabalhoIds, lote) => {
+controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {
   return db.sapConn.none(
     `UPDATE macrocontrole.unidade_trabalho
-    SET lote_id = $<lote>
+    SET bloco_id = $<bloco>
     WHERE id in ($<unidadeTrabalhoIds:csv>)`,
-    { unidadeTrabalhoIds, lote }
+    { unidadeTrabalhoIds, bloco }
   )
 }
 
@@ -632,16 +533,14 @@ controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
 
 controller.getProjetos = async () => {
   return db.sapConn.any(
-    'SELECT id, nome, finalizado FROM macrocontrole.projeto'
+    'SELECT id, nome FROM macrocontrole.projeto'
   )
 }
 
 controller.getLinhasProducao = async () => {
   return db.sapConn.any(
-    `SELECT lp.id, lp.nome, p.nome AS projeto, lp.projeto_id, p.finalizado, lp.tipo_produto_id,
-    tp.nome AS tipo_produto
+    `SELECT lp.id, lp.nome, lp.tipo_produto_id, tp.nome AS tipo_produto
     FROM macrocontrole.linha_producao AS lp
-    INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
     INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
     `
   )
@@ -650,44 +549,38 @@ controller.getLinhasProducao = async () => {
 controller.getFases = async () => {
   return db.sapConn.any(
     `SELECT f.id, tf.nome, f.tipo_fase_id, f.linha_producao_id, f.ordem,
-    lp.nome AS linha_producao, p.nome AS projeto, p.finalizado,
-    tp.nome AS tipo_produto
+    lp.nome AS linha_producao, tp.nome AS tipo_produto
     FROM macrocontrole.fase AS f
     INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
     INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-    INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
     INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id`
   )
 }
 
 controller.getSubfases = async () => {
   return db.sapConn.any(
-    `SELECT s.id, s.nome, s.fase_id, s.ordem, s.observacao,
+    `SELECT s.id, s.nome, s.fase_id,
     tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
-    lp.nome AS linha_producao, p.nome AS projeto, p.finalizado,
-    tp.nome AS tipo_produto
+    lp.nome AS linha_producao, tp.nome AS tipo_produto
     FROM macrocontrole.subfase AS s
     INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
     INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
     INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-    INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
     INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id`
   )
 }
 
 controller.getEtapas = async () => {
   return db.sapConn.any(
-    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, s.nome AS subfase, e.ordem, e.observacao,
+    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, s.nome AS subfase, e.ordem,
     tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
-    lp.nome AS linha_producao, p.nome AS projeto, p.finalizado,
-    tp.nome AS tipo_produto
+    lp.nome AS linha_producao, tp.nome AS tipo_produto
     FROM macrocontrole.etapa AS e
     INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
     INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
     INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
     INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
     INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-    INNER JOIN macrocontrole.projeto AS p ON p.id = lp.projeto_id
     INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id`
   )
 }
@@ -789,7 +682,7 @@ controller.getCamadas = async () => {
     `SELECT c.id, c.schema, c.nome, c.alias, c.documentacao, COUNT(a.id) > 0 AS atributo, COUNT(ppc.id) > 0 AS perfil
     FROM macrocontrole.camada AS c
     LEFT JOIN macrocontrole.atributo AS a ON a.camada_id = c.id
-    LEFT JOIN macrocontrole.perfil_propriedades_camada AS ppc ON ppc.camada_id = c.id
+    LEFT JOIN macrocontrole.propriedades_camada AS ppc ON ppc.camada_id = c.id
     GROUP BY c.id, c.schema, c.nome, c.alias, c.documentacao`
   )
 }
@@ -821,7 +714,7 @@ controller.deleteCamadas = async camadasIds => {
     }
 
     const existsAssociationPerfil = await t.any(
-      `SELECT id FROM macrocontrole.perfil_propriedades_camada 
+      `SELECT id FROM macrocontrole.propriedades_camada 
       WHERE camada_id in ($<camadasIds:csv>)`,
       { camadasIds }
     )
@@ -1176,7 +1069,7 @@ controller.atualizaPerfilEstilos = async perfilEstilos => { // FIXME REFATORAR
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_estilo
-      WHERE id in ($<perfilEstilos:csv>)`,
+      WHERE id in ($<perfilEstilosIds:csv>)`,
       { perfilEstilosIds: perfilEstilos.map(c => c.id) }
     )
     if (!exists && exists.length < perfilEstilos.length) {
@@ -1330,8 +1223,8 @@ controller.copiarUnidadeTrabalho = async (
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
       const unidadeTrabalho = await t.oneOrNone(
         `
-          INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, lote_id, disponivel, prioridade)
-          SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, lote_id, disponivel, prioridade
+          INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, bloco_id, disponivel, prioridade)
+          SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, bloco_id, disponivel, prioridade
           FROM macrocontrole.unidade_trabalho
           WHERE id = $<unidadeTrabalhoId>
           RETURNING id
@@ -1422,7 +1315,7 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, subfaseId) => {
     'nome',
     'epsg',
     'dado_producao_id',
-    'lote_id',
+    'bloco_id',
     { name: 'subfase_id', init: () => subfaseId },
     'disponivel',
     'prioridade',

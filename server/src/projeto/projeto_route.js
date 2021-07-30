@@ -356,55 +356,29 @@ router.get(
   })
 )
 
-router.post(
-  '/atividade/criar_revisao',
-  verifyAdmin,
-  schemaValidation({ body: projetoSchema.atividadeCriarRevisao }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaRevisao(req.body.unidade_trabalho_ids)
-
-    const msg = 'Revisão criada com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.post(
-  '/atividade/criar_revcorr',
-  verifyAdmin,
-  schemaValidation({ body: projetoSchema.atividadeCriarRevcorr }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.criaRevcorr(req.body.unidade_trabalho_ids)
-
-    const msg = 'Revisão/Correção criada com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
 router.get(
-  '/lote',
+  '/bloco',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getLotes()
+    const dados = await projetoCtrl.getBlocos()
 
-    const msg = 'Lotes retornados com sucesso'
+    const msg = 'Blocos retornados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
 router.put(
-  '/unidade_trabalho/lote',
+  '/unidade_trabalho/bloco',
   verifyAdmin,
-  schemaValidation({ body: projetoSchema.unidadeTrabalhoLote }),
+  schemaValidation({ body: projetoSchema.unidadeTrabalhoBloco }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.unidadeTrabalhoLote(
+    await projetoCtrl.unidadeTrabalhoBloco(
       req.body.unidade_trabalho_ids,
-      req.body.lote_id
+      req.body.bloco_id
     )
 
-    const msg = 'Lote das unidades de trabalho atualizado com sucesso'
+    const msg = 'Bloco das unidades de trabalho atualizado com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
@@ -837,7 +811,7 @@ router.put(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.atualizaPerfilEstilos(req.body.perfis_estilos)
 
-    const msg = 'Perfisde de Estilos atualizados com sucesso'
+    const msg = 'Perfis de Estilos atualizados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
@@ -881,21 +855,6 @@ router.delete(
     await projetoCtrl.deletaUnidadeTrabalho(req.body.unidade_trabalho_ids)
 
     const msg = 'Unidade de trabalho deletadas com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK)
-  })
-)
-
-router.delete(
-  '/revisao/:id',
-  verifyAdmin,
-  schemaValidation({
-    params: projetoSchema.idParams
-  }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaRevisao(req.params.id)
-
-    const msg = 'Revisão e correção deletadas com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })

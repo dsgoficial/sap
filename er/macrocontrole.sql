@@ -9,17 +9,22 @@ CREATE SCHEMA macrocontrole;
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE,
-	descricao TEXT,
-	finalizado BOOLEAN NOT NULL DEFAULT FALSE
+	descricao TEXT
 );
 
 CREATE TABLE macrocontrole.linha_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	descricao TEXT,
-	UNIQUE(nome,projeto_id)
+	UNIQUE(nome)
+);
+
+CREATE TABLE macrocontrole.lote(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) UNIQUE NOT NULL,
+	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
 );
 
 CREATE TABLE macrocontrole.produto(
@@ -29,8 +34,9 @@ CREATE TABLE macrocontrole.produto(
 	mi VARCHAR(255),
 	inom VARCHAR(255),
 	escala VARCHAR(255) NOT NULL,
-	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
-	geom geometry(POLYGON, 4326) NOT NULL
+	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	geom geometry(MULTIPOLYGON, 4326) NOT NULL
 );
 
 CREATE INDEX produto_geom
@@ -41,25 +47,15 @@ CREATE TABLE macrocontrole.fase(
     id SERIAL NOT NULL PRIMARY KEY,
     tipo_fase_id SMALLINT NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
-    ordem INTEGER NOT NULL, -- as fases são ordenadas dentro de uma linha de produção de um projeto
-    UNIQUE (linha_producao_id, tipo_fase_id) -- as combinações (tipo_fase, linha_producao_id) são unicos
+    ordem INTEGER NOT NULL,
+    UNIQUE (linha_producao_id, tipo_fase_id)
 );
-
---Meta anual estabelecida no PIT de uma fase
---CREATE TABLE macrocontrole.meta_anual(
---	id SERIAL NOT NULL PRIMARY KEY,
---	meta INTEGER NOT NULL,
---    ano INTEGER NOT NULL,
---    fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
---);
 
 CREATE TABLE macrocontrole.subfase(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
-	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
-	ordem INTEGER NOT NULL, -- as subfases são ordenadas dentre de uma fase. Isso não impede o paralelismo de subfases. É uma ordenação para apresentação
-	observacao text,
-	UNIQUE (nome, fase_id) -- as combinações (nome,fase_id) são unicos
+	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id)
+	UNIQUE (nome, fase_id)
 );
 
 CREATE TABLE macrocontrole.pre_requisito_subfase(
@@ -74,12 +70,11 @@ CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_etapa_id SMALLINT NOT NULL REFERENCES dominio.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	ordem INTEGER NOT NULL, -- as etapas são ordenadas dentre de uma subfase. Não existe paralelismo
-	observacao text,
+	ordem INTEGER NOT NULL,
 	CHECK (
 		tipo_etapa_id <> 1 or ordem = 1 -- Se tipo_etapa_id for 1 obrigatoriamente ordem tem que ser 1
 	),
-	UNIQUE (subfase_id, ordem)-- restrição para não ter ordem repetida para subfase
+	UNIQUE (subfase_id, ordem)
 );
 
 -- Constraint
@@ -116,13 +111,12 @@ CREATE TRIGGER etapa_verifica_rev_corr
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
 FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
 
---
-
-CREATE TABLE macrocontrole.requisito_finalizacao(
+CREATE TABLE macrocontrole.perfil_requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
-    ordem INTEGER NOT NULL, -- os requisitos são ordenados dentro de uma subfase
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id)
+    ordem INTEGER NOT NULL,
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id)
 );
 
 CREATE TABLE macrocontrole.perfil_fme(
@@ -132,8 +126,8 @@ CREATE TABLE macrocontrole.perfil_fme(
 	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	ordem INTEGER NOT NULL,
-	UNIQUE(gerenciador_fme_id,rotina,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	ordem INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.perfil_configuracao_qgis(
@@ -141,22 +135,24 @@ CREATE TABLE macrocontrole.perfil_configuracao_qgis(
 	tipo_configuracao_id SMALLINT NOT NULL REFERENCES dominio.tipo_configuracao (code),
 	parametros TEXT,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(tipo_configuracao_id,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(tipo_configuracao_id,subfase_id,lote_id)
 );
-
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome varchar(255) NOT NULL,
+	nome INTEGER NOT NULL REFERENCES dgeo.group_styles (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(nome,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(nome,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
 	grupo_regra_id INTEGER NOT NULL REFERENCES dgeo.group_rules (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(grupo_regra_id,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(grupo_regra_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(
@@ -164,7 +160,8 @@ CREATE TABLE macrocontrole.perfil_menu(
 	menu_id INTEGER NOT NULL REFERENCES dgeo.qgis_menus (id),
 	menu_revisao BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(menu_id,subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(menu_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_model_qgis(
@@ -174,15 +171,25 @@ CREATE TABLE macrocontrole.perfil_model_qgis(
 	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	ordem INTEGER NOT NULL,
-	UNIQUE(qgis_model_id,subfase_id)
+	UNIQUE(qgis_model_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_linhagem(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_exibicao_id SMALLINT NOT NULL REFERENCES dominio.tipo_exibicao (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(subfase_id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(subfase_id,lote_id)
+);
+
+CREATE TABLE macrocontrole.perfil_monitoramento(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(tipo_monitoramento_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.camada(
@@ -202,7 +209,7 @@ CREATE TABLE macrocontrole.atributo(
 	UNIQUE(camada_id,nome)
 );
 
-CREATE TABLE macrocontrole.perfil_propriedades_camada(
+CREATE TABLE macrocontrole.propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
 	atributo_filtro_subfase VARCHAR(255),
@@ -226,13 +233,6 @@ CREATE TABLE macrocontrole.dado_producao(
 	configuracao_finalizacao VARCHAR(255)
 );
 
-CREATE TABLE macrocontrole.perfil_monitoramento(
-	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	UNIQUE(tipo_monitoramento_id, subfase_id)
-);
-
 CREATE TABLE macrocontrole.restricao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_restricao_id SMALLINT NOT NULL REFERENCES dominio.tipo_restricao (code),
@@ -241,11 +241,10 @@ CREATE TABLE macrocontrole.restricao_etapa(
 	UNIQUE(etapa_anterior_id, etapa_posterior_id)	
 );
 
-CREATE TABLE macrocontrole.lote(
+CREATE TABLE macrocontrole.bloco(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
-	prioridade INTEGER NOT NULL,
-	observacao VARCHAR(255)
+	prioridade INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.unidade_trabalho(
@@ -255,11 +254,11 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	dado_producao_id INTEGER NOT NULL REFERENCES macrocontrole.dado_producao (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	prioridade INTEGER NOT NULL,
 	observacao text,
-    geom geometry(POLYGON, 4326) NOT NULL,
-	UNIQUE (nome, subfase_id)
+    geom geometry(POLYGON, 4326) NOT NULL
 );
 
 CREATE INDEX unidade_trabalho_subfase_id
@@ -353,7 +352,7 @@ CREATE TABLE macrocontrole.perfil_producao(
 CREATE TABLE macrocontrole.perfil_producao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
   	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id),
+	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id), 
 	prioridade INTEGER NOT NULL,
 	UNIQUE (perfil_producao_id, etapa_id)
 );
@@ -363,6 +362,12 @@ CREATE TABLE macrocontrole.perfil_producao_operador(
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
 	UNIQUE (usuario_id)
+);
+
+CREATE TABLE macrocontrole.perfil_projeto_operador(
+	id SERIAL NOT NULL PRIMARY KEY,
+  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria(
@@ -403,7 +408,7 @@ CREATE TABLE macrocontrole.problema_atividade(
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	tipo_problema_id SMALLINT NOT NULL REFERENCES dominio.tipo_problema (code),
 	descricao TEXT NOT NULL,
-	data  timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE,
 	geom geometry(POLYGON, 4326) NOT NULL
 );
@@ -418,7 +423,7 @@ CREATE TABLE macrocontrole.alteracao_fluxo(
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
  	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	descricao TEXT NOT NULL,
-	data  timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE,
 	geom geometry(POLYGON, 4326) NOT NULL
 );
