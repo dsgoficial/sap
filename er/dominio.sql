@@ -240,7 +240,8 @@ INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES
 (8, 'Dispensa de atividade de campo'),
 (9, 'Designação para realizar curso / capacitação'),
 (10, 'Designação para ministrar curso / capacitação'),
-(11, 'Designação para participação em eventos');
+(11, 'Designação para participação em eventos'),
+(99, 'Outros');
 
 
 CREATE TABLE dominio.estrategia_associacao(	
