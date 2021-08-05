@@ -736,6 +736,7 @@ controller.deleteCamadas = async camadasIds => {
 controller.atualizaCamadas = async camadas => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
+      'id',
       'alias',
       'documentacao'
     ])
@@ -1354,7 +1355,8 @@ controller.associaInsumos = async (
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(ut.geom), i.geom)
-        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
         { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
       )
@@ -1365,7 +1367,8 @@ controller.associaInsumos = async (
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(i.geom), ut.geom)
-        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
         { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
       )
@@ -1376,7 +1379,8 @@ controller.associaInsumos = async (
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(i.geom, ut.geom)
-        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
         { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
       )
@@ -1387,7 +1391,8 @@ controller.associaInsumos = async (
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_relate(ut.geom, i.geom, '2********')
-        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
         { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
       )
@@ -1398,7 +1403,8 @@ controller.associaInsumos = async (
         SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
         FROM macrocontrole.unidade_trabalho AS ut
         CROSS JOIN macrocontrole.insumo AS i
-        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) and i.grupo_insumo_id = $<grupoInsumoId>
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.id in ($<unidadesTrabalhoIs:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
         { unidadesTrabalhoIs, grupoInsumoId, caminhoPadrao }
       )

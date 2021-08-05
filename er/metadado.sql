@@ -29,7 +29,7 @@ INSERT INTO metadado.tipo_palavra_chave (code, nome) VALUES
 (5, 'toponimica');
 
 -- Associa palavra chave a um produto. O produto pode ter multiplas palavras chaves de diferentes tipos.
-CREATE TABLE metadado.palavra_chave(
+CREATE TABLE metadado.palavra_chave_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
  	tipo_palavra_chave_id SMALLINT NOT NULL REFERENCES metadado.tipo_palavra_chave (code),
@@ -71,10 +71,10 @@ CREATE TABLE metadado.datum_vertical(
 );
 
 INSERT INTO metadado.datum_vertical (code, nome) VALUES
+(0, 'Sem datum vertical')
 (1, 'Datum de Imbituba - SC'),
 (2, 'Datum de Santana - AP'),
-(3, 'Marégrafo de Torres - RS'),
-(0, 'Sem datum vertical');
+(3, 'Marégrafo de Torres - RS');
 
 
 CREATE TABLE metadado.especificacao(
@@ -90,20 +90,17 @@ INSERT INTO metadado.especificacao (code, nome) VALUES
 
 CREATE TABLE metadado.organizacao(
 	id INTEGER NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	endereco TEXT NOT NULL,
-	telefone VARCHAR(255) NOT NULL,
-	site VARCHAR(255) NOT NULL
+	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO metadado.organizacao (id, nome, endereco, telefone, site) VALUES
-(1, '1º Centro de Geoinformação', 'Rua Cleveland, nº 250 Morro Menino de Deus - CEP:90.850-240 - Porto Alegre - RS', '(51)3232-0749', 'http://www.1cgeo.eb.mil.br/'),
-(2, '2º Centro de Geoinformação', 'EPTC Km 4,5 DF 001 - Setor Habitacional Taquari - Lago Norte - Brasília - DF Setor Habitacional Taquari - CEP:71.559-901 - Brasília - DF', '(61)3415-3855', 'http://www.2cgeo.eb.mil.br'),
-(3, '3º Centro de Geoinformação', 'Avenida Joaquim Nabuco, nº 1687 Guadalupe - CEP:53.240-650 - Olinda - PE', '(81)3439-3033', 'http://www.3cgeo.eb.mil.br/'),
-(4, '4º Centro de Geoinformação', 'Avenida Marechal Bittencourt, nº 97 Compensa - CEP:69.027-140 - Manaus - AM', '(92)3625-1585', 'http://www.4cgeo.eb.mil.br/'),
-(5, '5º Centro de Geoinformação', 'Rua Major Daemon, nº 81 Morro da Conceição - CEP:20.081-190 - Rio de Janeiro - RJ', '(21)2263-9664', 'http://www.5cgeo.eb.mil.br/');
+INSERT INTO metadado.organizacao (id, nome) VALUES
+(1, '1º Centro de Geoinformação'),
+(2, '2º Centro de Geoinformação'),
+(3, '3º Centro de Geoinformação'),
+(4, '4º Centro de Geoinformação'),
+(5, '5º Centro de Geoinformação');
 
-CREATE TABLE metadado.informacoes_produto(
+CREATE TABLE metadado.informacoes_lote(
 	id SERIAL NOT NULL PRIMARY KEY,
  	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	resumo TEXT,
@@ -111,13 +108,14 @@ CREATE TABLE metadado.informacoes_produto(
 	creditos TEXT,
 	informacoes_complementares TEXT,
 	limitacao_acesso_id SMALLINT NOT NULL REFERENCES metadado.codigo_restricao (code),
+	limitacao_uso_id SMALLINT NOT NULL REFERENCES metadado.codigo_restricao (code),
 	restricao_uso_id SMALLINT NOT NULL REFERENCES metadado.codigo_restricao (code),
 	grau_sigilo_id SMALLINT NOT NULL REFERENCES metadado.codigo_classificacao (code),
 	organizacao_responsavel_id  INTEGER NOT NULL REFERENCES metadado.organizacao (id),
 	organizacao_distribuicao_id  INTEGER NOT NULL REFERENCES metadado.organizacao (id),
 	datum_vertical_id SMALLINT NOT NULL REFERENCES metadado.datum_vertical (code),
 	especificacao_id SMALLINT NOT NULL REFERENCES metadado.especificacao (code),
-	responsavel_produto_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+	responsavel_lote_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	declaracao_linhagem TEXT
 );
 

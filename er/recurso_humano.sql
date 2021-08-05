@@ -1,3 +1,7 @@
+BEGIN;
+
+CREATE SCHEMA recurso_humano;
+
 CREATE TABLE recurso_humano.perda_recurso_humano(
 	id SERIAL NOT NULL PRIMARY KEY,	
  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),	
@@ -34,8 +38,14 @@ CREATE TABLE recurso_humano.expediente(
 	quinta_feira REAL NOT NULL,
 	sexta_feira REAL NOT NULL,
 	sabado REAL NOT NULL,
-	domingo REAL NOT NULL
+	domingo REAL NOT NULL,
+	UNIQUE(nome)
 );
+
+INSERT INTO recurso_humano.expediente (nome, segunda_feira, terca_feira, quarta_feira, quinta_feira, sexta_feira, sabado, domingo) VALUES
+('Expediente integral', 6.5, 6.5, 6.5, 6.5, 4, 0, 0),
+('Turno', 6, 6, 6, 6, 6, 0, 0),
+('Integral terça e quinta', 6, 6.5, 6, 6.5, 6, 0, 0);
 
 CREATE TABLE recurso_humano.perfil_expediente(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -69,3 +79,5 @@ CREATE TABLE recurso_humano.banco_dispensas(
 	dias_totais INTEGER NOT NULL,
     dias_restantes INTEGER NOT NULL
 );
+
+COMMIT;
