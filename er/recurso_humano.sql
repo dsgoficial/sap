@@ -9,6 +9,7 @@ CREATE TABLE recurso_humano.perda_recurso_humano(
 	horas REAL,
 	data_inicio timestamp with time zone NOT NULL,
 	data_fim timestamp with time zone NOT NULL,	
+	aprovado boolean not null default true,
 	observacao TEXT	
 );
 
@@ -18,6 +19,7 @@ CREATE TABLE recurso_humano.ganho_recurso_humano(--horas além do expediente
 	horas REAL,
 	data_inicio timestamp with time zone NOT NULL,
 	data_fim timestamp with time zone NOT NULL,	
+	aprovado boolean not null default true,
 	observacao TEXT	
 );
 
