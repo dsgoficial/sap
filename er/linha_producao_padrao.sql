@@ -22,7 +22,6 @@ INSERT INTO macrocontrole.subfase (nome,fase_id) VALUES
 ('Carregamento BDGEx', 1), --1
 ('Carregamento BDGEx', 2), --2
 ('Controle de Qualidade de insumos', 3), --3
-('Coleta de insumos externos', 3), --4
 ('Equalização e mosaico de imagens', 3), --5
 ('Geração de curvas de nível', 3), --6
 ('Digitalização da Hidrografia e Altimetria', 4), --7
@@ -34,6 +33,7 @@ INSERT INTO macrocontrole.subfase (nome,fase_id) VALUES
 ('Digitalização de Limites', 4), --13
 ('Digitalização de Áreas Densamente Edificadas', 4), --14
 ('Digitalização de Vegetação', 4), --15
+('Coleta de insumos externos', 4), --4
 ('Digitalização de Planimetria', 4), --16
 ('Verificação final da digitalização', 4), --17
 ('Validação nível produto', 5), --18
@@ -41,7 +41,7 @@ INSERT INTO macrocontrole.subfase (nome,fase_id) VALUES
 ('Geração de automáticas', 5), --20
 ('Carregamento BDGEx', 6), --21
 ('Edição', 7), --22
-('Carregamento BDGEx', 8), --23
+('Carregamento BDGEx', 8); --23
 
 INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
 (2, 7, 7),
@@ -65,7 +65,9 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (1, 7, 14),
 (2, 15, 15),
 (1, 14, 15),
+(2, 4, 4),
 (2, 16, 16),
+(1, 4, 16),
 (1, 14, 16),
 (2, 17, 17),
 (1, 16, 17),
@@ -76,18 +78,28 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (2, 18, 18),
 (1, 17, 18),
 (2, 19, 19),
-
+(1, 18, 19),
+(1, 19, 20),
+(1, 20, 21),
+(1, 20, 22),
+(1, 22, 23);
 
 INSERT INTO macrocontrole.etapa (tipo_etapa_id,subfase_id,ordem) VALUES
-(1, 1, 1); --1
-(1, 2, 1); --2
-(1, 3, 1); --3
-(1, 4, 1); --4
-(1, 5, 1); --5
-(1, 6, 1); --6
-(1, 7, 1); --7
+(1, 1, 1), --1
+(1, 2, 1), --2
+(1, 3, 1), --3
+(1, 4, 1), --4
+(1, 5, 1), --5
+(1, 6, 1), --6
+(1, 7, 1), --7
 
-INSERT INTO macrocontrole.camada (schema,nome,alias,documentacao) VALUES
+INSERT INTO macrocontrole.restricao_etapa (tipo_restricao_id,etapa_anterior_id,etapa_posterior_id) VALUES
+
+	
+
+
+
+INSERT INTO macrocontrole.camada (schema,nome,alias) VALUES
 ('Civil', 'Civ');
 
 INSERT INTO macrocontrole.atributo (camada_id,nome,alias) VALUES

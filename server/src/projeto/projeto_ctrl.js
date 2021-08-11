@@ -25,16 +25,99 @@ const getUsuarioNomeById = async usuarioId => {
   return usuario.posto_nome
 }
 
-controller.getNomeEstilos = async () => {
+controller.getGrupoEstilos = async () => {
   return db.sapConn
-    .any('SELECT nome FROM dgeo.group_styles')
+    .any('SELECT id, nome FROM dgeo.group_styles')
+}
+
+
+controller.gravaGrupoEstilos = async (grupoEstilos, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome'
+    ])
+
+    const query = db.pgp.helpers.insert(grupoEstilos, cs, {
+      table: 'group_styles',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaGrupoEstilos = async (grupoEstilos, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        grupoEstilos,
+        cs,
+        { table: 'group_styles', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaGrupoEstilos = async grupoEstilosId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.group_styles
+      WHERE id in ($<grupoEstilosId:csv>)`,
+      { grupoEstilosId }
+    )
+    if (exists && exists.length < grupoRegrasId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um grupo de estilos',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation1 = await t.any(
+      `SELECT id FROM macrocontrole.perfil_estilo
+      WHERE grupo_estilo_id in ($<grupoEstilosId:csv>)`,
+      { grupoEstilosId }
+    )
+    if (existsAssociation1 && existsAssociation1.length > 0) {
+      throw new AppError(
+        'O grupo de estilos possui perfil de estilos associados',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation2 = await t.any(
+      `SELECT id FROM dgeo.layer_styles 
+      WHERE grupo_estilo_id in ($<grupoEstilosId:csv>)`,
+      { grupoEstilosId }
+    )
+    if (existsAssociation2 && existsAssociation2.length > 0) {
+      throw new AppError(
+        'O grupo de estilos possui estilos associados',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.group_styles
+      WHERE id in ($<grupoEstilosId:csv>)`,
+      { grupoEstilosId }
+    )
+  })
 }
 
 controller.getEstilos = async () => {
   return db.sapConn
     .any(`SELECT ls.id, ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, gs.nome AS stylename, ls.styleqml, ls.stylesld, ls.ui, ls.owner, ls.update_time
     FROM dgeo.layer_styles AS ls
-    INNER JOIN dgeo.group_styles AS gs ON gs.id = ls.stylename
+    INNER JOIN dgeo.group_styles AS gs ON gs.id = ls.grupo_estilo_id
     `)
 }
 
@@ -46,7 +129,7 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
       'f_table_schema',
       'f_table_name',
       'f_geometry_column',
-      'stylename',
+      'grupo_estilo_id',
       'styleqml',
       'stylesld',
       'ui',
@@ -72,7 +155,7 @@ controller.atualizaEstilos = async (estilos, usuarioId) => {
       'f_table_schema',
       'f_table_name',
       'f_geometry_column',
-      'stylename',
+      'grupo_estilo_id',
       'styleqml',
       'stylesld',
       'ui',
@@ -679,11 +762,11 @@ controller.deletaGerenciadorFME = async servidoresId => {
 
 controller.getCamadas = async () => {
   return db.sapConn.any(
-    `SELECT c.id, c.schema, c.nome, c.alias, c.documentacao, COUNT(a.id) > 0 AS atributo, COUNT(ppc.id) > 0 AS perfil
+    `SELECT c.id, c.schema, c.nome, c.alias, COUNT(a.id) > 0 AS atributo, COUNT(ppc.id) > 0 AS perfil
     FROM macrocontrole.camada AS c
     LEFT JOIN macrocontrole.atributo AS a ON a.camada_id = c.id
     LEFT JOIN macrocontrole.propriedades_camada AS ppc ON ppc.camada_id = c.id
-    GROUP BY c.id, c.schema, c.nome, c.alias, c.documentacao`
+    GROUP BY c.id, c.schema, c.nome, c.alias`
   )
 }
 
@@ -737,8 +820,7 @@ controller.atualizaCamadas = async camadas => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
-      'alias',
-      'documentacao'
+      'alias'
     ])
 
     const query =
@@ -759,8 +841,7 @@ controller.criaCamadas = async camadas => {
   const cs = new db.pgp.helpers.ColumnSet([
     'schema',
     'nome',
-    'alias',
-    'documentacao'
+    'alias'
   ])
 
   const query = db.pgp.helpers.insert(camadas, cs, {
@@ -1040,8 +1121,9 @@ controller.criaPerfilRegras = async perfilRegras => {
 }
 controller.getPerfilEstilos = async () => {
   return db.sapConn.any(
-    `SELECT pe.id, pe.nome, pe.subfase_id
-    FROM macrocontrole.perfil_estilo AS pe`
+    `SELECT pe.id, gs.nome, pe.grupo_estilo_id, pe.subfase_id
+    FROM macrocontrole.perfil_estilo AS pe
+    INNER JOIN dgeo.group_styles AS gs ON gs.id = pe.grupo_estilo_id`
   )
 }
 
@@ -1066,7 +1148,7 @@ controller.deletePerfilEstilos = async perfilEstilosIds => {
   })
 }
 
-controller.atualizaPerfilEstilos = async perfilEstilos => { // FIXME REFATORAR
+controller.atualizaPerfilEstilos = async perfilEstilos => {
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_estilo
@@ -1084,11 +1166,11 @@ controller.atualizaPerfilEstilos = async perfilEstilos => { // FIXME REFATORAR
       query.push(
         t.any(
           `UPDATE macrocontrole.perfil_estilo
-          SET nome = $<nome>, subfase_id = $<subfaseId>
+          SET grupo_estilo_id = $<grupoEstiloId>, subfase_id = $<subfaseId>
           where id = $<id>`,
           {
             id: c.id,
-            nome: c.nome,
+            grupoEstiloId: c.grupo_estilo_id,
             subfaseId: c.subfase_id
           }
         )
@@ -1101,9 +1183,22 @@ controller.atualizaPerfilEstilos = async perfilEstilos => { // FIXME REFATORAR
 
 controller.criaPerfilEstilos = async perfilEstilos => {
   const cs = new db.pgp.helpers.ColumnSet([
-    'nome',
+    'grupo_estilo_id',
     'subfase_id'
   ])
+
+  const perfisbd = await db.sapConn.any(`SELECT id, grupo_estilo_id, subfase_id FROM macrocontrole.perfil_estilo`)
+
+  perfisbd.forEach(perfilbd => {
+    perfilEstilos.array.forEach(perfil => {
+      if(perfil.grupo_estilo_id === perfilbd.grupo_estilo_id && perfil.subfase_id === perfilbd.subfase_id){
+        throw new AppError(
+          'Já existem perfis estilos com a mesma subfase_id and grupo_estilo_id',
+          httpCode.BadRequest
+        )
+      }
+    });
+  })
 
   const query = db.pgp.helpers.insert(perfilEstilos, cs, {
     table: 'perfil_estilo',

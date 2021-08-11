@@ -31,7 +31,7 @@ models.estilos = Joi.object().keys({
         f_table_schema: Joi.string().required(),
         f_table_name: Joi.string().required(),
         f_geometry_column: Joi.string().required(),
-        stylename: Joi.number().integer().strict().required(),
+        grupo_estilo_id: Joi.number().integer().strict().required(),
         styleqml: Joi.string().required(),
         stylesld: Joi.string().required(),
         ui: Joi.string().allow('', null).required()
@@ -48,7 +48,7 @@ models.estilosAtualizacao = Joi.object().keys({
         f_table_schema: Joi.string().required(),
         f_table_name: Joi.string().required(),
         f_geometry_column: Joi.string().required(),
-        stylename: Joi.number().integer().strict().required(),
+        grupo_estilo_id: Joi.number().integer().strict().required(),
         styleqml: Joi.string().required(),
         stylesld: Joi.string().required(),
         ui: Joi.string().allow('', null).required()
@@ -174,6 +174,37 @@ models.grupoRegrasIds = Joi.object().keys({
     .min(1)
 })
 
+models.grupoEstilos = Joi.object().keys({
+  grupo_estilos: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.grupoEstilosAtualizacao = Joi.object().keys({
+  grupo_estilos: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+models.grupoEstilosIds = Joi.object().keys({
+  grupo_estilos_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 models.qgisModels = Joi.object().keys({
   modelos: Joi.array()
     .items(
@@ -282,8 +313,7 @@ models.camadas = Joi.object().keys({
       Joi.object().keys({
         schema: Joi.string().required(),
         nome: Joi.string().required(),
-        alias: Joi.string().required().allow(''),
-        documentacao: Joi.string().required().allow('')
+        alias: Joi.string().required().allow('')
       })
     )
     .required()
@@ -295,8 +325,7 @@ models.camadasAtualizacao = Joi.object().keys({
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        alias: Joi.string().required().allow(''),
-        documentacao: Joi.string().required().allow('')
+        alias: Joi.string().required().allow('')
       })
     )
     .unique('id')
@@ -397,7 +426,7 @@ models.perfilEstilos = Joi.object().keys({
   perfis_estilos: Joi.array()
     .items(
       Joi.object().keys({
-        nome: Joi.number().integer().strict().required(),
+        grupo_estilo_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required()
       })
     )
@@ -410,7 +439,7 @@ models.perfilEstilostualizacao = Joi.object().keys({
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        nome: Joi.number().integer().strict().required(),
+        grupo_estilo_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required()
       })
     )

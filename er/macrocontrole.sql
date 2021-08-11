@@ -142,7 +142,7 @@ CREATE TABLE macrocontrole.perfil_configuracao_qgis(
 
 CREATE TABLE macrocontrole.perfil_estilo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome INTEGER NOT NULL REFERENCES dgeo.group_styles (id),
+	grupo_estilo_id INTEGER NOT NULL REFERENCES dgeo.group_styles (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	UNIQUE(nome,subfase_id,lote_id)
@@ -198,7 +198,6 @@ CREATE TABLE macrocontrole.camada(
 	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
 	alias VARCHAR(255),
-	documentacao VARCHAR(255),
 	UNIQUE(schema,nome)
 );
 

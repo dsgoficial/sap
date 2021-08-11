@@ -11,19 +11,24 @@ models.finaliza = Joi.object().keys({
     'Necessita nova revisão',
     'Não é necessário uma nova revisão'
   ),
-  info_edicao: Joi.object().keys({
-    nome_carta: Joi.string().required(),
-    palavras_chave: Joi.array()
-      .items(
-        Joi.object().keys({
-          palavra_chave: Joi.string().required(),
-          tipo_palavra_chave: Joi.number().integer().strict().required()
-        })
-      )
-      .unique('palavra_chave')
-      .required()
-      .min(1)
-  }),
+  info_edicao: Joi.array().items(
+    Joi.object().keys({
+      produto_id: Joi.number().integer().strict().required(),
+      nome_produto: Joi.string().required(),
+      palavras_chave: Joi.array()
+        .items(
+          Joi.object().keys({
+            palavra_chave: Joi.string().required(),
+            tipo_palavra_chave: Joi.number().integer().strict().required()
+          })
+        )
+        .unique('palavra_chave')
+        .required()
+        .min(1)
+    })
+  )
+  .unique('produto_id')
+  .min(1),
   observacao_proxima_atividade: Joi.string()
 })
 

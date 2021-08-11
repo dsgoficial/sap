@@ -41,7 +41,7 @@ CREATE TABLE dgeo.versao_qgis(
 CREATE TABLE dgeo.qgis_shortcuts(
   id SERIAL NOT NULL PRIMARY KEY,
   ferramenta VARCHAR(255) NOT NULL,
-  idioma VARCHAR(255) NOT NULL,
+  idioma VARCHAR(255),
   atalho VARCHAR(255),
   owner varchar(255) NOT NULL,
 	update_time timestamp without time zone NOT NULL DEFAULT now()
@@ -74,13 +74,13 @@ CREATE TABLE dgeo.layer_styles(
 	f_table_schema varchar(255) NOT NULL,
 	f_table_name varchar(255) NOT NULL,
 	f_geometry_column varchar(255) NOT NULL,
-	stylename INTEGER NOT NULL REFERENCES dgeo.group_styles (id),
+	grupo_estilo_id INTEGER NOT NULL REFERENCES dgeo.group_styles (id),
 	styleqml text,
   stylesld text,
 	ui text,
   owner varchar(255) NOT NULL,
 	update_time timestamp without time zone NOT NULL DEFAULT now(),
-  CONSTRAINT unique_styles UNIQUE (f_table_schema,f_table_name,stylename)
+  CONSTRAINT unique_styles UNIQUE (f_table_schema,f_table_name,grupo_estilo_id)
 );
 
 CREATE TABLE dgeo.group_rules(

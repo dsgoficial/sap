@@ -54,7 +54,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
 
   if (etapaCode === 1 || etapaCode === 4) {
     camadas = await connection.any(
-      `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase
+      `SELECT c.schema, c.nome, c.alias, pc.atributo_filtro_subfase
         FROM macrocontrole.propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1 and pc.camada_apontamento IS FALSE`,
@@ -70,7 +70,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
     )
   } else {
     camadas = await connection.any(
-      `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
+      `SELECT c.schema, c.nome, c.alias, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
         FROM macrocontrole.propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1`,
@@ -92,9 +92,6 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
     const aux = { nome: r.nome, schema: r.schema }
     if (r.alias) {
       aux.alias = r.alias
-    }
-    if (r.documentacao) {
-      aux.documentacao = r.documentacao
     }
     if (r.atributo_filtro_subfase) {
       aux.atributo_filtro_subfase = r.atributo_filtro_subfase
@@ -140,8 +137,8 @@ const getInfoMenus = async (connection, etapaCode, subfaseId, loteId) => {
 const getInfoEstilos = async (connection, subfaseId, loteId) => {
   return connection.any(
     `SELECT ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, gs.nome AS stylename, ls.styleqml, ls.ui FROM macrocontrole.perfil_estilo AS pe
-      INNER JOIN dgeo.layer_styles AS ls ON ls.stylename = pe.nome
-      INNER JOIN dgeo.group_styles AS gs ON gs.id = ls.stylename
+      INNER JOIN dgeo.group_styles AS gs ON gs.id = pe.grupo_estilo_id
+      INNER JOIN dgeo.layer_styles AS ls ON ls.grupo_estilo_id = gs.id
       INNER JOIN macrocontrole.camada AS c ON c.nome = ls.f_table_name AND c.schema = ls.f_table_schema
       INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = c.id AND pe.subfase_id = pc.subfase_id
       WHERE pe.subfase_id = $1 AND pe.lote_id = $2`,
@@ -374,6 +371,8 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.requisitos = await getInfoRequisitos(t, dadosut.subfase_id, dadosut.lote_id)
 
     info.atividade.atalhos = await getAtalhos(t)
+
+    //TODO infoEdicao se fase for de edição
 
     return info
   })

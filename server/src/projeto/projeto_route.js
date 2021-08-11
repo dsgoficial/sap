@@ -12,14 +12,53 @@ const projetoSchema = require('./projeto_schema')
 const router = express.Router()
 
 router.get(
-  '/nome_estilos',
+  '/grupo_estilos',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getNomeEstilos()
+    const dados = await projetoCtrl.getGrupoEstilos()
 
-    const msg = 'Estilos retornados'
+    const msg = 'Grupo de estilos retornados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/grupo_estilos',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.grupoEstilos }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaGrupoEstilos(req.body.grupo_estilos, req.usuarioId)
+
+    const msg = 'Grupo de estilos gravados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/grupo_estilos',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.grupoEstilosAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaGrupoEstilos(req.body.grupo_estilos, req.usuarioId)
+
+    const msg = 'Grupo de estilos atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/grupo_estilos',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.grupoEstilosIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaGrupoEstilos(req.body.grupo_estilos_ids)
+
+    const msg = 'Grupo de estilos deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
 )
 
