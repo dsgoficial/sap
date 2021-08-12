@@ -167,7 +167,7 @@ router.post(
   })
 )
 
-router.post(
+router.put(
   '/observacao',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.observacao }),

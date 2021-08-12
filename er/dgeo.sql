@@ -33,10 +33,12 @@ CREATE TABLE dgeo.plugin(
 );
 
 CREATE TABLE dgeo.versao_qgis(
-  id SERIAL NOT NULL PRIMARY KEY,
+  code SMALLINT NOT NULL PRIMARY KEY,
   versao_minima TEXT,
   CHECK (versao_minima ~ '^\d+(\.\d+){0,2}$')
 );
+INSERT INTO dgeo.versao_qgis (code, versao_minima) VALUES
+(1, '3.16.9');
 
 CREATE TABLE dgeo.qgis_shortcuts(
   id SERIAL NOT NULL PRIMARY KEY,

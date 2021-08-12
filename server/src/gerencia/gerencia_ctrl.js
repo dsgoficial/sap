@@ -137,7 +137,7 @@ controller.pausaAtividade = async (unidadeTrabalhoIds) => {
 
 controller.atualizaAtividadesBloqueadas = async () => {
   return db.sapConn.any(
-    'REFRESH MATERIALIZED VIEW acompanhamento.atividades_bloqueadas'
+    'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.atividades_bloqueadas'
   )
 }
 

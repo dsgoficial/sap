@@ -130,9 +130,13 @@ router.post(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.regras }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaRegras(req.body.regras, req.usuarioId)
+    await projetoCtrl.gravaRegras(
+      req.body.regras,
+      req.body.grupo_regras,
+      req.usuarioId
+    )
 
-    const msg = 'Regras gravadas com sucesso'
+    const msg = 'Regras gravados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
@@ -161,18 +165,6 @@ router.delete(
     const msg = 'Regras deletadas com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.get(
-  '/modelos',
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getModelos()
-
-    const msg = 'Modelos retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
@@ -278,33 +270,15 @@ router.delete(
   })
 )
 
-router.post(
-  '/regras',
+router.get(
+  '/modelos',
   verifyAdmin,
-  schemaValidation({ body: projetoSchema.regras }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaRegras(
-      req.body.regras,
-      req.body.grupo_regras,
-      req.usuarioId
-    )
+    const dados = await projetoCtrl.getModelos()
 
-    const msg = 'Regras gravados com sucesso'
+    const msg = 'Modelos retornados'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.post(
-  '/menus',
-  verifyAdmin,
-  schemaValidation({ body: projetoSchema.menus }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaMenus(req.body.menus, req.usuarioId)
-
-    const msg = 'Menus gravados com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
@@ -857,7 +831,7 @@ router.put(
 )
 
 router.delete(
-  '/insumos',
+  '/unidade_trabalho/insumos',
   verifyAdmin,
   schemaValidation({
     body: projetoSchema.deletaInsumos
@@ -925,7 +899,7 @@ router.post(
       req.body.caminho_padrao
     )
 
-    const msg = 'Produtos criados com sucesso'
+    const msg = 'Insumos associados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
