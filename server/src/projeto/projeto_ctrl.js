@@ -427,12 +427,6 @@ controller.getModelos = async () => {
   )
 }
 
-controller.getMenus = async () => {
-  return db.sapConn.any(
-    'SELECT id, nome, definicao_menu, owner, update_time FROM dgeo.qgis_menus'
-  )
-}
-
 controller.gravaModelos = async (modelos, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
@@ -513,6 +507,12 @@ controller.deletaModelos = async modelosId => {
       { modelosId }
     )
   })
+}
+
+controller.getMenus = async () => {
+  return db.sapConn.any(
+    'SELECT id, nome, definicao_menu, owner, update_time FROM dgeo.qgis_menus'
+  )
 }
 
 controller.gravaMenus = async (menus, usuarioId) => {
@@ -1559,5 +1559,164 @@ controller.associaInsumos = async (
 controller.getEstrategiaAssociacao = async () => {
   return db.sapConn.any('SELECT code, nome FROM dominio.estrategia_associacao')
 }
+
+controller.getAtalhos = async () => {
+  return db.sapConn.any(
+    'SELECT id, ferramenta, idioma, atalho FROM dgeo.qgis_shortcuts'
+  )
+}
+
+controller.gravaAtalhos = async (atalhos, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'ferramenta',
+      'idioma',
+      'atalho',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query = db.pgp.helpers.insert(atalhos, cs, {
+      table: 'qgis_shortcuts',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaAtalhos = async (atalhos, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'ferramenta',
+      'idioma',
+      'atalho',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        atalhos,
+        cs,
+        { table: 'qgis_shortcuts', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaAtalhos = async atalhoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.qgis_shortcuts
+      WHERE id in ($<atalhoIds:csv>)`,
+      { atalhoIds }
+    )
+    if (exists && exists.length < atalhoIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um atalho',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.qgis_shortcuts
+      WHERE id in ($<atalhoIds:csv>)`,
+      { atalhoIds }
+    )
+  })
+}
+
+controller.getVersaoQgis = async () => {
+  return db.sapConn.any(
+    'SELECT versao_minima FROM dgeo.versao_qgis'
+  )
+}
+
+controller.atualizaVersaoQgis = async versaoQgis => {
+  return db.sapConn.none(
+    `UPDATE dgeo.versao_qgis SET
+    versao_minima = $<versaoQgis>`,
+    { versaoQgis }
+  )
+}
+
+controller.getPlugins = async () => {
+  return db.sapConn.any(
+    'SELECT id, nome, versao_minima FROM dgeo.plugin'
+  )
+}
+
+controller.gravaPlugins = async plugins => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'versao_minima'
+    ])
+
+    const query = db.pgp.helpers.insert(plugins, cs, {
+      table: 'plugin',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPlugins = async plugins => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'versao_minima'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        plugins,
+        cs,
+        { table: 'plugin', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaPlugins = async pluginsId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.plugin
+      WHERE id in ($<pluginsId:csv>)`,
+      { pluginsId }
+    )
+    if (exists && exists.length < pluginsId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um plugin',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.plugin
+      WHERE id in ($<pluginsId:csv>)`,
+      { pluginsId }
+    )
+  })
+}
+
 
 module.exports = controller

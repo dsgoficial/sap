@@ -375,9 +375,26 @@ controller.ultimasAtividadesFinalizadas = async () => {
     INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
     INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
     INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
-    WHERE ee.tipo_situacao_id = 4 --finalizada
+    WHERE ee.tipo_situacao_id = 4
     ORDER BY ee.data_fim DESC
     LIMIT 20;
+    `
+  )
+}
+
+controller.usuariosSemPerfil = async () => {
+  return db.sapConn.any(
+    `SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario,
+    (CASE 
+      WHEN ppo.id IS NULL AND pproj.id IS NULL THEN 'Usuário sem perfil de produção e perfil de projeto' 
+      WHEN ppo.id IS NULL THEN 'Usuário sem perfil de produção'
+      ELSE 'Usuário sem perfil de projeto'
+    END) AS situacao
+    FROM dgeo.usuario AS u
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    LEFT JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.usuario_id = u.id
+    LEFT JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.usuario_id = u.id
+    WHERE ppo.id IS NULL OR pproj.id IS NULL
     `
   )
 }

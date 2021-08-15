@@ -562,4 +562,77 @@ models.unidadesTrabalho = Joi.object().keys({
   subfase_id: Joi.number().integer().strict().required()
 })
 
+models.atalhos = Joi.object().keys({
+  atalhos: Joi.array()
+    .items(
+      Joi.object().keys({
+        ferramenta: Joi.string().required(),
+        idioma: Joi.string().required(),
+        atalho: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.atalhosAtualizacao = Joi.object().keys({
+  atalhos: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        ferramenta: Joi.string().required(),
+        idioma: Joi.string().required(),
+        atalho: Joi.string().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+models.atalhosIds = Joi.object().keys({
+  atalhos_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.qgisAtualizacao = Joi.object().keys({
+  versao_qgis:  Joi.string().required()
+})
+
+models.plugins = Joi.object().keys({
+  atalhos: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        versao_minima: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.pluginsAtualizacao = Joi.object().keys({
+  plugins: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        versao_minima: Joi.string().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+models.pluginsIds = Joi.object().keys({
+  plugins_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+
 module.exports = models

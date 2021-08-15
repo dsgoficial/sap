@@ -140,6 +140,18 @@ router.get(
   })
 )
 
+router.get(
+  '/usuarios_sem_perfil',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.usuariosSemPerfil(
+    )
+
+    const msg = 'Usuários sem perfil associado retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 /*
 router.get(
   '/projetos',
