@@ -4,10 +4,19 @@ const Joi = require('joi')
 
 const models = {}
 
-models.idParams = Joi.object().keys({
-  id: Joi.number().integer()
+models.loteSubfaseParams = Joi.object().keys({
+  lote: Joi.number().integer()
+    .required(),
+  subfase: Joi.number().integer()
     .required()
 })
+
+models.loteParams = Joi.object().keys({
+  lote: Joi.number().integer()
+    .required()
+})
+/*
+
 
 models.mesParam = Joi.object().keys({
   mes: Joi.string()
@@ -63,5 +72,5 @@ models.perdaRecursoHumano = Joi.object().keys({
     .required()
     .min(1)
 })
-
+*/
 module.exports = models

@@ -124,17 +124,6 @@ INSERT INTO dominio.tipo_exibicao (code,nome) VALUES
 (2,'Exibir usuários na linhagem somente para revisores'),
 (3,'Sempre exibir usuários na linhagem');
 
-CREATE TABLE dominio.tipo_monitoramento(
-	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
-);
-
-INSERT INTO dominio.tipo_monitoramento (code, nome) VALUES
-(1, 'Monitoramento de feição'),
-(2, 'Monitoramento de tela'),
-(3, 'Monitoramento de apontamento'),
-(4, 'Monitoramento de comportamento');
-
 CREATE TABLE dominio.tipo_restricao(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL

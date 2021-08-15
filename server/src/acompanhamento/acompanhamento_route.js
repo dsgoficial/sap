@@ -12,6 +12,136 @@ const acompanhamentoCtrl = require('./acompanhamento_ctrl')
 const router = express.Router()
 
 router.get(
+  '/informacoes/:lote/:subfase',
+  schemaValidation({
+    params: acompanhamentoSchema.loteSubfaseParams
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getInfoSubfaseLote(
+      req.params.lote,
+      req.params.subfase
+    )
+
+    const msg = 'Informações da subfase retornada'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/informacoes/:lote',
+  schemaValidation({
+    params: acompanhamentoSchema.loteParams
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getInfoLote(
+      req.params.lote
+    )
+
+    const msg = 'Informações da subfase retornada'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/usuarios_sem_atividade',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.usuariosSemAtividade(
+    )
+
+    const msg = 'Usuários sem atividade retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/ultimos_login',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.ultimosLogin(
+    )
+
+    const msg = 'Últimos logins retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/usuarios_logados_hoje',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.usuariosLogadosHoje(
+    )
+
+    const msg = 'Usuários logados hoje retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/usuarios_nao_logados_hoje',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.usuariosNaoLogadosHoje(
+    )
+
+    const msg = 'Usuários não logados hoje retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/quantitativo_fila_distribuicao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.quantitativoFilaDistribuicao(
+    )
+
+    const msg = 'Quantitativo da fila de distribuição retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/quantitativo_atividades',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.quantitativoAtividades(
+    )
+
+    const msg = 'Quantitativo de atividades retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/atividades_em_execucao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.atividadesEmExecucao(
+    )
+
+    const msg = 'Atividades em execução retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/ultimas_atividades_finalizadas',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.ultimasAtividadesFinalizadas(
+    )
+
+    const msg = 'Ultimas atividade finalizadas retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/*
+router.get(
   '/projetos',
   schemaValidation({
     params: acompanhamentoSchema.anoParam,
@@ -103,5 +233,5 @@ router.get(
     res.send(tile)
   })
 )
-
+*/
 module.exports = router

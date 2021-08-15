@@ -15,6 +15,51 @@ const {
 
 const controller = {}
 
+controller.getTipoProduto = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_produto')
+}
+
+controller.getTipoFase = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_fase')
+}
+
+controller.getTipoPreRequisito = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM metadado.tipo_palavra_chave')
+}
+
+controller.getTipoEtapa = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_pre_requisito')
+}
+
+controller.getTipoExibicao = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_exibicao')
+}
+
+controller.getTipoRestricao = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_restricao')
+}
+
+controller.getTipoInsumo = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_insumo')
+}
+
+controller.getTipoDadoProducao = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_dado_producao')
+}
+
+controller.getTipoDadoFinalizacao = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_dado_finalizacao')
+}
+
 const getUsuarioNomeById = async usuarioId => {
   const usuario = await db.sapConn.one(
     `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
@@ -589,6 +634,16 @@ controller.deletaAtividades = async atividadeIds => {
   WHERE id in ($<atividadeIds:csv>) AND tipo_situacao_id IN (1)
   `,
     { atividadeIds }
+  )
+}
+
+controller.deletaAtividadesUnidadeTrabalho = async unidadeTrabalhoIds => {
+  return db.sapConn.none(
+    `
+  DELETE FROM macrocontrole.atividade
+  WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id IN (1)
+  `,
+    { unidadeTrabalhoIds }
   )
 }
 

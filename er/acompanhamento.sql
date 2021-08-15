@@ -45,7 +45,7 @@ INNER JOIN macrocontrole.etapa AS etapa_anterior ON re.etapa_anterior_id = etapa
 INNER JOIN macrocontrole.atividade AS atividade_anterior ON atividade_anterior.etapa_id = etapa_anterior.id AND atividade_anterior.unidade_trabalho_id = a.unidade_trabalho_id
 WHERE atividade_anterior.usuario_id = u.id AND re.tipo_restricao_id = 1 
 UNION
-SELECT a.id AS atividade_id, 'Unidade de trabalho bloqueada devido a pré requisito subfase' AS motivo --FIXME outro caso de pré requisito subfase
+SELECT a.id AS atividade_id, 'Unidade de trabalho bloqueada devido a pré requisito subfase - Região concluída' AS motivo
         FROM (
           SELECT id, etapa_id, unidade_trabalho_id
         FROM (
@@ -79,6 +79,40 @@ ut.geom && ut_re.geom AND
 st_relate(ut.geom, ut_re.geom, '2********') AND
 a_re.tipo_situacao_id IN (1, 2, 3) 
 UNION
+SELECT a.id AS atividade_id, 'Unidade de trabalho bloqueada devido a pré requisito subfase - Região não estar em execução' AS motivo
+        FROM (
+          SELECT id, etapa_id, unidade_trabalho_id
+        FROM (
+          SELECT ee.id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
+          FROM macrocontrole.atividade AS ee
+          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+          INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
+          INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
+		  INNER JOIN dominio.tipo_situacao AS ts ON ts.code = ee.tipo_situacao_id
+          LEFT JOIN
+          (
+            SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
+            INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
+            WHERE ee.tipo_situacao_id in (1,2,3,4)
+          ) 
+          AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
+          AND se.ordem > ee_ant.ordem
+          WHERE ut.disponivel IS TRUE AND ee.tipo_situacao_id in (1)
+        ) AS ativ
+          GROUP BY id, etapa_id, unidade_trabalho_id
+          HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
+      ) AS a  
+INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
+INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
+INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
+WHERE prs.tipo_pre_requisito_id = 2 AND 
+ut.geom && ut_re.geom AND
+st_relate(ut.geom, ut_re.geom, '2********') AND
+a_re.tipo_situacao_id IN (2) 
+UNION
 SELECT a.id AS atividade_id, 'Atividade não associada a perfil de produção ou sem operador associado ao perfil' AS motivo
         FROM (
           SELECT id, etapa_id, unidade_trabalho_id
@@ -107,7 +141,7 @@ LEFT JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_i
 LEFT JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
 WHERE ppo.usuario_id IS NULL
 UNION
-SELECT a.id AS atividade_id, 'Restrição de usuários iguais e usuário não ativo ou como perda de recurso humano' AS motivo --FIXME atualizar perda recurso humano
+SELECT a.id AS atividade_id, 'Restrição de usuários iguais e usuário não ativo ou como perda de recurso humano' AS motivo
         FROM (
           SELECT id, etapa_id, unidade_trabalho_id
         FROM (
@@ -132,7 +166,8 @@ SELECT a.id AS atividade_id, 'Restrição de usuários iguais e usuário não at
 INNER JOIN macrocontrole.restricao_etapa AS re ON re.etapa_posterior_id = a.etapa_id
 INNER JOIN macrocontrole.atividade AS atividade_anterior ON atividade_anterior.etapa_id = re.etapa_anterior_id AND atividade_anterior.unidade_trabalho_id = a.unidade_trabalho_id
 INNER JOIN dgeo.usuario AS u ON u.id = atividade_anterior.usuario_id
-WHERE re.tipo_restricao_id = 2 AND u.ativo IS FALSE
+LEFT JOIN recurso_humano.perda_recurso_humano AS prh ON prh.usuario_id = u.id
+WHERE re.tipo_restricao_id = 2 AND (u.ativo IS FALSE OR (prh.data_inicio IS NOT NULL AND prh.data_fim IS NOT NULL AND now() >= prh.data_inicio AND now() <= prh.data_fim))
 ) AS foo
 INNER JOIN macrocontrole.atividade AS ee ON ee.id = foo.atividade_id
 INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
@@ -149,200 +184,6 @@ CREATE INDEX atividades_bloqueadas_geom
     ON acompanhamento.atividades_bloqueadas USING gist
     (geom);
 
-/**
-CREATE VIEW acompanhamento.usuarios_sem_atividades AS
-SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno
-FROM dgeo.usuario AS u
-INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-LEFT JOIN 
-(
-  SELECT id, usuario_id 
-  FROM macrocontrole.atividade AS ee 
-  WHERE ee.tipo_situacao_id = 2 -- em execucao
-  ) AS ee
-ON ee.usuario_id = u.id
-WHERE ee.id IS NULL AND u.ativo IS TRUE
-ORDER BY u.nome_guerra;
-
-CREATE VIEW acompanhamento.ultimo_login AS
-SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno, l.data_login
-FROM dgeo.usuario AS u
-INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-INNER JOIN
-(SELECT usuario_id, max(data_login) as data_login FROM acompanhamento.login GROUP BY usuario_id) AS l
-ON l.usuario_id = u.id
-WHERE u.ativo IS TRUE
-ORDER BY l.data_login DESC;
-
-CREATE VIEW acompanhamento.usuarios_logados_hoje AS
-SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno, l.data_ultimo_login
-FROM dgeo.usuario AS u
-INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-INNER JOIN
-(SELECT usuario_id, max(data_login) as data_ultimo_login FROM acompanhamento.login GROUP BY usuario_id) AS l
-ON l.usuario_id = u.id
-WHERE l.data_ultimo_login::date = now()::date
-ORDER BY l.data_ultimo_login DESC;
-
-CREATE VIEW acompanhamento.usuarios_nao_logados_hoje AS
-SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno, l.data_login
-FROM dgeo.usuario AS u
-INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-INNER JOIN
-(SELECT usuario_id, max(data_login) as data_login FROM acompanhamento.login GROUP BY usuario_id) AS l
-ON l.usuario_id = u.id
-WHERE u.ativo IS TRUE and l.data_login::date != now()::date
-ORDER BY l.data_login DESC;
-
-CREATE VIEW acompanhamento.quantitativo_fila_distribuicao AS
-SELECT ROW_NUMBER () OVER (ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.bloco_id) AS id,
-ativ.perfil_producao_id, pp.nome AS perfil_producao, 
-ativ.subfase_id, s.nome AS subfase,
-ativ.bloco_id, l.nome AS bloco,  count(*) quantidade
-FROM (
-SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, bloco_id
-        FROM (
-        SELECT ut.bloco_id, se.subfase_id, ppo.perfil_producao_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
-        FROM macrocontrole.atividade AS ee
-        INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
-        INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
-        INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
-        INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
-        LEFT JOIN
-        (
-          SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
-          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          WHERE ee.tipo_situacao_id in (1,2,3,4)
-        ) 
-        AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
-        AND se.ordem > ee_ant.ordem
-        WHERE ut.disponivel IS TRUE AND ee.tipo_situacao_id = 1
-        AND ee.id NOT IN
-        (
-          SELECT a.id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-          INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-          INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
-          INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
-          WHERE prs.tipo_pre_requisito_id = 1 AND 
-          ut.geom && ut_re.geom AND
-          st_relate(ut.geom, ut_re.geom, '2********') AND
-          a_re.tipo_situacao_id IN (1, 2, 3)
-        )
-        ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, bloco_id
-        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
-) AS ativ
-INNER JOIN macrocontrole.perfil_producao AS pp ON pp.id = ativ.perfil_producao_id
-INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
-INNER JOIN macrocontrole.bloco AS l ON l.id = ativ.bloco_id
-GROUP BY ativ.perfil_producao_id, l.nome, s.nome, pp.nome, ativ.subfase_id, ativ.bloco_id
-ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.bloco_id;
-
-CREATE VIEW acompanhamento.quantitativo_atividades AS
-SELECT ROW_NUMBER () OVER (ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.bloco_id) AS id, 
-ativ.etapa_id, te.nome as etapa,
-ativ.subfase_id, s.nome as subfase,
-ativ.bloco_id, l.nome as bloco,
-count(*) quantidade
-FROM (
-SELECT etapa_id, unidade_trabalho_id, subfase_id, bloco_id
-        FROM (
-        SELECT ut.bloco_id, se.subfase_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
-        FROM macrocontrole.atividade AS ee
-        INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-        INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
-        LEFT JOIN
-        (
-          SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
-          INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-          WHERE ee.tipo_situacao_id in (1,2,3,4)
-        ) 
-        AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
-        AND se.ordem > ee_ant.ordem
-        WHERE ut.disponivel IS TRUE AND ee.tipo_situacao_id = 1
-        AND ee.id NOT IN
-        (
-          SELECT a.id FROM macrocontrole.atividade AS a
-          INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-          INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-          INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
-          INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
-          WHERE prs.tipo_pre_requisito_id = 1 AND 
-          ut.geom && ut_re.geom AND
-          st_relate(ut.geom, ut_re.geom, '2********') AND
-          a_re.tipo_situacao_id IN (1, 2, 3)
-        )
-        ) AS sit
-        GROUP BY etapa_id, unidade_trabalho_id, subfase_id, bloco_id
-        HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
-) AS ativ
-INNER JOIN macrocontrole.etapa AS e ON e.id = ativ.etapa_id
-INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
-INNER JOIN macrocontrole.bloco AS l ON l.id = ativ.bloco_id
-GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.bloco_id
-ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.bloco_id;
-
-CREATE VIEW acompanhamento.blocos AS
-SELECT b.id, b.nome, b.prioridade, count(ut.id) AS unidades_trabalho, ST_Collect(ut.geom)::geometry(MultiPolygon,4326) AS geom
-FROM macrocontrole.bloco AS b
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.bloco_id = b.id
-GROUP BY b.id;
-
-CREATE VIEW acompanhamento.atividades_em_execucao AS
-SELECT ROW_NUMBER () OVER (ORDER BY a.data_inicio) AS id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
-te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, a.id as atividade_id,
-u.id AS usuario_id, 
-tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-a.data_inicio, ut.geom
-FROM macrocontrole.atividade AS a
-INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
-INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
-INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
-INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
-INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
-INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
-INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
-WHERE a.tipo_situacao_id = 2 --em execucao
-ORDER BY a.data_inicio ASC;
-
-CREATE VIEW acompanhamento.ultimas_atividades_finalizadas AS
-SELECT ROW_NUMBER () OVER (ORDER BY ee.data_fim DESC) AS id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
-te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,  u.id AS usuario_id, 
-tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-ee.data_inicio, ee.data_fim, ut.geom
-FROM macrocontrole.atividade AS ee
-INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
-INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-INNER JOIN macrocontrole.etapa AS e ON e.id = ee.etapa_id
-INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON ee.unidade_trabalho_id = ut.id
-INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
-INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
-INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
-INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
-INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
-WHERE ee.tipo_situacao_id = 4 --finalizada
-ORDER BY ee.data_fim DESC
-LIMIT 100;
-**/
 CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_subfase(subfase_ident integer, lote_ident integer)
   RETURNS void AS
 $$

@@ -2,18 +2,46 @@
 
 //  const nunjucks = require('nunjucks')
 
-const qr = require('qr-image')
-
 const { db } = require('../database')
 
 const { AppError, httpCode } = require('../utils')
 
 const controller = {}
 
+controller.getTipoPalavraChave = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM metadado.tipo_palavra_chave')
+}
+
+controller.getOrganizacao = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM metadado.organizacao')
+}
+
+controller.getEspecificacao = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM metadado.especificacao')
+}
+
+controller.getDatumVertical = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM metadado.datum_vertical')
+}
+
+controller.getCodigoRestricao = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM metadado.codigo_restricao')
+}
+
+controller.getCodigoClassificacao = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM metadado.codigo_classificacao')
+}
+
+
+/*
 const xmlTemplate = {}
 
-// TODO read files sync and nunjucks.compile
-// path.join(__dirname, "templates", "NOME")
 xmlTemplate['1'] = 'template_carta_topo_vetorial.xml'
 xmlTemplate['2'] = 'template_carta_topo_matricial.xml'
 xmlTemplate['3'] = 'template_carta_ortoimagem.xml'
@@ -102,11 +130,5 @@ controller.getMetadado = async uuid => {
     return template.render(dados)
   })
 }
-
-controller.getQRCode = async (host, nome) => {
-  const url = `${host}/acompanhamento/linha_producao/${nome}`
-
-  return qr.image(url, { type: 'svg' })
-}
-
+*/
 module.exports = controller

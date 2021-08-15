@@ -38,26 +38,6 @@ models.feicao = Joi.object().keys({
     .min(1)
 })
 
-models.apontamento = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  data: Joi.date().required(),
-  dados: Joi.array()
-    .items(
-      Joi.object().keys({
-        categoria: Joi.string().required(),
-        quantidade: Joi.number()
-          .integer()
-          .strict()
-          .required()
-      })
-    )
-    .required()
-    .min(1)
-})
-
 models.tela = Joi.object().keys({
   atividade_id: Joi.number()
     .integer()

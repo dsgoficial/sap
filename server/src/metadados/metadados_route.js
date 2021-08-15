@@ -27,27 +27,70 @@ router.get(
 )
 
 router.get(
-  '/linha_producao/:nome/qrcode',
-  verifyAdmin,
-  schemaValidation({
-    params: metadadosSchema.nomeParams
-  }),
+  '/tipo_palavra_chave',
   asyncHandler(async (req, res, next) => {
-    const host = req.protocol + '://' + req.get('host')
-    const qrcode = await metadadosCtrl.getQRCode(host, req.params.nome)
+    const dados = await metadadosCtrl.getTipoPalavraChave()
 
-    res.type('svg')
+    const msg = 'Tipos palava chave retornados'
 
-    qrcode.pipe(res)
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
-// get tipo palavra chave
+router.get(
+  '/organizacao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getOrganizacao()
 
-// insere palavra chave de um produto
+    const msg = 'Organizações retornadas'
 
-// inserir informacoes gerais de um produto
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
 
-// inserir informacoes gerais da linha de producao
+router.get(
+  '/especificacao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getEspecificacao()
+
+    const msg = 'Especificações retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/datum_vertical',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getDatumVertical()
+
+    const msg = 'Datum vertical retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/codigo_restricao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getCodigoRestricao()
+
+    const msg = 'Código de restrição retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/codigo_classificacao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getCodigoClassificacao()
+
+    const msg = 'Código de classificação retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 
 module.exports = router

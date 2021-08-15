@@ -12,6 +12,105 @@ const projetoSchema = require('./projeto_schema')
 const router = express.Router()
 
 router.get(
+  '/tipo_produto',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getTipoProduto()
+
+    const msg = 'Tipos de produto retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_fase',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getTipoFase()
+
+    const msg = 'Tipos de fase retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_pre_requisito',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getTipoPreRequisito()
+
+    const msg = 'Tipos de pre requisito retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_etapa',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getTipoEtapa()
+
+    const msg = 'Tipos de etapa retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_exibicao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getTipoExibicao()
+
+    const msg = 'Tipos de exibição retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_restricao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getTipoRestricao()
+
+    const msg = 'Tipos de restrição retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_insumo',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getTipoInsumo()
+
+    const msg = 'Tipos de insumo retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_dado_producao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getTipoDadoProducao()
+
+    const msg = 'Tipos de dado de produção retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_dado_finalizacao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getTipoDadoFinalizacao()
+
+    const msg = 'Tipos de dado de finalização retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
   '/grupo_estilos',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
@@ -404,7 +503,20 @@ router.delete(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.deletaAtividades(req.body.atividades_ids)
 
-    const msg = 'Atividades pausadas ou não iniciadas deletadas com sucesso'
+    const msg = 'Atividades não iniciadas deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.delete(
+  '/unidade_trabalho/atividades',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.unidadeTrabalhoId }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaAtividadesUnidadeTrabalho(req.body.unidade_trabalho_ids)
+
+    const msg = 'Atividades não iniciadas relacionadas a unidade de trabalho deletadas com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })

@@ -15,6 +15,7 @@ const { acompanhamentoRoute } = require('./acompanhamento')
 const { metadadosRoute } = require('./metadados')
 const { usuarioRoute } = require('./usuario')
 const { perigoRoute } = require('./perigo')
+const { rhRoute } = require('./rh')
 
 const router = express.Router()
 
@@ -46,5 +47,7 @@ router.use('/metadados', metadadosRoute)
 router.use('/usuarios', usuarioRoute)
 
 router.use('/perigo', perigoRoute)
+
+router.use('/rh', rhRoute)
 
 module.exports = router

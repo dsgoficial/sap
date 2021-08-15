@@ -11,6 +11,28 @@ const microcontroleSchema = require('./microcontrole_schema')
 
 const router = express.Router()
 
+router.get(
+  '/tipo_monitoramento',
+  asyncHandler(async (req, res, next) => {
+    const dados = await rhCtrl.getTipoMonitoramento()
+
+    const msg = 'Tipo de monitoramento retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_operacao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await rhCtrl.getTipoOperacao()
+
+    const msg = 'Tipo de operação retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 router.post(
   '/feicao',
   verifyLogin,
@@ -24,25 +46,6 @@ router.post(
     )
 
     const msg = 'Informações de produção de feição armazenadas com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.post(
-  '/apontamento',
-  verifyLogin,
-  schemaValidation({ body: microcontroleSchema.apontamento }),
-  asyncHandler(async (req, res, next) => {
-    await microcontroleCtrl.armazenaApontamento(
-      req.body.atividade_id,
-      req.body.usuario_id,
-      req.body.data,
-      req.body.dados
-    )
-
-    const msg =
-      'Informações de produção de apontamento armazenadas com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })

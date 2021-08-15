@@ -4,6 +4,16 @@ const { db } = require('../database')
 
 const controller = {}
 
+controller.getTipoMonitoramento = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM microcontrole.tipo_monitoramento')
+}
+
+controller.getTipoOperacao = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM microcontrole.tipo_operacao')
+}
+
 controller.armazenaFeicao = async (atividadeId, usuarioId, data, dados) => {
   const cs = new db.pgp.helpers.ColumnSet(
     [
@@ -19,21 +29,6 @@ controller.armazenaFeicao = async (atividadeId, usuarioId, data, dados) => {
   )
 
   const query = db.pgp.helpers.insert(dados, cs, { table: 'monitoramento_feicao', schema: 'microcontrole' })
-
-  db.sapConn.none(query)
-}
-
-controller.armazenaApontamento = async (
-  atividadeId,
-  usuarioId,
-  data,
-  dados
-) => {
-  const cs = new db.pgp.helpers.ColumnSet(
-    ['quantidade', 'categoria', { name: 'data', init: () => data }, { name: 'atividade_id', init: () => atividadeId }, { name: 'usuario_id', init: () => usuarioId }]
-  )
-
-  const query = db.pgp.helpers.insert(dados, cs, { table: 'monitoramento_apontamento', schema: 'microcontrole' })
 
   db.sapConn.none(query)
 }
