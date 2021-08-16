@@ -394,7 +394,7 @@ controller.usuariosSemPerfil = async () => {
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
     LEFT JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.usuario_id = u.id
     LEFT JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.usuario_id = u.id
-    WHERE ppo.id IS NULL OR pproj.id IS NULL
+    WHERE ppo.id IS NULL OR pproj.id IS NULL AND u.ativo IS TRUE
     `
   )
 }

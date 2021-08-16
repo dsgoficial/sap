@@ -24,7 +24,8 @@ CREATE TABLE macrocontrole.lote(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
-	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
+	descricao TEXT
 );
 
 CREATE TABLE macrocontrole.produto(
