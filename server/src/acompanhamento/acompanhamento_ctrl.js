@@ -1,6 +1,6 @@
 'use strict'
 
-const {format} = require('date-fns');
+const {format, subWeeks, subMonths} = require('date-fns');
 
 const { db } = require('../database')
 
@@ -33,6 +33,7 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {
       estatisticas[a.etapa_id].atividades_finalizadas = 0
       estatisticas[a.etapa_id].atividades_finalizadas_hoje = 0
       estatisticas[a.etapa_id].atividades_finalizadas_semana = 0
+      estatisticas[a.etapa_id].atividades_finalizadas_semana_anterior = 0
     }
 
     if(a.tipo_situacao === 2){
@@ -46,8 +47,9 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {
     }
     const dataFim = format(a.data_fim,'dd.MM.yyyy')
     const hoje = format(new Date(),'dd.MM.yyyy')
-    const semanaFim = format(dataFim,'I.yyyy')
-    const semana = format(hoje,'I.yyyy')
+    const semanaFim = format(a.data_fim,'I.yyyy')
+    const semana = format(new Date(),'I.yyyy')
+    const semanaAnterior = subWeeks(new Date(), 1)
 
     if(a.tipo_situacao === 4){
       estatisticas[a.etapa_id].atividades_finalizada += 1
@@ -59,6 +61,10 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {
 
     if(a.tipo_situacao === 4 && semanaFim === semana){
       estatisticas[a.etapa_id].atividades_finalizadas_semana += 1
+    }
+
+    if(a.tipo_situacao === 4 && semanaFim === semanaAnterior){
+      estatisticas[a.etapa_id].atividades_finalizadas_semana_anterior += 1
     }
   })
 
@@ -92,6 +98,8 @@ controller.getInfoLote = async loteId => {
       estatisticas[a.fase_id].atividades_restantes = 0
       estatisticas[a.fase_id].atividades_finalizadas_semana = 0
       estatisticas[a.fase_id].atividades_finalizadas_mes = 0
+      estatisticas[a.fase_id].atividades_finalizadas_semana_anterior = 0
+      estatisticas[a.fase_id].atividades_finalizadas_mes_anterior = 0
     }
 
     if(a.data_inicio && a.data_fim){
@@ -107,12 +115,23 @@ controller.getInfoLote = async loteId => {
     const semana = format(new Date(),'I.yyyy')
     const mesFim = format(a.data_fim,'M.yyyy')
     const mes = format(new Date(),'M.yyyy')
+    const semanaAnterior = subWeeks(new Date(), 1)
+    const mesAnterior = subMonths(new Date(), 1)
+
+
 
     if(a.data_inicio && a.data_fim && semanaFim === semana){
       estatisticas[a.fase_id].atividades_finalizada_semana += 1
     }
     if(a.data_inicio && a.data_fim && mesFim === mes){
       estatisticas[a.fase_id].atividades_finalizadas_mes += 1
+    }
+
+    if(a.data_inicio && a.data_fim && semanaFim === semanaAnterior){
+      estatisticas[a.fase_id].atividades_finalizadas_semana_anterior += 1
+    }
+    if(a.data_inicio && a.data_fim && mesFim === mesAnterior){
+      estatisticas[a.fase_id].atividades_finalizadas_mes_anterior += 1
     }
   })
 
