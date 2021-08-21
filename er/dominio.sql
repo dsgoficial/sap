@@ -226,7 +226,7 @@ INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES
 (5, 'Férias'),
 (6, 'Dispensa por motivo de saúde'),
 (7, 'Dispensa como recompensa'),
-(8, 'Dispensa de atividade de campo'),
+(8, 'Dispensa por regresso de atividade de campo'),
 (9, 'Designação para realizar curso / capacitação'),
 (10, 'Designação para ministrar curso / capacitação'),
 (11, 'Designação para participação em eventos'),

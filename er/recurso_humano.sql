@@ -66,6 +66,7 @@ CREATE TABLE recurso_humano.informacoes_usuario(
     telefone VARCHAR(255),
     identidade VARCHAR(255),
     cpf VARCHAR(255),
+	email_eb VARCHAR(255),
     email VARCHAR(255),
     codigo_banco VARCHAR(255),
     banco VARCHAR(255),
