@@ -248,8 +248,7 @@ const createConfig = async () => {
         type: 'input',
         name: 'dbUser',
         message:
-          'Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?',
-        default: 'controle_app'
+          'Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?'
       },
       {
         type: 'password',

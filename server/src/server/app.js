@@ -2,7 +2,7 @@
 
 const express = require('express')
 const path = require('path')
-const bodyParser = require('body-parser')
+//const bodyParser = require('body-parser')
 const cors = require('cors')
 const hpp = require('hpp')
 const rateLimit = require('express-rate-limit')
@@ -28,7 +28,7 @@ const app = express()
 // Add sendJsonAndLog to res object
 app.use(sendJsonAndLogMiddleware)
 
-app.use(bodyParser.json({ limit: '50mb' })) // parsear POST em JSON
+app.use(express.json({ limit: '50mb' })) // parsear POST em JSON
 app.use(hpp()) // protection against parameter polution
 
 // CORS middleware
