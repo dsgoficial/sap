@@ -322,20 +322,6 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
       )
     }
 
-    await t.none(
-      `
-        DELETE FROM macrocontrole.atividade
-        WHERE id IN (
-            SELECT a_ant.id
-            FROM macrocontrole.atividade AS a
-            INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
-            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-            INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-            WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.tipo_situacao_id IN (1)
-        )
-        `,
-      { atividadeIds, comparisonOperator }
-    )
     const dataFim = new Date()
 
     await t.none(
@@ -352,6 +338,21 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
         )
         `,
       { atividadeIds, comparisonOperator, dataFim }
+    )
+
+    await t.none(
+      `
+        DELETE FROM macrocontrole.atividade
+        WHERE id IN (
+            SELECT a_ant.id
+            FROM macrocontrole.atividade AS a
+            INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+            WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.tipo_situacao_id IN (1)
+        )
+        `,
+      { atividadeIds, comparisonOperator }
     )
   })
 }
