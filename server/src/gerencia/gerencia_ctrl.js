@@ -271,7 +271,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
 }
 
 controller.avancaAtividade = async (atividadeIds, concluida) => {
-  const comparisonOperator = concluida ? '<=' : '='
+  const comparisonOperator = concluida ? '<=' : '<'
 
   await db.sapConn.tx(async (t) => {
     const ativEmExec = await t.any(
@@ -331,10 +331,27 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
             INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-            WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.tipo_situacao_id IN (1,3)
+            WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.tipo_situacao_id IN (1)
         )
         `,
       { atividadeIds, comparisonOperator }
+    )
+    const dataFim = new Date()
+
+    await t.none(
+      `
+        UPDATE macrocontrole.atividade
+        SET tipo_situacao_id = 4 AND data_inicio = $<dataFim> AND data_fim = $<dataFim>
+        WHERE id IN (
+            SELECT a_ant.id
+            FROM macrocontrole.atividade AS a
+            INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
+            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
+            WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.tipo_situacao_id IN (3)
+        )
+        `,
+      { atividadeIds, comparisonOperator, dataFim }
     )
   })
 }
