@@ -3,7 +3,7 @@
 */
 SELECT id
 FROM (
-  SELECT a.id, a.etapa_id, a.unidade_trabalho_id, a_ant.tipo_situacao_id AS situacao_ant, b.prioridade AS b_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
+  SELECT a.id, a.etapa_id, a.unidade_trabalho_id, a_ant.tipo_situacao_id AS situacao_ant, pproj.prioridade AS p_prioridade, b.prioridade AS b_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade
   FROM macrocontrole.atividade AS a
   INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = a.etapa_id
   INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
@@ -109,7 +109,7 @@ FROM (
     SELECT atividade_id FROM macrocontrole.fila_prioritaria_grupo
   )
 ) AS sit
-GROUP BY id, b_prioridade, pse_prioridade, ut_prioridade
+GROUP BY id, p_prioridade, b_prioridade, pse_prioridade, ut_prioridade
 HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
-ORDER BY b_prioridade, pse_prioridade, ut_prioridade
+ORDER BY p_prioridade, b_prioridade, pse_prioridade, ut_prioridade
 LIMIT 1

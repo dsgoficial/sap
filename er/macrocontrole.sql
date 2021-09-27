@@ -368,7 +368,8 @@ CREATE TABLE macrocontrole.perfil_producao_operador(
 CREATE TABLE macrocontrole.perfil_projeto_operador(
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
-	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id)
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
+	prioridade INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria(
