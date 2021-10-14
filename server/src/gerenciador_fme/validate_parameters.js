@@ -12,6 +12,8 @@ const verifyParameters = parameters => {
     'dbhost',
     'dbport',
     'dbarea',
+    'dbuser',
+    'dbpassword',
     'sapsubfase',
     'LOG_FILE'
   ]
