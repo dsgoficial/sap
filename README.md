@@ -25,8 +25,3 @@ Para acesso ao cliente QGIS do usuário verifique [Ferramentas de Produção](ht
 Para acesso ao cliente QGIS do gerente verifique [Ferramentas de Gerencia](https://github.com/1cgeo/Ferramentas_Gerencia)
 
 Para maiores informações verifique a [Wiki](https://github.com/1cgeo/sap/wiki)
-
-## Releases
-
-* [v1.1.1](https://github.com/1cgeo/sap/tree/1.1.1)
-
