@@ -151,7 +151,7 @@ managePermissions.grantPermissionsUser = async (
       `SELECT string_agg('ALTER TABLE ' || nspname || '.' || relname || ' ENABLE ROW LEVEL SECURITY;', '') AS txt
       FROM pg_class AS c
       INNER JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
-      WHERE c.relrowsecurity is false AND nspname || '.' || relname in ($<camadas:csv>);;`,
+      WHERE relrowsecurity is false AND nspname || '.' || relname in ($<camadas:csv>);`,
       { camadas }
     )
     if (enableRLSSQL && enableRLSSQL.txt) {
