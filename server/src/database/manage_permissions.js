@@ -70,7 +70,7 @@ managePermissions.grantPermissionsUser = async (
     `SELECT c.schema, c.nome AS nome_camada, ppc.camada_apontamento,
         ppc.atributo_situacao_correcao, ppc.atributo_justificativa_apontamento, 
         ppc.atributo_filtro_subfase, ppc.subfase_id, ut.epsg, 
-        ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) AS geom,
+        ST_ASEWKT(ST_ReducePrecision(ST_Transform(ut.geom,ut.epsg::integer), 0.000001)) AS geom,
         e.tipo_etapa_id, dp.nome AS db_nome
         FROM macrocontrole.camada AS c
         INNER JOIN macrocontrole.propriedades_camada AS ppc ON ppc.camada_id = c.id
