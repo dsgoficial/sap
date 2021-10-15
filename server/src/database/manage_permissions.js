@@ -86,22 +86,17 @@ managePermissions.grantPermissionsUser = async (
   }
   await connection.tx(async (t) => {
     const dbName = grantInfo[0].db_nome
-    await t.none('GRANT CONNECT ON DATABASE $<dbName:name> TO $<login:name>;', {
-      dbName,
-      login
-    })
+    let grantSQL = `GRANT CONNECT ON DATABASE ${dbName} TO ${login};`
+
     const schemasSQL = grantInfo
       .map((v) => v.schema)
       .filter((v, i, array) => array.indexOf(v) === i)
       .map((v) => `GRANT USAGE ON SCHEMA ${v} TO ${login};`)
       .join(' ')
 
-    await t.none(schemasSQL)
+    grantSQL += schemasSQL
 
-    await t.none(
-      'GRANT USAGE ON SCHEMA PUBLIC TO $<login:name>; GRANT SELECT ON public.geometry_columns TO $<login:name>;',
-      { login }
-    )
+    grantSQL += `GRANT USAGE ON SCHEMA PUBLIC TO ${login}; GRANT SELECT ON public.geometry_columns TO ${login};`
 
     let camadas
     const tipoEtapa = grantInfo[0].tipo_etapa_id
@@ -132,8 +127,6 @@ managePermissions.grantPermissionsUser = async (
         )
         .join(' ')
 
-      await t.none(camadasApontamentoSQL)
-
       const outrasCamadasSQL = grantInfo
         .filter((v) => v.camada_apontamento === false)
         .filter((v, i, array) => array.indexOf(v) === i)
@@ -143,19 +136,28 @@ managePermissions.grantPermissionsUser = async (
         )
         .join(' ')
 
-      await t.none(outrasCamadasSQL)
+        grantSQL += camadasApontamentoSQL
+        grantSQL += outrasCamadasSQL
     } else {
       const camadasSql = camadas
         .map((v) => `GRANT SELECT, INSERT, DELETE, UPDATE ON ${v} TO ${login};`)
         .join(' ')
 
-      await t.none(camadasSql)
+        grantSQL += camadasSql
     }
-    const enableRLS = camadas
-      .map((v) => `ALTER TABLE ${v} ENABLE ROW LEVEL SECURITY;`)
-      .join(' ')
 
-    await t.none(enableRLS)
+    // enableRLS
+    const enableRLSSQL = await t.oneOrNone(
+      `SELECT string_agg('ALTER TABLE ' || nspname || '.' || relname || ' ENABLE ROW LEVEL SECURITY;', '') AS txt
+      FROM pg_class AS c
+      INNER JOIN pg_catalog.pg_namespace AS ns ON c.relnamespace = ns.oid
+      WHERE c.relrowsecurity is false AND nspname || '.' || relname in ($<camadas:csv>);;`,
+      { camadas }
+    )
+    if (enableRLSSQL && enableRLSSQL.txt) {
+      grantSQL += enableRLSSQL.txt
+    }
+
     let createPolicy
     const geom = grantInfo[0].geom
 
@@ -171,7 +173,8 @@ managePermissions.grantPermissionsUser = async (
       })
       .join(' ')
 
-    await t.none(createPolicy)
+
+    grantSQL += createPolicy
 
     // grant select sequenciador
     const sequenceSQL = await t.oneOrNone(
@@ -184,7 +187,7 @@ managePermissions.grantPermissionsUser = async (
       { camadas, login }
     )
     if (sequenceSQL && sequenceSQL.grant_sequence) {
-      await t.none(sequenceSQL.grant_sequence)
+      grantSQL += sequenceSQL.grant_sequence
     }
     // grant trigger function
     const triggerSQL = await t.oneOrNone(
@@ -212,10 +215,10 @@ managePermissions.grantPermissionsUser = async (
       { camadas, login }
     )
     if (triggerSQL && triggerSQL.grant_trigger) {
-      await t.none(triggerSQL.grant_trigger)
+      grantSQL += triggerSQL.grant_trigger
     }
-    if (triggerSQL && triggerSchema.grant_trigger) {
-      await t.none(triggerSchema.grant_trigger)
+    if (triggerSchema && triggerSchema.grant_trigger) {
+      grantSQL += triggerSchema.grant_trigger
     }
     // grant select nos dominios relacionados
     const fkSQL = await t.oneOrNone(
@@ -240,12 +243,14 @@ managePermissions.grantPermissionsUser = async (
       { camadas, login }
     )
     if (fkSQL && fkSQL.grant_fk) {
-      await t.none(fkSQL.grant_fk)
+      grantSQL += fkSQL.grant_fk
     }
     if (fkSchema && fkSchema.grant_fk) {
-      await t.none(fkSchema.grant_fk)
+      grantSQL += fkSchema.grant_fk
     }
   })
+
+  await t.none(grantSQL)
 }
 
 module.exports = managePermissions
