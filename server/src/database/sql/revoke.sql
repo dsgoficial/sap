@@ -2,10 +2,6 @@
     Retorna SQL de revoke
 */
 SELECT string_agg(query, ' ') AS revoke_query FROM (
-	SELECT 'DROP POLICY ' || policyname || ' ON ' || schemaname || '.' || tablename || ';' AS query
-	FROM pg_policies
-	WHERE $1 = ANY(roles)
-	UNION ALL
 	SELECT DISTINCT 'REVOKE ALL ON TABLE ' || table_schema || '.' || table_name || ' FROM ' || $1 || ';' AS query
 	FROM information_schema.table_privileges
 	WHERE grantee ~* $1 AND table_schema NOT IN ('information_schema') AND table_schema !~ '^pg_'
@@ -24,4 +20,8 @@ SELECT string_agg(query, ' ') AS revoke_query FROM (
 	WHERE schema_name NOT IN ('information_schema') AND schema_name !~ '^pg_'
 	UNION ALL
 	SELECT 'REVOKE CONNECT ON DATABASE ' || current_database() || ' FROM ' || $1 || ';' AS query
+	UNION ALL
+	SELECT 'DROP POLICY ' || policyname || ' ON ' || schemaname || '.' || tablename || ';' AS query
+	FROM pg_policies
+	WHERE $1 = ANY(roles)
 ) AS foo;
