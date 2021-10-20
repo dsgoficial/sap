@@ -20,8 +20,4 @@ SELECT string_agg(query, ' ') AS revoke_query FROM (
 	WHERE schema_name NOT IN ('information_schema') AND schema_name !~ '^pg_'
 	UNION ALL
 	SELECT 'REVOKE CONNECT ON DATABASE ' || current_database() || ' FROM ' || $1 || ';' AS query
-	UNION ALL
-	SELECT 'DROP POLICY ' || policyname || ' ON ' || schemaname || '.' || tablename || ';' AS query
-	FROM pg_policies
-	WHERE $1 = ANY(roles)
 ) AS foo;

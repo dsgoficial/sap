@@ -145,7 +145,7 @@ managePermissions.grantPermissionsUser = async (
 
       grantSQL += camadasSql
   }
-
+  /** 
   // enableRLS
   const enableRLSSQL = await connection.oneOrNone(
     `SELECT string_agg('ALTER TABLE ' || nspname || '.' || relname || ' ENABLE ROW LEVEL SECURITY;', '') AS txt
@@ -175,6 +175,8 @@ managePermissions.grantPermissionsUser = async (
 
 
   grantSQL += createPolicy
+  
+  */
 
   // grant select sequenciador
   const sequenceSQL = await connection.oneOrNone(
