@@ -35,10 +35,10 @@ INSERT INTO macrocontrole.subfase (nome,fase_id) VALUES
 ('Digitalização de Vegetação', 4), --15
 ('Coleta de insumos externos', 4), --4
 ('Digitalização de Planimetria', 4), --16
-('Verificação final da digitalização', 4), --17
+('Verificação final', 4), --17
 ('Validação nível produto', 5), --18
 ('Validação da ligação', 5), --19
-('Geração de automáticas', 5), --20
+('Geração de classes automáticas', 5), --20
 ('Carregamento BDGEx', 6), --21
 ('Edição', 7), --22
 ('Carregamento BDGEx', 8); --23
