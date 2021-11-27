@@ -180,6 +180,8 @@ INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
 INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
 INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id;
 
+CREATE UNIQUE INDEX ON atividades_bloqueadas_geom(id);
+
 CREATE INDEX atividades_bloqueadas_geom
     ON acompanhamento.atividades_bloqueadas USING gist
     (geom);
@@ -302,6 +304,7 @@ $$
       EXECUTE view_txt;
       EXECUTE 'GRANT SELECT ON TABLE acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' TO PUBLIC';
       EXECUTE 'CREATE INDEX lote_' || lote_ident || '_subfase_' || subfase_ident || '_geom ON acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' USING gist (geom);';
+      EXECUTE 'CREATE UNIQUE INDEX lote_' || lote_ident || '_subfase_' || subfase_ident || '_id ON acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' (id);';
 
     iterator := 3*iterator - 3;
 
@@ -450,6 +453,7 @@ $$
       EXECUTE view_txt;
       EXECUTE 'GRANT SELECT ON TABLE acompanhamento.lote_' || lote_ident || ' TO PUBLIC';
       EXECUTE 'CREATE INDEX lote_' || lote_ident || '_geom ON acompanhamento.lote_' || lote_ident || ' USING gist (geom);';
+      EXECUTE 'CREATE UNIQUE INDEX lote_' || lote_ident || '_id ON acompanhamento.lote_' || lote_ident || ' (id);';
 
       iterator := 2*iterator - 2;
       rules_txt := rules_txt || '<rule symbol="' ||  iterator || '" key="{' || uuid_generate_v4() ||'}" label="Concluído" filter="' || fases_concluidas_txt || ' TRUE"/>';
