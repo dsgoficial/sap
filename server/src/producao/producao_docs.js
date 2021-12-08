@@ -145,7 +145,6 @@
  * @apiDescription Envia um problema na atividade, bloqueando a atividade e enviando uma nova ao operador
  *
  * @apiParam (Request body) {Integer} usuario_id ID do Usuário que está enviando o problema
- * @apiParam (Request body) {Integer} unidade_trabalho_id ID da Unidade de Trabalho referente ao problema
  * @apiParam (Request body) {Integer} etapa_id ID da Etapa referente ao problema
  * @apiParam (Request body) {Integer} tipo_problema_id ID do tipo do problema da atividade
  * @apiParam (Request body) {String} descricao Descrição textual do problema ocorrido na atividade

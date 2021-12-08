@@ -146,7 +146,7 @@ CREATE TABLE macrocontrole.perfil_estilo(
 	grupo_estilo_id INTEGER NOT NULL REFERENCES dgeo.group_styles (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
-	UNIQUE(nome,subfase_id,lote_id)
+	UNIQUE(grupo_estilo_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_regras(
@@ -186,13 +186,13 @@ CREATE TABLE macrocontrole.perfil_linhagem(
 	UNIQUE(subfase_id,lote_id)
 );
 
-CREATE TABLE macrocontrole.perfil_monitoramento(
-	id SERIAL NOT NULL PRIMARY KEY,
-	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),
-	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
-	UNIQUE(tipo_monitoramento_id,subfase_id,lote_id)
-);
+--CREATE TABLE macrocontrole.perfil_monitoramento(
+--	id SERIAL NOT NULL PRIMARY KEY,
+--	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),
+--	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+--	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+--	UNIQUE(tipo_monitoramento_id,subfase_id,lote_id)
+--);
 
 CREATE TABLE macrocontrole.camada(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -391,7 +391,6 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
- 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	tipo_problema_id SMALLINT NOT NULL REFERENCES dominio.tipo_problema (code),
 	descricao TEXT NOT NULL,
 	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -407,7 +406,6 @@ CREATE INDEX problema_atividade_geom
 CREATE TABLE macrocontrole.alteracao_fluxo(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
- 	unidade_trabalho_id INTEGER NOT NULL REFERENCES macrocontrole.unidade_trabalho (id),
 	descricao TEXT NOT NULL,
 	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE,

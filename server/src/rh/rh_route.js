@@ -37,12 +37,12 @@ router.get(
   })
 )
 
-
+/** 
 
 router.post(
   '/grupo_estilos',
   verifyAdmin,
-  schemaValidation({ body: projetoSchema.grupoEstilos }),
+  schemaValidation({ body: rhSchema.grupoEstilos }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.gravaGrupoEstilos(req.body.grupo_estilos, req.usuarioId)
 
@@ -55,7 +55,7 @@ router.post(
 router.put(
   '/grupo_estilos',
   verifyAdmin,
-  schemaValidation({ body: projetoSchema.grupoEstilosAtualizacao }),
+  schemaValidation({ body: rhSchema.grupoEstilosAtualizacao }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.atualizaGrupoEstilos(req.body.grupo_estilos, req.usuarioId)
 
@@ -68,7 +68,7 @@ router.put(
 router.delete(
   '/grupo_estilos',
   verifyAdmin,
-  schemaValidation({ body: projetoSchema.grupoEstilosIds }),
+  schemaValidation({ body: rhSchema.grupoEstilosIds }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.deletaGrupoEstilos(req.body.grupo_estilos_ids)
 
@@ -77,5 +77,5 @@ router.delete(
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
 )
-
+*/
 module.exports = router

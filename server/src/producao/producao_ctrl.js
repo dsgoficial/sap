@@ -347,11 +347,12 @@ const dadosProducao = async (atividadeId) => {
       dadosut.lote_id
     )
 
+    /*
     info.atividade.monitoramento = await getInfoMonitoramento(
       t,
       dadosut.subfase_id,
       dadosut.lote_id
-    )
+    )*/
 
     info.atividade.insumos = await getInfoInsumos(
       t,
@@ -496,8 +497,8 @@ controller.finaliza = async (
     if (alterarFluxo) {
       await t.none(
         `
-        INSERT INTO macrocontrole.alteracao_fluxo(atividade_id, unidade_trabalho_id, descricao, geom)
-        SELECT a.id, a.unidade_trabalho_id, $<alterarFluxo> AS descricao, ut.geom FROM macrocontrole.atividade AS a
+        INSERT INTO macrocontrole.alteracao_fluxo(atividade_id, descricao, geom)
+        SELECT a.id, $<alterarFluxo> AS descricao, ut.geom FROM macrocontrole.atividade AS a
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
         WHERE a.id = $<atividadeId>
         `,
@@ -610,8 +611,8 @@ controller.problemaAtividade = async (
     )
     await t.any(
       `
-      INSERT INTO macrocontrole.problema_atividade(atividade_id, unidade_trabalho_id, tipo_problema_id, descricao, data, resolvido, geom)
-      VALUES($<id>,$<unidadeTrabalhoId>,$<tipoProblemaId>,$<descricao>, NOW(), FALSE, ST_GEOMFROMEWKT($<geom>))
+      INSERT INTO macrocontrole.problema_atividade(atividade_id, tipo_problema_id, descricao, data, resolvido, geom)
+      VALUES($<id>,$<tipoProblemaId>,$<descricao>, NOW(), FALSE, ST_GEOMFROMEWKT($<geom>))
       `,
       {
         id: newId.id,
