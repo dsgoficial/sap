@@ -421,18 +421,6 @@ router.delete(
 )
 
 router.get(
-  '/projeto_qgis',
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getProject()
-
-    const msg = 'Projeto do QGIS retornado com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.get(
   '/banco_dados',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {

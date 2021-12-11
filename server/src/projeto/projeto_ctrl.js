@@ -6,7 +6,6 @@ const { AppError, httpCode } = require('../utils')
 
 const { DB_USER, DB_PASSWORD } = require('../config')
 
-const qgisProject = require('./qgis_project')
 
 const {
   checkFMEConnection,
@@ -581,10 +580,6 @@ controller.deletaMenus = async menusId => {
       { menusId }
     )
   })
-}
-
-controller.getProject = async () => {
-  return { projeto: qgisProject }
 }
 
 controller.getBancoDados = async () => {
