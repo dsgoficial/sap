@@ -648,7 +648,7 @@ controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
   INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
   SELECT DISTINCT $<etapaId> AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
   FROM macrocontrole.unidade_trabalho AS ut
-  INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id
+  INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
   LEFT JOIN (
     SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
     ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
@@ -705,7 +705,7 @@ controller.getSubfases = async () => {
 
 controller.getEtapas = async () => {
   return db.sapConn.any(
-    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, s.nome AS subfase, e.ordem,
+    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, e.lote_id, s.nome AS subfase, e.ordem,
     tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
     lp.nome AS linha_producao, tp.nome AS tipo_produto
     FROM macrocontrole.etapa AS e
@@ -1320,30 +1320,6 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
   })
 }
 
-controller.deletaRevisao = async revisaoId => {
-  const idCorr = await db.sapConn.oneOrNone(
-    `SELECT e_prox.id FROM macrocontrole.etapa AS e
-    INNER JOIN macrocontrole.etapa AS e_prox ON e_prox.ordem = e.ordem + 1 AND e.subfase_id = e_prox.subfase_id
-    WHERE e.id = $<revisaoId> AND e.tipo_etapa_id = 2 AND e_prox.tipo_etapa_id = 3
-    LIMIT 1`,
-    { revisaoId }
-  )
-
-  if (!idCorr) {
-    throw new AppError(
-      'A atividade de revisão e sua correção não foram encontradas.',
-      httpCode.BadRequest
-    )
-  }
-
-  return db.sapConn.any(
-    `DELETE FROM macrocontrole.etapa
-     WHERE id IN ($<revisaoId>, $<correcaoId>)
-  `,
-    { revisaoId, correcaoId: idCorr.id }
-  )
-}
-
 controller.copiarUnidadeTrabalho = async (
   unidadeTrabalhoIds,
   etapaIds,
@@ -1362,8 +1338,8 @@ controller.copiarUnidadeTrabalho = async (
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
       const unidadeTrabalho = await t.oneOrNone(
         `
-          INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, bloco_id, disponivel, prioridade)
-          SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, bloco_id, disponivel, prioridade
+          INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade)
+          SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade
           FROM macrocontrole.unidade_trabalho
           WHERE id = $<unidadeTrabalhoId>
           RETURNING id
@@ -1457,6 +1433,7 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, subfaseId) => {
     'bloco_id',
     { name: 'subfase_id', init: () => subfaseId },
     'disponivel',
+    'dificuldade',
     'prioridade',
     'observacao',
     { name: 'geom', mod: ':raw' }

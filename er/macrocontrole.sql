@@ -72,11 +72,12 @@ CREATE TABLE macrocontrole.etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
 	tipo_etapa_id SMALLINT NOT NULL REFERENCES dominio.tipo_etapa (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	ordem INTEGER NOT NULL,
 	CHECK (
 		tipo_etapa_id <> 1 or ordem = 1 -- Se tipo_etapa_id for 1 obrigatoriamente ordem tem que ser 1
 	),
-	UNIQUE (subfase_id, ordem)
+	UNIQUE (subfase_id, lote_id, ordem)
 );
 
 -- Constraint
@@ -86,14 +87,14 @@ $BODY$
     DECLARE nr_erro integer;
     BEGIN
 
-	WITH prev as (SELECT tipo_etapa_id, lag(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id ORDER BY ordem) as prev_tipo_etapa_id
+	WITH prev as (SELECT tipo_etapa_id, lag(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id, lote_id ORDER BY ordem) as prev_tipo_etapa_id
 	FROM macrocontrole.etapa),
-	prox as (SELECT tipo_etapa_id, lead(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id ORDER BY ordem) as prox_tipo_etapa_id
+	prox as (SELECT tipo_etapa_id, lead(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id, lote_id ORDER BY ordem) as prox_tipo_etapa_id
 	FROM macrocontrole.etapa)
 	SELECT count(*) into nr_erro FROM (
-		SELECT 1 FROM prev WHERE tipo_etapa_id = 3 and prev_tipo_etapa_id != 2
+		SELECT 1 FROM prev WHERE tipo_etapa_id = 3 and prev_tipo_etapa_id != 2 and prev_tipo_etapa_id != 5
 	    UNION
-		SELECT 1 FROM prox WHERE tipo_etapa_id = 2 and (prox_tipo_etapa_id != 3 OR prox_tipo_etapa_id IS NULL)
+		SELECT 1 FROM prox WHERE (tipo_etapa_id = 2 or tipo_etapa_id = 5 ) and (prox_tipo_etapa_id != 3 OR prox_tipo_etapa_id IS NULL)
 	) as foo;
 
 	IF nr_erro > 0 THEN
@@ -257,9 +258,11 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
+	dificuldade INTEGER NOT NULL DEFAULT 0,
 	prioridade INTEGER NOT NULL,
 	observacao text,
-    geom geometry(POLYGON, 4326) NOT NULL
+    geom geometry(POLYGON, 4326) NOT NULL,
+	CONSTRAINT dificuldade CHECK (dificuldade >= 0)
 );
 
 CREATE INDEX unidade_trabalho_subfase_id
@@ -326,10 +329,10 @@ $BODY$
 		SELECT count(*) into nr_erro AS ut_sufase_id from macrocontrole.atividade AS a
 		INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
 		INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-		WHERE e.subfase_id != ut.subfase_id;
+		WHERE e.subfase_id != ut.subfase_id OR e.lote_id != ut.lote_id;
 
 		IF nr_erro > 0 THEN
-			RAISE EXCEPTION 'Etapa e Unidade de Trabalho não devem possuir subfases distintas.';
+			RAISE EXCEPTION 'Etapa e Unidade de Trabalho não devem possuir subfases ou lotes distintos.';
 		END IF;
     RETURN NEW;
 
@@ -353,9 +356,10 @@ CREATE TABLE macrocontrole.perfil_producao(
 CREATE TABLE macrocontrole.perfil_producao_etapa(
 	id SERIAL NOT NULL PRIMARY KEY,
   	perfil_producao_id INTEGER NOT NULL REFERENCES macrocontrole.perfil_producao (id),
-	etapa_id INTEGER NOT NULL REFERENCES macrocontrole.etapa (id), 
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id), 
+	tipo_etapa_id SMALLINT NOT NULL REFERENCES dominio.tipo_etapa (code),
 	prioridade INTEGER NOT NULL,
-	UNIQUE (perfil_producao_id, etapa_id)
+	UNIQUE (perfil_producao_id, subfase_id, )
 );
 
 CREATE TABLE macrocontrole.perfil_producao_operador(
@@ -370,6 +374,15 @@ CREATE TABLE macrocontrole.perfil_projeto_operador(
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
 	prioridade INTEGER NOT NULL
+);
+
+CREATE TABLE macrocontrole.perfil_dificuldade_operador(
+	id SERIAL NOT NULL PRIMARY KEY,
+  	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
+	tipo_perfil_dificuldade_id SMALLINT NOT NULL REFERENCES dominio.tipo_perfil_dificuldade (code),
+	UNIQUE(usuario_id, subfase_id, projeto_id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria(

@@ -112,7 +112,8 @@ INSERT INTO dominio.tipo_etapa (code,nome) VALUES
 (1,'Execução'),
 (2,'Revisão'),
 (3,'Correção'),
-(4,'Revisão e Correção');
+(4,'Revisão e Correção'),
+(5,'Revisão final');
 
 CREATE TABLE dominio.tipo_exibicao(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -198,6 +199,16 @@ INSERT INTO dominio.tipo_configuracao (code, nome) VALUES
 (4, 'DSGTools - Ângulo Reto'),
 (5, 'DSGTools - Informação Raster'),
 (6, 'Escala minima para aquisição');
+
+CREATE TABLE dominio.tipo_perfil_dificuldade(	
+	code SMALLINT NOT NULL PRIMARY KEY,	
+	nome VARCHAR(255) NOT NULL	
+);	
+
+INSERT INTO dominio.tipo_perfil_dificuldade (code, nome) VALUES
+(1, 'Distribuir atividades mais fáceis'),
+(2, 'Distribuir atividades mais difíceis'),
+(3, 'Distribuir de forma balanceada');
 
 CREATE TABLE dominio.tipo_problema(
 	code SMALLINT NOT NULL PRIMARY KEY,

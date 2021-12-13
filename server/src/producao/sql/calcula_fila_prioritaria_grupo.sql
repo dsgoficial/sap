@@ -24,7 +24,8 @@ FROM (
   AND a.id NOT IN
   (
     SELECT a.id FROM macrocontrole.atividade AS a
-    INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
+    INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+    INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.subfase_id = e.subfase_id AND ppe.tipo_etapa_id = e.tipo_etapa_id
     INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
@@ -40,7 +41,8 @@ FROM (
   AND a.id NOT IN
   (
     SELECT a.id FROM macrocontrole.atividade AS a
-    INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
+    INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+    INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.subfase_id = e.subfase_id AND ppe.tipo_etapa_id = e.tipo_etapa_id
     INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id

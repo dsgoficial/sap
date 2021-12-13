@@ -25,7 +25,7 @@ CREATE TABLE public.layer_styles(
   type character varying
 );
 
-INSERT INTO public.layer_styles VALUES (1, current_database(), 'macrocontrole', 'alteracao_fluxo', 'geom', 'alteracao_fluxo', '<!DOCTYPE qgis PUBLIC ''http://mrcc.com/qgis.dtd'' ''SYSTEM''>
+INSERT INTO public.layer_styles VALUES (current_database(), 'macrocontrole', 'alteracao_fluxo', 'geom', 'alteracao_fluxo', '<!DOCTYPE qgis PUBLIC ''http://mrcc.com/qgis.dtd'' ''SYSTEM''>
 <qgis labelsEnabled="1" minScale="100000000" simplifyDrawingHints="0" hasScaleBasedVisibilityFlag="0" maxScale="0" readOnly="0" simplifyDrawingTol="1" version="3.18.3-Zürich" simplifyAlgorithm="0" styleCategories="AllStyleCategories" simplifyMaxScale="1" simplifyLocal="1">
  <flags>
   <Identifiable>1</Identifiable>
@@ -691,7 +691,7 @@ def my_form_open(dialog, layer, feature):
 </StyledLayerDescriptor>
 ', TRUE, NULL, current_user, NULL, now(), 'Polygon');
 
-INSERT INTO public.layer_styles VALUES (2, current_database(), 'macrocontrole', 'problema_atividade', 'geom', 'problema_atividade', '<!DOCTYPE qgis PUBLIC ''http://mrcc.com/qgis.dtd'' ''SYSTEM''>
+INSERT INTO public.layer_styles VALUES (current_database(), 'macrocontrole', 'problema_atividade', 'geom', 'problema_atividade', '<!DOCTYPE qgis PUBLIC ''http://mrcc.com/qgis.dtd'' ''SYSTEM''>
 <qgis labelsEnabled="1" minScale="100000000" simplifyDrawingHints="0" hasScaleBasedVisibilityFlag="0" maxScale="0" readOnly="0" simplifyDrawingTol="1" version="3.18.3-Zürich" simplifyAlgorithm="0" styleCategories="AllStyleCategories" simplifyMaxScale="1" simplifyLocal="1">
  <flags>
   <Identifiable>1</Identifiable>

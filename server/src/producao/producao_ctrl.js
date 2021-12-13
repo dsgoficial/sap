@@ -118,7 +118,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
 }
 
 const getInfoMenus = async (connection, etapaCode, subfaseId, loteId) => {
-  if (etapaCode === 2) {
+  if (etapaCode === 2 || etapCode === 5) {
     return connection.any(
       `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
         INNER JOIN dgeo.qgis_menus AS mp On mp.id = pm.menu_id
@@ -219,7 +219,7 @@ const getInfoLinhagem = async (
   let linhagem
   if (
     perfilLinhagem &&
-    ((perfilLinhagem.tipo_exibicao_id === 2 && etapaCode === 2) ||
+    ((perfilLinhagem.tipo_exibicao_id === 2 && (etapaCode === 2 || etapaCode === 5)) ||
       perfilLinhagem.tipo_exibicao_id === 3)
   ) {
     linhagem = await connection.any(
@@ -297,6 +297,7 @@ const dadosProducao = async (atividadeId) => {
     info.atividade = {}
     info.atividade.id = atividadeId
     info.atividade.epsg = dadosut.epsg
+    info.atividade.dificuldade = dadosut.dificuldade
     info.atividade.observacao_atividade = dadosut.observacao_atividade
     info.atividade.observacao_unidade_trabalho =
       dadosut.observacao_unidade_trabalho
@@ -479,8 +480,8 @@ controller.finaliza = async (
             with prox as (select e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
             from macrocontrole.atividade as a
             inner join macrocontrole.etapa as erev on erev.id = a.etapa_id
-            inner join macrocontrole.etapa as e on e.subfase_id = erev.subfase_id
-            where erev.tipo_etapa_id = 2 and a.id = $<atividadeId>)
+            inner join macrocontrole.etapa as e on e.subfase_id = erev.subfase_id AND e.lote_id = erev.lote_id
+            where erev.tipo_etapa_id in (2,5) and a.id = $<atividadeId>)
             select a.id
             from macrocontrole.atividade as a
             inner join macrocontrole.atividade as arev on arev.unidade_trabalho_id = a.unidade_trabalho_id
