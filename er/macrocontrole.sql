@@ -228,11 +228,8 @@ CREATE TABLE macrocontrole.propriedades_camada(
 
 CREATE TABLE macrocontrole.dado_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
 	tipo_dado_producao_id SMALLINT NOT NULL REFERENCES dominio.tipo_dado_producao (code),
-	configuracao_producao VARCHAR(255),
-	tipo_dado_finalizacao_id SMALLINT NOT NULL REFERENCES dominio.tipo_dado_finalizacao (code),
-	configuracao_finalizacao VARCHAR(255)
+	configuracao_producao VARCHAR(255)
 );
 
 CREATE TABLE macrocontrole.restricao_etapa(
@@ -245,8 +242,10 @@ CREATE TABLE macrocontrole.restricao_etapa(
 
 CREATE TABLE macrocontrole.bloco(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) UNIQUE NOT NULL,
-	prioridade INTEGER NOT NULL
+	nome VARCHAR(255) NOT NULL,
+	prioridade INTEGER NOT NULL,
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(nome, lote_id)
 );
 
 CREATE TABLE macrocontrole.unidade_trabalho(

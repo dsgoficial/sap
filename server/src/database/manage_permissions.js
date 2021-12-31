@@ -42,8 +42,10 @@ managePermissions.revokeAndGrantAllExecution = async () => {
   }
   for (const info of dbInfos) {
     const servidor = info.configuracao_producao.split(':')[0]
-    const porta = info.configuracao_producao.split(':')[1]
-    const conn = await db.createAdminConn(servidor, porta, info.nome, false)
+    const porta_banco = info.configuracao_producao.split(':')[1]
+    const porta = porta_banco.split('/')[0]
+    const banco = porta_banco.split('/')[1]
+    const conn = await db.createAdminConn(servidor, porta, banco, false)
     await managePermissions.revokeAllPermissionsUser(info.login, conn)
     await managePermissions.grantPermissionsUser(
       info.atividade_id,

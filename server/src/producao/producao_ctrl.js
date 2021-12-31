@@ -316,11 +316,8 @@ const dadosProducao = async (atividadeId) => {
       ' - ' +
       dadosut.unidade_trabalho_nome
     info.atividade.dado_producao = {
-      nome: dadosut.dado_producao_nome,
       configuracao_producao: dadosut.configuracao_producao,
-      tipo_dado_producao_id: dadosut.tipo_dado_producao_id,
-      tipo_dado_finalizacao_id: dadosut.tipo_dado_finalizacao_id,
-      configuracao_finalizacao: dadosut.configuracao_finalizacao
+      tipo_dado_producao_id: dadosut.tipo_dado_producao_id
     }
 
     info.atividade.camadas = await getInfoCamadas(

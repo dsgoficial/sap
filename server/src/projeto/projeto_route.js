@@ -14,7 +14,7 @@ const router = express.Router()
 router.get(
   '/tipo_produto',
   asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getTipoProduto()
+    const dados = await projetoCtrl.getTipoProduto()
 
     const msg = 'Tipos de produto retornados'
 
@@ -25,7 +25,7 @@ router.get(
 router.get(
   '/tipo_fase',
   asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getTipoFase()
+    const dados = await projetoCtrl.getTipoFase()
 
     const msg = 'Tipos de fase retornados'
 
@@ -36,7 +36,7 @@ router.get(
 router.get(
   '/tipo_pre_requisito',
   asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getTipoPreRequisito()
+    const dados = await projetoCtrl.getTipoPreRequisito()
 
     const msg = 'Tipos de pre requisito retornados'
 
@@ -47,7 +47,7 @@ router.get(
 router.get(
   '/tipo_etapa',
   asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getTipoEtapa()
+    const dados = await projetoCtrl.getTipoEtapa()
 
     const msg = 'Tipos de etapa retornados'
 
@@ -58,7 +58,7 @@ router.get(
 router.get(
   '/tipo_exibicao',
   asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getTipoExibicao()
+    const dados = await projetoCtrl.getTipoExibicao()
 
     const msg = 'Tipos de exibição retornados'
 
@@ -69,7 +69,7 @@ router.get(
 router.get(
   '/tipo_restricao',
   asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getTipoRestricao()
+    const dados = await projetoCtrl.getTipoRestricao()
 
     const msg = 'Tipos de restrição retornados'
 
@@ -80,7 +80,7 @@ router.get(
 router.get(
   '/tipo_insumo',
   asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getTipoInsumo()
+    const dados = await projetoCtrl.getTipoInsumo()
 
     const msg = 'Tipos de insumo retornados'
 
@@ -91,20 +91,9 @@ router.get(
 router.get(
   '/tipo_dado_producao',
   asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getTipoDadoProducao()
+    const dados = await projetoCtrl.getTipoDadoProducao()
 
     const msg = 'Tipos de dado de produção retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.get(
-  '/tipo_dado_finalizacao',
-  asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getTipoDadoFinalizacao()
-
-    const msg = 'Tipos de dado de finalização retornados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })

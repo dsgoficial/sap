@@ -54,11 +54,6 @@ controller.getTipoDadoProducao = async () => {
     .any('SELECT code, nome FROM dominio.tipo_dado_producao')
 }
 
-controller.getTipoDadoFinalizacao = async () => {
-  return db.sapConn
-    .any('SELECT code, nome FROM dominio.tipo_dado_finalizacao')
-}
-
 const getUsuarioNomeById = async usuarioId => {
   const usuario = await db.sapConn.one(
     `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
@@ -585,19 +580,18 @@ controller.deletaMenus = async menusId => {
 controller.getBancoDados = async () => {
   return db.sapConn.any(
     `SELECT nome, split_part(configuracao_producao, ':', 1) AS servidor,
-    split_part(configuracao_producao, ':', 2) AS porta
+    split_part(split_part(configuracao_producao, ':', 2), '/', 1) AS porta,
+    split_part(split_part(configuracao_producao, ':', 2), '/', 2) AS nome
     FROM macrocontrole.dado_producao WHERE tipo_dado_producao_id IN (2,3)`
   )
 }
 
 controller.getDadoProducao = async () => {
   return db.sapConn.any(
-    `SELECT dp.id, dp.nome, dp.tipo_dado_producao_id, tdp.nome AS tipo_dado_producao,
-    configuracao_producao, dp.tipo_dado_finalizacao_id, tdf.nome AS tipo_dado_finalizacao,
-    configuracao_finalizacao
+    `SELECT dp.id, dp.tipo_dado_producao_id, tdp.nome AS tipo_dado_producao,
+    configuracao_producao
     FROM macrocontrole.dado_producao AS dp
-    INNER JOIN dominio.tipo_dado_producao AS tdp On tdp.code = dp.tipo_dado_producao_id
-    INNER JOIN dominio.tipo_dado_producao AS tdf On tdf.code = dp.tipo_dado_finalizacao_id`
+    INNER JOIN dominio.tipo_dado_producao AS tdp On tdp.code = dp.tipo_dado_producao_id`
   )
 }
 
@@ -610,7 +604,7 @@ controller.getLogin = async () => {
 }
 
 controller.getBlocos = async () => {
-  return db.sapConn.any('SELECT id, nome FROM macrocontrole.bloco')
+  return db.sapConn.any('SELECT id, nome, lote_id FROM macrocontrole.bloco')
 }
 
 controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {

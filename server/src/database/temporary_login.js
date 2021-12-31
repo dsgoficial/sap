@@ -13,7 +13,7 @@ const temporaryLogin = {}
 
 const getDbInfo = async atividadeId => {
   return db.sapConn.oneOrNone(
-    `SELECT dp.nome, dp.configuracao_producao FROM macrocontrole.atividade AS a
+    `SELECT dp.configuracao_producao FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut
     ON ut.id = a.unidade_trabalho_id 
     INNER JOIN macrocontrole.dado_producao AS dp
