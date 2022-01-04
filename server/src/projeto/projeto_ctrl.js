@@ -19,6 +19,15 @@ controller.getTipoProduto = async () => {
     .any('SELECT code, nome FROM dominio.tipo_produto')
 }
 
+controller.getTipoCQ = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_controle_qualidade')
+}
+
+controller.getTipoCriacaoUnidadeTrabalho = async () => {
+  return db.sapConn.any('SELECT code, nome FROM dominio.tipo_criacao_unidade_trabalho')
+}
+
 controller.getTipoFase = async () => {
   return db.sapConn
     .any('SELECT code, nome FROM dominio.tipo_fase')
@@ -577,15 +586,6 @@ controller.deletaMenus = async menusId => {
   })
 }
 
-controller.getBancoDados = async () => {
-  return db.sapConn.any(
-    `SELECT nome, split_part(configuracao_producao, ':', 1) AS servidor,
-    split_part(split_part(configuracao_producao, ':', 2), '/', 1) AS porta,
-    split_part(split_part(configuracao_producao, ':', 2), '/', 2) AS nome
-    FROM macrocontrole.dado_producao WHERE tipo_dado_producao_id IN (2,3)`
-  )
-}
-
 controller.getDadoProducao = async () => {
   return db.sapConn.any(
     `SELECT dp.id, dp.tipo_dado_producao_id, tdp.nome AS tipo_dado_producao,
@@ -664,9 +664,23 @@ controller.getProjetos = async () => {
   )
 }
 
+controller.getEstruturaLinhaProducao = async () => {
+  return db.sapConn.any(
+    `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto,
+    f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase, 
+    sf.id AS subfase_id, sf.nome AS subfase,
+    FROM macrocontrole.linha_producao AS lp
+    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
+    INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
+    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+    INNER JOIN macrocontrole.subfase AS sf ON sf.fase_id = f.id
+    `
+  )
+}
+
 controller.getLinhasProducao = async () => {
   return db.sapConn.any(
-    `SELECT lp.id, lp.nome, lp.tipo_produto_id, tp.nome AS tipo_produto
+    `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto
     FROM macrocontrole.linha_producao AS lp
     INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
     `
@@ -675,7 +689,7 @@ controller.getLinhasProducao = async () => {
 
 controller.getFases = async () => {
   return db.sapConn.any(
-    `SELECT f.id, tf.nome, f.tipo_fase_id, f.linha_producao_id, f.ordem,
+    `SELECT f.id AS fase_id, tf.nome AS fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
     lp.nome AS linha_producao, tp.nome AS tipo_produto
     FROM macrocontrole.fase AS f
     INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
@@ -686,7 +700,7 @@ controller.getFases = async () => {
 
 controller.getSubfases = async () => {
   return db.sapConn.any(
-    `SELECT s.id, s.nome, s.fase_id,
+    `SELECT s.id AS subfase_id, s.nome AS subfase, s.fase_id,
     tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
     lp.nome AS linha_producao, tp.nome AS tipo_produto
     FROM macrocontrole.subfase AS s
@@ -699,8 +713,8 @@ controller.getSubfases = async () => {
 
 controller.getEtapas = async () => {
   return db.sapConn.any(
-    `SELECT e.id, te.nome, e.tipo_etapa_id, e.subfase_id, e.lote_id, s.nome AS subfase, e.ordem,
-    tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
+    `SELECT e.id AS etapa_id, te.nome AS etapa, e.tipo_etapa_id, e.subfase_id, e.lote_id, s.nome AS subfase, e.ordem,
+    tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem AS ordem_fase,
     lp.nome AS linha_producao, tp.nome AS tipo_produto
     FROM macrocontrole.etapa AS e
     INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
@@ -1257,6 +1271,78 @@ controller.getGrupoInsumo = async () => {
     FROM macrocontrole.grupo_insumo`)
 }
 
+
+controller.deletaGrupoInsumo = async grupoInsumoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.grupo_insumo
+      WHERE id in ($<grupoInsumoIds:csv>)`,
+      { grupoInsumoIds }
+    )
+    if (exists && exists.length < grupoInsumoIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um grupo insumo',
+        httpCode.BadRequest
+      )
+    }
+
+    const insumoAssociado = await t.oneOrNone(
+      `SELECT i.id FROM macrocontrole.insumo AS i
+      WHERE i.grupo_insumo_id in ($<grupoInsumoIds:csv>)
+      LIMIT 1`,
+      { grupoInsumoIds }
+    )
+    if (insumoAssociado) {
+      throw new AppError(
+        'Um dos grupo de insumos possui insumos associados',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.grupo_insumo
+      WHERE id in ($<grupoInsumoIds:csv>)`,
+      { grupoInsumoIds }
+    )
+  })
+}
+
+controller.atualizaGrupoInsumo = async grupo_insumos => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        grupo_insumos,
+        cs,
+        { table: 'grupo_insumo', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.gravaGrupoInsumo = async grupo_insumos => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome'
+    ])
+
+    const query = db.pgp.helpers.insert(grupo_insumos, cs, {
+      table: 'grupo_insumo',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
 controller.deletaInsumosAssociados = async (
   unidadeTrabalhoId,
   grupoInsumoId
@@ -1611,7 +1697,7 @@ controller.getVersaoQgis = async () => {
 controller.atualizaVersaoQgis = async versaoQgis => {
   return db.sapConn.none(
     `UPDATE dgeo.versao_qgis SET
-    versao_minima = $<versaoQgis>`,
+    versao_minima = $<versaoQgis> WHERE code = 1`,
     { versaoQgis }
   )
 }

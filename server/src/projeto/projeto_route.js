@@ -23,6 +23,28 @@ router.get(
 )
 
 router.get(
+  '/tipo_criacao_unidade_trabalho',
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getTipoCriacaoUnidadeTrabalho()
+
+    const msg = 'Tipos de criação de unidade de trabalho retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tipo_controle_qualidade',
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getTipoCQ()
+
+    const msg = 'Tipos de controle de qualidade retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
   '/tipo_fase',
   asyncHandler(async (req, res, next) => {
     const dados = await projetoCtrl.getTipoFase()
@@ -410,18 +432,6 @@ router.delete(
 )
 
 router.get(
-  '/banco_dados',
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getBancoDados()
-
-    const msg = 'Banco de dados retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.get(
   '/dado_producao',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
@@ -528,7 +538,19 @@ router.get(
 )
 
 router.get(
-  '/linhas_producao',
+  '/estrutura_linha_producao',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getEstruturaLinhaProducao()
+
+    const msg = 'Estrutura da linhas de produção retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/linha_producao',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await projetoCtrl.getLinhasProducao()
@@ -946,6 +968,49 @@ router.get(
     const msg = 'Grupos de insumos retornados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/grupo_insumo',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.grupoInsumoAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaGrupoInsumo(req.body.grupo_insumos)
+
+    const msg = 'Grupos de insumos atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.post(
+  '/grupo_insumo',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.grupoInsumo
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaGrupoInsumo(req.body.grupo_insumos)
+
+    const msg = 'Grupos de insumos criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/grupo_insumo',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.grupoInsumoId }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaGrupoInsumo(req.body.grupo_insumo_ids)
+
+    const msg = 'Grupos de insumos deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 )
 

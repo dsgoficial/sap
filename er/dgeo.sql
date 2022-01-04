@@ -38,7 +38,7 @@ CREATE TABLE dgeo.versao_qgis(
   CHECK (versao_minima ~ '^\d+(\.\d+){0,2}$')
 );
 INSERT INTO dgeo.versao_qgis (code, versao_minima) VALUES
-(1, '3.16.9');
+(1, '3.22.2');
 
 CREATE TABLE dgeo.qgis_shortcuts(
   id SERIAL NOT NULL PRIMARY KEY,

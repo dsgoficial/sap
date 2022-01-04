@@ -58,6 +58,364 @@ controller.getPerfilProducao = async () => {
   return db.sapConn.any('SELECT id, nome FROM macrocontrole.perfil_producao')
 }
 
+controller.criaPerfilProducao = async perfilProducao => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilProducao, cs, {
+      table: 'perfil_producao',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilProducao = async perfilProducao => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilProducao,
+        cs,
+        { table: 'perfil_producao', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaPerfilProducao = async perfilProducaoId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_producao
+      WHERE id in ($<perfilProducaoId:csv>)`,
+      { perfilProducaoId }
+    )
+    if (exists && exists.length < perfilProducaoId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil de producao',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation1 = await t.any(
+      `SELECT id FROM macrocontrole.perfil_producao_operador
+      WHERE perfil_producao_id in ($<perfilProducaoId:csv>)`,
+      { perfilProducaoId }
+    )
+    if (existsAssociation1 && existsAssociation1.length > 0) {
+      throw new AppError(
+        'O perfil de produção possui perfil de produção operador associado',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation2 = await t.any(
+      `SELECT id FROM macrocontrole.fila_prioritaria_grupo
+      WHERE perfil_producao_id in ($<perfilProducaoId:csv>)`,
+      { perfilProducaoId }
+    )
+    if (existsAssociation2 && existsAssociation2.length > 0) {
+      throw new AppError(
+        'O perfil de produção possui fila prioritária de grupo associada',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_producao
+      WHERE id in ($<perfilProducaoId:csv>)`,
+      { perfilProducaoId }
+    )
+  })
+}
+
+controller.getPerfilProjetoOperador = async () => {
+  return db.sapConn.any('SELECT id, usuario_id, projeto_id, prioridade FROM macrocontrole.perfil_projeto_operador')
+}
+
+controller.criaPerfilProjetoOperador = async perfilProjetoOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'usuario_id',
+      'projeto_id',
+      'prioridade'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilProjetoOperador, cs, {
+      table: 'perfil_projeto_operador',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilProjetoOperador = async perfilProjetoOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'usuario_id',
+      'projeto_id',
+      'prioridade'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilProjetoOperador,
+        cs,
+        { table: 'perfil_projeto_operador', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaPerfilProjetoOperador = async perfilProjetoOperadorId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_projeto_operador
+      WHERE id in ($<perfilProjetoOperadorId:csv>)`,
+      { perfilProjetoOperadorId }
+    )
+    if (exists && exists.length < perfilProjetoOperadorId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil projeto operador',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_projeto_operador
+      WHERE id in ($<perfilProjetoOperadorId:csv>)`,
+      { perfilProjetoOperadorId }
+    )
+  })
+}
+
+controller.getPerfilProducaoOperador = async () => {
+  return db.sapConn.any('SELECT id, usuario_id, perfil_producao_id FROM macrocontrole.perfil_producao_operador')
+}
+
+controller.criaPerfilProducaoOperador = async perfilProducaoOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'usuario_id',
+      'perfil_producao_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilProducaoOperador, cs, {
+      table: 'perfil_producao_operador',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilProducaoOperador = async perfilProducaoOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'usuario_id',
+      'perfil_producao_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilProducaoOperador,
+        cs,
+        { table: 'perfil_producao_operador', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaPerfilProducaoOperador = async perfilProducaoOperadorId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_producao_operador
+      WHERE id in ($<perfilProducaoOperadorId:csv>)`,
+      { perfilProducaoOperadorId }
+    )
+    if (exists && exists.length < perfilProducaoOperadorId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil produção operador',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_producao_operador
+      WHERE id in ($<perfilProducaoOperadorId:csv>)`,
+      { perfilProducaoOperadorId }
+    )
+  })
+}
+
+controller.getPerfilProducaoEtapa = async () => {
+  return db.sapConn.any('SELECT id, perfil_producao_id, subfase_id, tipo_etapa_id, prioridade FROM macrocontrole.perfil_producao_etapa')
+}
+
+controller.criaPerfilProducaoEtapa = async perfilProducaoEtapa => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'perfil_producao_id',
+      'subfase_id',
+      'tipo_etapa_id',
+      'prioridade'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilProducaoEtapa, cs, {
+      table: 'perfil_producao_etapa',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilProducaoEtapa = async perfilProducaoEtapa => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'perfil_producao_id',
+      'subfase_id',
+      'tipo_etapa_id',
+      'prioridade'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilProducaoEtapa,
+        cs,
+        { table: 'perfil_producao_etapa', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaPerfilProducaoEtapa = async perfilProducaoEtapaId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_producao_etapa
+      WHERE id in ($<perfilProducaoEtapaId:csv>)`,
+      { perfilProducaoEtapaId }
+    )
+    if (exists && exists.length < perfilProducaoEtapaId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil produção etapa',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_producao_etapa
+      WHERE id in ($<perfilProducaoEtapaId:csv>)`,
+      { perfilProducaoEtapaId }
+    )
+  })
+}
+
+controller.getPerfilDificuldadeOperador = async () => {
+  return db.sapConn.any('SELECT id, usuario_id, subfase_id, projeto_id, tipo_perfil_dificuldade_id FROM macrocontrole.perfil_dificuldade_operador')
+}
+
+controller.criaPerfilDificuldadeOperador = async perfilDificuldadeOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'usuario_id',
+      'subfase_id',
+      'projeto_id',
+      'tipo_perfil_dificuldade_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilDificuldadeOperador, cs, {
+      table: 'perfil_dificuldade_operador',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilDificuldadeOperador = async perfilDificuldadeOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'usuario_id',
+      'subfase_id',
+      'projeto_id',
+      'tipo_perfil_dificuldade_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilDificuldadeOperador,
+        cs,
+        { table: 'perfil_dificuldade_operador', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaPerfilDificuldadeOperador = async perfilDificuldadeOperadorId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_dificuldade_operador
+      WHERE id in ($<perfilDificuldadeOperadorId:csv>)`,
+      { perfilDificuldadeOperadorId }
+    )
+    if (exists && exists.length < perfilDificuldadeOperadorId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil dificuldade operador',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_dificuldade_operador
+      WHERE id in ($<perfilDificuldadeOperadorId:csv>)`,
+      { perfilDificuldadeOperadorId }
+    )
+  })
+}
+
 const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
   const dataFim = new Date()
 
@@ -133,12 +491,6 @@ controller.pausaAtividade = async (unidadeTrabalhoIds) => {
       )
     }
   })
-}
-
-controller.atualizaAtividadesBloqueadas = async () => {
-  return db.sapConn.any(
-    'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.atividades_bloqueadas'
-  )
 }
 
 controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {

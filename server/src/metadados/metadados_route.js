@@ -11,6 +11,7 @@ const metadadosSchema = require('./metadados_schema')
 
 const router = express.Router()
 
+/** 
 router.get(
   '/:uuid',
   verifyAdmin,
@@ -25,6 +26,7 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
+*/
 
 router.get(
   '/tipo_palavra_chave',

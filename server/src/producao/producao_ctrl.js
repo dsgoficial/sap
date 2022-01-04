@@ -174,7 +174,7 @@ const getInfoConfigQGIS = async (connection, subfaseId, loteId) => {
     { subfaseId, loteId }
   )
 }
-
+/**
 const getInfoMonitoramento = async (connection, subfaseId, loteId) => {
   return connection.any(
     `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
@@ -184,7 +184,7 @@ const getInfoMonitoramento = async (connection, subfaseId, loteId) => {
     [subfaseId, loteId]
   )
 }
-
+ */
 const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
   return connection.any(
     `SELECT i.id, i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao

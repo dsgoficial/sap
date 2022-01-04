@@ -358,7 +358,7 @@ CREATE TABLE macrocontrole.perfil_producao_etapa(
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id), 
 	tipo_etapa_id SMALLINT NOT NULL REFERENCES dominio.tipo_etapa (code),
 	prioridade INTEGER NOT NULL,
-	UNIQUE (perfil_producao_id, subfase_id, )
+	UNIQUE (perfil_producao_id, subfase_id, tipo_etapa_id)
 );
 
 CREATE TABLE macrocontrole.perfil_producao_operador(

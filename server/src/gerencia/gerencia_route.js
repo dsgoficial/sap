@@ -57,6 +57,243 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
+router.put(
+  '/perfil_producao',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProducaoAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.atualizaPerfilProducao(req.body.perfil_producao)
+
+    const msg = 'Perfis de produção atualizados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+router.post(
+  '/perfil_producao',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProducao }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.criaPerfilProducao(req.body.perfil_producao)
+
+    const msg = 'Perfis de produção criados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+router.delete(
+  '/perfil_producao',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProducaoIds }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.deletaPerfilProducao(req.body.perfil_producao_ids)
+
+    const msg = 'Perfis de produção deletados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/perfil_projeto_operador',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getPerfilProjetoOperador()
+
+    const msg = 'Perfis projeto operador retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/perfil_projeto_operador',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProjetoOperadorAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.atualizaPerfilProjetoOperador(req.body.perfil_projeto_operador)
+
+    const msg = 'Perfis projeto operador atualizados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/perfil_projeto_operador',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProjetoOperador }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.criaPerfilProjetoOperador(req.body.perfil_projeto_operador)
+
+    const msg = 'Perfis projeto operador criados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/perfil_projeto_operador',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProjetoOperadorIds }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.deletaPerfilProjetoOperador(req.body.perfil_projeto_operador_ids)
+
+    const msg = 'Perfis projeto operador deletados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/perfil_producao_operador',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getPerfilProducaoOperador()
+
+    const msg = 'Perfis produção operador retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/perfil_producao_operador',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProducaoOperadorAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.atualizaPerfilProducaoOperador(req.body.perfil_producao_operador)
+
+    const msg = 'Perfis produção operador atualizados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/perfil_producao_operador',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProducaoOperador }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.criaPerfilProducaoOperador(req.body.perfil_producao_operador)
+
+    const msg = 'Perfis produção operador criados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+router.delete(
+  '/perfil_producao_operador',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProducaoOperadorIds }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.deletaPerfilProducaoOperador(req.body.perfil_producao_operador_ids)
+
+    const msg = 'Perfis produção operador deletados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/perfil_producao_etapa',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getPerfilProducaoEtapa()
+
+    const msg = 'Perfis produção etapa retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/perfil_producao_etapa',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProducaoEtapaAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.atualizaPerfilProducaoEtapa(req.body.perfil_producao_etapa)
+
+    const msg = 'Perfis produção etapa atualizados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/perfil_producao_etapa',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProducaoEtapa }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.criaPerfilProducaoEtapa(req.body.perfil_producao_etapa)
+
+    const msg = 'Perfis produção etapa criados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+router.delete(
+  '/perfil_producao_etapa',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilProducaoEtapaIds }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.deletaPerfilProducaoEtapa(req.body.perfil_producao_etapa_ids)
+
+    const msg = 'Perfis produção etapa deletados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/perfil_dificuldade_operador',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getPerfilDificuldadeOperador()
+
+    const msg = 'Perfis dificuldade operador retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/perfil_dificuldade_operador',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilDificuldadeOperadorAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.atualizaPerfilDificuldadeOperador(req.body.perfil_dificuldade_operador)
+
+    const msg = 'Perfis dificuldade operador atualizados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/perfil_dificuldade_operador',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilDificuldadeOperador }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.criaPerfilDificuldadeOperador(req.body.perfil_dificuldade_operador)
+
+    const msg = 'Perfis dificuldade operador criados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+router.delete(
+  '/perfil_dificuldade_operador',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.perfilDificuldadeOperadorIds }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.deletaPerfilDificuldadeOperador(req.body.perfil_dificuldade_operador_ids)
+
+    const msg = 'Perfis dificuldade operador deletados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
 
 router.post(
   '/unidade_trabalho/disponivel',
@@ -211,18 +448,6 @@ router.get(
     const msg = 'Views de acompanhamento retornadas com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.put(
-  '/atividades_bloqueadas',
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.atualizaAtividadesBloqueadas()
-
-    const msg = 'View Atividades Bloqueadas atualizada com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 )
 

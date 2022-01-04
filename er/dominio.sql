@@ -112,7 +112,7 @@ INSERT INTO dominio.tipo_etapa (code,nome) VALUES
 (1,'Execução'),
 (2,'Revisão'),
 (3,'Correção'),
-(4,'Revisão e Correção'),
+(4,'Revisão/Correção'),
 (5,'Revisão final');
 
 CREATE TABLE dominio.tipo_exibicao(
@@ -195,6 +195,29 @@ INSERT INTO dominio.tipo_perfil_dificuldade (code, nome) VALUES
 (1, 'Distribuir atividades mais fáceis'),
 (2, 'Distribuir atividades mais difíceis'),
 (3, 'Distribuir de forma balanceada');
+
+CREATE TABLE dominio.tipo_controle_qualidade(	
+	code SMALLINT NOT NULL PRIMARY KEY,	
+	nome VARCHAR(255) NOT NULL	
+);	
+
+INSERT INTO dominio.tipo_controle_qualidade (code, nome) VALUES
+(1, 'Sem controle de qualidade nas subfases'),
+(2, 'Uma Revisão/Correção em todas as subfases'),
+(3, 'Uma Revisão em todas as subfases');
+
+CREATE TABLE dominio.tipo_criacao_unidade_trabalho(	
+	code SMALLINT NOT NULL PRIMARY KEY,	
+	nome VARCHAR(255) NOT NULL	
+);	
+
+INSERT INTO dominio.tipo_criacao_unidade_trabalho (code, nome) VALUES
+(1, 'Produto'),
+(2, '1/4 de produto'),
+(3, '1/9 de produto'),
+(4, 'Bloco'),
+(5, '1/4 de bloco'),
+(6, '1/9 de bloco');
 
 CREATE TABLE dominio.tipo_problema(
 	code SMALLINT NOT NULL PRIMARY KEY,
