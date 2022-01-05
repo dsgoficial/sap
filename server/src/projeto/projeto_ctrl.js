@@ -664,20 +664,6 @@ controller.getProjetos = async () => {
   )
 }
 
-controller.getEstruturaLinhaProducao = async () => {
-  return db.sapConn.any(
-    `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto,
-    f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase, 
-    sf.id AS subfase_id, sf.nome AS subfase,
-    FROM macrocontrole.linha_producao AS lp
-    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
-    INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
-    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
-    INNER JOIN macrocontrole.subfase AS sf ON sf.fase_id = f.id
-    `
-  )
-}
-
 controller.getLinhasProducao = async () => {
   return db.sapConn.any(
     `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto
@@ -700,14 +686,14 @@ controller.getFases = async () => {
 
 controller.getSubfases = async () => {
   return db.sapConn.any(
-    `SELECT s.id AS subfase_id, s.nome AS subfase, s.fase_id,
-    tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem,
-    lp.nome AS linha_producao, tp.nome AS tipo_produto
-    FROM macrocontrole.subfase AS s
-    INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+    `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto,
+    f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase, 
+    sf.id AS subfase_id, sf.nome AS subfase,
+    FROM macrocontrole.linha_producao AS lp
+    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
+    INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
     INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
-    INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id`
+    INNER JOIN macrocontrole.subfase AS sf ON sf.fase_id = f.id`
   )
 }
 
@@ -1770,5 +1756,10 @@ controller.deletaPlugins = async pluginsId => {
   })
 }
 
+controller.getLote = async () => {
+  return db.sapConn.any(
+    'SELECT id, nome, linha_producao_id, projeto_id, descricao  FROM macrocontrole.lote'
+  )
+}
 
 module.exports = controller

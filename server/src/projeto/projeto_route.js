@@ -538,18 +538,6 @@ router.get(
 )
 
 router.get(
-  '/estrutura_linha_producao',
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getEstruturaLinhaProducao()
-
-    const msg = 'Estrutura da linhas de produção retornadas com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.get(
   '/linha_producao',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
@@ -1238,6 +1226,18 @@ router.delete(
     const msg = 'Plugins deletados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.get(
+  '/lote',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getLote()
+
+    const msg = 'Lotes retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
