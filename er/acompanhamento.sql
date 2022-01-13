@@ -11,7 +11,7 @@ CREATE TABLE acompanhamento.login(
 CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_subfase(subfase_ident integer, lote_ident integer)
   RETURNS void AS
 $$
-    DECLARE view_txt text;
+    DECLARE view_txt text := '';
     DECLARE jointxt text := '';
     DECLARE wheretxt text := '';
     DECLARE num integer;
@@ -124,7 +124,7 @@ $$
       view_txt := view_txt || ' ORDER BY ut.prioridade;';
 
 
-      IF view_txt THEN
+      IF view_txt != '' THEN
         EXECUTE view_txt;
         EXECUTE 'GRANT SELECT ON TABLE acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' TO PUBLIC';
         EXECUTE 'CREATE INDEX lote_' || lote_ident || '_subfase_' || subfase_ident || '_geom ON acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' USING gist (geom);';
