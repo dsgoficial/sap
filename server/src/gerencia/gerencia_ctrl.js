@@ -60,6 +60,21 @@ controller.getPerfilProducao = async () => {
 
 controller.criaPerfilProducao = async perfilProducao => {
   return db.sapConn.tx(async t => {
+    const perfilProducaoList = perfilProducao.map(function (obj) {
+      return obj.nome;
+    });
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_producao
+      WHERE nome in ($<perfilProducaoList:csv>)`,
+      { perfilProducaoList }
+    )
+    if (exists && exists.length > 0) {
+      throw new AppError(
+        'Nome duplicado em perfil de producao',
+        httpCode.BadRequest
+      )
+    }
+
 
     const cs = new db.pgp.helpers.ColumnSet([
       'nome'
