@@ -233,7 +233,7 @@ controller.criaPerfilProducaoOperador = async perfilProducaoOperador => {
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_producao_operador
-      WHERE perfil_producao_id in ($<perfilProducaoOperadorId:csv>)`,
+      WHERE usuario_id in ($<perfilProducaoOperadorId:csv>)`,
       { perfilProducaoOperadorId: perfilProducaoOperador.map(c => c.usuario_id) }
     )
     if (exists && exists.length > 0) {
