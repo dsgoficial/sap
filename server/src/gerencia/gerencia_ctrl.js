@@ -702,17 +702,23 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
 
     const dataFim = new Date()
 
+    // Torna a ultima atividade com data final como finalizada
+    // Ela pode ser pausada, já finalizada (que é redundante), ou não finalizada
     await t.none(
       `
         UPDATE macrocontrole.atividade
-        SET tipo_situacao_id = 4 AND data_inicio = $<dataFim> AND data_fim = $<dataFim>
+        SET tipo_situacao_id = 4
         WHERE id IN (
-            SELECT a_ant.id
+          SELECT id
+          FROM (
+            SELECT a_ant.id, ROW_NUMBER() OVER (PARTITION BY a.id ORDER BY  a_ant.data_fim DESC) AS r
             FROM macrocontrole.atividade AS a
             INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
             INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
-            WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.tipo_situacao_id IN (3)
+            WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.data_fim IS NOT NULL
+          ) AS foo
+          WHERE r = 1;
         )
         `,
       { atividadeIds, comparisonOperator, dataFim }
