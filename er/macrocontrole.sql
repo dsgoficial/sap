@@ -127,7 +127,7 @@ CREATE TABLE macrocontrole.perfil_fme(
 	gerenciador_fme_id INTEGER NOT NULL REFERENCES dgeo.gerenciador_fme (id),
 	rotina VARCHAR(255) NOT NULL,
 	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
-	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
+	tipo_rotina_id SMALLINT NOT NULL REFERENCES dominio.tipo_rotina (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	ordem INTEGER NOT NULL
@@ -172,7 +172,7 @@ CREATE TABLE macrocontrole.perfil_model_qgis(
 	qgis_model_id INTEGER NOT NULL REFERENCES dgeo.qgis_models (id),
 	parametros TEXT, 
 	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
-	gera_falso_positivo BOOLEAN NOT NULL DEFAULT FALSE,
+	tipo_rotina_id SMALLINT NOT NULL REFERENCES dominio.tipo_rotina (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	ordem INTEGER NOT NULL,

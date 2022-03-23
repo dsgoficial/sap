@@ -898,7 +898,7 @@ controller.criaCamadas = async camadas => {
 
 controller.getPerfilFME = async () => {
   return db.sapConn.any(
-    `SELECT pf.id, pf.gerenciador_fme_id, pf.rotina, pf.requisito_finalizacao, pf.gera_falso_positivo, pf.subfase_id, pf.ordem, s.nome
+    `SELECT pf.id, pf.gerenciador_fme_id, pf.rotina, pf.requisito_finalizacao, pf.tipo_rotina_id, pf.subfase_id, pf.ordem, s.nome
     FROM macrocontrole.perfil_fme AS pf
     INNER JOIN macrocontrole.subfase AS s ON s.id = pf.subfase_id`
   )
@@ -943,7 +943,7 @@ controller.atualizaPerfilFME = async perfilFME => { // FIXME retornar mensagem d
       query.push(
         t.any(
           `UPDATE macrocontrole.perfil_fme
-          SET gerenciador_fme_id = $<gerenciadorFmeId>, rotina = $<rotina>, requisito_finalizacao = $<requisitoFinalizacao>, gera_falso_positivo = $<geraFalsoPositivo>,
+          SET gerenciador_fme_id = $<gerenciadorFmeId>, rotina = $<rotina>, requisito_finalizacao = $<requisitoFinalizacao>, tipo_rotina_id = $<tipoRotinaId>,
           subfase_id = $<subfaseId>, ordem = $<ordem>
           where id = $<id>`,
           {
@@ -951,7 +951,7 @@ controller.atualizaPerfilFME = async perfilFME => { // FIXME retornar mensagem d
             gerenciadorFmeId: c.gerenciador_fme_id,
             rotina: c.rotina,
             requisitoFinalizacao: c.requisito_finalizacao,
-            geraFalsoPositivo: c.gera_falso_positivo,
+            tipoRotinaId: c.tipo_rotina_id,
             subfaseId: c.subfase_id,
             ordem: c.ordem
           }
@@ -979,7 +979,7 @@ controller.criaPerfilFME = async perfilFME => { // FIXME retornar mensagem de er
     'gerenciador_fme_id',
     'rotina',
     'requisito_finalizacao',
-    'gera_falso_positivo',
+    'tipo_rotina_id',
     'subfase_id',
     'ordem'
   ])
@@ -1006,9 +1006,10 @@ controller.criaPerfilFME = async perfilFME => { // FIXME retornar mensagem de er
 
 controller.getPerfilModelo = async () => {
   return db.sapConn.any(
-    `SELECT pmq.id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.parametros, pmq.gera_falso_positivo, pmq.ordem, pmq.subfase_id, qm.nome, qm.descricao
+    `SELECT pmq.id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.parametros, pmq.tipo_rotina_id, tr.nome as tipo_rotina, pmq.ordem, pmq.subfase_id, qm.nome, qm.descricao
     FROM macrocontrole.perfil_model_qgis AS pmq
-    INNER JOIN dgeo.qgis_models AS qm ON qm.id = pmq.qgis_model_id`
+    INNER JOIN dgeo.qgis_models AS qm ON qm.id = pmq.qgis_model_id
+    INNER JOIN dominio.tipo_rotina AS tr ON tr.code = pmq.tipo_rotina_id`
   )
 }
 
@@ -1051,7 +1052,7 @@ controller.atualizaPerfilModelo = async perfilModelo => { // FIXME REFATORAR
       query.push(
         t.any(
           `UPDATE macrocontrole.perfil_model_qgis
-          SET qgis_model_id = $<qgisModelId>, parametros = $<parametros>, requisito_finalizacao = $<requisitoFinalizacao>, gera_falso_positivo = $<geraFalsoPositivo>,
+          SET qgis_model_id = $<qgisModelId>, parametros = $<parametros>, requisito_finalizacao = $<requisitoFinalizacao>, tipo_rotina_id = $<tipoRotinaId>,
           subfase_id = $<subfaseId>, ordem = $<ordem>
           where id = $<id>`,
           {
@@ -1059,7 +1060,7 @@ controller.atualizaPerfilModelo = async perfilModelo => { // FIXME REFATORAR
             qgisModelId: c.qgis_model_id,
             parametros: c.parametros,
             requisitoFinalizacao: c.requisito_finalizacao,
-            geraFalsoPositivo: c.gera_falso_positivo,
+            tipoRotinaId: c.tipo_rotina_id,
             subfaseId: c.subfase_id,
             ordem: c.ordem
           }
@@ -1076,7 +1077,7 @@ controller.criaPerfilModelo = async perfilModelo => {
     'qgis_model_id',
     'parametros',
     'requisito_finalizacao',
-    'gera_falso_positivo',
+    'tipo_rotina_id',
     'subfase_id',
     'ordem'
   ])

@@ -161,8 +161,9 @@ const getInfoRegras = async (connection, subfaseId, loteId) => {
 
 const getInfoFME = async (connection, subfaseId, loteId) => {
   return connection.any(
-    `SELECT gf.servidor, gf.porta, pf.rotina, pf.gera_falso_positivo, pf.requisito_finalizacao, pf.ordem FROM macrocontrole.perfil_fme AS pf
+    `SELECT gf.servidor, gf.porta, pf.rotina, pf.tipo_rotina_id, tr.nome as tipo_rotina, pf.requisito_finalizacao, pf.ordem FROM macrocontrole.perfil_fme AS pf
     INNER JOIN dgeo.gerenciador_fme AS gf ON gf.id = pf.gerenciador_fme_id
+    INNER JOIN dominio.tipo_rotina AS tr ON tr.code = pf.tipo_rotina_id
     WHERE subfase_id = $<subfaseId> AND lote_id = $<loteId>`,
     { subfaseId, loteId }
   )
@@ -197,9 +198,10 @@ const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
 
 const getInfoModelsQGIS = async (connection, subfaseId, loteId) => {
   return connection.any(
-    `SELECT lqm.nome, lqm.descricao, lqm.model_xml, pmq.parametros, pmq.gera_falso_positivo, pmq.requisito_finalizacao, pmq.ordem
+    `SELECT lqm.nome, lqm.descricao, lqm.model_xml, pmq.parametros, pmq.tipo_rotina_id, tr.nome as tipo_rotina, pmq.requisito_finalizacao, pmq.ordem
       FROM macrocontrole.perfil_model_qgis AS pmq
       INNER JOIN dgeo.qgis_models AS lqm ON pmq.qgis_model_id = lqm.id
+      INNER JOIN dominio.tipo_rotina AS tr on tr.code = pmq.tipo_rotina_id
       WHERE pmq.subfase_id = $1 AND pmq.lote_id = $2`,
     [subfaseId, loteId]
   )

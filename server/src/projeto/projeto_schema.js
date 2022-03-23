@@ -372,7 +372,7 @@ models.perfisFME = Joi.object().keys({
         gerenciador_fme_id: Joi.number().integer().strict().required(),
         rotina: Joi.number().integer().strict().required(),
         requisito_finalizacao: Joi.boolean().strict().required(),
-        gera_falso_positivo: Joi.boolean().strict().required(),
+        tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
       })
@@ -388,7 +388,7 @@ models.perfisModelo = Joi.object().keys({
         qgis_model_id: Joi.number().integer().strict().required(),
         parametros: Joi.string().required().allow(null, ''),
         requisito_finalizacao: Joi.boolean().strict().required(),
-        gera_falso_positivo: Joi.boolean().strict().required(),
+        tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
       })
@@ -455,7 +455,7 @@ models.perfisModeloAtualizacao = Joi.object().keys({
         qgis_model_id: Joi.number().integer().strict().required(),
         parametros: Joi.string().required(),
         requisito_finalizacao: Joi.boolean().strict().required(),
-        gera_falso_positivo: Joi.boolean().strict().required(),
+        tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
       })
@@ -473,7 +473,7 @@ models.perfilFMEAtualizacao = Joi.object().keys({
         gerenciador_fme_id: Joi.number().integer().strict().required(),
         rotina: Joi.number().integer().strict().required(),
         requisito_finalizacao: Joi.boolean().strict().required(),
-        gera_falso_positivo: Joi.boolean().strict().required(),
+        tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
       })

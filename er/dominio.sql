@@ -265,4 +265,15 @@ INSERT INTO dominio.estrategia_associacao (code, nome) VALUES
 (4, 'Sobreposição entre insumo e unidade de trabalho'),
 (5, 'Associar insumo a todas as unidades de trabalho');
 
+
+CREATE TABLE dominio.tipo_rotina(	
+	code SMALLINT NOT NULL PRIMARY KEY,	
+	nome VARCHAR(255) NOT NULL	
+);	
+
+INSERT INTO dominio.tipo_rotina (code, nome) VALUES	
+(1, 'Controle de qualidade sem falso positivo'),	
+(2, 'Controle de qualidade com falso positivo'),	
+(3, 'Auxiliar');
+
 COMMIT;
