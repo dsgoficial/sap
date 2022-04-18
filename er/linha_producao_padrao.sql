@@ -1,7 +1,7 @@
 BEGIN;
 
 INSERT INTO macrocontrole.linha_producao (tipo_produto_id,nome,descricao) VALUES
-(3, 'Carta ortoimagem', 'Linha de produção padrão para carta ortoimagem'); --1
+(3, 'Carta ortoimagem', 'Linha de produção padrão para carta ortoimagem'); --id 1
 
 INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
 (11,1,1),--1 PDI
@@ -33,12 +33,12 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (1, 3, 4),
 (1, 4, 5),
 (1, 4, 6),
-(1, 4, 7),
-(1, 4, 8),
+(1, 6, 7),
+(1, 5, 8),
 (1, 5, 9),
-(1, 6, 9),
 (1, 7, 9),
-(1, 4, 10),
+(1, 5, 10),
+(1, 7, 10),
 (1, 8, 11),
 (1, 9, 11),
 (1, 10, 11),
