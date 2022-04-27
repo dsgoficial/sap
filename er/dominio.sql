@@ -54,7 +54,7 @@ INSERT INTO dominio.tipo_produto (code, nome) VALUES
 (5, 'Modelo Digital de Superfície'),
 (6, 'Modelo Digital de Terreno'),
 (7, 'Conjunto de dados geoespaciais vetoriais - ET-EDGV 3.0'),
-(8, 'Conjunto de dados geoespaciais vetoriais - TRD 4'),
+(8, 'Conjunto de dados geoespaciais vetoriais - MGCP'),
 (9, 'Fototriangulação'),
 (10, 'Imagem aérea/satélite'),
 (11, 'Ponto de controle'),
@@ -65,7 +65,9 @@ INSERT INTO dominio.tipo_produto (code, nome) VALUES
 (16, 'Rede de transporte'),
 (17, 'Mapa de geografia humana'),
 (18, 'Levantamento topográfico'),
-(19, 'Carta ortoimagem de OM');
+(19, 'Carta ortoimagem de OM'),
+(20, 'Conjunto de dados geoespaciais vetoriais - MUVD'),
+(21, 'Modelo Digital de Superfície - TREx');
 
 
 -- Fase é somente para agrupar as Subfases
