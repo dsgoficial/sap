@@ -24,10 +24,6 @@ node_modules
 # Optional eslint cache
 .eslintcache
 
-# dotenv environment variables file(s)
-.env
-.env.*
-
 #Build generated
 dist/
 build/
@@ -106,7 +102,6 @@ log
 sap_config.qgs
 sap_config.qgs~
 
-*.env
 
 config.env
 
@@ -114,8 +109,3 @@ sslcert
 
 test_request.http
 
-*.fmw
-
-*.http
-
-github

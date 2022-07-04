@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { createBrowserHistory } from 'history'
 import axios from 'axios'
 
-axios.defaults.baseURL = process.env.REACT_APP_BE_URL;
+//axios.defaults.baseURL = process.env.REACT_APP_BE_URL;
 
 const APLICACAO = 'sap_web'
 
