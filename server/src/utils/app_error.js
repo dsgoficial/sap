@@ -4,7 +4,7 @@
  * @module utils/appError
  */
 
-const { serializeError } = require('serialize-error')
+const { serializeError } = import('serialize-error')
 
 const httpCode = require('./http_code')
 

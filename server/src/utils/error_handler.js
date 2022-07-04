@@ -1,6 +1,6 @@
 'use strict'
 
-const { serializeError } = require('serialize-error')
+const { serializeError } = import('serialize-error')
 
 const logger = require('./logger')
 const httpCode = require('./http_code')
