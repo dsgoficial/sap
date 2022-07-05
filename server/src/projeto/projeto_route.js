@@ -1016,7 +1016,7 @@ router.delete(
 )
 
 router.get(
-  '/estrategia_associacao',
+  '/tipo_estrategia_associacao',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await projetoCtrl.getEstrategiaAssociacao()

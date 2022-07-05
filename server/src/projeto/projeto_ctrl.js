@@ -1596,7 +1596,7 @@ controller.associaInsumos = async (
 }
 
 controller.getEstrategiaAssociacao = async () => {
-  return db.sapConn.any('SELECT code, nome FROM dominio.estrategia_associacao')
+  return db.sapConn.any('SELECT code, nome FROM dominio.tipo_estrategia_associacao')
 }
 
 controller.getAtalhos = async () => {

@@ -255,12 +255,12 @@ INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES
 (99, 'Outros');
 
 
-CREATE TABLE dominio.estrategia_associacao(	
+CREATE TABLE dominio.tipo_estrategia_associacao(	
 	code SMALLINT NOT NULL PRIMARY KEY,	
 	nome VARCHAR(255) NOT NULL	
 );	
 
-INSERT INTO dominio.estrategia_associacao (code, nome) VALUES	
+INSERT INTO dominio.tipo_estrategia_associacao (code, nome) VALUES	
 (1, 'Centroide da unidade de trabalho contido no insumo'),	
 (2, 'Centroide do insumo contido na unidade de trabalho'),	
 (3, 'Interseção entre insumo e unidade de trabalho'),
