@@ -12,7 +12,7 @@ FROM (
   LEFT JOIN
   (
     SELECT a.tipo_situacao_id, a.unidade_trabalho_id, e.ordem, e.subfase_id FROM macrocontrole.atividade AS a
-    INNER JOIN macrocontrole.etapa AS se ON e.id = a.etapa_id
+    INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
     WHERE a.tipo_situacao_id in (1,2,3,4)
   ) 
   AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND a_ant.subfase_id = e.subfase_id
