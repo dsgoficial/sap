@@ -83,4 +83,27 @@ CREATE TABLE recurso_humano.banco_dispensas(
     dias_restantes INTEGER NOT NULL
 );
 
+CREATE TABLE dominio.tipo_perda_recurso_humano(	
+	code SMALLINT NOT NULL PRIMARY KEY,	
+	nome VARCHAR(255) NOT NULL	
+);	
+
+INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES	
+(1, 'Atividades militares'),	
+(2, 'Atividades administrativas'),	
+(3, 'Problemas técnicos'),	
+(4, 'Feriado'),	
+(5, 'Férias'),
+(6, 'Dispensa por motivo de saúde'),
+(7, 'Dispensa como recompensa'),
+(8, 'Dispensa por regresso de atividade de campo'),
+(9, 'Designação para realizar curso / capacitação'),
+(10, 'Designação para ministrar curso / capacitação'),
+(11, 'Designação para participação em eventos'),
+(99, 'Outros');
+
+GRANT USAGE ON SCHEMA recurso_humano TO $1:name;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA recurso_humano TO $1:name;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA recurso_humano TO $1:name;
+
 COMMIT;
