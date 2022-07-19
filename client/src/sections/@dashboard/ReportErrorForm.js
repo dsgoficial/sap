@@ -30,7 +30,7 @@ const validationSchema = yup.object({
 
 export default function ReportErrorForm({ open, setOpen, onSubmit }) {
 
-    const { getData } = useAPI()
+    const { getErrorTypes } = useAPI()
 
     const [errorTypes, setErrorTypes] = React.useState([]);
 
@@ -39,7 +39,8 @@ export default function ReportErrorForm({ open, setOpen, onSubmit }) {
     }, []);
 
     const loadErrorTypes = async () => {
-        let data = await getData('/api/distribuicao/tipo_problema')
+        let data = await getErrorTypes()
+        if (!data) return
         setErrorTypes(data.dados)
     }
 

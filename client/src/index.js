@@ -7,21 +7,26 @@ import * as serviceWorker from './serviceWorker';
 import reportWebVitals from './reportWebVitals';
 import Loading from './components/Loading'
 import { SnackbarProvider } from 'notistack';
+import AxiosProvider from './contexts/axiosContext'
 
 const App = lazy(() => import('./App'))
 
 ReactDOM.render(
 
     <HelmetProvider>
-        <APIProvider>
-            <BrowserRouter>
-                <Suspense fallback={<Loading open={true} />}>
-                    <SnackbarProvider maxSnack={3}>
-                        <App />
-                    </SnackbarProvider>
-                </Suspense>
-            </BrowserRouter>
-        </APIProvider>
+        <SnackbarProvider maxSnack={3}>
+            <AxiosProvider>
+                <APIProvider>
+                    <BrowserRouter>
+                        <Suspense fallback={<Loading open={true} />}>
+
+                            <App />
+
+                        </Suspense>
+                    </BrowserRouter>
+                </APIProvider>
+            </AxiosProvider>
+        </SnackbarProvider>
     </HelmetProvider>,
     document.getElementById('root')
 );

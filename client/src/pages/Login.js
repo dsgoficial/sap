@@ -45,8 +45,7 @@ const SubmitButtonStyled = styled(SubmitButton)(({ theme }) => ({
 
 export default function Login() {
     const {
-        handleLogin,
-        handleApiError,
+        login,
         history,
         isAuthenticated
     } = useAPI()
@@ -57,12 +56,10 @@ export default function Login() {
 
     const onSubmit = async (values) => {
         try {
-            const success = await handleLogin(values.usuario, values.senha)
+            const success = await login(values.usuario, values.senha)
             if (success) history.go('/')
-        } catch (err) {
-            const error = handleApiError(err)
-            console.log(error)
-            showSnackbar(error.msg, error.status)
+        } catch (error) {
+            showSnackbar(error.msg, 'warning')
         }
     }
 

@@ -20,7 +20,12 @@ import { useAPI } from '../../contexts/apiContext'
 
 export default function ActivityCard() {
 
-    const { getData, postData } = useAPI()
+    const {
+        getCurrentActivity,
+        startActivity,
+        finishActivity,
+        reportError
+    } = useAPI()
     const [subtitle, setSubtitle] = useState('')
     const [message, setMessage] = useState({ severity: 'info', text: '' })
     const [activityByQgis, setActivityByQgis] = useState(false)
@@ -36,7 +41,12 @@ export default function ActivityCard() {
 
     const loadCurrentActivity = async () => {
         setActivityId(null)
-        let data = await getData('/api/distribuicao/verifica')
+        let data = await getCurrentActivity()
+        if (!data) {
+            showMessage("Falha na verificação de atividades!", 'error')
+            setWait(false)
+            return
+        }
         if (data.dados == null) {
             setSubtitle(data.message)
             setWait(false)
@@ -48,57 +58,40 @@ export default function ActivityCard() {
         setWait(false)
     }
 
-    const startActivity = async () => {
+    const handleStartActivity = async () => {
         setWait(true)
-        try {
-            let response = await postData(
-                '/api/distribuicao/inicia',
-                {}
-            )
-            showMessage(response.data.message, 'success')
-            await loadCurrentActivity()
-        } catch (error) {
-            showMessage(error.response.data.message, 'error')
+        let data = await startActivity()
+        if (!data) {
+            showMessage("Falha ao iniciar atividade!", 'error')
+            setWait(false)
+            return
         }
-        setWait(false)
+        showMessage(data.message, 'success')
+        await loadCurrentActivity()
     }
 
-    const finishActivity = async () => {
+    const handleFinishActivity = async () => {
         setWait(true)
-        try {
-            let response = await postData(
-                '/api/distribuicao/finaliza',
-                {
-                    'atividade_id': activityId,
-                    'sem_correcao': false,
-                }
-            )
-            console.log(response)
-            showMessage(response.data.message, 'success')
-            await loadCurrentActivity()
-        } catch (error) {
-            console.log(error)
-            showMessage(error.response.data.message, 'error')
+        let data = await finishActivity(activityId)
+        if (!data) {
+            showMessage("Falha ao finalizar atividade!", 'error')
+            setWait(false)
+            return
         }
-        setWait(false)
+        showMessage(data.message, 'success')
+        await loadCurrentActivity()
     }
 
-    const reportError = async (errorInfo) => {
+    const handleReportError = async (errorInfo) => {
         setWait(true)
-        try {
-            let response = await postData(
-                '/api/distribuicao/problema_atividade',
-                {
-                    'atividade_id': activityId,
-                    ...errorInfo
-                }
-            )
-            showMessage(response.data.message, 'success')
-            await loadCurrentActivity()
-        } catch (error) {
-            showMessage(error.response.data.message, 'error')
+        let data = await reportError(activityId, errorInfo)
+        if (!data) {
+            showMessage("Falha ao reportar error!", 'error')
+            setWait(false)
+            return
         }
-        setWait(false)
+        showMessage(data.message, 'success')
+        await loadCurrentActivity()
     }
 
     const showMessage = (text, severity) => {
@@ -165,7 +158,8 @@ export default function ActivityCard() {
                                 }
                             </Box>
                             <Box sx={{ paddingTop: 5 }}>
-                                <Collapse in={!!message.text}>
+                                {
+                                    message.text &&
                                     <Alert
                                         variant="filled"
                                         severity={message.severity}
@@ -185,7 +179,7 @@ export default function ActivityCard() {
                                     >
                                         {message.text}
                                     </Alert>
-                                </Collapse>
+                                }
                             </Box>
                         </Box>
                     </div>
@@ -194,17 +188,17 @@ export default function ActivityCard() {
             <StartActivityForm
                 open={showStartActivity}
                 setOpen={setShowStartActivity}
-                onSubmit={() => startActivity()}
+                onSubmit={() => handleStartActivity()}
             />
-            <ReportErrorForm
+             <ReportErrorForm
                 open={showReportError}
                 setOpen={setShowReportError}
-                onSubmit={(data) => reportError(data)}
+                onSubmit={(data) => handleReportError(data)}
             />
             <FinishActivityForm
                 open={showFinishActivity}
                 setOpen={setShowFinishActivity}
-                onSubmit={() => finishActivity()}
+                onSubmit={() => handleFinishActivity()}
             />
         </>
     );
