@@ -357,7 +357,7 @@ $BODY$
               INNER JOIN macrocontrole.lote AS l ON f.linha_producao_id = l.linha_producao_id
               WHERE f.id = fase_ident;
 
-    IF lote_ident AND linhaproducao_ident THEN
+    IF lote_ident IS NOT NULL AND linhaproducao_ident IS NOT NULL THEN
 
       EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_'|| lote_ident;
 
@@ -405,7 +405,7 @@ $BODY$
               FROM macrocontrole.etapa AS e
               WHERE e.id = etapa_ident;
 
-    IF lote_ident AND subfase_ident THEN
+    IF lote_ident IS NOT NULL AND subfase_ident IS NOT NULL THEN
 
     EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
     EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || subfase_ident;
@@ -488,7 +488,7 @@ $BODY$
     INNER JOIN macrocontrole.lote AS l ON f.linha_producao_id = l.linha_producao_id
     WHERE s.id = subfase_ident;
 
-    IF lote_ident THEN
+    IF lote_ident IS NOT NULL THEN
 
     EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
 

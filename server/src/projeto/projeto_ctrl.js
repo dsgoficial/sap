@@ -589,9 +589,20 @@ controller.deletaMenus = async menusId => {
 controller.getDadoProducao = async () => {
   return db.sapConn.any(
     `SELECT dp.id, dp.tipo_dado_producao_id, tdp.nome AS tipo_dado_producao,
-    configuracao_producao
+    dp.configuracao_producao
     FROM macrocontrole.dado_producao AS dp
     INNER JOIN dominio.tipo_dado_producao AS tdp On tdp.code = dp.tipo_dado_producao_id`
+  )
+}
+
+controller.getDatabase = async () => {
+  return db.sapConn.any(
+    `SELECT id, tipo_dado_producao_id, configuracao_producao,
+    split_part(configuracao_producao, ':', 1) AS servidor,
+    split_part(split_part(configuracao_producao, ':', 2), '/', 1) AS porta,
+    split_part(split_part(configuracao_producao, ':', 2), '/', 2) AS nome
+    FROM macrocontrole.dado_producao
+    WHERE tipo_dado_producao_id in (2,3)`
   )
 }
 

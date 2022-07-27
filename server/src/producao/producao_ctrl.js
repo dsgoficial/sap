@@ -118,7 +118,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
 }
 
 const getInfoMenus = async (connection, etapaCode, subfaseId, loteId) => {
-  if (etapaCode === 2 || etapCode === 5) {
+  if (etapaCode === 2 || etapaCode === 5) {
     return connection.any(
       `SELECT mp.nome, mp.definicao_menu FROM macrocontrole.perfil_menu AS pm
         INNER JOIN dgeo.qgis_menus AS mp On mp.id = pm.menu_id

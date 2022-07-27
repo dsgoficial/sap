@@ -5,7 +5,7 @@ INSERT INTO macrocontrole.linha_producao (tipo_produto_id,nome,descricao) VALUES
 
 INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
 (11,1,1),--1 PDI
-(1,1,2), --2 Digitalização
+(1,1,2), --2 Extração
 (3,1,3), --3 Validação
 (4,1,4), --4 Edição
 (5,1,5); --5 Disseminação
@@ -15,12 +15,12 @@ INSERT INTO macrocontrole.subfase (nome,fase_id) VALUES
 ('Preparo altimetria', 1), --2
 ('Controle de Qualidade de insumos', 1), --3
 ('Coleta de insumos externos', 2), --4
-('Digitalização da Hidrografia e Altimetria', 2), --5
-('Digitalização de Ferrovias', 2), --6
-('Digitalização de Vias de Deslocamento', 2), --7
-('Digitalização de Topônimos', 2), --8
-('Digitalização de Limites', 2), --9
-('Digitalização de Planimetria', 2), --10
+('Extração da Hidrografia e Altimetria', 2), --5
+('Extração de Ferrovias', 2), --6
+('Extração de Vias de Deslocamento', 2), --7
+('Extração de Topônimos', 2), --8
+('Extração de Limites', 2), --9
+('Extração de Planimetria', 2), --10
 ('Verificação final', 2), --11
 ('Validação nível produto', 3), --12
 ('Validação da ligação', 3), --13
@@ -55,9 +55,9 @@ INSERT INTO macrocontrole.linha_producao (tipo_produto_id,nome,descricao) VALUES
 
 INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
 (11,2,1),--6 PDI
-(1,2,2), --7 Digitalização
+(1,2,2), --7 Extração
 (3,2,3), --8 Validação
-(5,2,4), --9 Disseminação
+(5,2,4), --9 Disseminação - Conjunto de dados vetoriais
 (4,3,1), --10 Edição - Carta topográfica ET-RDG
 (5,3,2); --11 Disseminação - Carta topográfica ET-RDG
 
@@ -66,15 +66,15 @@ INSERT INTO macrocontrole.subfase (nome,fase_id) VALUES
 ('Preparo altimetria', 6), --17
 ('Controle de Qualidade de insumos', 6), --18
 ('Coleta de insumos externos', 7), --19
-('Digitalização da Hidrografia e Altimetria', 7), --20
-('Digitalização de Ferrovias', 7), --21
-('Digitalização de Vias de Deslocamento', 7), --22
-('Digitalização de Topônimos', 7), --23
-('Digitalização de Limites', 7), --24
-('Digitalização de interseção de hidrografia e transportes', 7), --25
-('Digitalização de Área Edificada', 7), --26
-('Digitalização de Vegetação', 7), --27
-('Digitalização de Planimetria', 7), --28
+('Extração da Hidrografia e Altimetria', 7), --20
+('Extração de Ferrovias', 7), --21
+('Extração de Vias de Deslocamento', 7), --22
+('Extração de Topônimos', 7), --23
+('Extração de Limites', 7), --24
+('Extração de interseção de hidrografia e transportes', 7), --25
+('Extração de Área Edificada', 7), --26
+('Extração de Vegetação', 7), --27
+('Extração de Planimetria', 7), --28
 ('Verificação final', 7), --29
 ('Validação nível produto', 8), --30
 ('Validação da ligação', 8), --31
@@ -115,7 +115,7 @@ INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
 ('edgv', 'aquisicao_centroide_massa_dagua_p', NULL), -- 3
 ('edgv', 'aquisicao_limite_elemento_hidrografico_l', NULL), -- 4
 ('edgv', 'aquisicao_limite_massa_dagua_l', NULL), -- 5
-('edgv', 'aux_area_sem_dados_a', NULL), -- 6
+('edgv', 'edicao_area_sem_dados_a', NULL), -- 6
 ('edgv', 'aux_revisao_a', NULL), -- 7
 ('edgv', 'aux_revisao_l', NULL), -- 8
 ('edgv', 'aux_revisao_p', NULL), -- 9

@@ -80,7 +80,7 @@ CREATE TABLE dominio.tipo_fase(
 );
 
 INSERT INTO dominio.tipo_fase (code, nome, cor) VALUES
-(1, 'Digitalização', '252,141,89'),
+(1, 'Extração', '252,141,89'),
 (2, 'Reambulação', '254,224,139'),
 (3, 'Validação', '255,255,191'),
 (4, 'Edição', '217,239,139'),

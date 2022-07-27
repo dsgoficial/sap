@@ -444,6 +444,18 @@ router.get(
 )
 
 router.get(
+  '/banco_dados',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getDatabase()
+
+    const msg = 'Banco de dados retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
   '/login',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
