@@ -95,7 +95,7 @@ INSERT INTO dominio.tipo_fase (code, nome, cor) VALUES
 (12, 'Medição de pontos de controle', '0,0,0'),
 (13, 'Geração de ortoimagem', '128,205,193'),
 (14, 'Geração de MDE', '191,129,45'),
-(15, 'Levantamento topográfico', '37,52,148');
+(15, 'Levantamento topográfico', '37,52,148'),
 (16, 'Preparo', '175,141,195');
 
 CREATE TABLE dominio.tipo_pre_requisito(

@@ -50,7 +50,7 @@ CREATE TABLE dgeo.qgis_shortcuts(
 );
 
 INSERT INTO dgeo.qgis_shortcuts (ferramenta, idioma, atalho, owner) VALUES
-('Mesclar feições selecionadas', 'português', 'M', 'sap');
+('Mesclar feições selecionadas', 'português', 'M', 'sap'),
 ('Merge Selected Features', 'inglês', 'M', 'sap');
 
 

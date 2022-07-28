@@ -1,7 +1,7 @@
 BEGIN;
 
 INSERT INTO macrocontrole.linha_producao (tipo_produto_id,nome,descricao) VALUES
-(22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0', 'Linha de produção padrão para vetores de carta ortoimagem'); --id 1
+(22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0', 'Linha de produção padrão para vetores de carta ortoimagem'), --id 1
 (3, 'Carta ortoimagem', 'Linha de produção padrão para carta ortoimagem'); --id 2
 
 INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
@@ -9,7 +9,7 @@ INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
 (16,1,1),--1 Preparo
 (1,1,2), --2 Extração
 (3,1,3), --3 Validação
-(5,1,4); --4 Disseminação
+(5,1,4), --4 Disseminação
 -- Linha de produção 2
 (16,2,1),--5 Preparo
 (4,2,2), --6 Edição
@@ -29,7 +29,7 @@ INSERT INTO macrocontrole.subfase (nome,fase_id) VALUES
 ('Verificação final', 2), --10
 ('Validação nível produto', 3), --11
 ('Validação da ligação', 3), --12
-('Disseminação', 4); --13
+('Disseminação', 4), --13
 -- Linha de produção 2
 ('Preparo para edição', 5), --14
 ('Edição', 6), --15
@@ -125,7 +125,7 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (1, 31, 32),
 -- Linha de produção 4
 (1, 33, 34),
-(1, 34, 35),
+(1, 34, 35);
 
 ------------------------------------------------------------------------------------------------------------------------------------
 INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
