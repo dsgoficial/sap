@@ -67,7 +67,8 @@ INSERT INTO dominio.tipo_produto (code, nome) VALUES
 (18, 'Levantamento topográfico'),
 (19, 'Carta ortoimagem de OM'),
 (20, 'Conjunto de dados geoespaciais vetoriais - MUVD'),
-(21, 'Modelo Digital de Superfície - TREx');
+(21, 'Modelo Digital de Superfície - TREx'),
+(22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0');
 
 
 -- Fase é somente para agrupar as Subfases
@@ -95,6 +96,7 @@ INSERT INTO dominio.tipo_fase (code, nome, cor) VALUES
 (13, 'Geração de ortoimagem', '128,205,193'),
 (14, 'Geração de MDE', '191,129,45'),
 (15, 'Levantamento topográfico', '37,52,148');
+(16, 'Preparo', '175,141,195');
 
 CREATE TABLE dominio.tipo_pre_requisito(
 	code SMALLINT NOT NULL PRIMARY KEY,

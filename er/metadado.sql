@@ -122,7 +122,8 @@ CREATE TABLE metadado.informacoes_lote(
 CREATE TABLE metadado.informacoes_imagem_insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
  	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id),
-	data_insumo timestamp with time zone NOT NULL,
+	data_insumo_primeira timestamp with time zone NOT NULL,
+	data_insumo_ultima timestamp with time zone NOT NULL,
 	nome_sensor VARCHAR(255) NOT NULL,
 	tipo_sensor VARCHAR(255) NOT NULL,
 	plataforma_sensor VARCHAR(255) NOT NULL,

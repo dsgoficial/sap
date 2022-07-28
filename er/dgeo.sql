@@ -49,6 +49,11 @@ CREATE TABLE dgeo.qgis_shortcuts(
 	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
+INSERT INTO dgeo.qgis_shortcuts (ferramenta, idioma, atalho, owner) VALUES
+('Mesclar feições selecionadas', 'português', 'M', 'sap');
+('Merge Selected Features', 'inglês', 'M', 'sap');
+
+
 CREATE TABLE dgeo.gerenciador_fme(
   id SERIAL NOT NULL PRIMARY KEY,
 	servidor VARCHAR(255) NOT NULL,
