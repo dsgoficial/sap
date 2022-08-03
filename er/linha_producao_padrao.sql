@@ -223,8 +223,7 @@ INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
 ('edgv', 'llp_delimitacao_fisica_l', NULL), -- 92
 ('edgv', 'llp_limite_especial_a', NULL), -- 93
 ('edgv', 'llp_limite_especial_l', NULL), -- 94
-('edgv', 'llp_limite_legal_a', NULL), -- 95
-('edgv', 'llp_ponto_controle_p', NULL); -- 96
+('edgv', 'llp_ponto_controle_p', NULL); -- 95
 
 INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) VALUES
 (63, NULL, FALSE, NULL, NULL, 3),
