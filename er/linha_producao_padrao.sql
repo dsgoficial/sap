@@ -187,7 +187,7 @@ INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
 ('edgv', 'aquisicao_centroide_area_sem_dados_p', NULL), -- 56
 ('edgv', 'aquisicao_centroide_limite_especial_p', NULL), -- 57
 ('edgv', 'aquisicao_centroide_vegetacao_p', NULL), -- 58
-('edgv', '', NULL), -- 59 remover camada, já sem 59 no resto 
+('edgv', 'edicao_simb_vegetacao_a', NULL), -- 59 renomeada
 ('edgv', 'aquisicao_limite_area_construida_l', NULL), -- 60
 ('edgv', 'aquisicao_limite_limite_especial_l', NULL), -- 61
 ('edgv', 'aquisicao_limite_vegetacao_l', NULL), -- 62
@@ -210,7 +210,7 @@ INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
 ('edgv', 'elemnat_elemento_fisiografico_l', NULL), -- 79
 ('edgv', 'elemnat_elemento_fisiografico_p', NULL), -- 80
 ('edgv', 'elemnat_sumidouro_vertedouro_p', NULL), -- 81
-('edgv', '', NULL), -- 82 remover camada, já sem 59 no resto
+('edgv', 'edicao_simbolo_area_p', NULL), -- 82 renomeada
 ('edgv', 'infra_alteracao_fisiografica_antropica_l', NULL), -- 83
 ('edgv', 'infra_elemento_infraestrutura_a', NULL), -- 84
 ('edgv', 'infra_elemento_infraestrutura_l', NULL), -- 85
@@ -224,6 +224,7 @@ INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
 ('edgv', 'llp_limite_especial_a', NULL), -- 93 
 ('edgv', 'llp_limite_especial_l', NULL), -- 94
 ('edgv', 'llp_ponto_controle_p', NULL); -- 95
+('edgv', 'edicao_borda_elemento_hidrografico_l', NULL); -- 96 inserida
 
 INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) VALUES
 (63, NULL, FALSE, NULL, NULL, 3),
@@ -612,11 +613,9 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (4, NULL, FALSE, NULL, NULL, 20),
 (5, NULL, FALSE, NULL, NULL, 20),
 (22, NULL, FALSE, NULL, NULL, 20),
-(23, NULL, FALSE, NULL, NULL, 20),
 (24, NULL, FALSE, NULL, NULL, 20),
 (25, NULL, FALSE, NULL, NULL, 20),
 (27, NULL, FALSE, NULL, NULL, 20),
-(28, NULL, FALSE, NULL, NULL, 20),
 (32, NULL, FALSE, NULL, NULL, 20),
 (33, NULL, FALSE, NULL, NULL, 20),
 (34, NULL, FALSE, NULL, NULL, 20),
@@ -647,6 +646,7 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (63, NULL, FALSE, NULL, NULL, 22),
 (64, NULL, FALSE, NULL, NULL, 22),
 (65, NULL, FALSE, NULL, NULL, 22),
+(90, NULL, FALSE, NULL, NULL, 22),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 22),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 22),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 22),
@@ -659,11 +659,9 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (4, NULL, FALSE, NULL, NULL, 23),
 (5, NULL, FALSE, NULL, NULL, 23),
 (22, NULL, FALSE, NULL, NULL, 23),
-(23, NULL, FALSE, NULL, NULL, 23),
 (24, NULL, FALSE, NULL, NULL, 23),
 (25, NULL, FALSE, NULL, NULL, 23),
 (27, NULL, FALSE, NULL, NULL, 23),
-(28, NULL, FALSE, NULL, NULL, 23),
 (32, NULL, FALSE, NULL, NULL, 23),
 (33, NULL, FALSE, NULL, NULL, 23),
 (34, NULL, FALSE, NULL, NULL, 23),
@@ -698,11 +696,9 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (4, NULL, FALSE, NULL, NULL, 24),
 (5, NULL, FALSE, NULL, NULL, 24),
 (22, NULL, FALSE, NULL, NULL, 24),
-(23, NULL, FALSE, NULL, NULL, 24),
 (24, NULL, FALSE, NULL, NULL, 24),
 (25, NULL, FALSE, NULL, NULL, 24),
 (27, NULL, FALSE, NULL, NULL, 24),
-(28, NULL, FALSE, NULL, NULL, 24),
 (32, NULL, FALSE, NULL, NULL, 24),
 (33, NULL, FALSE, NULL, NULL, 24),
 (34, NULL, FALSE, NULL, NULL, 24),
@@ -717,6 +713,7 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (10, 'subfase_id', FALSE, NULL, NULL, 24),
 (11, 'subfase_id', FALSE, NULL, NULL, 24),
 (12, 'subfase_id', FALSE, NULL, NULL, 24),
+(90, NULL, FALSE, NULL, NULL, 24),
 (96, NULL, FALSE, NULL, NULL, 24),
 (86, NULL, FALSE, NULL, NULL, 25),
 (87, NULL, FALSE, NULL, NULL, 25),
@@ -729,11 +726,9 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (4, NULL, FALSE, NULL, NULL, 25),
 (5, NULL, FALSE, NULL, NULL, 25),
 (22, NULL, FALSE, NULL, NULL, 25),
-(23, NULL, FALSE, NULL, NULL, 25),
 (24, NULL, FALSE, NULL, NULL, 25),
 (25, NULL, FALSE, NULL, NULL, 25),
 (27, NULL, FALSE, NULL, NULL, 25),
-(28, NULL, FALSE, NULL, NULL, 25),
 (32, NULL, FALSE, NULL, NULL, 25),
 (33, NULL, FALSE, NULL, NULL, 25),
 (34, NULL, FALSE, NULL, NULL, 25),
@@ -742,6 +737,7 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (63, NULL, FALSE, NULL, NULL, 25),
 (64, NULL, FALSE, NULL, NULL, 25),
 (65, NULL, FALSE, NULL, NULL, 25),
+(90, NULL, FALSE, NULL, NULL, 25),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 25),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 25),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 25),
@@ -759,11 +755,9 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (4, NULL, FALSE, NULL, NULL, 26),
 (5, NULL, FALSE, NULL, NULL, 26),
 (22, NULL, FALSE, NULL, NULL, 26),
-(23, NULL, FALSE, NULL, NULL, 26),
 (24, NULL, FALSE, NULL, NULL, 26),
 (25, NULL, FALSE, NULL, NULL, 26),
 (27, NULL, FALSE, NULL, NULL, 26),
-(28, NULL, FALSE, NULL, NULL, 26),
 (32, NULL, FALSE, NULL, NULL, 26),
 (33, NULL, FALSE, NULL, NULL, 26),
 (34, NULL, FALSE, NULL, NULL, 26),
@@ -772,6 +766,7 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (63, NULL, FALSE, NULL, NULL, 26),
 (64, NULL, FALSE, NULL, NULL, 26),
 (65, NULL, FALSE, NULL, NULL, 26),
+(90, NULL, FALSE, NULL, NULL, 26),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 26),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 26),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 26),
@@ -791,11 +786,9 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (4, NULL, FALSE, NULL, NULL, 27),
 (5, NULL, FALSE, NULL, NULL, 27),
 (22, NULL, FALSE, NULL, NULL, 27),
-(23, NULL, FALSE, NULL, NULL, 27),
 (24, NULL, FALSE, NULL, NULL, 27),
 (25, NULL, FALSE, NULL, NULL, 27),
 (27, NULL, FALSE, NULL, NULL, 27),
-(28, NULL, FALSE, NULL, NULL, 27),
 (32, NULL, FALSE, NULL, NULL, 27),
 (33, NULL, FALSE, NULL, NULL, 27),
 (34, NULL, FALSE, NULL, NULL, 27),
@@ -804,6 +797,7 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (63, NULL, FALSE, NULL, NULL, 27),
 (64, NULL, FALSE, NULL, NULL, 27),
 (65, NULL, FALSE, NULL, NULL, 27),
+(90, NULL, FALSE, NULL, NULL, 27),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 27),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 27),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 27),
@@ -849,11 +843,9 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (4, NULL, FALSE, NULL, NULL, 28),
 (5, NULL, FALSE, NULL, NULL, 28),
 (22, NULL, FALSE, NULL, NULL, 28),
-(23, NULL, FALSE, NULL, NULL, 28),
 (24, NULL, FALSE, NULL, NULL, 28),
 (25, NULL, FALSE, NULL, NULL, 28),
 (27, NULL, FALSE, NULL, NULL, 28),
-(28, NULL, FALSE, NULL, NULL, 28),
 (32, NULL, FALSE, NULL, NULL, 28),
 (33, NULL, FALSE, NULL, NULL, 28),
 (34, NULL, FALSE, NULL, NULL, 28),
@@ -906,7 +898,6 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (4, NULL, FALSE, NULL, NULL, 29),
 (5, NULL, FALSE, NULL, NULL, 29),
 (22, NULL, FALSE, NULL, NULL, 29),
-(23, NULL, FALSE, NULL, NULL, 29),
 (24, NULL, FALSE, NULL, NULL, 29),
 (25, NULL, FALSE, NULL, NULL, 29),
 (27, NULL, FALSE, NULL, NULL, 29),
