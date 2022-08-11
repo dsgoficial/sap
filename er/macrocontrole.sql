@@ -9,12 +9,14 @@ CREATE SCHEMA macrocontrole;
 CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE,
+	nome_abrev VARCHAR(255) NOT NULL UNIQUE,
 	descricao TEXT
 );
 
 CREATE TABLE macrocontrole.linha_producao(
 	id INTEGER NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
+	nome VARCHAR(255) NOT NULL UNIQUE,
+	nome_abrev VARCHAR(255) NOT NULL UNIQUE,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	descricao TEXT,
 	UNIQUE(nome)
@@ -23,6 +25,7 @@ CREATE TABLE macrocontrole.linha_producao(
 CREATE TABLE macrocontrole.lote(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
+	nome_abrev VARCHAR(255) NOT NULL,
 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
 	descricao TEXT
