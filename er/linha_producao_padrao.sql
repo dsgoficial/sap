@@ -129,11 +129,11 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 
 ------------------------------------------------------------------------------------------------------------------------------------
 INSERT INTO macrocontrole.camada (id, schema, nome, alias) VALUES
-(1,'edgv', 'aquisicao_centroide_elemento_hidrografico_p', NULL), -- 1
-(2,'edgv', 'aquisicao_centroide_ilha_p', NULL), -- 2
-(3,'edgv', 'aquisicao_centroide_massa_dagua_p', NULL), -- 3
-(4,'edgv', 'aquisicao_limite_elemento_hidrografico_l', NULL), -- 4
-(5,'edgv', 'aquisicao_limite_massa_dagua_l', NULL), -- 5
+(1,'edgv', 'centroide_elemento_hidrografico_p', NULL), -- 1
+(2,'edgv', 'centroide_ilha_p', NULL), -- 2
+(3,'edgv', 'centroide_massa_dagua_p', NULL), -- 3
+(4,'edgv', 'delimitador_elemento_hidrografico_l', NULL), -- 4
+(5,'edgv', 'delimitador_massa_dagua_l', NULL), -- 5
 (6,'edgv', 'edicao_area_sem_dados_a', NULL), -- 6
 (7,'edgv', 'aux_revisao_a', NULL), -- 7
 (8,'edgv', 'aux_revisao_l', NULL), -- 8
@@ -183,14 +183,14 @@ INSERT INTO macrocontrole.camada (id, schema, nome, alias) VALUES
 (52,'edgv', 'llp_terra_indigena_l', NULL), -- 52
 (53,'edgv', 'llp_unidade_conservacao_a', NULL), -- 53
 (54,'edgv', 'llp_unidade_conservacao_l', NULL), -- 54
-(55,'edgv', 'aquisicao_centroide_area_construida_p', NULL), -- 55
-(56,'edgv', 'aquisicao_centroide_area_sem_dados_p', NULL), -- 56
-(57,'edgv', 'aquisicao_centroide_limite_especial_p', NULL), -- 57
-(58,'edgv', 'aquisicao_centroide_vegetacao_p', NULL), -- 58
+(55,'edgv', 'centroide_area_construida_p', NULL), -- 55
+(56,'edgv', 'centroide_area_sem_dados_p', NULL), -- 56
+(57,'edgv', 'centroide_limite_especial_p', NULL), -- 57
+(58,'edgv', 'centroide_vegetacao_p', NULL), -- 58
 (59,'edgv', 'edicao_simb_vegetacao_p', NULL), -- 59 renomeada
-(60,'edgv', 'aquisicao_limite_area_construida_l', NULL), -- 60
-(61,'edgv', 'aquisicao_limite_limite_especial_l', NULL), -- 61
-(62,'edgv', 'aquisicao_limite_vegetacao_l', NULL), -- 62
+(60,'edgv', 'delimitador_area_construida_l', NULL), -- 60
+(61,'edgv', 'delimitador_limite_especial_l', NULL), -- 61
+(62,'edgv', 'delimitador_vegetacao_l', NULL), -- 62
 (63,'edgv', 'aux_insumo_externo_a', NULL), -- 63
 (64,'edgv', 'aux_insumo_externo_l', NULL), -- 64
 (65,'edgv', 'aux_insumo_externo_p', NULL), -- 65
@@ -225,7 +225,7 @@ INSERT INTO macrocontrole.camada (id, schema, nome, alias) VALUES
 (94,'edgv', 'llp_limite_especial_l', NULL), -- 94
 (95,'edgv', 'llp_ponto_controle_p', NULL), -- 95
 (96,'edgv', 'edicao_borda_elemento_hidrografico_l', NULL), -- 96 inserida
-(97,'edgv', 'aquisicao_limite_area_sem_dados_l', NULL); -- 97 inserida
+(97,'edgv', 'delimitador_area_sem_dados_l', NULL); -- 97 inserida
 
 INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) VALUES
 (63, NULL, FALSE, NULL, NULL, 3),
