@@ -128,7 +128,7 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (1, 34, 35);
 
 ------------------------------------------------------------------------------------------------------------------------------------
-INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
+INSERT INTO macrocontrole.camada (id, schema, nome, alias) VALUES
 (1,'edgv', 'aquisicao_centroide_elemento_hidrografico_p', NULL), -- 1
 (2,'edgv', 'aquisicao_centroide_ilha_p', NULL), -- 2
 (3,'edgv', 'aquisicao_centroide_massa_dagua_p', NULL), -- 3
@@ -203,7 +203,7 @@ INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
 (72,'edgv', 'constr_deposito_p', NULL), -- 72
 (73,'edgv', 'constr_edificacao_a', NULL), -- 73
 (74,'edgv', 'constr_edificacao_p', NULL), -- 74
-(5 ,'edgv', 'constr_ocupacao_solo_a', NULL), -- 75 
+(75 ,'edgv', 'constr_ocupacao_solo_a', NULL), -- 75 
 (76,'edgv', 'constr_ocupacao_solo_l', NULL), -- 76
 (77,'edgv', 'constr_ocupacao_solo_p', NULL), -- 77
 (78,'edgv', 'elemnat_elemento_fisiografico_a', NULL), -- 78
