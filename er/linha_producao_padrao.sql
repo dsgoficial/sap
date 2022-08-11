@@ -225,7 +225,7 @@ INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
 ('edgv', 'llp_limite_especial_l', NULL), -- 94
 ('edgv', 'llp_ponto_controle_p', NULL), -- 95
 ('edgv', 'edicao_borda_elemento_hidrografico_l', NULL), -- 96 inserida
-('edgv', 'aquisicao_limite_area_sem_dados_l', NULL), -- 97 inserida
+('edgv', 'aquisicao_limite_area_sem_dados_l', NULL); -- 97 inserida
 
 INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) VALUES
 (63, NULL, FALSE, NULL, NULL, 3),
@@ -321,7 +321,6 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (53, NULL, FALSE, NULL, NULL, 8),
 (54, NULL, FALSE, NULL, NULL, 8),
 (56, NULL, FALSE, NULL, NULL, 8),
-(97, NULL, FALSE, NULL, NULL, 8),
 (57, NULL, FALSE, NULL, NULL, 8),
 (61, NULL, FALSE, NULL, NULL, 8),
 (63, NULL, FALSE, NULL, NULL, 8),
@@ -971,7 +970,6 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (3, NULL, FALSE, NULL, NULL, 30),
 (4, NULL, FALSE, NULL, NULL, 30),
 (5, NULL, FALSE, NULL, NULL, 30),
-(6, NULL, FALSE, NULL, NULL, 30),
 (22, NULL, FALSE, NULL, NULL, 30),
 (23, NULL, FALSE, NULL, NULL, 30),
 (24, NULL, FALSE, NULL, NULL, 30),

@@ -13,7 +13,7 @@ CREATE TABLE macrocontrole.projeto(
 );
 
 CREATE TABLE macrocontrole.linha_producao(
-	id SERIAL NOT NULL PRIMARY KEY,
+	id INTEGER NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	descricao TEXT,
@@ -46,7 +46,7 @@ CREATE INDEX produto_geom
     (geom);
 
 CREATE TABLE macrocontrole.fase(
-    id SERIAL NOT NULL PRIMARY KEY,
+    id INTEGER NOT NULL PRIMARY KEY,
     tipo_fase_id SMALLINT NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
     ordem INTEGER NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE macrocontrole.fase(
 );
 
 CREATE TABLE macrocontrole.subfase(
-	id SERIAL NOT NULL PRIMARY KEY,
+	id INTEGER NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	UNIQUE (nome, fase_id)
@@ -196,7 +196,7 @@ CREATE TABLE macrocontrole.perfil_linhagem(
 --);
 
 CREATE TABLE macrocontrole.camada(
-	id SERIAL NOT NULL PRIMARY KEY,
+	id INTEGER NOT NULL PRIMARY KEY,
 	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
 	alias VARCHAR(255),
