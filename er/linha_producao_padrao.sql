@@ -1,39 +1,39 @@
 BEGIN;
 
-INSERT INTO macrocontrole.linha_producao (tipo_produto_id,nome,descricao) VALUES
-(22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0', 'Linha de produção padrão para vetores de carta ortoimagem'), --id 1
-(3, 'Carta ortoimagem', 'Linha de produção padrão para carta ortoimagem'); --id 2
+INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao) VALUES
+(1,22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0', 'Linha de produção padrão para vetores de carta ortoimagem'), --id 1
+(2,3, 'Carta ortoimagem', 'Linha de produção padrão para carta ortoimagem'); --id 2
 
-INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
+INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
 -- Linha de produção 1
-(16,1,1),--1 Preparo
-(1,1,2), --2 Extração
-(3,1,3), --3 Validação
-(5,1,4), --4 Disseminação
+(1,16,1,1),--1 Preparo
+(2,1,1,2), --2 Extração
+(3,3,1,3), --3 Validação
+(4,5,1,4), --4 Disseminação
 -- Linha de produção 2
-(16,2,1),--5 Preparo
-(4,2,2), --6 Edição
-(5,2,3); --7 Disseminação
+(5,16,2,1),--5 Preparo
+(6,4,2,2), --6 Edição
+(7,5,2,3); --7 Disseminação
 
-INSERT INTO macrocontrole.subfase (nome,fase_id) VALUES
+INSERT INTO macrocontrole.subfase (id,nome,fase_id) VALUES
 -- Linha de produção 1
-('Preparo imagens', 1), --1
-('Preparo altimetria', 1), --2
-('Coleta de insumos externos', 1), --3
-('Extração da Hidrografia e Altimetria', 2), --4
-('Extração de Ferrovias', 2), --5
-('Extração de Vias de Deslocamento', 2), --6
-('Extração de Topônimos', 2), --7
-('Extração de Limites', 2), --8
-('Extração de Planimetria', 2), --9
-('Verificação final', 2), --10
-('Validação nível produto', 3), --11
-('Validação da ligação', 3), --12
-('Disseminação', 4), --13
+(1,'Preparo imagens', 1), --1
+(2,'Preparo altimetria', 1), --2
+(3,'Coleta de insumos externos', 1), --3
+(4,'Extração da Hidrografia e Altimetria', 2), --4
+(5,'Extração de Ferrovias', 2), --5
+(6,'Extração de Vias de Deslocamento', 2), --6
+(7,'Extração de Topônimos', 2), --7
+(8,'Extração de Limites', 2), --8
+(9,'Extração de Planimetria', 2), --9
+(10,'Verificação final', 2), --10
+(11,'Validação nível produto', 3), --11
+(12,'Validação da ligação', 3), --12
+(13,'Disseminação', 4), --13
 -- Linha de produção 2
-('Preparo para edição', 5), --14
-('Edição', 6), --15
-('Disseminação', 7); --16
+(14,'Preparo para edição', 5), --14
+(15,'Edição', 6), --15
+(16,'Disseminação', 7); --16
 
 INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
 -- Linha de produção 1
@@ -61,41 +61,41 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-INSERT INTO macrocontrole.linha_producao (tipo_produto_id,nome,descricao) VALUES
-(7, 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação', 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação'), --id 3
-(12, 'Carta topográfica ET-RDG', 'Linha de produção padrão para cartas topográficas no padrão ET-RDG'); --id 4
+INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao) VALUES
+(3,7, 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação', 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação'), --id 3
+(4,12, 'Carta topográfica ET-RDG', 'Linha de produção padrão para cartas topográficas no padrão ET-RDG'); --id 4
 
-INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
+INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
 -- Linha de produção 3
-(16,3,1),--8 Preparo
-(1,3,2), --9 Extração
-(3,3,3), --10 Validação
-(5,3,4), --11 Disseminação - Conjunto de dados vetoriais
+(8,16,3,1),--8 Preparo
+(9,1,3,2), --9 Extração
+(10,3,3,3), --10 Validação
+(11,5,3,4), --11 Disseminação - Conjunto de dados vetoriais
 -- Linha de produção 4
-(16,4,1),--12 Preparo para edição
-(4,4,2), --13 Edição - Carta topográfica ET-RDG
-(5,4,3); --14 Disseminação - Carta topográfica ET-RDG
+(12,16,4,1),--12 Preparo para edição
+(13,4,4,2), --13 Edição - Carta topográfica ET-RDG
+(14,5,4,3); --14 Disseminação - Carta topográfica ET-RDG
 
-INSERT INTO macrocontrole.subfase (nome,fase_id) VALUES
-('Preparo imagens', 8), --17
-('Preparo altimetria', 8), --18
-('Coleta de insumos externos', 8), --19
-('Extração da Hidrografia e Altimetria', 9), --20
-('Extração de Ferrovias', 9), --21
-('Extração de Vias de Deslocamento', 9), --22
-('Extração de Topônimos', 9), --23
-('Extração de Limites', 9), --24
-('Extração de interseção de hidrografia e transportes', 9), --25
-('Extração de Área Edificada', 9), --26
-('Extração de Vegetação', 9), --27
-('Extração de Planimetria',9), --28
-('Verificação final', 9), --29
-('Validação nível produto', 10), --30
-('Validação da ligação', 10), --31
-('Disseminação', 11), --32
-('Preparo para edição', 12), --33
-('Edição', 13), --34
-('Disseminação', 14); --35
+INSERT INTO macrocontrole.subfase (id,nome,fase_id) VALUES
+(17,'Preparo imagens', 8), --17
+(18,'Preparo altimetria', 8), --18
+(19,'Coleta de insumos externos', 8), --19
+(20,'Extração da Hidrografia e Altimetria', 9), --20
+(21,'Extração de Ferrovias', 9), --21
+(22,'Extração de Vias de Deslocamento', 9), --22
+(23,'Extração de Topônimos', 9), --23
+(24,'Extração de Limites', 9), --24
+(25,'Extração de interseção de hidrografia e transportes', 9), --25
+(26,'Extração de Área Edificada', 9), --26
+(27,'Extração de Vegetação', 9), --27
+(28,'Extração de Planimetria',9), --28
+(29,'Verificação final', 9), --29
+(30,'Validação nível produto', 10), --30
+(31,'Validação da ligação', 10), --31
+(32,'Disseminação', 11), --32
+(33,'Preparo para edição', 12), --33
+(34,'Edição', 13), --34
+(35,'Disseminação', 14); --35
 
 INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
 -- Linha de produção 3
@@ -129,103 +129,103 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 
 ------------------------------------------------------------------------------------------------------------------------------------
 INSERT INTO macrocontrole.camada (schema, nome, alias) VALUES
-('edgv', 'aquisicao_centroide_elemento_hidrografico_p', NULL), -- 1
-('edgv', 'aquisicao_centroide_ilha_p', NULL), -- 2
-('edgv', 'aquisicao_centroide_massa_dagua_p', NULL), -- 3
-('edgv', 'aquisicao_limite_elemento_hidrografico_l', NULL), -- 4
-('edgv', 'aquisicao_limite_massa_dagua_l', NULL), -- 5
-('edgv', 'edicao_area_sem_dados_a', NULL), -- 6
-('edgv', 'aux_revisao_a', NULL), -- 7
-('edgv', 'aux_revisao_l', NULL), -- 8
-('edgv', 'aux_revisao_p', NULL), -- 9
-('edgv', 'aux_validacao_a', NULL), -- 10
-('edgv', 'aux_validacao_l', NULL), -- 11
-('edgv', 'aux_validacao_p', NULL), -- 12
-('edgv', 'cobter_massa_dagua_a', NULL), -- 13
-('edgv', 'constr_extracao_mineral_a', NULL), -- 14
-('edgv', 'constr_extracao_mineral_p', NULL), -- 15
-('edgv', 'edicao_identificador_trecho_rod_p', NULL), -- 16
-('edgv', 'edicao_simb_cota_mestra_l', NULL), -- 17
-('edgv', 'edicao_simb_direcao_corrente_p', NULL), -- 18
-('edgv', 'edicao_simb_torre_energia_p', NULL), -- 19
-('edgv', 'edicao_texto_generico_l', NULL), -- 20
-('edgv', 'edicao_texto_generico_p', NULL), -- 21
-('edgv', 'elemnat_curva_nivel_l', NULL), -- 22
-('edgv', 'elemnat_elemento_hidrografico_a', NULL), -- 23
-('edgv', 'elemnat_elemento_hidrografico_l', NULL), -- 24
-('edgv', 'elemnat_elemento_hidrografico_p', NULL), -- 25
-('edgv', 'elemnat_ilha_a', NULL), -- 26
-('edgv', 'elemnat_ilha_p', NULL), -- 27
-('edgv', 'elemnat_ponto_cotado_p', NULL), -- 28
-('edgv', 'elemnat_terreno_sujeito_inundacao_a', NULL), -- 29
-('edgv', 'elemnat_toponimo_fisiografico_natural_l', NULL), -- 30
-('edgv', 'elemnat_toponimo_fisiografico_natural_p', NULL), -- 31
-('edgv', 'elemnat_trecho_drenagem_l', NULL), -- 32
-('edgv', 'infra_barragem_a', NULL), -- 33
-('edgv', 'infra_barragem_l', NULL), -- 34
-('edgv', 'infra_elemento_energia_a', NULL), -- 35
-('edgv', 'infra_elemento_energia_l', NULL), -- 36
-('edgv', 'infra_elemento_energia_p', NULL), -- 37
-('edgv', 'infra_elemento_infraestrutura_p', NULL), -- 38
-('edgv', 'infra_ferrovia_l', NULL), -- 39
-('edgv', 'infra_obstaculo_vertical_p', NULL), -- 40
-('edgv', 'infra_pista_pouso_a', NULL), -- 41
-('edgv', 'infra_pista_pouso_l', NULL), -- 42
-('edgv', 'infra_pista_pouso_p', NULL), -- 43
-('edgv', 'infra_via_deslocamento_l', NULL), -- 44
-('edgv', 'llp_aglomerado_rural_p', NULL), -- 45
-('edgv', 'llp_area_pub_militar_a', NULL), -- 46
-('edgv', 'llp_area_pub_militar_l', NULL), -- 47
-('edgv', 'llp_limite_legal_l', NULL), -- 48
-('edgv', 'llp_localidade_p', NULL), -- 49
-('edgv', 'llp_nome_local_p', NULL), -- 50
-('edgv', 'llp_terra_indigena_a', NULL), -- 51
-('edgv', 'llp_terra_indigena_l', NULL), -- 52
-('edgv', 'llp_unidade_conservacao_a', NULL), -- 53
-('edgv', 'llp_unidade_conservacao_l', NULL), -- 54
-('edgv', 'aquisicao_centroide_area_construida_p', NULL), -- 55
-('edgv', 'aquisicao_centroide_area_sem_dados_p', NULL), -- 56
-('edgv', 'aquisicao_centroide_limite_especial_p', NULL), -- 57
-('edgv', 'aquisicao_centroide_vegetacao_p', NULL), -- 58
-('edgv', 'edicao_simb_vegetacao_p', NULL), -- 59 renomeada
-('edgv', 'aquisicao_limite_area_construida_l', NULL), -- 60
-('edgv', 'aquisicao_limite_limite_especial_l', NULL), -- 61
-('edgv', 'aquisicao_limite_vegetacao_l', NULL), -- 62
-('edgv', 'aux_insumo_externo_a', NULL), -- 63
-('edgv', 'aux_insumo_externo_l', NULL), -- 64
-('edgv', 'aux_insumo_externo_p', NULL), -- 65
-('edgv', 'aux_reambulacao_a', NULL), -- 66
-('edgv', 'aux_reambulacao_l', NULL), -- 67
-('edgv', 'aux_reambulacao_p', NULL), -- 68
-('edgv', 'cobter_area_construida_a', NULL), -- 69
-('edgv', 'cobter_vegetacao_a', NULL), -- 70
-('edgv', 'constr_deposito_a', NULL), -- 71
-('edgv', 'constr_deposito_p', NULL), -- 72
-('edgv', 'constr_edificacao_a', NULL), -- 73
-('edgv', 'constr_edificacao_p', NULL), -- 74
-('edgv', 'constr_ocupacao_solo_a', NULL), -- 75 
-('edgv', 'constr_ocupacao_solo_l', NULL), -- 76
-('edgv', 'constr_ocupacao_solo_p', NULL), -- 77
-('edgv', 'elemnat_elemento_fisiografico_a', NULL), -- 78
-('edgv', 'elemnat_elemento_fisiografico_l', NULL), -- 79
-('edgv', 'elemnat_elemento_fisiografico_p', NULL), -- 80
-('edgv', 'elemnat_sumidouro_vertedouro_p', NULL), -- 81
-('edgv', 'edicao_simb_area_p', NULL), -- 82 renomeada
-('edgv', 'infra_alteracao_fisiografica_antropica_l', NULL), -- 83
-('edgv', 'infra_elemento_infraestrutura_a', NULL), -- 84
-('edgv', 'infra_elemento_infraestrutura_l', NULL), -- 85
-('edgv', 'infra_elemento_viario_l', NULL), -- 86
-('edgv', 'infra_elemento_viario_p', NULL), -- 87
-('edgv', 'infra_mobilidade_urbana_l', NULL), -- 88
-('edgv', 'infra_trecho_duto_l', NULL), -- 89
-('edgv', 'infra_travessia_hidroviaria_l', NULL), -- 90
-('edgv', 'infra_vala_l', NULL), -- 91
-('edgv', 'llp_delimitacao_fisica_l', NULL), -- 92
-('edgv', 'llp_limite_especial_a', NULL), -- 93 
-('edgv', 'llp_limite_especial_l', NULL), -- 94
-('edgv', 'llp_ponto_controle_p', NULL), -- 95
-('edgv', 'edicao_borda_elemento_hidrografico_l', NULL), -- 96 inserida
-('edgv', 'aquisicao_limite_area_sem_dados_l', NULL); -- 97 inserida
+(1,'edgv', 'aquisicao_centroide_elemento_hidrografico_p', NULL), -- 1
+(2,'edgv', 'aquisicao_centroide_ilha_p', NULL), -- 2
+(3,'edgv', 'aquisicao_centroide_massa_dagua_p', NULL), -- 3
+(4,'edgv', 'aquisicao_limite_elemento_hidrografico_l', NULL), -- 4
+(5,'edgv', 'aquisicao_limite_massa_dagua_l', NULL), -- 5
+(6,'edgv', 'edicao_area_sem_dados_a', NULL), -- 6
+(7,'edgv', 'aux_revisao_a', NULL), -- 7
+(8,'edgv', 'aux_revisao_l', NULL), -- 8
+(9,'edgv', 'aux_revisao_p', NULL), -- 9
+(10,'edgv', 'aux_validacao_a', NULL), -- 10
+(11,'edgv', 'aux_validacao_l', NULL), -- 11
+(12,'edgv', 'aux_validacao_p', NULL), -- 12
+(13,'edgv', 'cobter_massa_dagua_a', NULL), -- 13
+(14,'edgv', 'constr_extracao_mineral_a', NULL), -- 14
+(15,'edgv', 'constr_extracao_mineral_p', NULL), -- 15
+(16,'edgv', 'edicao_identificador_trecho_rod_p', NULL), -- 16
+(17,'edgv', 'edicao_simb_cota_mestra_l', NULL), -- 17
+(18,'edgv', 'edicao_simb_direcao_corrente_p', NULL), -- 18
+(19,'edgv', 'edicao_simb_torre_energia_p', NULL), -- 19
+(20,'edgv', 'edicao_texto_generico_l', NULL), -- 20
+(21,'edgv', 'edicao_texto_generico_p', NULL), -- 21
+(22,'edgv', 'elemnat_curva_nivel_l', NULL), -- 22
+(23,'edgv', 'elemnat_elemento_hidrografico_a', NULL), -- 23
+(24,'edgv', 'elemnat_elemento_hidrografico_l', NULL), -- 24
+(25,'edgv', 'elemnat_elemento_hidrografico_p', NULL), -- 25
+(26,'edgv', 'elemnat_ilha_a', NULL), -- 26
+(27,'edgv', 'elemnat_ilha_p', NULL), -- 27
+(28,'edgv', 'elemnat_ponto_cotado_p', NULL), -- 28
+(29,'edgv', 'elemnat_terreno_sujeito_inundacao_a', NULL), -- 29
+(30,'edgv', 'elemnat_toponimo_fisiografico_natural_l', NULL), -- 30
+(31,'edgv', 'elemnat_toponimo_fisiografico_natural_p', NULL), -- 31
+(32,'edgv', 'elemnat_trecho_drenagem_l', NULL), -- 32
+(33,'edgv', 'infra_barragem_a', NULL), -- 33
+(34,'edgv', 'infra_barragem_l', NULL), -- 34
+(35,'edgv', 'infra_elemento_energia_a', NULL), -- 35
+(36,'edgv', 'infra_elemento_energia_l', NULL), -- 36
+(37,'edgv', 'infra_elemento_energia_p', NULL), -- 37
+(38,'edgv', 'infra_elemento_infraestrutura_p', NULL), -- 38
+(39,'edgv', 'infra_ferrovia_l', NULL), -- 39
+(40,'edgv', 'infra_obstaculo_vertical_p', NULL), -- 40
+(41,'edgv', 'infra_pista_pouso_a', NULL), -- 41
+(42,'edgv', 'infra_pista_pouso_l', NULL), -- 42
+(43,'edgv', 'infra_pista_pouso_p', NULL), -- 43
+(44,'edgv', 'infra_via_deslocamento_l', NULL), -- 44
+(45,'edgv', 'llp_aglomerado_rural_p', NULL), -- 45
+(46,'edgv', 'llp_area_pub_militar_a', NULL), -- 46
+(47,'edgv', 'llp_area_pub_militar_l', NULL), -- 47
+(48,'edgv', 'llp_limite_legal_l', NULL), -- 48
+(49,'edgv', 'llp_localidade_p', NULL), -- 49
+(50,'edgv', 'llp_nome_local_p', NULL), -- 50
+(51,'edgv', 'llp_terra_indigena_a', NULL), -- 51
+(52,'edgv', 'llp_terra_indigena_l', NULL), -- 52
+(53,'edgv', 'llp_unidade_conservacao_a', NULL), -- 53
+(54,'edgv', 'llp_unidade_conservacao_l', NULL), -- 54
+(55,'edgv', 'aquisicao_centroide_area_construida_p', NULL), -- 55
+(56,'edgv', 'aquisicao_centroide_area_sem_dados_p', NULL), -- 56
+(57,'edgv', 'aquisicao_centroide_limite_especial_p', NULL), -- 57
+(58,'edgv', 'aquisicao_centroide_vegetacao_p', NULL), -- 58
+(59,'edgv', 'edicao_simb_vegetacao_p', NULL), -- 59 renomeada
+(60,'edgv', 'aquisicao_limite_area_construida_l', NULL), -- 60
+(61,'edgv', 'aquisicao_limite_limite_especial_l', NULL), -- 61
+(62,'edgv', 'aquisicao_limite_vegetacao_l', NULL), -- 62
+(63,'edgv', 'aux_insumo_externo_a', NULL), -- 63
+(64,'edgv', 'aux_insumo_externo_l', NULL), -- 64
+(65,'edgv', 'aux_insumo_externo_p', NULL), -- 65
+(66,'edgv', 'aux_reambulacao_a', NULL), -- 66
+(67,'edgv', 'aux_reambulacao_l', NULL), -- 67
+(68,'edgv', 'aux_reambulacao_p', NULL), -- 68
+(69,'edgv', 'cobter_area_construida_a', NULL), -- 69
+(70,'edgv', 'cobter_vegetacao_a', NULL), -- 70
+(71,'edgv', 'constr_deposito_a', NULL), -- 71
+(72,'edgv', 'constr_deposito_p', NULL), -- 72
+(73,'edgv', 'constr_edificacao_a', NULL), -- 73
+(74,'edgv', 'constr_edificacao_p', NULL), -- 74
+(5 ,'edgv', 'constr_ocupacao_solo_a', NULL), -- 75 
+(76,'edgv', 'constr_ocupacao_solo_l', NULL), -- 76
+(77,'edgv', 'constr_ocupacao_solo_p', NULL), -- 77
+(78,'edgv', 'elemnat_elemento_fisiografico_a', NULL), -- 78
+(79,'edgv', 'elemnat_elemento_fisiografico_l', NULL), -- 79
+(80,'edgv', 'elemnat_elemento_fisiografico_p', NULL), -- 80
+(81,'edgv', 'elemnat_sumidouro_vertedouro_p', NULL), -- 81
+(82,'edgv', 'edicao_simb_area_p', NULL), -- 82 renomeada
+(83,'edgv', 'infra_alteracao_fisiografica_antropica_l', NULL), -- 83
+(84,'edgv', 'infra_elemento_infraestrutura_a', NULL), -- 84
+(85,'edgv', 'infra_elemento_infraestrutura_l', NULL), -- 85
+(86,'edgv', 'infra_elemento_viario_l', NULL), -- 86
+(87,'edgv', 'infra_elemento_viario_p', NULL), -- 87
+(88,'edgv', 'infra_mobilidade_urbana_l', NULL), -- 88
+(89,'edgv', 'infra_trecho_duto_l', NULL), -- 89
+(90,'edgv', 'infra_travessia_hidroviaria_l', NULL), -- 90
+(91,'edgv', 'infra_vala_l', NULL), -- 91
+(92,'edgv', 'llp_delimitacao_fisica_l', NULL), -- 92
+(93 ,'edgv', 'llp_limite_especial_a', NULL), -- 93
+(94,'edgv', 'llp_limite_especial_l', NULL), -- 94
+(95,'edgv', 'llp_ponto_controle_p', NULL), -- 95
+(96,'edgv', 'edicao_borda_elemento_hidrografico_l', NULL), -- 96 inserida
+(97,'edgv', 'aquisicao_limite_area_sem_dados_l', NULL); -- 97 inserida
 
 INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) VALUES
 (63, NULL, FALSE, NULL, NULL, 3),
@@ -236,6 +236,12 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (3, NULL, FALSE, NULL, NULL, 4),
 (4, NULL, FALSE, NULL, NULL, 4),
 (5, NULL, FALSE, NULL, NULL, 4),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 4),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 4),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 4),
+(10, 'subfase_id', FALSE, NULL, NULL, 4),
+(11, 'subfase_id', FALSE, NULL, NULL, 4),
+(12, 'subfase_id', FALSE, NULL, NULL, 4),
 (22, NULL, FALSE, NULL, NULL, 4),
 (24, NULL, FALSE, NULL, NULL, 4),
 (25, NULL, FALSE, NULL, NULL, 4),
@@ -246,64 +252,64 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (63, NULL, FALSE, NULL, NULL, 4),
 (64, NULL, FALSE, NULL, NULL, 4),
 (65, NULL, FALSE, NULL, NULL, 4),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 4),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 4),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 4),
-(10, 'subfase_id', FALSE, NULL, NULL, 4),
-(11, 'subfase_id', FALSE, NULL, NULL, 4),
-(12, 'subfase_id', FALSE, NULL, NULL, 4),
-(39, NULL, FALSE, NULL, NULL, 5),
-(63, NULL, FALSE, NULL, NULL, 5),
-(64, NULL, FALSE, NULL, NULL, 5),
-(65, NULL, FALSE, NULL, NULL, 5),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 5),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 5),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 5),
 (10, 'subfase_id', FALSE, NULL, NULL, 5),
 (11, 'subfase_id', FALSE, NULL, NULL, 5),
 (12, 'subfase_id', FALSE, NULL, NULL, 5),
-(39, NULL, FALSE, NULL, NULL, 6),
-(44, NULL, FALSE, NULL, NULL, 6),
-(63, NULL, FALSE, NULL, NULL, 6),
-(64, NULL, FALSE, NULL, NULL, 6),
-(65, NULL, FALSE, NULL, NULL, 6),
+(39, NULL, FALSE, NULL, NULL, 5),
+(63, NULL, FALSE, NULL, NULL, 5),
+(64, NULL, FALSE, NULL, NULL, 5),
+(65, NULL, FALSE, NULL, NULL, 5),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 6),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 6),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 6),
 (10, 'subfase_id', FALSE, NULL, NULL, 6),
 (11, 'subfase_id', FALSE, NULL, NULL, 6),
 (12, 'subfase_id', FALSE, NULL, NULL, 6),
+(39, NULL, FALSE, NULL, NULL, 6),
+(44, NULL, FALSE, NULL, NULL, 6),
+(63, NULL, FALSE, NULL, NULL, 6),
+(64, NULL, FALSE, NULL, NULL, 6),
+(65, NULL, FALSE, NULL, NULL, 6),
 (1, NULL, FALSE, NULL, NULL, 7),
 (2, NULL, FALSE, NULL, NULL, 7),
 (3, NULL, FALSE, NULL, NULL, 7),
 (4, NULL, FALSE, NULL, NULL, 7),
 (5, NULL, FALSE, NULL, NULL, 7),
-(22, NULL, FALSE, NULL, NULL, 7),
-(24, NULL, FALSE, NULL, NULL, 7),
-(25, NULL, FALSE, NULL, NULL, 7),
-(27, NULL, FALSE, NULL, NULL, 7),
-(32, NULL, FALSE, NULL, NULL, 7),
-(33, NULL, FALSE, NULL, NULL, 7),
-(34, NULL, FALSE, NULL, NULL, 7),
-(30, NULL, FALSE, NULL, NULL, 7),
-(31, NULL, FALSE, NULL, NULL, 7),
-(45, NULL, FALSE, NULL, NULL, 7),
-(49, NULL, FALSE, NULL, NULL, 7),
-(50, NULL, FALSE, NULL, NULL, 7),
-(63, NULL, FALSE, NULL, NULL, 7),
-(64, NULL, FALSE, NULL, NULL, 7),
-(65, NULL, FALSE, NULL, NULL, 7),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 7),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 7),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 7),
 (10, 'subfase_id', FALSE, NULL, NULL, 7),
 (11, 'subfase_id', FALSE, NULL, NULL, 7),
 (12, 'subfase_id', FALSE, NULL, NULL, 7),
+(22, NULL, FALSE, NULL, NULL, 7),
+(24, NULL, FALSE, NULL, NULL, 7),
+(25, NULL, FALSE, NULL, NULL, 7),
+(27, NULL, FALSE, NULL, NULL, 7),
+(30, NULL, FALSE, NULL, NULL, 7),
+(31, NULL, FALSE, NULL, NULL, 7),
+(32, NULL, FALSE, NULL, NULL, 7),
+(33, NULL, FALSE, NULL, NULL, 7),
+(34, NULL, FALSE, NULL, NULL, 7),
+(45, NULL, FALSE, NULL, NULL, 7),
+(49, NULL, FALSE, NULL, NULL, 7),
+(50, NULL, FALSE, NULL, NULL, 7),
+(63, NULL, FALSE, NULL, NULL, 7),
+(64, NULL, FALSE, NULL, NULL, 7),
+(65, NULL, FALSE, NULL, NULL, 7),
 (1, NULL, FALSE, NULL, NULL, 8),
 (2, NULL, FALSE, NULL, NULL, 8),
 (3, NULL, FALSE, NULL, NULL, 8),
 (4, NULL, FALSE, NULL, NULL, 8),
 (5, NULL, FALSE, NULL, NULL, 8),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 8),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 8),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 8),
+(10, 'subfase_id', FALSE, NULL, NULL, 8),
+(11, 'subfase_id', FALSE, NULL, NULL, 8),
+(12, 'subfase_id', FALSE, NULL, NULL, 8),
 (22, NULL, FALSE, NULL, NULL, 8),
 (24, NULL, FALSE, NULL, NULL, 8),
 (25, NULL, FALSE, NULL, NULL, 8),
@@ -326,18 +332,20 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (63, NULL, FALSE, NULL, NULL, 8),
 (64, NULL, FALSE, NULL, NULL, 8),
 (65, NULL, FALSE, NULL, NULL, 8),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 8),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 8),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 8),
-(10, 'subfase_id', FALSE, NULL, NULL, 8),
-(11, 'subfase_id', FALSE, NULL, NULL, 8),
-(12, 'subfase_id', FALSE, NULL, NULL, 8),
 (97, NULL, FALSE, NULL, NULL, 8),
 (1, NULL, FALSE, NULL, NULL, 9),
 (2, NULL, FALSE, NULL, NULL, 9),
 (3, NULL, FALSE, NULL, NULL, 9),
 (4, NULL, FALSE, NULL, NULL, 9),
 (5, NULL, FALSE, NULL, NULL, 9),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 9),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 9),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 9),
+(10, 'subfase_id', FALSE, NULL, NULL, 9),
+(11, 'subfase_id', FALSE, NULL, NULL, 9),
+(12, 'subfase_id', FALSE, NULL, NULL, 9),
+(14, NULL, FALSE, NULL, NULL, 9),
+(15, NULL, FALSE, NULL, NULL, 9),
 (22, NULL, FALSE, NULL, NULL, 9),
 (24, NULL, FALSE, NULL, NULL, 9),
 (25, NULL, FALSE, NULL, NULL, 9),
@@ -345,26 +353,18 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (32, NULL, FALSE, NULL, NULL, 9),
 (33, NULL, FALSE, NULL, NULL, 9),
 (34, NULL, FALSE, NULL, NULL, 9),
-(39, NULL, FALSE, NULL, NULL, 9),
-(44, NULL, FALSE, NULL, NULL, 9),
-(14, NULL, FALSE, NULL, NULL, 9),
-(15, NULL, FALSE, NULL, NULL, 9),
 (35, NULL, FALSE, NULL, NULL, 9),
 (36, NULL, FALSE, NULL, NULL, 9),
 (37, NULL, FALSE, NULL, NULL, 9),
 (38, NULL, FALSE, NULL, NULL, 9),
+(39, NULL, FALSE, NULL, NULL, 9),
 (41, NULL, FALSE, NULL, NULL, 9),
 (42, NULL, FALSE, NULL, NULL, 9),
 (43, NULL, FALSE, NULL, NULL, 9),
+(44, NULL, FALSE, NULL, NULL, 9),
 (63, NULL, FALSE, NULL, NULL, 9),
 (64, NULL, FALSE, NULL, NULL, 9),
 (65, NULL, FALSE, NULL, NULL, 9),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 9),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 9),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 9),
-(10, 'subfase_id', FALSE, NULL, NULL, 9),
-(11, 'subfase_id', FALSE, NULL, NULL, 9),
-(12, 'subfase_id', FALSE, NULL, NULL, 9),
 (84, NULL, FALSE, NULL, NULL, 9),
 (85, NULL, FALSE, NULL, NULL, 9),
 (1, NULL, FALSE, NULL, NULL, 10),
@@ -372,61 +372,70 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (3, NULL, FALSE, NULL, NULL, 10),
 (4, NULL, FALSE, NULL, NULL, 10),
 (5, NULL, FALSE, NULL, NULL, 10),
-(22, NULL, FALSE, NULL, NULL, 10),
-(24, NULL, FALSE, NULL, NULL, 10),
-(25, NULL, FALSE, NULL, NULL, 10),
-(27, NULL, FALSE, NULL, NULL, 10),
-(28, NULL, FALSE, NULL, NULL, 10),
-(32, NULL, FALSE, NULL, NULL, 10),
-(33, NULL, FALSE, NULL, NULL, 10),
-(34, NULL, FALSE, NULL, NULL, 10),
-(39, NULL, FALSE, NULL, NULL, 10),
-(44, NULL, FALSE, NULL, NULL, 10),
-(14, NULL, FALSE, NULL, NULL, 10),
-(15, NULL, FALSE, NULL, NULL, 10),
-(35, NULL, FALSE, NULL, NULL, 10),
-(36, NULL, FALSE, NULL, NULL, 10),
-(37, NULL, FALSE, NULL, NULL, 10),
-(38, NULL, FALSE, NULL, NULL, 10),
-(41, NULL, FALSE, NULL, NULL, 10),
-(42, NULL, FALSE, NULL, NULL, 10),
-(43, NULL, FALSE, NULL, NULL, 10),
-(46, NULL, FALSE, NULL, NULL, 10),
-(47, NULL, FALSE, NULL, NULL, 10),
-(48, NULL, FALSE, NULL, NULL, 10),
-(51, NULL, FALSE, NULL, NULL, 10),
-(52, NULL, FALSE, NULL, NULL, 10),
-(53, NULL, FALSE, NULL, NULL, 10),
-(54, NULL, FALSE, NULL, NULL, 10),
-(56, NULL, FALSE, NULL, NULL, 10),
-(97, NULL, FALSE, NULL, NULL, 10),
-(57, NULL, FALSE, NULL, NULL, 10),
-(30, NULL, FALSE, NULL, NULL, 10),
-(31, NULL, FALSE, NULL, NULL, 10),
-(45, NULL, FALSE, NULL, NULL, 10),
-(49, NULL, FALSE, NULL, NULL, 10),
-(50, NULL, FALSE, NULL, NULL, 10),
-(61, NULL, FALSE, NULL, NULL, 10),
-(63, NULL, FALSE, NULL, NULL, 10),
-(64, NULL, FALSE, NULL, NULL, 10),
-(65, NULL, FALSE, NULL, NULL, 10),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 10),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 10),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 10),
 (10, 'subfase_id', FALSE, NULL, NULL, 10),
 (11, 'subfase_id', FALSE, NULL, NULL, 10),
 (12, 'subfase_id', FALSE, NULL, NULL, 10),
-(84, NULL, FALSE, NULL, NULL, 10),
-(85, NULL, FALSE, NULL, NULL, 10),
+(14, NULL, FALSE, NULL, NULL, 10),
+(15, NULL, FALSE, NULL, NULL, 10),
+(22, NULL, FALSE, NULL, NULL, 10),
+(24, NULL, FALSE, NULL, NULL, 10),
+(25, NULL, FALSE, NULL, NULL, 10),
+(27, NULL, FALSE, NULL, NULL, 10),
+(28, NULL, FALSE, NULL, NULL, 10),
+(30, NULL, FALSE, NULL, NULL, 10),
+(31, NULL, FALSE, NULL, NULL, 10),
+(32, NULL, FALSE, NULL, NULL, 10),
+(33, NULL, FALSE, NULL, NULL, 10),
+(34, NULL, FALSE, NULL, NULL, 10),
+(35, NULL, FALSE, NULL, NULL, 10),
+(36, NULL, FALSE, NULL, NULL, 10),
+(37, NULL, FALSE, NULL, NULL, 10),
+(38, NULL, FALSE, NULL, NULL, 10),
+(39, NULL, FALSE, NULL, NULL, 10),
+(41, NULL, FALSE, NULL, NULL, 10),
+(42, NULL, FALSE, NULL, NULL, 10),
+(43, NULL, FALSE, NULL, NULL, 10),
+(44, NULL, FALSE, NULL, NULL, 10),
+(45, NULL, FALSE, NULL, NULL, 10),
+(46, NULL, FALSE, NULL, NULL, 10),
+(47, NULL, FALSE, NULL, NULL, 10),
+(48, NULL, FALSE, NULL, NULL, 10),
+(49, NULL, FALSE, NULL, NULL, 10),
+(50, NULL, FALSE, NULL, NULL, 10),
+(51, NULL, FALSE, NULL, NULL, 10),
+(52, NULL, FALSE, NULL, NULL, 10),
+(53, NULL, FALSE, NULL, NULL, 10),
+(54, NULL, FALSE, NULL, NULL, 10),
+(56, NULL, FALSE, NULL, NULL, 10),
+(57, NULL, FALSE, NULL, NULL, 10),
+(61, NULL, FALSE, NULL, NULL, 10),
+(63, NULL, FALSE, NULL, NULL, 10),
+(64, NULL, FALSE, NULL, NULL, 10),
+(65, NULL, FALSE, NULL, NULL, 10),
 (69, NULL, FALSE, NULL, NULL, 10),
 (70, NULL, FALSE, NULL, NULL, 10),
+(84, NULL, FALSE, NULL, NULL, 10),
+(85, NULL, FALSE, NULL, NULL, 10),
 (92, NULL, FALSE, NULL, NULL, 10),
+(97, NULL, FALSE, NULL, NULL, 10),
 (1, NULL, FALSE, NULL, NULL, 11),
 (2, NULL, FALSE, NULL, NULL, 11),
 (3, NULL, FALSE, NULL, NULL, 11),
 (4, NULL, FALSE, NULL, NULL, 11),
 (5, NULL, FALSE, NULL, NULL, 11),
+(6, NULL, FALSE, NULL, NULL, 11),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 11),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 11),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 11),
+(10, 'subfase_id', FALSE, NULL, NULL, 11),
+(11, 'subfase_id', FALSE, NULL, NULL, 11),
+(12, 'subfase_id', FALSE, NULL, NULL, 11),
 (13, NULL, FALSE, NULL, NULL, 11),
+(14, NULL, FALSE, NULL, NULL, 11),
+(15, NULL, FALSE, NULL, NULL, 11),
 (22, NULL, FALSE, NULL, NULL, 11),
 (23, NULL, FALSE, NULL, NULL, 11),
 (24, NULL, FALSE, NULL, NULL, 11),
@@ -435,57 +444,57 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (27, NULL, FALSE, NULL, NULL, 11),
 (28, NULL, FALSE, NULL, NULL, 11),
 (29, NULL, FALSE, NULL, NULL, 11),
+(30, NULL, FALSE, NULL, NULL, 11),
+(31, NULL, FALSE, NULL, NULL, 11),
 (32, NULL, FALSE, NULL, NULL, 11),
 (33, NULL, FALSE, NULL, NULL, 11),
 (34, NULL, FALSE, NULL, NULL, 11),
-(39, NULL, FALSE, NULL, NULL, 11),
-(44, NULL, FALSE, NULL, NULL, 11),
-(14, NULL, FALSE, NULL, NULL, 11),
-(15, NULL, FALSE, NULL, NULL, 11),
 (35, NULL, FALSE, NULL, NULL, 11),
 (36, NULL, FALSE, NULL, NULL, 11),
 (37, NULL, FALSE, NULL, NULL, 11),
 (38, NULL, FALSE, NULL, NULL, 11),
+(39, NULL, FALSE, NULL, NULL, 11),
 (41, NULL, FALSE, NULL, NULL, 11),
 (42, NULL, FALSE, NULL, NULL, 11),
 (43, NULL, FALSE, NULL, NULL, 11),
-(6, NULL, FALSE, NULL, NULL, 11),
+(44, NULL, FALSE, NULL, NULL, 11),
+(45, NULL, FALSE, NULL, NULL, 11),
 (46, NULL, FALSE, NULL, NULL, 11),
 (47, NULL, FALSE, NULL, NULL, 11),
 (48, NULL, FALSE, NULL, NULL, 11),
+(49, NULL, FALSE, NULL, NULL, 11),
+(50, NULL, FALSE, NULL, NULL, 11),
 (51, NULL, FALSE, NULL, NULL, 11),
 (52, NULL, FALSE, NULL, NULL, 11),
 (53, NULL, FALSE, NULL, NULL, 11),
 (54, NULL, FALSE, NULL, NULL, 11),
 (56, NULL, FALSE, NULL, NULL, 11),
-(97, NULL, FALSE, NULL, NULL, 11),
 (57, NULL, FALSE, NULL, NULL, 11),
-(30, NULL, FALSE, NULL, NULL, 11),
-(31, NULL, FALSE, NULL, NULL, 11),
-(45, NULL, FALSE, NULL, NULL, 11),
-(49, NULL, FALSE, NULL, NULL, 11),
-(50, NULL, FALSE, NULL, NULL, 11),
 (61, NULL, FALSE, NULL, NULL, 11),
 (63, NULL, FALSE, NULL, NULL, 11),
 (64, NULL, FALSE, NULL, NULL, 11),
 (65, NULL, FALSE, NULL, NULL, 11),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 11),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 11),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 11),
-(10, 'subfase_id', FALSE, NULL, NULL, 11),
-(11, 'subfase_id', FALSE, NULL, NULL, 11),
-(12, 'subfase_id', FALSE, NULL, NULL, 11),
-(84, NULL, FALSE, NULL, NULL, 11),
-(85, NULL, FALSE, NULL, NULL, 11),
 (69, NULL, FALSE, NULL, NULL, 11),
 (70, NULL, FALSE, NULL, NULL, 11),
+(84, NULL, FALSE, NULL, NULL, 11),
+(85, NULL, FALSE, NULL, NULL, 11),
 (92, NULL, FALSE, NULL, NULL, 11),
+(97, NULL, FALSE, NULL, NULL, 11),
 (1, NULL, FALSE, NULL, NULL, 12),
 (2, NULL, FALSE, NULL, NULL, 12),
 (3, NULL, FALSE, NULL, NULL, 12),
 (4, NULL, FALSE, NULL, NULL, 12),
 (5, NULL, FALSE, NULL, NULL, 12),
+(6, NULL, FALSE, NULL, NULL, 12),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 12),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 12),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 12),
+(10, 'subfase_id', FALSE, NULL, NULL, 12),
+(11, 'subfase_id', FALSE, NULL, NULL, 12),
+(12, 'subfase_id', FALSE, NULL, NULL, 12),
 (13, NULL, FALSE, NULL, NULL, 12),
+(14, NULL, FALSE, NULL, NULL, 12),
+(15, NULL, FALSE, NULL, NULL, 12),
 (22, NULL, FALSE, NULL, NULL, 12),
 (23, NULL, FALSE, NULL, NULL, 12),
 (24, NULL, FALSE, NULL, NULL, 12),
@@ -494,57 +503,61 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (27, NULL, FALSE, NULL, NULL, 12),
 (28, NULL, FALSE, NULL, NULL, 12),
 (29, NULL, FALSE, NULL, NULL, 12),
+(30, NULL, FALSE, NULL, NULL, 12),
+(31, NULL, FALSE, NULL, NULL, 12),
 (32, NULL, FALSE, NULL, NULL, 12),
 (33, NULL, FALSE, NULL, NULL, 12),
 (34, NULL, FALSE, NULL, NULL, 12),
-(39, NULL, FALSE, NULL, NULL, 12),
-(44, NULL, FALSE, NULL, NULL, 12),
-(14, NULL, FALSE, NULL, NULL, 12),
-(15, NULL, FALSE, NULL, NULL, 12),
 (35, NULL, FALSE, NULL, NULL, 12),
 (36, NULL, FALSE, NULL, NULL, 12),
 (37, NULL, FALSE, NULL, NULL, 12),
 (38, NULL, FALSE, NULL, NULL, 12),
+(39, NULL, FALSE, NULL, NULL, 12),
 (41, NULL, FALSE, NULL, NULL, 12),
 (42, NULL, FALSE, NULL, NULL, 12),
 (43, NULL, FALSE, NULL, NULL, 12),
-(6, NULL, FALSE, NULL, NULL, 12),
+(44, NULL, FALSE, NULL, NULL, 12),
+(45, NULL, FALSE, NULL, NULL, 12),
 (46, NULL, FALSE, NULL, NULL, 12),
 (47, NULL, FALSE, NULL, NULL, 12),
 (48, NULL, FALSE, NULL, NULL, 12),
+(49, NULL, FALSE, NULL, NULL, 12),
+(50, NULL, FALSE, NULL, NULL, 12),
 (51, NULL, FALSE, NULL, NULL, 12),
 (52, NULL, FALSE, NULL, NULL, 12),
 (53, NULL, FALSE, NULL, NULL, 12),
 (54, NULL, FALSE, NULL, NULL, 12),
 (56, NULL, FALSE, NULL, NULL, 12),
-(97, NULL, FALSE, NULL, NULL, 12),
 (57, NULL, FALSE, NULL, NULL, 12),
-(30, NULL, FALSE, NULL, NULL, 12),
-(31, NULL, FALSE, NULL, NULL, 12),
-(45, NULL, FALSE, NULL, NULL, 12),
-(49, NULL, FALSE, NULL, NULL, 12),
-(50, NULL, FALSE, NULL, NULL, 12),
 (61, NULL, FALSE, NULL, NULL, 12),
 (63, NULL, FALSE, NULL, NULL, 12),
 (64, NULL, FALSE, NULL, NULL, 12),
 (65, NULL, FALSE, NULL, NULL, 12),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 12),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 12),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 12),
-(10, 'subfase_id', FALSE, NULL, NULL, 12),
-(11, 'subfase_id', FALSE, NULL, NULL, 12),
-(12, 'subfase_id', FALSE, NULL, NULL, 12),
-(84, NULL, FALSE, NULL, NULL, 12),
-(85, NULL, FALSE, NULL, NULL, 12),
 (69, NULL, FALSE, NULL, NULL, 12),
 (70, NULL, FALSE, NULL, NULL, 12),
+(84, NULL, FALSE, NULL, NULL, 12),
+(85, NULL, FALSE, NULL, NULL, 12),
 (92, NULL, FALSE, NULL, NULL, 12),
+(97, NULL, FALSE, NULL, NULL, 12),
 (1, NULL, FALSE, NULL, NULL, 15),
 (2, NULL, FALSE, NULL, NULL, 15),
 (3, NULL, FALSE, NULL, NULL, 15),
 (4, NULL, FALSE, NULL, NULL, 15),
 (5, NULL, FALSE, NULL, NULL, 15),
+(6, NULL, FALSE, NULL, NULL, 15),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 15),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 15),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 15),
+(10, 'subfase_id', FALSE, NULL, NULL, 15),
+(11, 'subfase_id', FALSE, NULL, NULL, 15),
+(12, 'subfase_id', FALSE, NULL, NULL, 15),
 (13, NULL, FALSE, NULL, NULL, 15),
+(14, NULL, FALSE, NULL, NULL, 15),
+(15, NULL, FALSE, NULL, NULL, 15),
+(16, NULL, FALSE, NULL, NULL, 15),
+(17, NULL, FALSE, NULL, NULL, 15),
+(18, NULL, FALSE, NULL, NULL, 15),
+(19, NULL, FALSE, NULL, NULL, 15),
 (20, NULL, FALSE, NULL, NULL, 15),
 (21, NULL, FALSE, NULL, NULL, 15),
 (22, NULL, FALSE, NULL, NULL, 15),
@@ -555,55 +568,42 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (27, NULL, FALSE, NULL, NULL, 15),
 (28, NULL, FALSE, NULL, NULL, 15),
 (29, NULL, FALSE, NULL, NULL, 15),
+(30, NULL, FALSE, NULL, NULL, 15),
+(31, NULL, FALSE, NULL, NULL, 15),
 (32, NULL, FALSE, NULL, NULL, 15),
 (33, NULL, FALSE, NULL, NULL, 15),
 (34, NULL, FALSE, NULL, NULL, 15),
-(39, NULL, FALSE, NULL, NULL, 15),
-(44, NULL, FALSE, NULL, NULL, 15),
-(14, NULL, FALSE, NULL, NULL, 15),
-(15, NULL, FALSE, NULL, NULL, 15),
 (35, NULL, FALSE, NULL, NULL, 15),
 (36, NULL, FALSE, NULL, NULL, 15),
 (37, NULL, FALSE, NULL, NULL, 15),
 (38, NULL, FALSE, NULL, NULL, 15),
+(39, NULL, FALSE, NULL, NULL, 15),
 (41, NULL, FALSE, NULL, NULL, 15),
 (42, NULL, FALSE, NULL, NULL, 15),
 (43, NULL, FALSE, NULL, NULL, 15),
-(6, NULL, FALSE, NULL, NULL, 15),
+(44, NULL, FALSE, NULL, NULL, 15),
+(45, NULL, FALSE, NULL, NULL, 15),
 (46, NULL, FALSE, NULL, NULL, 15),
 (47, NULL, FALSE, NULL, NULL, 15),
 (48, NULL, FALSE, NULL, NULL, 15),
+(49, NULL, FALSE, NULL, NULL, 15),
+(50, NULL, FALSE, NULL, NULL, 15),
 (51, NULL, FALSE, NULL, NULL, 15),
 (52, NULL, FALSE, NULL, NULL, 15),
 (53, NULL, FALSE, NULL, NULL, 15),
 (54, NULL, FALSE, NULL, NULL, 15),
 (56, NULL, FALSE, NULL, NULL, 15),
-(97, NULL, FALSE, NULL, NULL, 15),
 (57, NULL, FALSE, NULL, NULL, 15),
-(30, NULL, FALSE, NULL, NULL, 15),
-(31, NULL, FALSE, NULL, NULL, 15),
-(45, NULL, FALSE, NULL, NULL, 15),
-(49, NULL, FALSE, NULL, NULL, 15),
-(50, NULL, FALSE, NULL, NULL, 15),
 (61, NULL, FALSE, NULL, NULL, 15),
 (63, NULL, FALSE, NULL, NULL, 15),
 (64, NULL, FALSE, NULL, NULL, 15),
 (65, NULL, FALSE, NULL, NULL, 15),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 15),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 15),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 15),
-(10, 'subfase_id', FALSE, NULL, NULL, 15),
-(11, 'subfase_id', FALSE, NULL, NULL, 15),
-(12, 'subfase_id', FALSE, NULL, NULL, 15),
-(16, NULL, FALSE, NULL, NULL, 15),
-(17, NULL, FALSE, NULL, NULL, 15),
-(18, NULL, FALSE, NULL, NULL, 15),
-(19, NULL, FALSE, NULL, NULL, 15),
-(84, NULL, FALSE, NULL, NULL, 15),
-(85, NULL, FALSE, NULL, NULL, 15),
 (69, NULL, FALSE, NULL, NULL, 15),
 (70, NULL, FALSE, NULL, NULL, 15),
+(84, NULL, FALSE, NULL, NULL, 15),
+(85, NULL, FALSE, NULL, NULL, 15),
 (92, NULL, FALSE, NULL, NULL, 15),
+(97, NULL, FALSE, NULL, NULL, 15),
 (63, NULL, FALSE, NULL, NULL, 19),
 (64, NULL, FALSE, NULL, NULL, 19),
 (65, NULL, FALSE, NULL, NULL, 19),
@@ -612,6 +612,12 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (3, NULL, FALSE, NULL, NULL, 20),
 (4, NULL, FALSE, NULL, NULL, 20),
 (5, NULL, FALSE, NULL, NULL, 20),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 20),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 20),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 20),
+(10, 'subfase_id', FALSE, NULL, NULL, 20),
+(11, 'subfase_id', FALSE, NULL, NULL, 20),
+(12, 'subfase_id', FALSE, NULL, NULL, 20),
 (22, NULL, FALSE, NULL, NULL, 20),
 (24, NULL, FALSE, NULL, NULL, 20),
 (25, NULL, FALSE, NULL, NULL, 20),
@@ -619,82 +625,73 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (32, NULL, FALSE, NULL, NULL, 20),
 (33, NULL, FALSE, NULL, NULL, 20),
 (34, NULL, FALSE, NULL, NULL, 20),
-(81, NULL, FALSE, NULL, NULL, 20),
-(91, NULL, FALSE, NULL, NULL, 20),
 (63, NULL, FALSE, NULL, NULL, 20),
 (64, NULL, FALSE, NULL, NULL, 20),
 (65, NULL, FALSE, NULL, NULL, 20),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 20),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 20),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 20),
-(10, 'subfase_id', FALSE, NULL, NULL, 20),
-(11, 'subfase_id', FALSE, NULL, NULL, 20),
-(12, 'subfase_id', FALSE, NULL, NULL, 20),
-(39, NULL, FALSE, NULL, NULL, 21),
-(63, NULL, FALSE, NULL, NULL, 21),
-(64, NULL, FALSE, NULL, NULL, 21),
-(65, NULL, FALSE, NULL, NULL, 21),
+(81, NULL, FALSE, NULL, NULL, 20),
+(91, NULL, FALSE, NULL, NULL, 20),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 21),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 21),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 21),
 (10, 'subfase_id', FALSE, NULL, NULL, 21),
 (11, 'subfase_id', FALSE, NULL, NULL, 21),
 (12, 'subfase_id', FALSE, NULL, NULL, 21),
-(39, NULL, FALSE, NULL, NULL, 22),
-(44, NULL, FALSE, NULL, NULL, 22),
-(88, NULL, FALSE, NULL, NULL, 22),
-(63, NULL, FALSE, NULL, NULL, 22),
-(64, NULL, FALSE, NULL, NULL, 22),
-(65, NULL, FALSE, NULL, NULL, 22),
-(90, NULL, FALSE, NULL, NULL, 22),
+(39, NULL, FALSE, NULL, NULL, 21),
+(63, NULL, FALSE, NULL, NULL, 21),
+(64, NULL, FALSE, NULL, NULL, 21),
+(65, NULL, FALSE, NULL, NULL, 21),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 22),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 22),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 22),
 (10, 'subfase_id', FALSE, NULL, NULL, 22),
 (11, 'subfase_id', FALSE, NULL, NULL, 22),
 (12, 'subfase_id', FALSE, NULL, NULL, 22),
+(39, NULL, FALSE, NULL, NULL, 22),
+(44, NULL, FALSE, NULL, NULL, 22),
+(63, NULL, FALSE, NULL, NULL, 22),
+(64, NULL, FALSE, NULL, NULL, 22),
+(65, NULL, FALSE, NULL, NULL, 22),
+(88, NULL, FALSE, NULL, NULL, 22),
+(90, NULL, FALSE, NULL, NULL, 22),
 (1, NULL, FALSE, NULL, NULL, 23),
 (2, NULL, FALSE, NULL, NULL, 23),
 (3, NULL, FALSE, NULL, NULL, 23),
 (4, NULL, FALSE, NULL, NULL, 23),
 (5, NULL, FALSE, NULL, NULL, 23),
-(22, NULL, FALSE, NULL, NULL, 23),
-(24, NULL, FALSE, NULL, NULL, 23),
-(25, NULL, FALSE, NULL, NULL, 23),
-(27, NULL, FALSE, NULL, NULL, 23),
-(32, NULL, FALSE, NULL, NULL, 23),
-(33, NULL, FALSE, NULL, NULL, 23),
-(34, NULL, FALSE, NULL, NULL, 23),
-(81, NULL, FALSE, NULL, NULL, 23),
-(91, NULL, FALSE, NULL, NULL, 23),
-(30, NULL, FALSE, NULL, NULL, 23),
-(31, NULL, FALSE, NULL, NULL, 23),
-(45, NULL, FALSE, NULL, NULL, 23),
-(49, NULL, FALSE, NULL, NULL, 23),
-(50, NULL, FALSE, NULL, NULL, 23),
-(63, NULL, FALSE, NULL, NULL, 23),
-(64, NULL, FALSE, NULL, NULL, 23),
-(65, NULL, FALSE, NULL, NULL, 23),
 (7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 23),
 (8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 23),
 (9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 23),
 (10, 'subfase_id', FALSE, NULL, NULL, 23),
 (11, 'subfase_id', FALSE, NULL, NULL, 23),
 (12, 'subfase_id', FALSE, NULL, NULL, 23),
-(48, NULL, FALSE, NULL, NULL, 24),
-(56, NULL, FALSE, NULL, NULL, 24),
-(97, NULL, FALSE, NULL, NULL, 24),
-(57, NULL, FALSE, NULL, NULL, 24),
-(61, NULL, FALSE, NULL, NULL, 24),
-(94, NULL, FALSE, NULL, NULL, 24),
-(39, NULL, FALSE, NULL, NULL, 24),
-(44, NULL, FALSE, NULL, NULL, 24),
-(88, NULL, FALSE, NULL, NULL, 24),
+(22, NULL, FALSE, NULL, NULL, 23),
+(24, NULL, FALSE, NULL, NULL, 23),
+(25, NULL, FALSE, NULL, NULL, 23),
+(27, NULL, FALSE, NULL, NULL, 23),
+(30, NULL, FALSE, NULL, NULL, 23),
+(31, NULL, FALSE, NULL, NULL, 23),
+(32, NULL, FALSE, NULL, NULL, 23),
+(33, NULL, FALSE, NULL, NULL, 23),
+(34, NULL, FALSE, NULL, NULL, 23),
+(45, NULL, FALSE, NULL, NULL, 23),
+(49, NULL, FALSE, NULL, NULL, 23),
+(50, NULL, FALSE, NULL, NULL, 23),
+(63, NULL, FALSE, NULL, NULL, 23),
+(64, NULL, FALSE, NULL, NULL, 23),
+(65, NULL, FALSE, NULL, NULL, 23),
+(81, NULL, FALSE, NULL, NULL, 23),
+(91, NULL, FALSE, NULL, NULL, 23),
 (1, NULL, FALSE, NULL, NULL, 24),
 (2, NULL, FALSE, NULL, NULL, 24),
 (3, NULL, FALSE, NULL, NULL, 24),
 (4, NULL, FALSE, NULL, NULL, 24),
 (5, NULL, FALSE, NULL, NULL, 24),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 24),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 24),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 24),
+(10, 'subfase_id', FALSE, NULL, NULL, 24),
+(11, 'subfase_id', FALSE, NULL, NULL, 24),
+(12, 'subfase_id', FALSE, NULL, NULL, 24),
 (22, NULL, FALSE, NULL, NULL, 24),
 (24, NULL, FALSE, NULL, NULL, 24),
 (25, NULL, FALSE, NULL, NULL, 24),
@@ -702,28 +699,32 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (32, NULL, FALSE, NULL, NULL, 24),
 (33, NULL, FALSE, NULL, NULL, 24),
 (34, NULL, FALSE, NULL, NULL, 24),
-(81, NULL, FALSE, NULL, NULL, 24),
-(91, NULL, FALSE, NULL, NULL, 24),
+(39, NULL, FALSE, NULL, NULL, 24),
+(44, NULL, FALSE, NULL, NULL, 24),
+(48, NULL, FALSE, NULL, NULL, 24),
+(56, NULL, FALSE, NULL, NULL, 24),
+(57, NULL, FALSE, NULL, NULL, 24),
+(61, NULL, FALSE, NULL, NULL, 24),
 (63, NULL, FALSE, NULL, NULL, 24),
 (64, NULL, FALSE, NULL, NULL, 24),
 (65, NULL, FALSE, NULL, NULL, 24),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 24),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 24),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 24),
-(10, 'subfase_id', FALSE, NULL, NULL, 24),
-(11, 'subfase_id', FALSE, NULL, NULL, 24),
-(12, 'subfase_id', FALSE, NULL, NULL, 24),
+(81, NULL, FALSE, NULL, NULL, 24),
+(88, NULL, FALSE, NULL, NULL, 24),
 (90, NULL, FALSE, NULL, NULL, 24),
-(86, NULL, FALSE, NULL, NULL, 25),
-(87, NULL, FALSE, NULL, NULL, 25),
-(39, NULL, FALSE, NULL, NULL, 25),
-(44, NULL, FALSE, NULL, NULL, 25),
-(88, NULL, FALSE, NULL, NULL, 25),
+(91, NULL, FALSE, NULL, NULL, 24),
+(94, NULL, FALSE, NULL, NULL, 24),
+(97, NULL, FALSE, NULL, NULL, 24),
 (1, NULL, FALSE, NULL, NULL, 25),
 (2, NULL, FALSE, NULL, NULL, 25),
 (3, NULL, FALSE, NULL, NULL, 25),
 (4, NULL, FALSE, NULL, NULL, 25),
 (5, NULL, FALSE, NULL, NULL, 25),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 25),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 25),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 25),
+(10, 'subfase_id', FALSE, NULL, NULL, 25),
+(11, 'subfase_id', FALSE, NULL, NULL, 25),
+(12, 'subfase_id', FALSE, NULL, NULL, 25),
 (22, NULL, FALSE, NULL, NULL, 25),
 (24, NULL, FALSE, NULL, NULL, 25),
 (25, NULL, FALSE, NULL, NULL, 25),
@@ -731,28 +732,28 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (32, NULL, FALSE, NULL, NULL, 25),
 (33, NULL, FALSE, NULL, NULL, 25),
 (34, NULL, FALSE, NULL, NULL, 25),
-(81, NULL, FALSE, NULL, NULL, 25),
-(91, NULL, FALSE, NULL, NULL, 25),
+(39, NULL, FALSE, NULL, NULL, 25),
+(44, NULL, FALSE, NULL, NULL, 25),
 (63, NULL, FALSE, NULL, NULL, 25),
 (64, NULL, FALSE, NULL, NULL, 25),
 (65, NULL, FALSE, NULL, NULL, 25),
+(81, NULL, FALSE, NULL, NULL, 25),
+(86, NULL, FALSE, NULL, NULL, 25),
+(87, NULL, FALSE, NULL, NULL, 25),
+(88, NULL, FALSE, NULL, NULL, 25),
 (90, NULL, FALSE, NULL, NULL, 25),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 25),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 25),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 25),
-(10, 'subfase_id', FALSE, NULL, NULL, 25),
-(11, 'subfase_id', FALSE, NULL, NULL, 25),
-(12, 'subfase_id', FALSE, NULL, NULL, 25),
-(55, NULL, FALSE, NULL, NULL, 26),
-(60, NULL, FALSE, NULL, NULL, 26),
-(39, NULL, FALSE, NULL, NULL, 26),
-(44, NULL, FALSE, NULL, NULL, 26),
-(88, NULL, FALSE, NULL, NULL, 26),
+(91, NULL, FALSE, NULL, NULL, 25),
 (1, NULL, FALSE, NULL, NULL, 26),
 (2, NULL, FALSE, NULL, NULL, 26),
 (3, NULL, FALSE, NULL, NULL, 26),
 (4, NULL, FALSE, NULL, NULL, 26),
 (5, NULL, FALSE, NULL, NULL, 26),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 26),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 26),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 26),
+(10, 'subfase_id', FALSE, NULL, NULL, 26),
+(11, 'subfase_id', FALSE, NULL, NULL, 26),
+(12, 'subfase_id', FALSE, NULL, NULL, 26),
 (22, NULL, FALSE, NULL, NULL, 26),
 (24, NULL, FALSE, NULL, NULL, 26),
 (25, NULL, FALSE, NULL, NULL, 26),
@@ -760,30 +761,28 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (32, NULL, FALSE, NULL, NULL, 26),
 (33, NULL, FALSE, NULL, NULL, 26),
 (34, NULL, FALSE, NULL, NULL, 26),
-(81, NULL, FALSE, NULL, NULL, 26),
-(91, NULL, FALSE, NULL, NULL, 26),
+(39, NULL, FALSE, NULL, NULL, 26),
+(44, NULL, FALSE, NULL, NULL, 26),
+(55, NULL, FALSE, NULL, NULL, 26),
+(60, NULL, FALSE, NULL, NULL, 26),
 (63, NULL, FALSE, NULL, NULL, 26),
 (64, NULL, FALSE, NULL, NULL, 26),
 (65, NULL, FALSE, NULL, NULL, 26),
+(81, NULL, FALSE, NULL, NULL, 26),
+(88, NULL, FALSE, NULL, NULL, 26),
 (90, NULL, FALSE, NULL, NULL, 26),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 26),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 26),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 26),
-(10, 'subfase_id', FALSE, NULL, NULL, 26),
-(11, 'subfase_id', FALSE, NULL, NULL, 26),
-(12, 'subfase_id', FALSE, NULL, NULL, 26),
-(58, NULL, FALSE, NULL, NULL, 27),
-(62, NULL, FALSE, NULL, NULL, 27),
-(55, NULL, FALSE, NULL, NULL, 27),
-(60, NULL, FALSE, NULL, NULL, 27),
-(39, NULL, FALSE, NULL, NULL, 27),
-(44, NULL, FALSE, NULL, NULL, 27),
-(88, NULL, FALSE, NULL, NULL, 27),
+(91, NULL, FALSE, NULL, NULL, 26),
 (1, NULL, FALSE, NULL, NULL, 27),
 (2, NULL, FALSE, NULL, NULL, 27),
 (3, NULL, FALSE, NULL, NULL, 27),
 (4, NULL, FALSE, NULL, NULL, 27),
 (5, NULL, FALSE, NULL, NULL, 27),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 27),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 27),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 27),
+(10, 'subfase_id', FALSE, NULL, NULL, 27),
+(11, 'subfase_id', FALSE, NULL, NULL, 27),
+(12, 'subfase_id', FALSE, NULL, NULL, 27),
 (22, NULL, FALSE, NULL, NULL, 27),
 (24, NULL, FALSE, NULL, NULL, 27),
 (25, NULL, FALSE, NULL, NULL, 27),
@@ -791,29 +790,57 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (32, NULL, FALSE, NULL, NULL, 27),
 (33, NULL, FALSE, NULL, NULL, 27),
 (34, NULL, FALSE, NULL, NULL, 27),
-(81, NULL, FALSE, NULL, NULL, 27),
-(91, NULL, FALSE, NULL, NULL, 27),
+(39, NULL, FALSE, NULL, NULL, 27),
+(44, NULL, FALSE, NULL, NULL, 27),
+(55, NULL, FALSE, NULL, NULL, 27),
+(58, NULL, FALSE, NULL, NULL, 27),
+(60, NULL, FALSE, NULL, NULL, 27),
+(62, NULL, FALSE, NULL, NULL, 27),
 (63, NULL, FALSE, NULL, NULL, 27),
 (64, NULL, FALSE, NULL, NULL, 27),
 (65, NULL, FALSE, NULL, NULL, 27),
+(81, NULL, FALSE, NULL, NULL, 27),
+(88, NULL, FALSE, NULL, NULL, 27),
 (90, NULL, FALSE, NULL, NULL, 27),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 27),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 27),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 27),
-(10, 'subfase_id', FALSE, NULL, NULL, 27),
-(11, 'subfase_id', FALSE, NULL, NULL, 27),
-(12, 'subfase_id', FALSE, NULL, NULL, 27),
+(91, NULL, FALSE, NULL, NULL, 27),
 (92, NULL, FALSE, NULL, NULL, 27),
+(1, NULL, FALSE, NULL, NULL, 28),
+(2, NULL, FALSE, NULL, NULL, 28),
+(3, NULL, FALSE, NULL, NULL, 28),
+(4, NULL, FALSE, NULL, NULL, 28),
+(5, NULL, FALSE, NULL, NULL, 28),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 28),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 28),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 28),
+(10, 'subfase_id', FALSE, NULL, NULL, 28),
+(11, 'subfase_id', FALSE, NULL, NULL, 28),
+(12, 'subfase_id', FALSE, NULL, NULL, 28),
 (14, NULL, FALSE, NULL, NULL, 28),
 (15, NULL, FALSE, NULL, NULL, 28),
+(22, NULL, FALSE, NULL, NULL, 28),
+(24, NULL, FALSE, NULL, NULL, 28),
+(25, NULL, FALSE, NULL, NULL, 28),
+(27, NULL, FALSE, NULL, NULL, 28),
+(32, NULL, FALSE, NULL, NULL, 28),
+(33, NULL, FALSE, NULL, NULL, 28),
+(34, NULL, FALSE, NULL, NULL, 28),
 (35, NULL, FALSE, NULL, NULL, 28),
 (36, NULL, FALSE, NULL, NULL, 28),
 (37, NULL, FALSE, NULL, NULL, 28),
 (38, NULL, FALSE, NULL, NULL, 28),
+(39, NULL, FALSE, NULL, NULL, 28),
 (40, NULL, FALSE, NULL, NULL, 28),
 (41, NULL, FALSE, NULL, NULL, 28),
 (42, NULL, FALSE, NULL, NULL, 28),
 (43, NULL, FALSE, NULL, NULL, 28),
+(44, NULL, FALSE, NULL, NULL, 28),
+(55, NULL, FALSE, NULL, NULL, 28),
+(58, NULL, FALSE, NULL, NULL, 28),
+(60, NULL, FALSE, NULL, NULL, 28),
+(62, NULL, FALSE, NULL, NULL, 28),
+(63, NULL, FALSE, NULL, NULL, 28),
+(64, NULL, FALSE, NULL, NULL, 28),
+(65, NULL, FALSE, NULL, NULL, 28),
 (71, NULL, FALSE, NULL, NULL, 28),
 (72, NULL, FALSE, NULL, NULL, 28),
 (73, NULL, FALSE, NULL, NULL, 28),
@@ -824,51 +851,61 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (78, NULL, FALSE, NULL, NULL, 28),
 (79, NULL, FALSE, NULL, NULL, 28),
 (80, NULL, FALSE, NULL, NULL, 28),
+(81, NULL, FALSE, NULL, NULL, 28),
 (83, NULL, FALSE, NULL, NULL, 28),
 (84, NULL, FALSE, NULL, NULL, 28),
 (85, NULL, FALSE, NULL, NULL, 28),
+(88, NULL, FALSE, NULL, NULL, 28),
 (89, NULL, FALSE, NULL, NULL, 28),
 (90, NULL, FALSE, NULL, NULL, 28),
-(58, NULL, FALSE, NULL, NULL, 28),
-(62, NULL, FALSE, NULL, NULL, 28),
-(55, NULL, FALSE, NULL, NULL, 28),
-(60, NULL, FALSE, NULL, NULL, 28),
-(39, NULL, FALSE, NULL, NULL, 28),
-(44, NULL, FALSE, NULL, NULL, 28),
-(88, NULL, FALSE, NULL, NULL, 28),
-(1, NULL, FALSE, NULL, NULL, 28),
-(2, NULL, FALSE, NULL, NULL, 28),
-(3, NULL, FALSE, NULL, NULL, 28),
-(4, NULL, FALSE, NULL, NULL, 28),
-(5, NULL, FALSE, NULL, NULL, 28),
-(22, NULL, FALSE, NULL, NULL, 28),
-(24, NULL, FALSE, NULL, NULL, 28),
-(25, NULL, FALSE, NULL, NULL, 28),
-(27, NULL, FALSE, NULL, NULL, 28),
-(32, NULL, FALSE, NULL, NULL, 28),
-(33, NULL, FALSE, NULL, NULL, 28),
-(34, NULL, FALSE, NULL, NULL, 28),
-(81, NULL, FALSE, NULL, NULL, 28),
 (91, NULL, FALSE, NULL, NULL, 28),
-(63, NULL, FALSE, NULL, NULL, 28),
-(64, NULL, FALSE, NULL, NULL, 28),
-(65, NULL, FALSE, NULL, NULL, 28),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 28),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 28),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 28),
-(10, 'subfase_id', FALSE, NULL, NULL, 28),
-(11, 'subfase_id', FALSE, NULL, NULL, 28),
-(12, 'subfase_id', FALSE, NULL, NULL, 28),
+(1, NULL, FALSE, NULL, NULL, 29),
+(2, NULL, FALSE, NULL, NULL, 29),
+(3, NULL, FALSE, NULL, NULL, 29),
+(4, NULL, FALSE, NULL, NULL, 29),
+(5, NULL, FALSE, NULL, NULL, 29),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 29),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 29),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 29),
+(10, 'subfase_id', FALSE, NULL, NULL, 29),
+(11, 'subfase_id', FALSE, NULL, NULL, 29),
+(12, 'subfase_id', FALSE, NULL, NULL, 29),
 (14, NULL, FALSE, NULL, NULL, 29),
 (15, NULL, FALSE, NULL, NULL, 29),
+(22, NULL, FALSE, NULL, NULL, 29),
+(24, NULL, FALSE, NULL, NULL, 29),
+(25, NULL, FALSE, NULL, NULL, 29),
+(27, NULL, FALSE, NULL, NULL, 29),
+(28, NULL, FALSE, NULL, NULL, 29),
+(30, NULL, FALSE, NULL, NULL, 29),
+(31, NULL, FALSE, NULL, NULL, 29),
+(32, NULL, FALSE, NULL, NULL, 29),
+(33, NULL, FALSE, NULL, NULL, 29),
+(34, NULL, FALSE, NULL, NULL, 29),
 (35, NULL, FALSE, NULL, NULL, 29),
 (36, NULL, FALSE, NULL, NULL, 29),
 (37, NULL, FALSE, NULL, NULL, 29),
 (38, NULL, FALSE, NULL, NULL, 29),
+(39, NULL, FALSE, NULL, NULL, 29),
 (40, NULL, FALSE, NULL, NULL, 29),
 (41, NULL, FALSE, NULL, NULL, 29),
 (42, NULL, FALSE, NULL, NULL, 29),
 (43, NULL, FALSE, NULL, NULL, 29),
+(44, NULL, FALSE, NULL, NULL, 29),
+(48, NULL, FALSE, NULL, NULL, 29),
+(49, NULL, FALSE, NULL, NULL, 29),
+(55, NULL, FALSE, NULL, NULL, 29),
+(56, NULL, FALSE, NULL, NULL, 29),
+(57, NULL, FALSE, NULL, NULL, 29),
+(58, NULL, FALSE, NULL, NULL, 29),
+(60, NULL, FALSE, NULL, NULL, 29),
+(61, NULL, FALSE, NULL, NULL, 29),
+(62, NULL, FALSE, NULL, NULL, 29),
+(63, NULL, FALSE, NULL, NULL, 29),
+(64, NULL, FALSE, NULL, NULL, 29),
+(65, NULL, FALSE, NULL, NULL, 29),
+(69, NULL, FALSE, NULL, NULL, 29),
+(70, NULL, FALSE, NULL, NULL, 29),
 (71, NULL, FALSE, NULL, NULL, 29),
 (72, NULL, FALSE, NULL, NULL, 29),
 (73, NULL, FALSE, NULL, NULL, 29),
@@ -879,68 +916,72 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (78, NULL, FALSE, NULL, NULL, 29),
 (79, NULL, FALSE, NULL, NULL, 29),
 (80, NULL, FALSE, NULL, NULL, 29),
+(81, NULL, FALSE, NULL, NULL, 29),
 (83, NULL, FALSE, NULL, NULL, 29),
 (84, NULL, FALSE, NULL, NULL, 29),
 (85, NULL, FALSE, NULL, NULL, 29),
-(89, NULL, FALSE, NULL, NULL, 29),
-(90, NULL, FALSE, NULL, NULL, 29),
-(58, NULL, FALSE, NULL, NULL, 29),
-(62, NULL, FALSE, NULL, NULL, 29),
-(55, NULL, FALSE, NULL, NULL, 29),
-(56, NULL, FALSE, NULL, NULL, 29),
-(97, NULL, FALSE, NULL, NULL, 29),
-(60, NULL, FALSE, NULL, NULL, 29),
-(39, NULL, FALSE, NULL, NULL, 29),
-(44, NULL, FALSE, NULL, NULL, 29),
-(88, NULL, FALSE, NULL, NULL, 29),
-(1, NULL, FALSE, NULL, NULL, 29),
-(2, NULL, FALSE, NULL, NULL, 29),
-(3, NULL, FALSE, NULL, NULL, 29),
-(4, NULL, FALSE, NULL, NULL, 29),
-(5, NULL, FALSE, NULL, NULL, 29),
-(22, NULL, FALSE, NULL, NULL, 29),
-(24, NULL, FALSE, NULL, NULL, 29),
-(25, NULL, FALSE, NULL, NULL, 29),
-(27, NULL, FALSE, NULL, NULL, 29),
-(28, NULL, FALSE, NULL, NULL, 29),
-(30, NULL, FALSE, NULL, NULL, 29),
-(31, NULL, FALSE, NULL, NULL, 29),
-(48, NULL, FALSE, NULL, NULL, 29),
-(49, NULL, FALSE, NULL, NULL, 29),
-(56, NULL, FALSE, NULL, NULL, 29),
-(57, NULL, FALSE, NULL, NULL, 29),
-(61, NULL, FALSE, NULL, NULL, 29),
 (86, NULL, FALSE, NULL, NULL, 29),
 (87, NULL, FALSE, NULL, NULL, 29),
+(88, NULL, FALSE, NULL, NULL, 29),
+(89, NULL, FALSE, NULL, NULL, 29),
+(90, NULL, FALSE, NULL, NULL, 29),
+(91, NULL, FALSE, NULL, NULL, 29),
+(92, NULL, FALSE, NULL, NULL, 29),
 (94, NULL, FALSE, NULL, NULL, 29),
 (95, NULL, FALSE, NULL, NULL, 29),
-(32, NULL, FALSE, NULL, NULL, 29),
-(33, NULL, FALSE, NULL, NULL, 29),
-(34, NULL, FALSE, NULL, NULL, 29),
-(81, NULL, FALSE, NULL, NULL, 29),
-(91, NULL, FALSE, NULL, NULL, 29),
-(63, NULL, FALSE, NULL, NULL, 29),
-(64, NULL, FALSE, NULL, NULL, 29),
-(65, NULL, FALSE, NULL, NULL, 29),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 29),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 29),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 29),
-(10, 'subfase_id', FALSE, NULL, NULL, 29),
-(11, 'subfase_id', FALSE, NULL, NULL, 29),
-(12, 'subfase_id', FALSE, NULL, NULL, 29),
-(69, NULL, FALSE, NULL, NULL, 29),
-(70, NULL, FALSE, NULL, NULL, 29),
-(92, NULL, FALSE, NULL, NULL, 29),
+(97, NULL, FALSE, NULL, NULL, 29),
+(1, NULL, FALSE, NULL, NULL, 30),
+(2, NULL, FALSE, NULL, NULL, 30),
+(3, NULL, FALSE, NULL, NULL, 30),
+(4, NULL, FALSE, NULL, NULL, 30),
+(5, NULL, FALSE, NULL, NULL, 30),
+(6, NULL, FALSE, NULL, NULL, 30),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 30),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 30),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 30),
+(10, 'subfase_id', FALSE, NULL, NULL, 30),
+(11, 'subfase_id', FALSE, NULL, NULL, 30),
+(12, 'subfase_id', FALSE, NULL, NULL, 30),
+(13, NULL, FALSE, NULL, NULL, 30),
 (14, NULL, FALSE, NULL, NULL, 30),
 (15, NULL, FALSE, NULL, NULL, 30),
+(22, NULL, FALSE, NULL, NULL, 30),
+(23, NULL, FALSE, NULL, NULL, 30),
+(24, NULL, FALSE, NULL, NULL, 30),
+(25, NULL, FALSE, NULL, NULL, 30),
+(26, NULL, FALSE, NULL, NULL, 30),
+(27, NULL, FALSE, NULL, NULL, 30),
+(28, NULL, FALSE, NULL, NULL, 30),
+(29, NULL, FALSE, NULL, NULL, 30),
+(30, NULL, FALSE, NULL, NULL, 30),
+(31, NULL, FALSE, NULL, NULL, 30),
+(32, NULL, FALSE, NULL, NULL, 30),
+(33, NULL, FALSE, NULL, NULL, 30),
+(34, NULL, FALSE, NULL, NULL, 30),
 (35, NULL, FALSE, NULL, NULL, 30),
 (36, NULL, FALSE, NULL, NULL, 30),
 (37, NULL, FALSE, NULL, NULL, 30),
 (38, NULL, FALSE, NULL, NULL, 30),
+(39, NULL, FALSE, NULL, NULL, 30),
 (40, NULL, FALSE, NULL, NULL, 30),
 (41, NULL, FALSE, NULL, NULL, 30),
 (42, NULL, FALSE, NULL, NULL, 30),
 (43, NULL, FALSE, NULL, NULL, 30),
+(44, NULL, FALSE, NULL, NULL, 30),
+(48, NULL, FALSE, NULL, NULL, 30),
+(49, NULL, FALSE, NULL, NULL, 30),
+(55, NULL, FALSE, NULL, NULL, 30),
+(56, NULL, FALSE, NULL, NULL, 30),
+(57, NULL, FALSE, NULL, NULL, 30),
+(58, NULL, FALSE, NULL, NULL, 30),
+(60, NULL, FALSE, NULL, NULL, 30),
+(61, NULL, FALSE, NULL, NULL, 30),
+(62, NULL, FALSE, NULL, NULL, 30),
+(63, NULL, FALSE, NULL, NULL, 30),
+(64, NULL, FALSE, NULL, NULL, 30),
+(65, NULL, FALSE, NULL, NULL, 30),
+(69, NULL, FALSE, NULL, NULL, 30),
+(70, NULL, FALSE, NULL, NULL, 30),
 (71, NULL, FALSE, NULL, NULL, 30),
 (72, NULL, FALSE, NULL, NULL, 30),
 (73, NULL, FALSE, NULL, NULL, 30),
@@ -951,73 +992,73 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (78, NULL, FALSE, NULL, NULL, 30),
 (79, NULL, FALSE, NULL, NULL, 30),
 (80, NULL, FALSE, NULL, NULL, 30),
+(81, NULL, FALSE, NULL, NULL, 30),
 (83, NULL, FALSE, NULL, NULL, 30),
 (84, NULL, FALSE, NULL, NULL, 30),
 (85, NULL, FALSE, NULL, NULL, 30),
-(89, NULL, FALSE, NULL, NULL, 30),
-(90, NULL, FALSE, NULL, NULL, 30),
-(58, NULL, FALSE, NULL, NULL, 30),
-(62, NULL, FALSE, NULL, NULL, 30),
-(55, NULL, FALSE, NULL, NULL, 30),
-(56, NULL, FALSE, NULL, NULL, 30),
-(97, NULL, FALSE, NULL, NULL, 30),
-(60, NULL, FALSE, NULL, NULL, 30),
-(39, NULL, FALSE, NULL, NULL, 30),
-(44, NULL, FALSE, NULL, NULL, 30),
-(88, NULL, FALSE, NULL, NULL, 30),
-(1, NULL, FALSE, NULL, NULL, 30),
-(2, NULL, FALSE, NULL, NULL, 30),
-(3, NULL, FALSE, NULL, NULL, 30),
-(4, NULL, FALSE, NULL, NULL, 30),
-(5, NULL, FALSE, NULL, NULL, 30),
-(22, NULL, FALSE, NULL, NULL, 30),
-(23, NULL, FALSE, NULL, NULL, 30),
-(24, NULL, FALSE, NULL, NULL, 30),
-(25, NULL, FALSE, NULL, NULL, 30),
-(27, NULL, FALSE, NULL, NULL, 30),
-(28, NULL, FALSE, NULL, NULL, 30),
-(32, NULL, FALSE, NULL, NULL, 30),
-(33, NULL, FALSE, NULL, NULL, 30),
-(34, NULL, FALSE, NULL, NULL, 30),
-(81, NULL, FALSE, NULL, NULL, 30),
-(91, NULL, FALSE, NULL, NULL, 30),
-(63, NULL, FALSE, NULL, NULL, 30),
-(64, NULL, FALSE, NULL, NULL, 30),
-(65, NULL, FALSE, NULL, NULL, 30),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 30),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 30),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 30),
-(10, 'subfase_id', FALSE, NULL, NULL, 30),
-(11, 'subfase_id', FALSE, NULL, NULL, 30),
-(12, 'subfase_id', FALSE, NULL, NULL, 30),
-(69, NULL, FALSE, NULL, NULL, 30),
-(70, NULL, FALSE, NULL, NULL, 30),
-(92, NULL, FALSE, NULL, NULL, 30),
-(13, NULL, FALSE, NULL, NULL, 30),
-(26, NULL, FALSE, NULL, NULL, 30),
-(29, NULL, FALSE, NULL, NULL, 30),
-(31, NULL, FALSE, NULL, NULL, 30),
-(30, NULL, FALSE, NULL, NULL, 30),
 (86, NULL, FALSE, NULL, NULL, 30),
 (87, NULL, FALSE, NULL, NULL, 30),
-(94, NULL, FALSE, NULL, NULL, 30),
+(88, NULL, FALSE, NULL, NULL, 30),
+(89, NULL, FALSE, NULL, NULL, 30),
+(90, NULL, FALSE, NULL, NULL, 30),
+(91, NULL, FALSE, NULL, NULL, 30),
+(92, NULL, FALSE, NULL, NULL, 30),
 (93, NULL, FALSE, NULL, NULL, 30),
-(48, NULL, FALSE, NULL, NULL, 30),
-(49, NULL, FALSE, NULL, NULL, 30),
+(94, NULL, FALSE, NULL, NULL, 30),
 (95, NULL, FALSE, NULL, NULL, 30),
-(6, NULL, FALSE, NULL, NULL, 30),
-(61, NULL, FALSE, NULL, NULL, 30),
-(57, NULL, FALSE, NULL, NULL, 30),
+(97, NULL, FALSE, NULL, NULL, 30),
+(1, NULL, FALSE, NULL, NULL, 31),
+(2, NULL, FALSE, NULL, NULL, 31),
+(3, NULL, FALSE, NULL, NULL, 31),
+(4, NULL, FALSE, NULL, NULL, 31),
+(5, NULL, FALSE, NULL, NULL, 31),
+(6, NULL, FALSE, NULL, NULL, 31),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 31),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 31),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 31),
+(10, 'subfase_id', FALSE, NULL, NULL, 31),
+(11, 'subfase_id', FALSE, NULL, NULL, 31),
+(12, 'subfase_id', FALSE, NULL, NULL, 31),
+(13, NULL, FALSE, NULL, NULL, 31),
 (14, NULL, FALSE, NULL, NULL, 31),
 (15, NULL, FALSE, NULL, NULL, 31),
+(22, NULL, FALSE, NULL, NULL, 31),
+(23, NULL, FALSE, NULL, NULL, 31),
+(24, NULL, FALSE, NULL, NULL, 31),
+(25, NULL, FALSE, NULL, NULL, 31),
+(26, NULL, FALSE, NULL, NULL, 31),
+(27, NULL, FALSE, NULL, NULL, 31),
+(28, NULL, FALSE, NULL, NULL, 31),
+(29, NULL, FALSE, NULL, NULL, 31),
+(30, NULL, FALSE, NULL, NULL, 31),
+(31, NULL, FALSE, NULL, NULL, 31),
+(32, NULL, FALSE, NULL, NULL, 31),
+(33, NULL, FALSE, NULL, NULL, 31),
+(34, NULL, FALSE, NULL, NULL, 31),
 (35, NULL, FALSE, NULL, NULL, 31),
 (36, NULL, FALSE, NULL, NULL, 31),
 (37, NULL, FALSE, NULL, NULL, 31),
 (38, NULL, FALSE, NULL, NULL, 31),
+(39, NULL, FALSE, NULL, NULL, 31),
 (40, NULL, FALSE, NULL, NULL, 31),
 (41, NULL, FALSE, NULL, NULL, 31),
 (42, NULL, FALSE, NULL, NULL, 31),
 (43, NULL, FALSE, NULL, NULL, 31),
+(44, NULL, FALSE, NULL, NULL, 31),
+(48, NULL, FALSE, NULL, NULL, 31),
+(49, NULL, FALSE, NULL, NULL, 31),
+(55, NULL, FALSE, NULL, NULL, 31),
+(56, NULL, FALSE, NULL, NULL, 31),
+(57, NULL, FALSE, NULL, NULL, 31),
+(58, NULL, FALSE, NULL, NULL, 31),
+(60, NULL, FALSE, NULL, NULL, 31),
+(61, NULL, FALSE, NULL, NULL, 31),
+(62, NULL, FALSE, NULL, NULL, 31),
+(63, NULL, FALSE, NULL, NULL, 31),
+(64, NULL, FALSE, NULL, NULL, 31),
+(65, NULL, FALSE, NULL, NULL, 31),
+(69, NULL, FALSE, NULL, NULL, 31),
+(70, NULL, FALSE, NULL, NULL, 31),
 (71, NULL, FALSE, NULL, NULL, 31),
 (72, NULL, FALSE, NULL, NULL, 31),
 (73, NULL, FALSE, NULL, NULL, 31),
@@ -1028,79 +1069,83 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (78, NULL, FALSE, NULL, NULL, 31),
 (79, NULL, FALSE, NULL, NULL, 31),
 (80, NULL, FALSE, NULL, NULL, 31),
+(81, NULL, FALSE, NULL, NULL, 31),
 (83, NULL, FALSE, NULL, NULL, 31),
 (84, NULL, FALSE, NULL, NULL, 31),
 (85, NULL, FALSE, NULL, NULL, 31),
-(89, NULL, FALSE, NULL, NULL, 31),
-(90, NULL, FALSE, NULL, NULL, 31),
-(58, NULL, FALSE, NULL, NULL, 31),
-(62, NULL, FALSE, NULL, NULL, 31),
-(55, NULL, FALSE, NULL, NULL, 31),
-(56, NULL, FALSE, NULL, NULL, 31),
-(97, NULL, FALSE, NULL, NULL, 31),
-(60, NULL, FALSE, NULL, NULL, 31),
-(39, NULL, FALSE, NULL, NULL, 31),
-(44, NULL, FALSE, NULL, NULL, 31),
-(88, NULL, FALSE, NULL, NULL, 31),
-(1, NULL, FALSE, NULL, NULL, 31),
-(2, NULL, FALSE, NULL, NULL, 31),
-(3, NULL, FALSE, NULL, NULL, 31),
-(4, NULL, FALSE, NULL, NULL, 31),
-(5, NULL, FALSE, NULL, NULL, 31),
-(6, NULL, FALSE, NULL, NULL, 31),
-(22, NULL, FALSE, NULL, NULL, 31),
-(23, NULL, FALSE, NULL, NULL, 31),
-(24, NULL, FALSE, NULL, NULL, 31),
-(25, NULL, FALSE, NULL, NULL, 31),
-(27, NULL, FALSE, NULL, NULL, 31),
-(28, NULL, FALSE, NULL, NULL, 31),
-(32, NULL, FALSE, NULL, NULL, 31),
-(33, NULL, FALSE, NULL, NULL, 31),
-(34, NULL, FALSE, NULL, NULL, 31),
-(81, NULL, FALSE, NULL, NULL, 31),
-(91, NULL, FALSE, NULL, NULL, 31),
-(63, NULL, FALSE, NULL, NULL, 31),
-(64, NULL, FALSE, NULL, NULL, 31),
-(65, NULL, FALSE, NULL, NULL, 31),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 31),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 31),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 31),
-(10, 'subfase_id', FALSE, NULL, NULL, 31),
-(11, 'subfase_id', FALSE, NULL, NULL, 31),
-(12, 'subfase_id', FALSE, NULL, NULL, 31),
-(69, NULL, FALSE, NULL, NULL, 31),
-(70, NULL, FALSE, NULL, NULL, 31),
-(92, NULL, FALSE, NULL, NULL, 31),
-(13, NULL, FALSE, NULL, NULL, 31),
-(26, NULL, FALSE, NULL, NULL, 31),
-(29, NULL, FALSE, NULL, NULL, 31),
-(31, NULL, FALSE, NULL, NULL, 31),
-(30, NULL, FALSE, NULL, NULL, 31),
 (86, NULL, FALSE, NULL, NULL, 31),
 (87, NULL, FALSE, NULL, NULL, 31),
-(94, NULL, FALSE, NULL, NULL, 31),
+(88, NULL, FALSE, NULL, NULL, 31),
+(89, NULL, FALSE, NULL, NULL, 31),
+(90, NULL, FALSE, NULL, NULL, 31),
+(91, NULL, FALSE, NULL, NULL, 31),
+(92, NULL, FALSE, NULL, NULL, 31),
 (93, NULL, FALSE, NULL, NULL, 31),
-(48, NULL, FALSE, NULL, NULL, 31),
-(49, NULL, FALSE, NULL, NULL, 31),
+(94, NULL, FALSE, NULL, NULL, 31),
 (95, NULL, FALSE, NULL, NULL, 31),
-(6, NULL, FALSE, NULL, NULL, 31),
-(61, NULL, FALSE, NULL, NULL, 31),
-(57, NULL, FALSE, NULL, NULL, 31),
+(97, NULL, FALSE, NULL, NULL, 31),
+(1, NULL, FALSE, NULL, NULL, 34),
+(2, NULL, FALSE, NULL, NULL, 34),
+(3, NULL, FALSE, NULL, NULL, 34),
+(4, NULL, FALSE, NULL, NULL, 34),
+(5, NULL, FALSE, NULL, NULL, 34),
+(6, NULL, FALSE, NULL, NULL, 34),
+(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 34),
+(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 34),
+(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 34),
+(10, 'subfase_id', FALSE, NULL, NULL, 34),
+(11, 'subfase_id', FALSE, NULL, NULL, 34),
+(12, 'subfase_id', FALSE, NULL, NULL, 34),
+(13, NULL, FALSE, NULL, NULL, 34),
+(14, NULL, FALSE, NULL, NULL, 34),
+(15, NULL, FALSE, NULL, NULL, 34),
+(16, NULL, FALSE, NULL, NULL, 34),
 (17, NULL, FALSE, NULL, NULL, 34),
 (18, NULL, FALSE, NULL, NULL, 34),
 (19, NULL, FALSE, NULL, NULL, 34),
 (20, NULL, FALSE, NULL, NULL, 34),
 (21, NULL, FALSE, NULL, NULL, 34),
-(14, NULL, FALSE, NULL, NULL, 34),
-(15, NULL, FALSE, NULL, NULL, 34),
+(22, NULL, FALSE, NULL, NULL, 34),
+(23, NULL, FALSE, NULL, NULL, 34),
+(24, NULL, FALSE, NULL, NULL, 34),
+(25, NULL, FALSE, NULL, NULL, 34),
+(26, NULL, FALSE, NULL, NULL, 34),
+(27, NULL, FALSE, NULL, NULL, 34),
+(28, NULL, FALSE, NULL, NULL, 34),
+(29, NULL, FALSE, NULL, NULL, 34),
+(30, NULL, FALSE, NULL, NULL, 34),
+(31, NULL, FALSE, NULL, NULL, 34),
+(32, NULL, FALSE, NULL, NULL, 34),
+(33, NULL, FALSE, NULL, NULL, 34),
+(34, NULL, FALSE, NULL, NULL, 34),
 (35, NULL, FALSE, NULL, NULL, 34),
 (36, NULL, FALSE, NULL, NULL, 34),
 (37, NULL, FALSE, NULL, NULL, 34),
 (38, NULL, FALSE, NULL, NULL, 34),
+(39, NULL, FALSE, NULL, NULL, 34),
 (40, NULL, FALSE, NULL, NULL, 34),
 (41, NULL, FALSE, NULL, NULL, 34),
 (42, NULL, FALSE, NULL, NULL, 34),
 (43, NULL, FALSE, NULL, NULL, 34),
+(44, NULL, FALSE, NULL, NULL, 34),
+(48, NULL, FALSE, NULL, NULL, 34),
+(49, NULL, FALSE, NULL, NULL, 34),
+(55, NULL, FALSE, NULL, NULL, 34),
+(56, NULL, FALSE, NULL, NULL, 34),
+(57, NULL, FALSE, NULL, NULL, 34),
+(58, NULL, FALSE, NULL, NULL, 34),
+(59, NULL, FALSE, NULL, NULL, 34),
+(60, NULL, FALSE, NULL, NULL, 34),
+(61, NULL, FALSE, NULL, NULL, 34),
+(62, NULL, FALSE, NULL, NULL, 34),
+(63, NULL, FALSE, NULL, NULL, 34),
+(64, NULL, FALSE, NULL, NULL, 34),
+(65, NULL, FALSE, NULL, NULL, 34),
+(66, NULL, FALSE, NULL, NULL, 34),
+(67, NULL, FALSE, NULL, NULL, 34),
+(68, NULL, FALSE, NULL, NULL, 34),
+(69, NULL, FALSE, NULL, NULL, 34),
+(70, NULL, FALSE, NULL, NULL, 34),
 (71, NULL, FALSE, NULL, NULL, 34),
 (72, NULL, FALSE, NULL, NULL, 34),
 (73, NULL, FALSE, NULL, NULL, 34),
@@ -1111,72 +1156,23 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (78, NULL, FALSE, NULL, NULL, 34),
 (79, NULL, FALSE, NULL, NULL, 34),
 (80, NULL, FALSE, NULL, NULL, 34),
+(81, NULL, FALSE, NULL, NULL, 34),
+(82, NULL, FALSE, NULL, NULL, 34),
 (83, NULL, FALSE, NULL, NULL, 34),
 (84, NULL, FALSE, NULL, NULL, 34),
 (85, NULL, FALSE, NULL, NULL, 34),
-(89, NULL, FALSE, NULL, NULL, 34),
-(90, NULL, FALSE, NULL, NULL, 34),
-(58, NULL, FALSE, NULL, NULL, 34),
-(62, NULL, FALSE, NULL, NULL, 34),
-(55, NULL, FALSE, NULL, NULL, 34),
-(56, NULL, FALSE, NULL, NULL, 34),
-(97, NULL, FALSE, NULL, NULL, 34),
-(60, NULL, FALSE, NULL, NULL, 34),
-(39, NULL, FALSE, NULL, NULL, 34),
-(44, NULL, FALSE, NULL, NULL, 34),
-(88, NULL, FALSE, NULL, NULL, 34),
-(1, NULL, FALSE, NULL, NULL, 34),
-(2, NULL, FALSE, NULL, NULL, 34),
-(3, NULL, FALSE, NULL, NULL, 34),
-(4, NULL, FALSE, NULL, NULL, 34),
-(5, NULL, FALSE, NULL, NULL, 34),
-(6, NULL, FALSE, NULL, NULL, 34),
-(22, NULL, FALSE, NULL, NULL, 34),
-(23, NULL, FALSE, NULL, NULL, 34),
-(24, NULL, FALSE, NULL, NULL, 34),
-(25, NULL, FALSE, NULL, NULL, 34),
-(27, NULL, FALSE, NULL, NULL, 34),
-(28, NULL, FALSE, NULL, NULL, 34),
-(32, NULL, FALSE, NULL, NULL, 34),
-(33, NULL, FALSE, NULL, NULL, 34),
-(34, NULL, FALSE, NULL, NULL, 34),
-(81, NULL, FALSE, NULL, NULL, 34),
-(91, NULL, FALSE, NULL, NULL, 34),
-(63, NULL, FALSE, NULL, NULL, 34),
-(64, NULL, FALSE, NULL, NULL, 34),
-(65, NULL, FALSE, NULL, NULL, 34),
-(7, 'subfase_id', TRUE, 'corrigido', 'justificativa', 34),
-(8, 'subfase_id', TRUE, 'corrigido', 'justificativa', 34),
-(9, 'subfase_id', TRUE, 'corrigido', 'justificativa', 34),
-(10, 'subfase_id', FALSE, NULL, NULL, 34),
-(11, 'subfase_id', FALSE, NULL, NULL, 34),
-(12, 'subfase_id', FALSE, NULL, NULL, 34),
-(69, NULL, FALSE, NULL, NULL, 34),
-(70, NULL, FALSE, NULL, NULL, 34),
-(92, NULL, FALSE, NULL, NULL, 34),
-(96, NULL, FALSE, NULL, NULL, 34),
-(13, NULL, FALSE, NULL, NULL, 34),
-(26, NULL, FALSE, NULL, NULL, 34),
-(29, NULL, FALSE, NULL, NULL, 34),
-(31, NULL, FALSE, NULL, NULL, 34),
-(30, NULL, FALSE, NULL, NULL, 34),
 (86, NULL, FALSE, NULL, NULL, 34),
 (87, NULL, FALSE, NULL, NULL, 34),
-(94, NULL, FALSE, NULL, NULL, 34),
+(88, NULL, FALSE, NULL, NULL, 34),
+(89, NULL, FALSE, NULL, NULL, 34),
+(90, NULL, FALSE, NULL, NULL, 34),
+(91, NULL, FALSE, NULL, NULL, 34),
+(92, NULL, FALSE, NULL, NULL, 34),
 (93, NULL, FALSE, NULL, NULL, 34),
-(48, NULL, FALSE, NULL, NULL, 34),
-(49, NULL, FALSE, NULL, NULL, 34),
+(94, NULL, FALSE, NULL, NULL, 34),
 (95, NULL, FALSE, NULL, NULL, 34),
-(6, NULL, FALSE, NULL, NULL, 34),
-(56, NULL, FALSE, NULL, NULL, 34),
-(66, NULL, FALSE, NULL, NULL, 34),
-(67, NULL, FALSE, NULL, NULL, 34),
-(68, NULL, FALSE, NULL, NULL, 34),
-(61, NULL, FALSE, NULL, NULL, 34),
-(57, NULL, FALSE, NULL, NULL, 34),
-(16, NULL, FALSE, NULL, NULL, 34),
-(59, NULL, FALSE, NULL, NULL, 34),
-(82, NULL, FALSE, NULL, NULL, 34);
+(96, NULL, FALSE, NULL, NULL, 34),
+(97, NULL, FALSE, NULL, NULL, 34);
 ------------------------------------------------------------------------------------------------------------------------------------
 
 COMMIT;
