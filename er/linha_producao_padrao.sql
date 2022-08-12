@@ -1,8 +1,8 @@
 BEGIN;
 
-INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao) VALUES
-(1,22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0', 'Linha de produção padrão para vetores de carta ortoimagem'), --id 1
-(2,3, 'Carta ortoimagem', 'Linha de produção padrão para carta ortoimagem'); --id 2
+INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao, nome_abrev) VALUES
+(1,22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0', 'Linha de produção padrão para vetores de carta ortoimagem', 'cdgv_edgv_3_orto'), --id 1
+(2,3, 'Carta ortoimagem', 'Linha de produção padrão para carta ortoimagem', 'carta_orto'); --id 2
 
 INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
 -- Linha de produção 1
@@ -61,9 +61,9 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao) VALUES
-(3,7, 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação', 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação'), --id 3
-(4,12, 'Carta topográfica ET-RDG', 'Linha de produção padrão para cartas topográficas no padrão ET-RDG'); --id 4
+INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao, nome_abrev) VALUES
+(3,7, 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação', 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação', 'cdgv_edgv_3'), --id 3
+(4,12, 'Carta topográfica ET-RDG', 'Linha de produção padrão para cartas topográficas no padrão ET-RDG', 'carta_topo'); --id 4
 
 INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
 -- Linha de produção 3
