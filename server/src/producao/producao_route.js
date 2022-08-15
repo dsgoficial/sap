@@ -88,7 +88,7 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
-
+/*
 router.post(
   '/retorna_atividade_anterior',
   verifyLogin,
@@ -103,5 +103,5 @@ router.post(
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
 )
-
+*/
 module.exports = router

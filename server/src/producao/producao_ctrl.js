@@ -645,7 +645,7 @@ controller.getTipoProblema = async () => {
   })
   return dados
 }
-
+/*
 controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
   await db.sapConn.tx(async (t) => {
     const dataFim = new Date()
@@ -719,5 +719,5 @@ controller.retornaAtividadeAnterior = async (atividadeId, usuarioId) => {
     await temporaryLogin.resetPassword(atividadeId, usuarioId)
   })
 }
-
+*/
 module.exports = controller
