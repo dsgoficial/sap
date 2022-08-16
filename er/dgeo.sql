@@ -43,7 +43,7 @@ INSERT INTO dgeo.versao_qgis (code, versao_minima) VALUES
 CREATE TABLE dgeo.qgis_shortcuts(
   code SMALLINT NOT NULL PRIMARY KEY,
   ferramenta VARCHAR(255) NOT NULL,
-  idioma VARCHAR(255),
+  idioma VARCHAR(255) NOT NULL,
   atalho VARCHAR(255),
   owner varchar(255) NOT NULL,
 	update_time timestamp without time zone NOT NULL DEFAULT now()
@@ -161,7 +161,7 @@ CREATE TABLE dgeo.layer_rules(
     ordem integer NOT NULL,
     regra TEXT NOT NULL,
     owner varchar(255) NOT NULL,
-    update_time timestamp without time zone NOT NULL DEFAULT now()
+    update_time timestamp without time zone NOT NULL DEFAULT now(),
     UNIQUE(nome)
 );
 
