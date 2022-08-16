@@ -154,26 +154,16 @@ CREATE TABLE dgeo.layer_styles(
   CONSTRAINT unique_styles UNIQUE (f_table_schema,f_table_name,grupo_estilo_id)
 );
 
-CREATE TABLE dgeo.group_rules(
+CREATE TABLE dgeo.layer_rules(
   	id SERIAL NOT NULL PRIMARY KEY,
-    grupo_regra varchar(255) NOT NULL,
+    nome varchar(255) NOT NULL,
     cor_rgb varchar(255) NOT NULL,
     ordem integer NOT NULL,
-    UNIQUE(grupo_regra)
+    regra TEXT NOT NULL,
+    owner varchar(255) NOT NULL,
+    update_time timestamp without time zone NOT NULL DEFAULT now()
+    UNIQUE(nome)
 );
-
-CREATE TABLE dgeo.layer_rules(
-	id SERIAL NOT NULL PRIMARY KEY,
-  grupo_regra_id INTEGER NOT NULL REFERENCES dgeo.group_rules (id),
-  schema varchar(255) NOT NULL,
-  camada varchar(255) NOT NULL,
-  atributo varchar(255) NOT NULL,
-  regra TEXT NOT NULL,
-  descricao TEXT NOT NULL,
-  owner varchar(255) NOT NULL,
-	update_time timestamp without time zone NOT NULL DEFAULT now()
-);
-
 
 CREATE TABLE dgeo.qgis_models(
 	id SERIAL NOT NULL PRIMARY KEY,

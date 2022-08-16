@@ -148,12 +148,9 @@ const getInfoEstilos = async (connection, subfaseId, loteId) => {
 
 const getInfoRegras = async (connection, subfaseId, loteId) => {
   return connection.any(
-    `SELECT lr.schema, lr.camada, lr.atributo, lr.regra, lr.grupo_regra_id, lr.descricao,  gr.cor_rgb, gr.grupo_regra, gr.ordem, lr.id
+    `SELECT lr.nome, lr.cor_rgb, lr.ordem, lr.regra
       FROM macrocontrole.perfil_regras as pr
-      INNER JOIN dgeo.group_rules AS gr ON gr.id = pr.grupo_regra_id
-      INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
-      INNER JOIN macrocontrole.camada AS c ON c.nome = lr.camada AND c.schema = lr.schema
-      INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = c.id AND pr.subfase_id = pc.subfase_id
+      INNER JOIN dgeo.layer_rules AS lr ON lr.id = pr.layer_rules_id
       WHERE pr.subfase_id = $1 AND pr.lote_id = $2`,
     [subfaseId, loteId]
   )

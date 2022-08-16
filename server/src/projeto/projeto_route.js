@@ -173,57 +173,6 @@ router.delete(
 )
 
 router.get(
-  '/grupo_regras',
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getGrupoRegras()
-
-    const msg = 'Grupo de regras retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.post(
-  '/grupo_regras',
-  verifyAdmin,
-  schemaValidation({ body: projetoSchema.grupoRegras }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaGrupoRegras(req.body.grupo_regras, req.usuarioId)
-
-    const msg = 'Grupo de regras gravados com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.put(
-  '/grupo_regras',
-  verifyAdmin,
-  schemaValidation({ body: projetoSchema.grupoRegrasAtualizacao }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaGrupoRegras(req.body.grupo_regras, req.usuarioId)
-
-    const msg = 'Grupo de regras atualizados com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.delete(
-  '/grupo_regras',
-  verifyAdmin,
-  schemaValidation({ body: projetoSchema.grupoRegrasIds }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaGrupoRegras(req.body.grupo_regras_ids)
-
-    const msg = 'Grupo de regras deletados com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.get(
   '/regras',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
@@ -242,7 +191,6 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.gravaRegras(
       req.body.regras,
-      req.body.grupo_regras,
       req.usuarioId
     )
 

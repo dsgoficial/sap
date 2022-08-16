@@ -155,10 +155,10 @@ CREATE TABLE macrocontrole.perfil_estilo(
 
 CREATE TABLE macrocontrole.perfil_regras(
 	id SERIAL NOT NULL PRIMARY KEY,
-	grupo_regra_id INTEGER NOT NULL REFERENCES dgeo.group_rules (id),
+	layer_rules_id INTEGER NOT NULL REFERENCES dgeo.layer_rules (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
-	UNIQUE(grupo_regra_id,subfase_id,lote_id)
+	UNIQUE(layer_rules_id,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_menu(

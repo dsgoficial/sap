@@ -122,7 +122,7 @@ controller.deletaGrupoEstilos = async grupoEstilosId => {
       WHERE id in ($<grupoEstilosId:csv>)`,
       { grupoEstilosId }
     )
-    if (exists && exists.length < grupoRegrasId.length) {
+    if (exists && exists.length < grupoEstilosId.length) {
       throw new AppError(
         'O id informado não corresponde a um grupo de estilos',
         httpCode.BadRequest
@@ -249,28 +249,24 @@ controller.deletaEstilos = async estilosId => {
 
 controller.getRegras = async () => {
   return db.sapConn.any(`
-    SELECT lr.id, lr.grupo_regra_id, gr.grupo_regra, lr.schema, lr.camada, lr.atributo, lr.regra, lr.descricao, lr.owner, lr.update_time
-    FROM dgeo.group_rules AS gr
-    INNER JOIN dgeo.layer_rules AS lr ON lr.grupo_regra_id = gr.id
+    SELECT lr.id, lr.nome, lr.cor_rgb, lr.ordem, lr.regra, lr.owner, lr.update_time
+    FROM dgeo.layer_rules AS lr
     `)
 }
 
-controller.gravaRegras = async (regras, usuarioId) => {
+controller.gravaRegras = async (layerRules, usuarioId) => {
+  const usuarioPostoNome = getUsuarioNomeById(usuarioId)
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
-
     const cs = new db.pgp.helpers.ColumnSet([
-      'grupo_regra_id',
-      'schema',
-      'camada',
-      'atributo',
+      'nome',
+      'cor_rgb',
+      'ordem',
       'regra',
-      'descricao',
       { name: 'owner', init: () => usuarioPostoNome },
       { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
     ])
 
-    const query = db.pgp.helpers.insert(regras, cs, {
+    const query = db.pgp.helpers.insert(layerRules, cs, {
       table: 'layer_rules',
       schema: 'dgeo'
     })
@@ -279,25 +275,22 @@ controller.gravaRegras = async (regras, usuarioId) => {
   })
 }
 
-controller.atualizaRegras = async (regras, usuarioId) => {
+controller.atualizaRegras = async (layerRules, usuarioId) => {
+  const usuarioPostoNome = getUsuarioNomeById(usuarioId)
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
-
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
-      'grupo_regra_id',
-      'schema',
-      'camada',
-      'atributo',
+      'nome',
+      'cor_rgb',
+      'ordem',
       'regra',
-      'descricao',
       { name: 'owner', init: () => usuarioPostoNome },
       { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
     ])
 
     const query =
       db.pgp.helpers.update(
-        regras,
+        layerRules,
         cs,
         { table: 'layer_rules', schema: 'dgeo' },
         {
@@ -309,83 +302,14 @@ controller.atualizaRegras = async (regras, usuarioId) => {
   })
 }
 
-controller.deletaRegras = async regrasId => {
+controller.deletaRegras = async layerRulesId => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
       `SELECT id FROM dgeo.layer_rules
-      WHERE id in ($<regrasId:csv>)`,
-      { regrasId }
+      WHERE id in ($<layerRulesId:csv>)`,
+      { layerRulesId }
     )
-    if (exists && exists.length < regrasId.length) {
-      throw new AppError(
-        'O id informado não corresponde a regras de atributos',
-        httpCode.BadRequest
-      )
-    }
-
-    return t.any(
-      `DELETE FROM dgeo.layer_rules
-      WHERE id in ($<regrasId:csv>)`,
-      { regrasId }
-    )
-  })
-}
-
-controller.getGrupoRegras = async () => {
-  return await db.sapConn.any(`
-  SELECT gr.id, gr.grupo_regra, gr.cor_rgb, gr.ordem
-  FROM dgeo.group_rules AS gr
-  `)
-}
-
-controller.gravaGrupoRegras = async (grupoRegras, usuarioId) => {
-  return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet([
-      'grupo_regra',
-      'cor_rgb',
-      'ordem'
-    ])
-
-    const query = db.pgp.helpers.insert(grupoRegras, cs, {
-      table: 'group_rules',
-      schema: 'dgeo'
-    })
-
-    await t.none(query)
-  })
-}
-
-controller.atualizaGrupoRegras = async (grupoRegras, usuarioId) => {
-  return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet([
-      'id',
-      'grupo_regra',
-      'cor_rgb',
-      'ordem'
-    ])
-
-    const query =
-      db.pgp.helpers.update(
-        grupoRegras,
-        cs,
-        { table: 'group_rules', schema: 'dgeo' },
-        {
-          tableAlias: 'X',
-          valueAlias: 'Y'
-        }
-      ) + 'WHERE Y.id = X.id'
-    await t.none(query)
-  })
-}
-
-controller.deletaGrupoRegras = async grupoRegrasId => {
-  return db.sapConn.task(async t => {
-    const exists = await t.any(
-      `SELECT id FROM dgeo.group_rules
-      WHERE id in ($<grupoRegrasId:csv>)`,
-      { grupoRegrasId }
-    )
-    if (exists && exists.length < grupoRegrasId.length) {
+    if (exists && exists.length < layerRulesId.length) {
       throw new AppError(
         'O id informado não corresponde a um grupo de regras',
         httpCode.BadRequest
@@ -394,8 +318,8 @@ controller.deletaGrupoRegras = async grupoRegrasId => {
 
     const existsAssociation1 = await t.any(
       `SELECT id FROM macrocontrole.perfil_regras 
-      WHERE grupo_regra_id in ($<grupoRegrasId:csv>)`,
-      { grupoRegrasId }
+      WHERE layer_rules_id in ($<layerRulesId:csv>)`,
+      { layerRulesId }
     )
     if (existsAssociation1 && existsAssociation1.length > 0) {
       throw new AppError(
@@ -404,22 +328,10 @@ controller.deletaGrupoRegras = async grupoRegrasId => {
       )
     }
 
-    const existsAssociation2 = await t.any(
-      `SELECT id FROM dgeo.layer_rules 
-      WHERE grupo_regra_id in ($<grupoRegrasId:csv>)`,
-      { grupoRegrasId }
-    )
-    if (existsAssociation2 && existsAssociation2.length > 0) {
-      throw new AppError(
-        'O grupo regras possui regras associadas',
-        httpCode.BadRequest
-      )
-    }
-
     return t.any(
-      `DELETE FROM dgeo.group_rules
-      WHERE id in ($<grupoRegrasId:csv>)`,
-      { grupoRegrasId }
+      `DELETE FROM dgeo.layer_rules
+      WHERE id in ($<layerRulesId:csv>)`,
+      { layerRulesId }
     )
   })
 }
@@ -1103,7 +1015,7 @@ controller.criaPerfilModelo = async perfilModelo => {
 
 controller.getPerfilRegras = async () => {
   return db.sapConn.any(
-    `SELECT pr.id, pr.grupo_regra_id, pr.subfase_id
+    `SELECT pr.id, pr.layer_rules_id, pr.subfase_id
     FROM macrocontrole.perfil_regras AS pr`
   )
 }
@@ -1147,11 +1059,11 @@ controller.atualizaPerfilRegras = async perfilRegras => { // FIXME REFATORAR
       query.push(
         t.any(
           `UPDATE macrocontrole.perfil_regras
-          SET grupo_regra_id = $<grupoRegraId>, subfase_id = $<subfaseId>
+          SET layer_rules_id = $<layerRulesId>, subfase_id = $<subfaseId>
           where id = $<id>`,
           {
             id: c.id,
-            grupoRegraId: c.grupo_regra_id,
+            layerRulesId: c.layer_rules_id,
             subfaseId: c.subfase_id
           }
         )
@@ -1164,7 +1076,7 @@ controller.atualizaPerfilRegras = async perfilRegras => { // FIXME REFATORAR
 
 controller.criaPerfilRegras = async perfilRegras => {
   const cs = new db.pgp.helpers.ColumnSet([
-    'grupo_regra_id',
+    'layer_rules_id',
     'subfase_id'
   ])
 
