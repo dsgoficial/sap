@@ -111,9 +111,10 @@ const processTempUser = async (
   if (!dbInfo) {
     return null
   }
-  const { configuracao_producao, nome: nomeDb } = dbInfo
+  const { configuracao_producao} = dbInfo
   const servidor = configuracao_producao.split(':')[0]
-  const porta = configuracao_producao.split(':')[1]
+  const porta = configuracao_producao.split(':')[1].split('/')[0]
+  const nomeDb = configuracao_producao.split(':')[1].split('/')[1]
 
   const conn = await db.createAdminConn(servidor, porta, nomeDb, false)
 

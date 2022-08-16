@@ -43,7 +43,7 @@ INSERT INTO dgeo.versao_qgis (code, versao_minima) VALUES
 CREATE TABLE dgeo.qgis_shortcuts(
   code SMALLINT NOT NULL PRIMARY KEY,
   ferramenta VARCHAR(255) NOT NULL,
-  idioma VARCHAR(255),
+  idioma VARCHAR(255) NOT NULL,
   atalho VARCHAR(255),
   owner varchar(255) NOT NULL,
 	update_time timestamp without time zone NOT NULL DEFAULT now()
@@ -84,8 +84,8 @@ INSERT INTO dgeo.qgis_shortcuts (code, ferramenta, idioma, atalho, owner) VALUES
 (32,'Topological Editing','inglês','H', 'sap'),
 (33,'Salvar','português','', 'sap'),
 (34,'Save','inglês','', 'sap'),
-(35,'Select Feature(s)','português','V', 'sap'),
-(36,'Feição(s)','inglês','V', 'sap'),
+(35,'Select Feature(s)','inglês','V', 'sap'),
+(36,'Feição(s)','português','V', 'sap'),
 (37,'DSGTools: Inspecionar anterior','português','Q', 'sap'),
 (38,'DSGTools: Back Inspect','inglês','Q', 'sap'),
 (39,'DSGTools: Inspecionar próximo','português','W', 'sap'),
@@ -154,26 +154,16 @@ CREATE TABLE dgeo.layer_styles(
   CONSTRAINT unique_styles UNIQUE (f_table_schema,f_table_name,grupo_estilo_id)
 );
 
-CREATE TABLE dgeo.group_rules(
+CREATE TABLE dgeo.layer_rules(
   	id SERIAL NOT NULL PRIMARY KEY,
-    grupo_regra varchar(255) NOT NULL,
+    nome varchar(255) NOT NULL,
     cor_rgb varchar(255) NOT NULL,
     ordem integer NOT NULL,
-    UNIQUE(grupo_regra)
+    regra TEXT NOT NULL,
+    owner varchar(255) NOT NULL,
+    update_time timestamp without time zone NOT NULL DEFAULT now(),
+    UNIQUE(nome)
 );
-
-CREATE TABLE dgeo.layer_rules(
-	id SERIAL NOT NULL PRIMARY KEY,
-  grupo_regra_id INTEGER NOT NULL REFERENCES dgeo.group_rules (id),
-  schema varchar(255) NOT NULL,
-  camada varchar(255) NOT NULL,
-  atributo varchar(255) NOT NULL,
-  regra TEXT NOT NULL,
-  descricao TEXT NOT NULL,
-  owner varchar(255) NOT NULL,
-	update_time timestamp without time zone NOT NULL DEFAULT now()
-);
-
 
 CREATE TABLE dgeo.qgis_models(
 	id SERIAL NOT NULL PRIMARY KEY,

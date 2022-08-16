@@ -104,12 +104,11 @@ models.regras = Joi.object().keys({
   regras: Joi.array()
     .items(
       Joi.object().keys({
-        grupo_regra_id: Joi.number().integer().strict().required(),
-        schema: Joi.string().required(),
-        camada: Joi.string().required(),
+        nome: Joi.string().required(),
+        cor_rgb: Joi.string().required(),
         atributo: Joi.string().required(),
-        regra: Joi.string().required(),
-        descricao: Joi.string().required()
+        ordem: Joi.number().integer().strict().required(),
+        regra: Joi.string().required()
       })
     )
     .required()
@@ -120,12 +119,11 @@ models.regrasAtualizacao = Joi.object().keys({
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        grupo_regra_id: Joi.number().integer().strict().required(),
-        schema: Joi.string().required(),
-        camada: Joi.string().required(),
+        nome: Joi.string().required(),
+        cor_rgb: Joi.string().required(),
         atributo: Joi.string().required(),
-        regra: Joi.string().required(),
-        descricao: Joi.string().required()
+        ordem: Joi.number().integer().strict().required(),
+        regra: Joi.string().required()
       })
     )
     .required()
@@ -133,41 +131,6 @@ models.regrasAtualizacao = Joi.object().keys({
 
 models.regrasIds = Joi.object().keys({
   regras_ids: Joi.array()
-    .items(Joi.number().integer().strict().required())
-    .unique()
-    .required()
-    .min(1)
-})
-
-models.grupoRegras = Joi.object().keys({
-  grupo_regras: Joi.array()
-    .items(
-      Joi.object().keys({
-        grupo_regra: Joi.string().required(),
-        cor_rgb: Joi.string().required(),
-        ordem: Joi.number().integer().strict().required()
-      })
-    )
-    .required()
-})
-
-models.grupoRegrasAtualizacao = Joi.object().keys({
-  grupo_regras: Joi.array()
-    .items(
-      Joi.object().keys({
-        id: Joi.number().integer().strict().required(),
-        grupo_regra: Joi.string().required(),
-        cor_rgb: Joi.string().required(),
-        ordem: Joi.number().integer().strict().required()
-      })
-    )
-    .unique('id')
-    .required()
-    .min(1)
-})
-
-models.grupoRegrasIds = Joi.object().keys({
-  grupo_regras_ids: Joi.array()
     .items(Joi.number().integer().strict().required())
     .unique()
     .required()
@@ -401,7 +364,7 @@ models.perfilRegras = Joi.object().keys({
   perfis_regras: Joi.array()
     .items(
       Joi.object().keys({
-        grupo_regra_id: Joi.number().integer().strict().required(),
+        layer_rules_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required()
       })
     )
@@ -414,7 +377,7 @@ models.perfilRegrastualizacao = Joi.object().keys({
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        grupo_regra_id: Joi.number().integer().strict().required(),
+        layer_rules_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required()
       })
     )

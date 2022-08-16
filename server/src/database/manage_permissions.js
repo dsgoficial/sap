@@ -26,7 +26,7 @@ managePermissions.revokeAllDb = async (servidor, porta, banco) => {
 
 managePermissions.revokeAndGrantAllExecution = async () => {
   const dbInfos = await db.sapConn.any(
-    `SELECT dp.nome, dp.configuracao_producao, a.id AS atividade_id, lt.login 
+    `SELECT dp.configuracao_producao, a.id AS atividade_id, lt.login 
         FROM macrocontrole.atividade AS a
         INNER JOIN macrocontrole.unidade_trabalho AS ut
         ON ut.id = a.unidade_trabalho_id 
@@ -73,7 +73,7 @@ managePermissions.grantPermissionsUser = async (
         ppc.atributo_situacao_correcao, ppc.atributo_justificativa_apontamento, 
         ppc.atributo_filtro_subfase, ppc.subfase_id, ut.epsg, 
         ST_ASEWKT(ST_SnapToGrid(ST_Transform(ut.geom,ut.epsg::integer), 0.000001)) AS geom,
-        e.tipo_etapa_id, dp.nome AS db_nome
+        e.tipo_etapa_id, dp.configuracao_producao
         FROM macrocontrole.camada AS c
         INNER JOIN macrocontrole.propriedades_camada AS ppc ON ppc.camada_id = c.id
         INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ppc.subfase_id
@@ -87,7 +87,7 @@ managePermissions.grantPermissionsUser = async (
     return null
   }
 
-  const dbName = grantInfo[0].db_nome
+  const dbName = grantInfo[0].configuracao_producao.split(':')[1].split('/')[1]
   let grantSQL = `GRANT CONNECT ON DATABASE ${dbName} TO ${login};`
 
   const schemasSQL = grantInfo

@@ -177,7 +177,13 @@ $BODY$
       lote_ident := NEW.lote_id;
     END IF;
 
-    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || lote_ident || '_subfase_'|| subfase_ident;
+    IF TG_OP = 'UPDATE' THEN
+      EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || OLD.lote_id || '_subfase_'|| OLD.subfase_id;
+      EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || NEW.lote_id || '_subfase_'|| NEW.subfase_id;
+    ELSE
+      EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || lote_ident || '_subfase_'|| subfase_ident;
+    END IF;
+
 
     DELETE FROM public.layer_styles
     WHERE f_table_schema = 'acompanhamento' AND f_table_name = ('lote_' || lote_ident || '_subfase_'|| subfase_ident) AND stylename = 'acompanhamento_subfase';
