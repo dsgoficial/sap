@@ -296,6 +296,7 @@ const dadosProducao = async (atividadeId) => {
     info.atividade = {}
     info.atividade.id = atividadeId
     info.atividade.epsg = dadosut.epsg
+    info.atividade.denominador_escala = dadosut.denominador_escala
     info.atividade.dificuldade = dadosut.dificuldade
     info.atividade.observacao_atividade = dadosut.observacao_atividade
     info.atividade.observacao_unidade_trabalho =

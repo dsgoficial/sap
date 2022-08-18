@@ -26,6 +26,7 @@ CREATE TABLE macrocontrole.lote(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL,
 	nome_abrev VARCHAR(255) NOT NULL,
+	denominador_escala INTEGER NOT NULL,
 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
 	descricao TEXT
@@ -37,12 +38,27 @@ CREATE TABLE macrocontrole.produto(
 	nome VARCHAR(255),
 	mi VARCHAR(255),
 	inom VARCHAR(255),
-	escala VARCHAR(255) NOT NULL,
+	denominador_escala INTEGER NOT NULL,
 	edicao VARCHAR(255),
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
-	geom geometry(MULTIPOLYGON, 4326) NOT NULL
+	geom geometry(MULTIPOLYGON, 4326) NOT NULL,
+	CONSTRAINT chk_product_scale CHECK (chk_scale(denominador_escala, lote_id))
 );
+
+CREATE OR REPLACE FUNCTION macrocontrole.chk_scale(int, int)
+  RETURNS BOOLEAN AS
+$$
+	SELECT EXISTS (
+		SELECT 1
+		FROM macrocontrole.lote
+		WHERE denominador_escala = $1
+		AND id = $2
+	);
+$$
+  LANGUAGE SQL;
+ALTER FUNCTION macrocontrole.chk_scale(int, int)
+  OWNER TO postgres;
 
 CREATE INDEX produto_geom
     ON macrocontrole.produto USING gist

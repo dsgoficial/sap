@@ -1398,7 +1398,7 @@ controller.criaProdutos = async (produtos, linhaProducaoId) => {
     'nome',
     'mi',
     'inom',
-    'escala',
+    'denominador_escala',
     { name: 'linha_producao_id', init: () => linhaProducaoId },
     { name: 'geom', mod: ':raw' }
   ])

@@ -496,7 +496,7 @@ models.produtos = Joi.object().keys({
         nome: Joi.string().required().allow(''),
         mi: Joi.string().required().allow(''),
         inom: Joi.string().required().allow(''),
-        escala: Joi.string().required(),
+        denominador_escala: Joi.string().required(),
         geom: Joi.string().required()
       })
     )
