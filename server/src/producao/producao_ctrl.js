@@ -204,6 +204,16 @@ const getInfoModelsQGIS = async (connection, subfaseId, loteId) => {
   )
 }
 
+const getInfoWorkflow = async (connection, subfaseId, loteId) => {
+  return connection.any(
+    `SELECT wd.nome, wd.descricao, wd.workflow_json
+      FROM macrocontrole.perfil_workflow_dsgtools AS pwd
+      INNER JOIN dgeo.workflow_dsgtools AS wd ON pwd.workflow_dsgtools_id = wd.id
+      WHERE pwd.subfase_id = $1 AND pwd.lote_id = $2`,
+    [subfaseId, loteId]
+  )
+}
+
 const getInfoLinhagem = async (
   connection,
   subfaseId,
@@ -358,6 +368,8 @@ const dadosProducao = async (atividadeId) => {
     )
 
     info.atividade.models_qgis = await getInfoModelsQGIS(t, dadosut.subfase_id, dadosut.lote_id)
+
+    info.atividade.workflow_dsgtools = await getInfoWorkflow(t, dadosut.subfase_id, dadosut.lote_id)
 
     info.atividade.linhagem = await getInfoLinhagem(
       t,

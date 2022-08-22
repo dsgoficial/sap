@@ -206,6 +206,14 @@ CREATE TABLE macrocontrole.perfil_linhagem(
 	UNIQUE(subfase_id,lote_id)
 );
 
+CREATE TABLE macrocontrole.perfil_workflow_dsgtools(
+	id SERIAL NOT NULL PRIMARY KEY,
+	workflow_dsgtools_id INTEGER NOT NULL REFERENCES dgeo.workflow_dsgtools (id),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(workflow_dsgtools_id,subfase_id,lote_id)
+);
+
 --CREATE TABLE macrocontrole.perfil_monitoramento(
 --	id SERIAL NOT NULL PRIMARY KEY,
 --	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),

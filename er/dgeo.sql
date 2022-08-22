@@ -174,4 +174,14 @@ CREATE TABLE dgeo.qgis_models(
 	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
+CREATE TABLE dgeo.workflow_dsgtools(
+	id SERIAL NOT NULL PRIMARY KEY,
+  nome varchar(255) NOT NULL UNIQUE,
+  descricao TEXT NOT NULL,
+  workflow_json TEXT NOT NULL,
+  owner varchar(255) NOT NULL,
+	update_time timestamp without time zone NOT NULL DEFAULT now()
+);
+
+
 COMMIT;
