@@ -219,6 +219,7 @@ CREATE TABLE macrocontrole.camada(
 	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
 	alias VARCHAR(255),
+	documentacao VARCHAR(255)
 	UNIQUE(schema,nome)
 );
 

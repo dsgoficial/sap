@@ -729,7 +729,7 @@ controller.deletaGerenciadorFME = async servidoresId => {
 
 controller.getCamadas = async () => {
   return db.sapConn.any(
-    `SELECT c.id, c.schema, c.nome, c.alias, COUNT(a.id) > 0 AS atributo, COUNT(ppc.id) > 0 AS perfil
+    `SELECT c.id, c.schema, c.nome, c.alias, c.documentacao, COUNT(a.id) > 0 AS atributo, COUNT(ppc.id) > 0 AS perfil
     FROM macrocontrole.camada AS c
     LEFT JOIN macrocontrole.atributo AS a ON a.camada_id = c.id
     LEFT JOIN macrocontrole.propriedades_camada AS ppc ON ppc.camada_id = c.id

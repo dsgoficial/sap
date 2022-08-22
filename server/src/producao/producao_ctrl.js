@@ -54,7 +54,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
 
   if (etapaCode === 1 || etapaCode === 4) {
     camadas = await connection.any(
-      `SELECT c.schema, c.nome, c.alias, pc.atributo_filtro_subfase
+      `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase
         FROM macrocontrole.propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1 and pc.camada_apontamento IS FALSE`,
@@ -70,7 +70,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
     )
   } else {
     camadas = await connection.any(
-      `SELECT c.schema, c.nome, c.alias, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
+      `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
         FROM macrocontrole.propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1`,
