@@ -15,7 +15,7 @@ router.get(
   '/projeto_qgis',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getProject()
+    const dados = await gerenciaCtrl.getProject()
 
     const msg = 'Projeto do QGIS retornado com sucesso'
 
