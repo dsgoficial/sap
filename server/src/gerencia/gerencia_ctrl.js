@@ -861,10 +861,11 @@ controller.getObservacao = async (atividadeId) => {
 controller.getViewsAcompanhamento = async (emAndamento) => {
   let views = await db.sapConn.any(`
   SELECT 'acompanhamento' AS schema, mat.matviewname AS nome,
-  l.id AS lote_id, l.projeto_id, l.linha_producao_id,
+  l.id AS lote_id, l.projeto_id, p.nome_abrev AS projeto, p.finalizado, l.linha_producao_id,
   CASE WHEN mat.matviewname LIKE '%_subfase_%' THEN 'subfase' ELSE 'lote' END AS tipo
   FROM pg_matviews AS mat
   INNER JOIN macrocontrole.lote AS l ON l.id = substring(mat.matviewname from 6 for 1)::int
+  INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
   WHERE schemaname = 'acompanhamento' AND matviewname ~ '^lote_'
   ORDER BY mat.matviewname;
   `)
@@ -876,6 +877,7 @@ controller.getViewsAcompanhamento = async (emAndamento) => {
   if (emAndamento) {
     views = views.filter((v) => !v.finalizado)
   }
+
   const dados = {}
   dados.banco_dados = {
     nome_db: DB_NAME,

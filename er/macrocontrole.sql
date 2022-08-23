@@ -10,7 +10,8 @@ CREATE TABLE macrocontrole.projeto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE,
 	nome_abrev VARCHAR(255) NOT NULL UNIQUE,
-	descricao TEXT
+	descricao TEXT,
+	finalizado BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE macrocontrole.linha_producao(
