@@ -12,6 +12,18 @@ const gerenciaSchema = require('./gerencia_schema')
 const router = express.Router()
 
 router.get(
+  '/projeto_qgis',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getProject()
+
+    const msg = 'Projeto do QGIS retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
   '/atividade/:id',
   verifyAdmin,
   schemaValidation({ params: gerenciaSchema.idParams }),

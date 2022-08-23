@@ -14,7 +14,13 @@ const { AppError, httpCode } = require('../utils')
 
 const { producaoCtrl } = require('../producao')
 
+const qgisProject = require('./qgis_project')
+
 const controller = {}
+
+controller.getProject = async () => {
+  return { projeto: qgisProject }
+}
 
 controller.getAtividade = async (atividadeId, gerenteId) => {
   const atividade = await db.sapConn.oneOrNone(
