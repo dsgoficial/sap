@@ -157,8 +157,6 @@ CREATE TABLE dgeo.layer_styles(
 CREATE TABLE dgeo.layer_rules(
   	id SERIAL NOT NULL PRIMARY KEY,
     nome varchar(255) NOT NULL,
-    cor_rgb varchar(255) NOT NULL,
-    ordem integer NOT NULL,
     regra TEXT NOT NULL,
     owner varchar(255) NOT NULL,
     update_time timestamp without time zone NOT NULL DEFAULT now(),
