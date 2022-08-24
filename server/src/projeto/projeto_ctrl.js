@@ -249,7 +249,7 @@ controller.deletaEstilos = async estilosId => {
 
 controller.getRegras = async () => {
   return db.sapConn.any(`
-    SELECT lr.id, lr.nome, lr.cor_rgb, lr.ordem, lr.regra, lr.owner, lr.update_time
+    SELECT lr.id, lr.nome, lr.regra, lr.owner, lr.update_time
     FROM dgeo.layer_rules AS lr
     `)
 }

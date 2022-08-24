@@ -148,7 +148,7 @@ const getInfoEstilos = async (connection, subfaseId, loteId) => {
 
 const getInfoRegras = async (connection, subfaseId, loteId) => {
   return connection.any(
-    `SELECT lr.nome, lr.cor_rgb, lr.ordem, lr.regra
+    `SELECT lr.nome, lr.regra
       FROM macrocontrole.perfil_regras as pr
       INNER JOIN dgeo.layer_rules AS lr ON lr.id = pr.layer_rules_id
       WHERE pr.subfase_id = $1 AND pr.lote_id = $2`,
