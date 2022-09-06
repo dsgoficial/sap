@@ -130,9 +130,9 @@ $BODY$
 ALTER FUNCTION macrocontrole.etapa_verifica_rev_corr()
   OWNER TO postgres;
 
-CREATE TRIGGER etapa_verifica_rev_corr
-AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
-FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
+--CREATE TRIGGER etapa_verifica_rev_corr
+--AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+--FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
 
 CREATE TABLE macrocontrole.perfil_requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
