@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAPI } from '../contexts/apiContext'
 
 const PrivateRoute = ({ role, children }) => {

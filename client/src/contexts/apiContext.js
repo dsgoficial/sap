@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { createBrowserHistory } from 'history'
 import { useSnackbar } from 'notistack';
@@ -16,10 +16,6 @@ const USER_AUTHORIZATION_KEY = '@sap_web-User-Authorization'
 
 const USER_UUID_KEY = '@sap_web-User-uuid'
 
-const ROLES = {
-  Admin: 'ADMIN',
-  User: 'USER'
-}
 
 APIProvider.propTypes = {
   children: PropTypes.node.isRequired
@@ -38,7 +34,7 @@ export default function APIProvider({ children }) {
       window.localStorage.getItem(USER_AUTHORIZATION_KEY) !== null
   }
 
-  const getToken = () => window.localStorage.getItem(TOKEN_KEY)
+  //const getToken = () => window.localStorage.getItem(TOKEN_KEY)
 
   const setToken = token => window.localStorage.setItem(TOKEN_KEY, token)
 
@@ -54,7 +50,7 @@ export default function APIProvider({ children }) {
     admin ? window.localStorage.setItem(USER_AUTHORIZATION_KEY, 'ADMIN') : window.localStorage.setItem(USER_AUTHORIZATION_KEY, 'USER')
   }
 
-  const getUUID = () => window.localStorage.getItem(USER_UUID_KEY)
+  //const getUUID = () => window.localStorage.getItem(USER_UUID_KEY)
 
   const setUUID = uuid => window.localStorage.setItem(USER_UUID_KEY, uuid)
 
@@ -160,7 +156,6 @@ export default function APIProvider({ children }) {
         logout,
         isAuthenticated,
         getAuthorization,
-        history: customHistory,
         getCurrentActivity,
         startActivity,
         finishActivity,

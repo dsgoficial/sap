@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import {
     Dialog,
     DialogTitle,
-    DialogContentText,
     DialogContent,
-    DialogActions,
     TextField,
     Button,
     Box,
-    LinearProgress,
     InputLabel,
     Select,
     MenuItem,
@@ -36,7 +33,7 @@ export default function ReportErrorForm({ open, setOpen, onSubmit }) {
 
     useEffect(() => {
         loadErrorTypes()
-    }, []);
+    }, []);// eslint-disable-line react-hooks/exhaustive-deps
 
     const loadErrorTypes = async () => {
         let data = await getErrorTypes()
