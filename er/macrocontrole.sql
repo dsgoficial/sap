@@ -33,6 +33,20 @@ CREATE TABLE macrocontrole.lote(
 	descricao TEXT
 );
 
+CREATE OR REPLACE FUNCTION macrocontrole.chk_scale(integer, integer)
+  RETURNS BOOLEAN AS
+$$
+	SELECT EXISTS (
+		SELECT 1
+		FROM macrocontrole.lote
+		WHERE denominador_escala = $1
+		AND id = $2
+	);
+$$
+  LANGUAGE SQL;
+ALTER FUNCTION macrocontrole.chk_scale(integer, integer)
+  OWNER TO postgres;
+
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	uuid text NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
@@ -44,22 +58,8 @@ CREATE TABLE macrocontrole.produto(
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	geom geometry(MULTIPOLYGON, 4326) NOT NULL,
-	CONSTRAINT chk_product_scale CHECK (chk_scale(denominador_escala, lote_id))
+	CONSTRAINT chk_product_scale CHECK (macrocontrole.chk_scale(denominador_escala, lote_id))
 );
-
-CREATE OR REPLACE FUNCTION macrocontrole.chk_scale(int, int)
-  RETURNS BOOLEAN AS
-$$
-	SELECT EXISTS (
-		SELECT 1
-		FROM macrocontrole.lote
-		WHERE denominador_escala = $1
-		AND id = $2
-	);
-$$
-  LANGUAGE SQL;
-ALTER FUNCTION macrocontrole.chk_scale(int, int)
-  OWNER TO postgres;
 
 CREATE INDEX produto_geom
     ON macrocontrole.produto USING gist
@@ -228,7 +228,7 @@ CREATE TABLE macrocontrole.camada(
 	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
 	alias VARCHAR(255),
-	documentacao VARCHAR(255)
+	documentacao VARCHAR(255),
 	UNIQUE(schema,nome)
 );
 

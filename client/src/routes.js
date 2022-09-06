@@ -1,5 +1,5 @@
-import React, { lazy, Suspense } from 'react';
-import { Navigate, useRoutes, Routes, Route } from 'react-router-dom';
+import React, { lazy } from 'react';
+import { Navigate, useRoutes } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute'
 // ----------------------------------------------------------------------
 const DashboardLayout = lazy(() => import('./layouts/dashboard'))

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useContext, createContext } from 'react';
+import React, { useEffect, useRef, useMemo, useContext, createContext } from 'react';
 import axios from 'axios';
 
 const TOKEN_KEY = '@sap_web-Token'
@@ -45,7 +45,7 @@ const AxiosProvider = ({
                 interceptor
             );
         });
-    }, []);
+    }, []);// eslint-disable-line react-hooks/exhaustive-deps
 
     const callAxios = async (url, method, payload) => {
         let error, data

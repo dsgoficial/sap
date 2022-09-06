@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types';
-import { useEffect, useState, lazy } from 'react';
+import { useEffect } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import MuiDrawer from '@mui/material/Drawer';
 import {
@@ -75,7 +74,7 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
         if (isOpenSidebar) {
             onCloseSidebar();
         }
-    }, [pathname]);
+    }, [pathname]);// eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <Drawer variant="permanent" open={isOpenSidebar}>

@@ -9,7 +9,6 @@ import {
     Button,
     Box,
     Alert,
-    Collapse,
     IconButton
 } from '@mui/material';
 import StartActivityForm from './StartActivityForm'
@@ -37,7 +36,7 @@ export default function ActivityCard() {
 
     useEffect(() => {
         loadCurrentActivity()
-    }, []);
+    }, []);// eslint-disable-line react-hooks/exhaustive-deps
 
     const loadCurrentActivity = async () => {
         setActivityId(null)
