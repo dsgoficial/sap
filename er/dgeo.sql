@@ -60,8 +60,8 @@ INSERT INTO dgeo.qgis_shortcuts (code, ferramenta, idioma, atalho, owner) VALUES
 (8,'Split Features','inglês','C', 'sap'),
 (9,'Identificar feições','português','I', 'sap'),
 (10,'Identify Features','inglês','I', 'sap'),
-(11,'Adicionar feição','português','A', 'sap'),
-(12,'Add Feature','inglês','A', 'sap'),
+(11,'Adicionar Polígono','português','A', 'sap'),
+(12,'Add Polygon','inglês','A', 'sap'),
 (13,'Desfazer seleção de feições em todas as camadas','português','D', 'sap'),
 (14,'Deselect Features from All Layers','inglês','D', 'sap'),
 (15,'Ferramenta Vértice (Todas as Camadas)','português','N', 'sap'),
@@ -115,8 +115,11 @@ INSERT INTO dgeo.qgis_shortcuts (code, ferramenta, idioma, atalho, owner) VALUES
 (63,'DSGTools: Select Raster','português',E'\'', 'sap'),
 (64,'DSGTools: Select Raster','inglês',E'\'', 'sap'),
 (65,'Remover camada/grupo','português','Ctrl+D', 'sap'),
-(66,'Remove Layer/Group','inglês','Ctrl+D', 'sap');
-
+(66,'Remove Layer/Group','inglês','Ctrl+D', 'sap'),
+(67,'Adicionar Linha','português','A', 'sap'),
+(68,'Add Line','inglês','A', 'sap'),
+(69,'Adicionar Ponto','português','A', 'sap'),
+(70,'Add Point','inglês','A', 'sap');
 
 CREATE TABLE dgeo.gerenciador_fme(
   id SERIAL NOT NULL PRIMARY KEY,
