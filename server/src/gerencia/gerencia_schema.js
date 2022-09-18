@@ -140,8 +140,7 @@ models.perfilBlocoOperador = Joi.object().keys({
     .items(
       Joi.object().keys({
         usuario_id: Joi.number().integer().strict().required(),
-        bloco_id: Joi.number().integer().strict().required(),
-        prioridade: Joi.number().integer().strict().required()
+        bloco_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -154,8 +153,7 @@ models.perfilBlocoOperadorAtualizacao = Joi.object().keys({
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         usuario_id: Joi.number().integer().strict().required(),
-        bloco_id: Joi.number().integer().strict().required(),
-        prioridade: Joi.number().integer().strict().required()
+        bloco_id: Joi.number().integer().strict().required()
       })
     )
     .unique('id')

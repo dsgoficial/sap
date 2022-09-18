@@ -400,8 +400,7 @@ CREATE TABLE macrocontrole.perfil_producao_operador(
 CREATE TABLE macrocontrole.perfil_bloco_operador(
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
-	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
-	prioridade INTEGER NOT NULL
+	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id)
 );
 
 CREATE TABLE macrocontrole.perfil_dificuldade_operador(

@@ -164,7 +164,7 @@ controller.deletaPerfilProducao = async perfilProducaoId => {
 }
 
 controller.getPerfilBlocoOperador = async () => {
-  return db.sapConn.any('SELECT id, usuario_id, bloco_id, prioridade FROM macrocontrole.perfil_bloco_operador')
+  return db.sapConn.any('SELECT id, usuario_id, bloco_id FROM macrocontrole.perfil_bloco_operador')
 }
 
 controller.criaPerfilBlocoOperador = async perfilBlocoOperador => {
@@ -172,8 +172,7 @@ controller.criaPerfilBlocoOperador = async perfilBlocoOperador => {
 
     const cs = new db.pgp.helpers.ColumnSet([
       'usuario_id',
-      'bloco_id',
-      'prioridade'
+      'bloco_id'
     ])
 
     const query = db.pgp.helpers.insert(perfilBlocoOperador, cs, {
@@ -191,8 +190,7 @@ controller.atualizaPerfilBlocoOperador = async perfilBlocoOperador => {
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
       'usuario_id',
-      'bloco_id',
-      'prioridade'
+      'bloco_id'
     ])
 
     const query =

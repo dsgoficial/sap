@@ -3,7 +3,7 @@
 */
 SELECT id
 FROM (
-  SELECT a.id, a.etapa_id, a.unidade_trabalho_id, a_ant.tipo_situacao_id AS situacao_ant, pbloco.prioridade AS p_prioridade, b.prioridade AS b_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade,
+  SELECT a.id, a.etapa_id, a.unidade_trabalho_id, a_ant.tipo_situacao_id AS situacao_ant, b.prioridade AS b_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade,
   CASE 
   WHEN pdo.tipo_perfil_dificuldade_id IS NULL THEN 0
   WHEN pdo.tipo_perfil_dificuldade_id = 1 THEN ut.dificuldade
@@ -121,7 +121,7 @@ FROM (
     SELECT atividade_id FROM macrocontrole.fila_prioritaria_grupo
   )
 ) AS sit
-GROUP BY id, p_prioridade, b_prioridade, pse_prioridade, dificuldade_rank, ut_prioridade
+GROUP BY id, b_prioridade, pse_prioridade, dificuldade_rank, ut_prioridade
 HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4)) 
-ORDER BY p_prioridade, b_prioridade, pse_prioridade, dificuldade_rank, ut_prioridade
+ORDER BY b_prioridade, pse_prioridade, dificuldade_rank, ut_prioridade
 LIMIT 1
