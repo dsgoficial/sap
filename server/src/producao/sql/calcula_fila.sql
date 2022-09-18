@@ -3,7 +3,7 @@
 */
 SELECT id
 FROM (
-  SELECT a.id, a.etapa_id, a.unidade_trabalho_id, a_ant.tipo_situacao_id AS situacao_ant, pproj.prioridade AS p_prioridade, b.prioridade AS b_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade,
+  SELECT a.id, a.etapa_id, a.unidade_trabalho_id, a_ant.tipo_situacao_id AS situacao_ant, pbloco.prioridade AS p_prioridade, b.prioridade AS b_prioridade, pse.prioridade AS pse_prioridade, ut.prioridade AS ut_prioridade,
   CASE 
   WHEN pdo.tipo_perfil_dificuldade_id IS NULL THEN 0
   WHEN pdo.tipo_perfil_dificuldade_id = 1 THEN ut.dificuldade
@@ -17,14 +17,13 @@ FROM (
   INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
   INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
   INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
-  INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-  INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
-  LEFT JOIN macrocontrole.perfil_dificuldade_operador AS pdo ON pdo.projeto_id = l.projeto_id AND pdo.subfase_id = e.subfase_id AND pdo.usuario_id = $1
+\  INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = b.id AND pbloco.usuario_id = ppo.usuario_id
+  LEFT JOIN macrocontrole.perfil_dificuldade_operador AS pdo ON pdo.bloco_id = b.id AND pdo.subfase_id = e.subfase_id AND pdo.usuario_id = $1
   LEFT JOIN (
     SELECT ut.dificuldade, count(*) AS diff_count
     FROM macrocontrole.perfil_dificuldade_operador AS pdo
-    INNER JOIN macrocontrole.lote AS l ON l.projeto_id = pdo.projeto_id
-    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.subfase_id = pdo.subfase_id AND l.id = ut.lote_id
+    INNER JOIN macrocontrole.bloco AS b ON b.id = pdo.bloco_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.subfase_id = pdo.subfase_id AND b.id = ut.bloco_id
     INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.usuario_id = pdo.usuario_id
     WHERE pdo.usuario_id = $1 AND a.tipo_situacao_id = 4
     GROUP BY ut.dificuldade
@@ -44,8 +43,7 @@ FROM (
     INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.subfase_id = et.subfase_id AND pse.tipo_etapa_id = et.tipo_etapa_id
     INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-    INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-    INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
+    INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = ut.bloco_id AND pbloco.usuario_id = ppo.usuario_id
     INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
     INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
@@ -61,8 +59,7 @@ FROM (
     INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.subfase_id = et.subfase_id AND pse.tipo_etapa_id = et.tipo_etapa_id
     INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-    INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-    INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
+    INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = ut.bloco_id AND pbloco.usuario_id = ppo.usuario_id
     INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
     INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
@@ -81,8 +78,7 @@ FROM (
     INNER JOIN macrocontrole.fase AS fa ON fa.id = sub.fase_id
     INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-    INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-    INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
+    INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = ut.bloco_id AND pbloco.usuario_id = ppo.usuario_id
     INNER JOIN macrocontrole.restricao_etapa AS re ON re.etapa_posterior_id = a.etapa_id
     INNER JOIN macrocontrole.etapa AS et_re ON et_re.id = re.etapa_anterior_id AND et_re.subfase_id != et.subfase_id
     INNER JOIN macrocontrole.subfase AS sub_re ON sub_re.id = et_re.subfase_id
@@ -103,8 +99,7 @@ FROM (
     INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.subfase_id = et.subfase_id AND pse.tipo_etapa_id = et.tipo_etapa_id
     INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-    INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-    INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
+    INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = ut.bloco_id AND pbloco.usuario_id = ppo.usuario_id
     INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
     INNER JOIN macrocontrole.restricao_etapa AS re ON re.etapa_posterior_id = a.etapa_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.etapa_id = re.etapa_anterior_id

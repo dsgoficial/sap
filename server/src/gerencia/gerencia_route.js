@@ -107,51 +107,51 @@ router.delete(
 )
 
 router.get(
-  '/perfil_projeto_operador',
+  '/perfil_bloco_operador',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getPerfilProjetoOperador()
+    const dados = await gerenciaCtrl.getPerfilBlocoOperador()
 
-    const msg = 'Perfis projeto operador retornados'
+    const msg = 'Perfis bloco operador retornados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
 router.put(
-  '/perfil_projeto_operador',
+  '/perfil_bloco_operador',
   verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.perfilProjetoOperadorAtualizacao }),
+  schemaValidation({ body: gerenciaSchema.perfilBlocoOperadorAtualizacao }),
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.atualizaPerfilProjetoOperador(req.body.perfil_projeto_operador)
+    const dados = await gerenciaCtrl.atualizaPerfilBlocoOperador(req.body.perfil_bloco_operador)
 
-    const msg = 'Perfis projeto operador atualizados'
+    const msg = 'Perfis bloco operador atualizados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
 router.post(
-  '/perfil_projeto_operador',
+  '/perfil_bloco_operador',
   verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.perfilProjetoOperador }),
+  schemaValidation({ body: gerenciaSchema.perfilBlocoOperador }),
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.criaPerfilProjetoOperador(req.body.perfil_projeto_operador)
+    const dados = await gerenciaCtrl.criaPerfilBlocoOperador(req.body.perfil_bloco_operador)
 
-    const msg = 'Perfis projeto operador criados'
+    const msg = 'Perfis bloco operador criados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
 router.delete(
-  '/perfil_projeto_operador',
+  '/perfil_bloco_operador',
   verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.perfilProjetoOperadorIds }),
+  schemaValidation({ body: gerenciaSchema.perfilBlocoOperadorIds }),
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.deletaPerfilProjetoOperador(req.body.perfil_projeto_operador_ids)
+    const dados = await gerenciaCtrl.deletaPerfilBlocoOperador(req.body.perfil_bloco_operador_ids)
 
-    const msg = 'Perfis projeto operador deletados'
+    const msg = 'Perfis bloco operador deletados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })

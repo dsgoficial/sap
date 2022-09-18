@@ -127,20 +127,20 @@ models.perfilProducaoAtualizacao = Joi.object().keys({
     .min(1)
 })
 
-models.perfilProjetoOperadorIds = Joi.object().keys({
-  perfil_projeto_operador_ids: Joi.array()
+models.perfilBlocoOperadorIds = Joi.object().keys({
+  perfil_bloco_operador_ids: Joi.array()
     .items(Joi.number().integer().strict())
     .unique()
     .required()
     .min(1)
 })
 
-models.perfilProjetoOperador = Joi.object().keys({
-  perfil_projeto_operador: Joi.array()
+models.perfilBlocoOperador = Joi.object().keys({
+  perfil_bloco_operador: Joi.array()
     .items(
       Joi.object().keys({
         usuario_id: Joi.number().integer().strict().required(),
-        projeto_id: Joi.number().integer().strict().required(),
+        bloco_id: Joi.number().integer().strict().required(),
         prioridade: Joi.number().integer().strict().required()
       })
     )
@@ -148,13 +148,13 @@ models.perfilProjetoOperador = Joi.object().keys({
     .min(1)
 })
 
-models.perfilProjetoOperadorAtualizacao = Joi.object().keys({
-  perfil_projeto_operador: Joi.array()
+models.perfilBlocoOperadorAtualizacao = Joi.object().keys({
+  perfil_bloco_operador: Joi.array()
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         usuario_id: Joi.number().integer().strict().required(),
-        projeto_id: Joi.number().integer().strict().required(),
+        bloco_id: Joi.number().integer().strict().required(),
         prioridade: Joi.number().integer().strict().required()
       })
     )
@@ -249,7 +249,7 @@ models.perfilDificuldadeOperador = Joi.object().keys({
       Joi.object().keys({
         usuario_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        projeto_id: Joi.number().integer().strict().required(),
+        bloco_id: Joi.number().integer().strict().required(),
         tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
       })
     )
@@ -264,7 +264,7 @@ models.perfilDificuldadeOperadorAtualizacao = Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         usuario_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        projeto_id: Joi.number().integer().strict().required(),
+        bloco_id: Joi.number().integer().strict().required(),
         tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
       })
     )

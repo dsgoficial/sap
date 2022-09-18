@@ -397,10 +397,10 @@ CREATE TABLE macrocontrole.perfil_producao_operador(
 	UNIQUE (usuario_id)
 );
 
-CREATE TABLE macrocontrole.perfil_projeto_operador(
+CREATE TABLE macrocontrole.perfil_bloco_operador(
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
-	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
+	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
 	prioridade INTEGER NOT NULL
 );
 
@@ -408,9 +408,9 @@ CREATE TABLE macrocontrole.perfil_dificuldade_operador(
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
+	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
 	tipo_perfil_dificuldade_id SMALLINT NOT NULL REFERENCES dominio.tipo_perfil_dificuldade (code),
-	UNIQUE(usuario_id, subfase_id, projeto_id)
+	UNIQUE(usuario_id, subfase_id, bloco_id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria(

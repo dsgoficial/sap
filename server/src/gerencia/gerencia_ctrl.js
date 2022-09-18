@@ -163,21 +163,21 @@ controller.deletaPerfilProducao = async perfilProducaoId => {
   })
 }
 
-controller.getPerfilProjetoOperador = async () => {
-  return db.sapConn.any('SELECT id, usuario_id, projeto_id, prioridade FROM macrocontrole.perfil_projeto_operador')
+controller.getPerfilBlocoOperador = async () => {
+  return db.sapConn.any('SELECT id, usuario_id, bloco_id, prioridade FROM macrocontrole.perfil_bloco_operador')
 }
 
-controller.criaPerfilProjetoOperador = async perfilProjetoOperador => {
+controller.criaPerfilBlocoOperador = async perfilBlocoOperador => {
   return db.sapConn.tx(async t => {
 
     const cs = new db.pgp.helpers.ColumnSet([
       'usuario_id',
-      'projeto_id',
+      'bloco_id',
       'prioridade'
     ])
 
-    const query = db.pgp.helpers.insert(perfilProjetoOperador, cs, {
-      table: 'perfil_projeto_operador',
+    const query = db.pgp.helpers.insert(perfilBlocoOperador, cs, {
+      table: 'perfil_bloco_operador',
       schema: 'macrocontrole'
     })
 
@@ -185,21 +185,21 @@ controller.criaPerfilProjetoOperador = async perfilProjetoOperador => {
   })
 }
 
-controller.atualizaPerfilProjetoOperador = async perfilProjetoOperador => {
+controller.atualizaPerfilBlocoOperador = async perfilBlocoOperador => {
   return db.sapConn.tx(async t => {
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
       'usuario_id',
-      'projeto_id',
+      'bloco_id',
       'prioridade'
     ])
 
     const query =
       db.pgp.helpers.update(
-        perfilProjetoOperador,
+        perfilBlocoOperador,
         cs,
-        { table: 'perfil_projeto_operador', schema: 'macrocontrole' },
+        { table: 'perfil_bloco_operador', schema: 'macrocontrole' },
         {
           tableAlias: 'X',
           valueAlias: 'Y'
@@ -209,24 +209,24 @@ controller.atualizaPerfilProjetoOperador = async perfilProjetoOperador => {
   })
 }
 
-controller.deletaPerfilProjetoOperador = async perfilProjetoOperadorId => {
+controller.deletaPerfilBlocoOperador = async perfilBlocoOperadorId => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
-      `SELECT id FROM macrocontrole.perfil_projeto_operador
-      WHERE id in ($<perfilProjetoOperadorId:csv>)`,
-      { perfilProjetoOperadorId }
+      `SELECT id FROM macrocontrole.perfil_bloco_operador
+      WHERE id in ($<perfilBlocoOperadorId:csv>)`,
+      { perfilBlocoOperadorId }
     )
-    if (exists && exists.length < perfilProjetoOperadorId.length) {
+    if (exists && exists.length < perfilBlocoOperadorId.length) {
       throw new AppError(
-        'O id informado não corresponde a um perfil projeto operador',
+        'O id informado não corresponde a um perfil bloco operador',
         httpCode.BadRequest
       )
     }
 
     return t.any(
-      `DELETE FROM macrocontrole.perfil_projeto_operador
-      WHERE id in ($<perfilProjetoOperadorId:csv>)`,
-      { perfilProjetoOperadorId }
+      `DELETE FROM macrocontrole.perfil_bloco_operador
+      WHERE id in ($<perfilBlocoOperadorId:csv>)`,
+      { perfilBlocoOperadorId }
     )
   })
 }
@@ -379,7 +379,7 @@ controller.deletaPerfilProducaoEtapa = async perfilProducaoEtapaId => {
 }
 
 controller.getPerfilDificuldadeOperador = async () => {
-  return db.sapConn.any('SELECT id, usuario_id, subfase_id, projeto_id, tipo_perfil_dificuldade_id FROM macrocontrole.perfil_dificuldade_operador')
+  return db.sapConn.any('SELECT id, usuario_id, subfase_id, bloco_id, tipo_perfil_dificuldade_id FROM macrocontrole.perfil_dificuldade_operador')
 }
 
 controller.criaPerfilDificuldadeOperador = async perfilDificuldadeOperador => {
@@ -388,7 +388,7 @@ controller.criaPerfilDificuldadeOperador = async perfilDificuldadeOperador => {
     const cs = new db.pgp.helpers.ColumnSet([
       'usuario_id',
       'subfase_id',
-      'projeto_id',
+      'bloco_id',
       'tipo_perfil_dificuldade_id'
     ])
 
@@ -408,7 +408,7 @@ controller.atualizaPerfilDificuldadeOperador = async perfilDificuldadeOperador =
       'id',
       'usuario_id',
       'subfase_id',
-      'projeto_id',
+      'bloco_id',
       'tipo_perfil_dificuldade_id'
     ])
 
