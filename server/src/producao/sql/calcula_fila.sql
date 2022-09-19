@@ -17,7 +17,7 @@ FROM (
   INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
   INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
   INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
-\  INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = b.id AND pbloco.usuario_id = ppo.usuario_id
+  INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = b.id AND pbloco.usuario_id = ppo.usuario_id
   LEFT JOIN macrocontrole.perfil_dificuldade_operador AS pdo ON pdo.bloco_id = b.id AND pdo.subfase_id = e.subfase_id AND pdo.usuario_id = $1
   LEFT JOIN (
     SELECT ut.dificuldade, count(*) AS diff_count
