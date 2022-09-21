@@ -14,7 +14,7 @@ controller.limpaAtividades = async usuarioId => {
     { usuarioId }
   )
 
-  if (!result.rowCount || result.rowCount !== 1) {
+  if (!result.rowCount || result.rowCount == 0) {
     throw new AppError(
       'Usuário não encontrado ou o usuário não possue atividades relacionadas',
       httpCode.BadRequest

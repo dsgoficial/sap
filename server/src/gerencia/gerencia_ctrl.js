@@ -774,7 +774,7 @@ controller.criaFilaPrioritaria = async (
       `,
     { atividadeIds, usuarioPrioridadeId, prioridade }
   )
-  if (!result.rowCount || result.rowCount !== 1) {
+  if (!result.rowCount || result.rowCount == 0) {
     throw new AppError(
       'Atividade não encontrada ou não pode ser adicionada na fila prioritária',
       httpCode.BadRequest
@@ -812,7 +812,7 @@ controller.criaFilaPrioritariaGrupo = async (
     { atividadeIds, perfilProducaoId, prioridade }
   )
 
-  if (!result.rowCount || result.rowCount !== 1) {
+  if (!result.rowCount || result.rowCount == 0) {
     throw new AppError(
       'Atividade não encontrada ou não pode ser adicionada na fila prioritária',
       httpCode.BadRequest
