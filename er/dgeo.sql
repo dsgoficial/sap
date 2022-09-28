@@ -119,7 +119,10 @@ INSERT INTO dgeo.qgis_shortcuts (code, ferramenta, idioma, atalho, owner) VALUES
 (67,'Adicionar Linha','português','A', 'sap'),
 (68,'Add Line','inglês','A', 'sap'),
 (69,'Adicionar Ponto','português','A', 'sap'),
-(70,'Add Point','inglês','A', 'sap');
+(70,'Add Point','inglês','A', 'sap'),
+(71,'DSGTools: Go to next tile','inglês','Shift+S', 'sap'),
+(72,'DSGTools: Go to previous tile','inglês','Shift+A', 'sap'),
+(73,'DSGTools: Mark tile as done','inglês','Shift+D', 'sap');
 
 CREATE TABLE dgeo.gerenciador_fme(
   id SERIAL NOT NULL PRIMARY KEY,
