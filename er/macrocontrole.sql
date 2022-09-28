@@ -212,6 +212,7 @@ CREATE TABLE macrocontrole.perfil_workflow_dsgtools(
 	workflow_dsgtools_id INTEGER NOT NULL REFERENCES dgeo.workflow_dsgtools (id),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	requisito_finalizacao BOOLEAN NOT NULL DEFAULT TRUE,
 	UNIQUE(workflow_dsgtools_id,subfase_id,lote_id)
 );
 
@@ -227,17 +228,7 @@ CREATE TABLE macrocontrole.camada(
 	id INTEGER NOT NULL PRIMARY KEY,
 	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
-	alias VARCHAR(255),
-	documentacao VARCHAR(255),
 	UNIQUE(schema,nome)
-);
-
-CREATE TABLE macrocontrole.atributo(
-	id SERIAL NOT NULL PRIMARY KEY,
-	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
-	nome VARCHAR(255) NOT NULL,
-	alias VARCHAR(255),
-	UNIQUE(camada_id,nome)
 );
 
 CREATE TABLE macrocontrole.propriedades_camada(
@@ -254,6 +245,15 @@ CREATE TABLE macrocontrole.propriedades_camada(
 	),
 	UNIQUE(camada_id, subfase_id)
 );
+
+CREATE TABLE macrocontrole.perfil_alias(
+	id SERIAL NOT NULL PRIMARY KEY,
+	alias_id INTEGER NOT NULL REFERENCES dgeo.layer_alias (id),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(alias_id,subfase_id,lote_id)
+);
+
 
 CREATE TABLE macrocontrole.dado_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
