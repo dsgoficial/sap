@@ -137,6 +137,15 @@ CREATE TABLE dgeo.qgis_menus(
     CONSTRAINT unique_menus UNIQUE (nome)
 );
 
+CREATE TABLE dgeo.layer_alias(
+	  id SERIAL NOT NULL PRIMARY KEY,
+    nome text NOT NULL,
+    definicao_alias text NOT NULL,
+    owner varchar(255) NOT NULL,
+	  update_time timestamp without time zone NOT NULL DEFAULT now(),
+    CONSTRAINT unique_alias UNIQUE (nome)
+);
+
 CREATE TABLE dgeo.group_styles(
   	id SERIAL NOT NULL PRIMARY KEY,
     nome varchar(255) NOT NULL,

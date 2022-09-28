@@ -275,8 +275,7 @@ models.camadas = Joi.object().keys({
     .items(
       Joi.object().keys({
         schema: Joi.string().required(),
-        nome: Joi.string().required(),
-        alias: Joi.string().required().allow('')
+        nome: Joi.string().required()
       })
     )
     .required()
@@ -288,7 +287,8 @@ models.camadasAtualizacao = Joi.object().keys({
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        alias: Joi.string().required().allow('')
+        schema: Joi.string().required(),
+        nome: Joi.string().required()
       })
     )
     .unique('id')

@@ -48,38 +48,30 @@ controller.calculaFila = async (usuarioId) => {
   return prioridade
 }
 
+const getAlias = async (connection, subfaseId, loteId) => {
+  return connection.any(
+    `SELECT la.nome, la.definicao_alias FROM macrocontrole.perfil_alias AS pa
+      INNER JOIN dgeo.layer_alias AS la On la.id = pa.alias_id
+      WHERE pa.subfase_id = $1 AND pa.lote_id = $2`,
+    [subfaseId, loteId]
+  )
+}
+
 const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
   let camadas
-  let atributos
 
   if (etapaCode === 1 || etapaCode === 4) {
     camadas = await connection.any(
-      `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase
+      `SELECT c.schema, c.nome, pc.atributo_filtro_subfase
         FROM macrocontrole.propriedades_camada AS pc
-        INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
-        WHERE pc.subfase_id = $1 and pc.camada_apontamento IS FALSE`,
-      [subfaseId]
-    )
-    atributos = await connection.any(
-      `SELECT a.nome, a.alias, c.nome as camada, c.schema
-        FROM macrocontrole.atributo AS a
-        INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = a.camada_id
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1 and pc.camada_apontamento IS FALSE`,
       [subfaseId]
     )
   } else {
     camadas = await connection.any(
-      `SELECT c.schema, c.nome, c.alias, c.documentacao, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
+      `SELECT c.schema, c.nome, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
         FROM macrocontrole.propriedades_camada AS pc
-        INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
-        WHERE pc.subfase_id = $1`,
-      [subfaseId]
-    )
-    atributos = await connection.any(
-      `SELECT a.nome, a.alias, c.nome as camada, c.schema
-        FROM macrocontrole.atributo AS a
-        INNER JOIN macrocontrole.propriedades_camada AS pc ON pc.camada_id = a.camada_id
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1`,
       [subfaseId]
@@ -90,9 +82,6 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
 
   camadas.forEach((r) => {
     const aux = { nome: r.nome, schema: r.schema }
-    if (r.alias) {
-      aux.alias = r.alias
-    }
     if (r.atributo_filtro_subfase) {
       aux.atributo_filtro_subfase = r.atributo_filtro_subfase
     }
@@ -102,15 +91,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
       aux.atributo_justificativa_apontamento =
         r.atributo_justificativa_apontamento
     }
-    const auxAtt = []
-    atributos.forEach((a) => {
-      if (a.camada === r.nome && a.schema === r.schema) {
-        auxAtt.push({ nome: a.nome, alias: a.alias })
-      }
-    })
-    if (auxAtt.length > 0) {
-      aux.atributos = auxAtt
-    }
+
     result.push(aux)
   })
 
@@ -334,6 +315,12 @@ const dadosProducao = async (atividadeId) => {
       t,
       dadosut.tipo_etapa_id,
       dadosut.subfase_id
+    )
+
+    info.atividade.alias = await getAlias(
+      t,
+      dadosut.subfase_id,
+      dadosut.lote_id
     )
 
     info.atividade.menus = await getInfoMenus(

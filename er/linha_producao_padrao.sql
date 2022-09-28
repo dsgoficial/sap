@@ -149,104 +149,104 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (1, 34, 35);
 
 ------------------------------------------------------------------------------------------------------------------------------------
-INSERT INTO macrocontrole.camada (id, schema, nome, alias) VALUES
-(1,'edgv', 'centroide_elemento_hidrografico_p', NULL), -- 1
-(2,'edgv', 'centroide_ilha_p', NULL), -- 2
-(3,'edgv', 'centroide_massa_dagua_p', NULL), -- 3
-(4,'edgv', 'delimitador_elemento_hidrografico_l', NULL), -- 4
-(5,'edgv', 'delimitador_massa_dagua_l', NULL), -- 5
-(6,'edgv', 'edicao_area_sem_dados_a', NULL), -- 6
-(7,'edgv', 'aux_revisao_a', NULL), -- 7
-(8,'edgv', 'aux_revisao_l', NULL), -- 8
-(9,'edgv', 'aux_revisao_p', NULL), -- 9
-(10,'edgv', 'aux_validacao_a', NULL), -- 10
-(11,'edgv', 'aux_validacao_l', NULL), -- 11
-(12,'edgv', 'aux_validacao_p', NULL), -- 12
-(13,'edgv', 'cobter_massa_dagua_a', NULL), -- 13
-(14,'edgv', 'constr_extracao_mineral_a', NULL), -- 14
-(15,'edgv', 'constr_extracao_mineral_p', NULL), -- 15
-(16,'edgv', 'edicao_identificador_trecho_rod_p', NULL), -- 16
-(17,'edgv', 'edicao_simb_cota_mestra_l', NULL), -- 17
-(18,'edgv', 'edicao_simb_direcao_corrente_p', NULL), -- 18
-(19,'edgv', 'edicao_simb_torre_energia_p', NULL), -- 19
-(20,'edgv', 'edicao_texto_generico_l', NULL), -- 20
-(21,'edgv', 'edicao_texto_generico_p', NULL), -- 21
-(22,'edgv', 'elemnat_curva_nivel_l', NULL), -- 22
-(23,'edgv', 'elemnat_elemento_hidrografico_a', NULL), -- 23
-(24,'edgv', 'elemnat_elemento_hidrografico_l', NULL), -- 24
-(25,'edgv', 'elemnat_elemento_hidrografico_p', NULL), -- 25
-(26,'edgv', 'elemnat_ilha_a', NULL), -- 26
-(27,'edgv', 'elemnat_ilha_p', NULL), -- 27
-(28,'edgv', 'elemnat_ponto_cotado_p', NULL), -- 28
-(29,'edgv', 'elemnat_terreno_sujeito_inundacao_a', NULL), -- 29
-(30,'edgv', 'elemnat_toponimo_fisiografico_natural_l', NULL), -- 30
-(31,'edgv', 'elemnat_toponimo_fisiografico_natural_p', NULL), -- 31
-(32,'edgv', 'elemnat_trecho_drenagem_l', NULL), -- 32
-(33,'edgv', 'infra_barragem_a', NULL), -- 33
-(34,'edgv', 'infra_barragem_l', NULL), -- 34
-(35,'edgv', 'infra_elemento_energia_a', NULL), -- 35
-(36,'edgv', 'infra_elemento_energia_l', NULL), -- 36
-(37,'edgv', 'infra_elemento_energia_p', NULL), -- 37
-(38,'edgv', 'infra_elemento_infraestrutura_p', NULL), -- 38
-(39,'edgv', 'infra_ferrovia_l', NULL), -- 39
-(40,'edgv', 'infra_obstaculo_vertical_p', NULL), -- 40
-(41,'edgv', 'infra_pista_pouso_a', NULL), -- 41
-(42,'edgv', 'infra_pista_pouso_l', NULL), -- 42
-(43,'edgv', 'infra_pista_pouso_p', NULL), -- 43
-(44,'edgv', 'infra_via_deslocamento_l', NULL), -- 44
-(45,'edgv', 'llp_aglomerado_rural_p', NULL), -- 45
-(46,'edgv', 'llp_area_pub_militar_a', NULL), -- 46
-(47,'edgv', 'llp_area_pub_militar_l', NULL), -- 47
-(48,'edgv', 'llp_limite_legal_l', NULL), -- 48
-(49,'edgv', 'llp_localidade_p', NULL), -- 49
-(50,'edgv', 'llp_nome_local_p', NULL), -- 50
-(51,'edgv', 'llp_terra_indigena_a', NULL), -- 51
-(52,'edgv', 'llp_terra_indigena_l', NULL), -- 52
-(53,'edgv', 'llp_unidade_conservacao_a', NULL), -- 53
-(54,'edgv', 'llp_unidade_conservacao_l', NULL), -- 54
-(55,'edgv', 'centroide_area_construida_p', NULL), -- 55
-(56,'edgv', 'centroide_area_sem_dados_p', NULL), -- 56
-(57,'edgv', 'centroide_limite_especial_p', NULL), -- 57
-(58,'edgv', 'centroide_vegetacao_p', NULL), -- 58
-(59,'edgv', 'edicao_simb_vegetacao_p', NULL), -- 59 renomeada
-(60,'edgv', 'delimitador_area_construida_l', NULL), -- 60
-(61,'edgv', 'delimitador_limite_especial_l', NULL), -- 61
-(62,'edgv', 'delimitador_vegetacao_l', NULL), -- 62
-(63,'edgv', 'aux_insumo_externo_a', NULL), -- 63
-(64,'edgv', 'aux_insumo_externo_l', NULL), -- 64
-(65,'edgv', 'aux_insumo_externo_p', NULL), -- 65
-(66,'edgv', 'aux_reambulacao_a', NULL), -- 66
-(67,'edgv', 'aux_reambulacao_l', NULL), -- 67
-(68,'edgv', 'aux_reambulacao_p', NULL), -- 68
-(69,'edgv', 'cobter_area_construida_a', NULL), -- 69
-(70,'edgv', 'cobter_vegetacao_a', NULL), -- 70
-(71,'edgv', 'constr_deposito_a', NULL), -- 71
-(72,'edgv', 'constr_deposito_p', NULL), -- 72
-(73,'edgv', 'constr_edificacao_a', NULL), -- 73
-(74,'edgv', 'constr_edificacao_p', NULL), -- 74
-(75 ,'edgv', 'constr_ocupacao_solo_a', NULL), -- 75 
-(76,'edgv', 'constr_ocupacao_solo_l', NULL), -- 76
-(77,'edgv', 'constr_ocupacao_solo_p', NULL), -- 77
-(78,'edgv', 'elemnat_elemento_fisiografico_a', NULL), -- 78
-(79,'edgv', 'elemnat_elemento_fisiografico_l', NULL), -- 79
-(80,'edgv', 'elemnat_elemento_fisiografico_p', NULL), -- 80
-(81,'edgv', 'elemnat_sumidouro_vertedouro_p', NULL), -- 81
-(82,'edgv', 'edicao_simb_area_p', NULL), -- 82 renomeada
-(83,'edgv', 'infra_alteracao_fisiografica_antropica_l', NULL), -- 83
-(84,'edgv', 'infra_elemento_infraestrutura_a', NULL), -- 84
-(85,'edgv', 'infra_elemento_infraestrutura_l', NULL), -- 85
-(86,'edgv', 'infra_elemento_viario_l', NULL), -- 86
-(87,'edgv', 'infra_elemento_viario_p', NULL), -- 87
-(88,'edgv', 'infra_mobilidade_urbana_l', NULL), -- 88
-(89,'edgv', 'infra_trecho_duto_l', NULL), -- 89
-(90,'edgv', 'infra_travessia_hidroviaria_l', NULL), -- 90
-(91,'edgv', 'infra_vala_l', NULL), -- 91
-(92,'edgv', 'llp_delimitacao_fisica_l', NULL), -- 92
-(93 ,'edgv', 'llp_limite_especial_a', NULL), -- 93
-(94,'edgv', 'llp_limite_especial_l', NULL), -- 94
-(95,'edgv', 'llp_ponto_controle_p', NULL), -- 95
-(96,'edgv', 'edicao_borda_elemento_hidrografico_l', NULL), -- 96 inserida
-(97,'edgv', 'delimitador_area_sem_dados_l', NULL); -- 97 inserida
+INSERT INTO macrocontrole.camada (id, schema, nome) VALUES
+(1,'edgv', 'centroide_elemento_hidrografico_p'), -- 1
+(2,'edgv', 'centroide_ilha_p'), -- 2
+(3,'edgv', 'centroide_massa_dagua_p'), -- 3
+(4,'edgv', 'delimitador_elemento_hidrografico_l'), -- 4
+(5,'edgv', 'delimitador_massa_dagua_l'), -- 5
+(6,'edgv', 'edicao_area_sem_dados_a'), -- 6
+(7,'edgv', 'aux_revisao_a'), -- 7
+(8,'edgv', 'aux_revisao_l'), -- 8
+(9,'edgv', 'aux_revisao_p'), -- 9
+(10,'edgv', 'aux_validacao_a'), -- 10
+(11,'edgv', 'aux_validacao_l'), -- 11
+(12,'edgv', 'aux_validacao_p'), -- 12
+(13,'edgv', 'cobter_massa_dagua_a'), -- 13
+(14,'edgv', 'constr_extracao_mineral_a'), -- 14
+(15,'edgv', 'constr_extracao_mineral_p'), -- 15
+(16,'edgv', 'edicao_identificador_trecho_rod_p'), -- 16
+(17,'edgv', 'edicao_simb_cota_mestra_l'), -- 17
+(18,'edgv', 'edicao_simb_direcao_corrente_p'), -- 18
+(19,'edgv', 'edicao_simb_torre_energia_p'), -- 19
+(20,'edgv', 'edicao_texto_generico_l'), -- 20
+(21,'edgv', 'edicao_texto_generico_p'), -- 21
+(22,'edgv', 'elemnat_curva_nivel_l'), -- 22
+(23,'edgv', 'elemnat_elemento_hidrografico_a'), -- 23
+(24,'edgv', 'elemnat_elemento_hidrografico_l'), -- 24
+(25,'edgv', 'elemnat_elemento_hidrografico_p'), -- 25
+(26,'edgv', 'elemnat_ilha_a'), -- 26
+(27,'edgv', 'elemnat_ilha_p'), -- 27
+(28,'edgv', 'elemnat_ponto_cotado_p'), -- 28
+(29,'edgv', 'elemnat_terreno_sujeito_inundacao_a'), -- 29
+(30,'edgv', 'elemnat_toponimo_fisiografico_natural_l'), -- 30
+(31,'edgv', 'elemnat_toponimo_fisiografico_natural_p'), -- 31
+(32,'edgv', 'elemnat_trecho_drenagem_l'), -- 32
+(33,'edgv', 'infra_barragem_a'), -- 33
+(34,'edgv', 'infra_barragem_l'), -- 34
+(35,'edgv', 'infra_elemento_energia_a'), -- 35
+(36,'edgv', 'infra_elemento_energia_l'), -- 36
+(37,'edgv', 'infra_elemento_energia_p'), -- 37
+(38,'edgv', 'infra_elemento_infraestrutura_p'), -- 38
+(39,'edgv', 'infra_ferrovia_l'), -- 39
+(40,'edgv', 'infra_obstaculo_vertical_p'), -- 40
+(41,'edgv', 'infra_pista_pouso_a'), -- 41
+(42,'edgv', 'infra_pista_pouso_l'), -- 42
+(43,'edgv', 'infra_pista_pouso_p'), -- 43
+(44,'edgv', 'infra_via_deslocamento_l'), -- 44
+(45,'edgv', 'llp_aglomerado_rural_p'), -- 45
+(46,'edgv', 'llp_area_pub_militar_a'), -- 46
+(47,'edgv', 'llp_area_pub_militar_l'), -- 47
+(48,'edgv', 'llp_limite_legal_l'), -- 48
+(49,'edgv', 'llp_localidade_p'), -- 49
+(50,'edgv', 'llp_nome_local_p'), -- 50
+(51,'edgv', 'llp_terra_indigena_a'), -- 51
+(52,'edgv', 'llp_terra_indigena_l'), -- 52
+(53,'edgv', 'llp_unidade_conservacao_a'), -- 53
+(54,'edgv', 'llp_unidade_conservacao_l'), -- 54
+(55,'edgv', 'centroide_area_construida_p'), -- 55
+(56,'edgv', 'centroide_area_sem_dados_p'), -- 56
+(57,'edgv', 'centroide_limite_especial_p'), -- 57
+(58,'edgv', 'centroide_vegetacao_p'), -- 58
+(59,'edgv', 'edicao_simb_vegetacao_p'), -- 59 renomeada
+(60,'edgv', 'delimitador_area_construida_l'), -- 60
+(61,'edgv', 'delimitador_limite_especial_l'), -- 61
+(62,'edgv', 'delimitador_vegetacao_l'), -- 62
+(63,'edgv', 'aux_insumo_externo_a'), -- 63
+(64,'edgv', 'aux_insumo_externo_l'), -- 64
+(65,'edgv', 'aux_insumo_externo_p'), -- 65
+(66,'edgv', 'aux_reambulacao_a'), -- 66
+(67,'edgv', 'aux_reambulacao_l'), -- 67
+(68,'edgv', 'aux_reambulacao_p'), -- 68
+(69,'edgv', 'cobter_area_construida_a'), -- 69
+(70,'edgv', 'cobter_vegetacao_a'), -- 70
+(71,'edgv', 'constr_deposito_a'), -- 71
+(72,'edgv', 'constr_deposito_p'), -- 72
+(73,'edgv', 'constr_edificacao_a'), -- 73
+(74,'edgv', 'constr_edificacao_p'), -- 74
+(75 ,'edgv', 'constr_ocupacao_solo_a'), -- 75 
+(76,'edgv', 'constr_ocupacao_solo_l'), -- 76
+(77,'edgv', 'constr_ocupacao_solo_p'), -- 77
+(78,'edgv', 'elemnat_elemento_fisiografico_a'), -- 78
+(79,'edgv', 'elemnat_elemento_fisiografico_l'), -- 79
+(80,'edgv', 'elemnat_elemento_fisiografico_p'), -- 80
+(81,'edgv', 'elemnat_sumidouro_vertedouro_p'), -- 81
+(82,'edgv', 'edicao_simb_area_p'), -- 82 renomeada
+(83,'edgv', 'infra_alteracao_fisiografica_antropica_l'), -- 83
+(84,'edgv', 'infra_elemento_infraestrutura_a'), -- 84
+(85,'edgv', 'infra_elemento_infraestrutura_l'), -- 85
+(86,'edgv', 'infra_elemento_viario_l'), -- 86
+(87,'edgv', 'infra_elemento_viario_p'), -- 87
+(88,'edgv', 'infra_mobilidade_urbana_l'), -- 88
+(89,'edgv', 'infra_trecho_duto_l'), -- 89
+(90,'edgv', 'infra_travessia_hidroviaria_l'), -- 90
+(91,'edgv', 'infra_vala_l'), -- 91
+(92,'edgv', 'llp_delimitacao_fisica_l'), -- 92
+(93 ,'edgv', 'llp_limite_especial_a'), -- 93
+(94,'edgv', 'llp_limite_especial_l'), -- 94
+(95,'edgv', 'llp_ponto_controle_p'), -- 95
+(96,'edgv', 'edicao_borda_elemento_hidrografico_l'), -- 96 inserida
+(97,'edgv', 'delimitador_area_sem_dados_l'); -- 97 inserida
 
 INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) VALUES
 (63, NULL, FALSE, NULL, NULL, 3),

@@ -729,11 +729,10 @@ controller.deletaGerenciadorFME = async servidoresId => {
 
 controller.getCamadas = async () => {
   return db.sapConn.any(
-    `SELECT c.id, c.schema, c.nome, c.alias, c.documentacao, COUNT(a.id) > 0 AS atributo, COUNT(ppc.id) > 0 AS perfil
+    `SELECT c.id, c.schema, c.nome, COUNT(ppc.id) > 0 AS perfil
     FROM macrocontrole.camada AS c
-    LEFT JOIN macrocontrole.atributo AS a ON a.camada_id = c.id
     LEFT JOIN macrocontrole.propriedades_camada AS ppc ON ppc.camada_id = c.id
-    GROUP BY c.id, c.schema, c.nome, c.alias`
+    GROUP BY c.id, c.schema, c.nome`
   )
 }
 
@@ -747,18 +746,6 @@ controller.deleteCamadas = async camadasIds => {
     if (exists && exists.length < camadasIds.length) {
       throw new AppError(
         'Os ids informados não correspondem a uma camada',
-        httpCode.BadRequest
-      )
-    }
-
-    const existsAssociationAtributo = await t.any(
-      `SELECT id FROM macrocontrole.atributo 
-      WHERE camada_id in ($<camadasIds:csv>)`,
-      { camadasIds }
-    )
-    if (existsAssociationAtributo && existsAssociationAtributo.length > 0) {
-      throw new AppError(
-        'A camada possui atributos associados',
         httpCode.BadRequest
       )
     }
@@ -787,7 +774,8 @@ controller.atualizaCamadas = async camadas => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
-      'alias'
+      'schema',
+      'nome'
     ])
 
     const query =
@@ -807,8 +795,7 @@ controller.atualizaCamadas = async camadas => {
 controller.criaCamadas = async camadas => {
   const cs = new db.pgp.helpers.ColumnSet([
     'schema',
-    'nome',
-    'alias'
+    'nome'
   ])
 
   const query = db.pgp.helpers.insert(camadas, cs, {
