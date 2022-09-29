@@ -148,6 +148,76 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (1, 33, 34),
 (1, 34, 35);
 
+INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao, nome_abrev) VALUES
+(5,1, 'CDGV EDGV 2.1.3 sem reambulação e Carta Topográfica T34-700', 'CDGV EDGV 2.1.3 sem reambulação com validação no Gothic e edição de Carta Topográfica T34-700', 'cdgv_edgv_213'), --id 3
+
+INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
+-- Linha de produção 5
+(15,16,5,1),--15 Preparo
+(16,1,5,2), --16 Extração
+(17,3,5,3), --17 Validação
+(18,4,5,4), --18 Edição - Carta topográfica T34-700
+(19,3,5,5), --19 Validação Área Contínua
+(20,5,5,6); --20 Disseminação - Conjunto de dados vetoriais 2.1.3 / Carta topográfica T34-700 
+
+INSERT INTO macrocontrole.subfase (id,nome,fase_id) VALUES
+(36,'Preparo imagens', 15), 
+(37,'Preparo altimetria', 15), 
+(38,'Coleta de insumos externos', 15), 
+(39,'Extração da Hidrografia e Altimetria', 16), 
+(40,'Extração de Ferrovias', 16), 
+(41,'Extração de Vias de Deslocamento', 16), 
+(42,'Extração de Topônimos', 16), 
+(43,'Extração de Limites', 16), 
+(44,'Extração de interseção de hidrografia e transportes', 16), 
+(45,'Extração de Área Edificada', 16), 
+(46,'Extração de Vegetação', 16), 
+(47,'Extração de Planimetria',16), 
+(48,'Verificação final', 16), 
+(49,'Validação Gothic', 17), 
+(50,'Edição', 18), 
+(51,'Validação Área Contínua Gothic', 19), 
+(52,'Disseminação', 20); 
+
+
+INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
+-- Linha de produção 5
+(1, 36, 39),
+(1, 37, 39),
+(1, 38, 39),
+(1, 36, 40),
+(1, 37, 40),
+(1, 38, 40),
+(1, 40, 41),
+(1, 39, 42),
+(1, 39, 43),
+(1, 41, 43),
+(1, 39, 44),
+(1, 41, 44),
+(1, 39, 45),
+(1, 41, 45),
+(1, 45, 46),
+(1, 45, 47),
+(1, 42, 48),
+(1, 43, 48),
+(1, 44, 48),
+(1, 46, 48),
+(1, 47, 48),
+(1, 48, 49),
+(1, 49, 50),
+(1, 50, 51),
+(1, 51, 52),
+(2, 39, 39),
+(2, 40, 40),
+(2, 41, 41),
+(2, 42, 42),
+(2, 43, 43),
+(2, 44, 44),
+(2, 45, 45),
+(2, 46, 46),
+(2, 47, 47),
+(2, 48, 48);
+
 ------------------------------------------------------------------------------------------------------------------------------------
 INSERT INTO macrocontrole.camada (id, schema, nome) VALUES
 (1,'edgv', 'centroide_elemento_hidrografico_p'), -- 1
