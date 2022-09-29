@@ -149,7 +149,7 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (1, 34, 35);
 
 INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao, nome_abrev) VALUES
-(5,1, 'CDGV EDGV 2.1.3 sem reambulação e Carta Topográfica T34-700', 'CDGV EDGV 2.1.3 sem reambulação com validação no Gothic e edição de Carta Topográfica T34-700', 'cdgv_edgv_213'), --id 3
+(5,1, 'CDGV EDGV 2.1.3 sem reambulação e Carta Topográfica T34-700', 'CDGV EDGV 2.1.3 sem reambulação com validação no Gothic e edição de Carta Topográfica T34-700', 'cdgv_edgv_213'); --id 5
 
 INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
 -- Linha de produção 5
@@ -316,21 +316,21 @@ INSERT INTO macrocontrole.camada (id, schema, nome) VALUES
 (94,'edgv', 'llp_limite_especial_l'), -- 94
 (95,'edgv', 'llp_ponto_controle_p'), -- 95
 (96,'edgv', 'edicao_borda_elemento_hidrografico_l'), -- 96 inserida
-(97,'edgv', 'delimitador_area_sem_dados_l'); -- 97 inserida
-(98,'edgv','cobter_area_edificada_a'); -- 98 inserida 213
-(99,'edgv','cobter_corpo_dagua_a'); -- 99 inserida 213
-(100,'edgv','infra_elemento_transportes_a'); -- 100 inserida 213
-(101,'edgv','infra_elemento_transportes_l'); -- 101 inserida 213
-(102,'edgv','infra_elemento_transportes_p'); -- 102 inserida 213
-(103,'edgv','llp_limite_legal_a'); -- 103 inserida 213
-(104,'edgv','aquisicao_limite_vegetacao_l'); -- 104 inserida 213
-(105,'edgv','aquisicao_limite_massa_dagua_l'); -- 105 inserida 213
-(106,'edgv','aquisicao_limite_area_edificada_l'); -- 106 inserida 213
-(107,'edgv','aquisicao_centroide_vegetacao_p'); -- 107 inserida 213
-(108,'edgv','aquisicao_centroide_corpo_dagua_p'); -- 108 inserida 213
-(109,'edgv','aquisicao_centroide_area_edificada_p'); -- 109 inserida 213
-(110,'edgv','rev_revisao_a'); -- 110 inserida 213
-(111,'edgv','rev_revisao_l'); -- 111 inserida 213
+(97,'edgv', 'delimitador_area_sem_dados_l'), -- 97 inserida
+(98,'edgv','cobter_area_edificada_a'), -- 98 inserida 213
+(99,'edgv','cobter_corpo_dagua_a'), -- 99 inserida 213
+(100,'edgv','infra_elemento_transportes_a'), -- 100 inserida 213
+(101,'edgv','infra_elemento_transportes_l'), -- 101 inserida 213
+(102,'edgv','infra_elemento_transportes_p'), -- 102 inserida 213
+(103,'edgv','llp_limite_legal_a'), -- 103 inserida 213
+(104,'edgv','aquisicao_limite_vegetacao_l'), -- 104 inserida 213
+(105,'edgv','aquisicao_limite_massa_dagua_l'), -- 105 inserida 213
+(106,'edgv','aquisicao_limite_area_edificada_l'), -- 106 inserida 213
+(107,'edgv','aquisicao_centroide_vegetacao_p'), -- 107 inserida 213
+(108,'edgv','aquisicao_centroide_corpo_dagua_p'), -- 108 inserida 213
+(109,'edgv','aquisicao_centroide_area_edificada_p'), -- 109 inserida 213
+(110,'edgv','rev_revisao_a'), -- 110 inserida 213
+(111,'edgv','rev_revisao_l'), -- 111 inserida 213
 (112,'edgv','rev_revisao_p'); -- 112 inserida 213
 
 INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) VALUES
@@ -1331,6 +1331,7 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (93, NULL, FALSE, NULL, NULL, 43),
 (94, NULL, FALSE, NULL, NULL, 43),
 (95, NULL, FALSE, NULL, NULL, 43),
+(103, NULL, FALSE, NULL, NULL, 43),
 (105, NULL, FALSE, NULL, NULL, 43),
 (108, NULL, FALSE, NULL, NULL, 43),
 (110, NULL, FALSE, NULL, NULL, 43),
@@ -1433,7 +1434,9 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (84, NULL, FALSE, NULL, NULL, 47),
 (85, NULL, FALSE, NULL, NULL, 47),
 (86, NULL, FALSE, NULL, NULL, 47),
-(88, NULL, FALSE, NULL, NULL, 47),
+(100, NULL, FALSE, NULL, NULL, 47),
+(101, NULL, FALSE, NULL, NULL, 47),
+(102, NULL, FALSE, NULL, NULL, 47),
 (105, NULL, FALSE, NULL, NULL, 47),
 (106, NULL, FALSE, NULL, NULL, 47),
 (108, NULL, FALSE, NULL, NULL, 47),
@@ -1460,6 +1463,7 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (63, NULL, FALSE, NULL, NULL, 48),
 (64, NULL, FALSE, NULL, NULL, 48),
 (65, NULL, FALSE, NULL, NULL, 48),
+(70, NULL, FALSE, NULL, NULL, 48),
 (71, NULL, FALSE, NULL, NULL, 48),
 (72, NULL, FALSE, NULL, NULL, 48),
 (73, NULL, FALSE, NULL, NULL, 48),
@@ -1478,6 +1482,12 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (93, NULL, FALSE, NULL, NULL, 48),
 (94, NULL, FALSE, NULL, NULL, 48),
 (95, NULL, FALSE, NULL, NULL, 48),
+(98, NULL, FALSE, NULL, NULL, 48),
+(99, NULL, FALSE, NULL, NULL, 48),
+(100, NULL, FALSE, NULL, NULL, 48),
+(101, NULL, FALSE, NULL, NULL, 48),
+(102, NULL, FALSE, NULL, NULL, 48),
+(103, NULL, FALSE, NULL, NULL, 48),
 (104, NULL, FALSE, NULL, NULL, 48),
 (105, NULL, FALSE, NULL, NULL, 48),
 (106, NULL, FALSE, NULL, NULL, 48),
@@ -1487,8 +1497,6 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (110, NULL, FALSE, NULL, NULL, 48),
 (111, NULL, FALSE, NULL, NULL, 48),
 (112, NULL, FALSE, NULL, NULL, 48);
-
-
 ------------------------------------------------------------------------------------------------------------------------------------
 
 COMMIT;
