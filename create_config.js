@@ -39,6 +39,7 @@ const verifyAuthServer = async authServer => {
       throw new Error()
     }
   } catch (e) {
+    console.log(e)
     throw new Error('Erro ao se comunicar com o servidor de autenticação')
   }
 }
