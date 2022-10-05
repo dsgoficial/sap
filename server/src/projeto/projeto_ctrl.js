@@ -1145,7 +1145,7 @@ controller.criaPerfilEstilos = async perfilEstilos => {
   const perfisbd = await db.sapConn.any(`SELECT id, grupo_estilo_id, subfase_id FROM macrocontrole.perfil_estilo`)
 
   perfisbd.forEach(perfilbd => {
-    perfilEstilos.array.forEach(perfil => {
+    perfilEstilos.forEach(perfil => {
       if(perfil.grupo_estilo_id === perfilbd.grupo_estilo_id && perfil.subfase_id === perfilbd.subfase_id){
         throw new AppError(
           'Já existem perfis estilos com a mesma subfase_id and grupo_estilo_id',
