@@ -1076,7 +1076,7 @@ controller.criaPerfilRegras = async perfilRegras => {
 }
 controller.getPerfilEstilos = async () => {
   return db.sapConn.any(
-    `SELECT pe.id, gs.nome, pe.grupo_estilo_id, pe.subfase_id
+    `SELECT pe.id, gs.nome, pe.grupo_estilo_id, pe.subfase_id, pe.lote_id
     FROM macrocontrole.perfil_estilo AS pe
     INNER JOIN dgeo.group_styles AS gs ON gs.id = pe.grupo_estilo_id`
   )
