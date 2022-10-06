@@ -1139,14 +1139,15 @@ controller.atualizaPerfilEstilos = async perfilEstilos => {
 controller.criaPerfilEstilos = async perfilEstilos => {
   const cs = new db.pgp.helpers.ColumnSet([
     'grupo_estilo_id',
-    'subfase_id'
+    'subfase_id',
+    'lote_id'
   ])
 
-  const perfisbd = await db.sapConn.any(`SELECT id, grupo_estilo_id, subfase_id FROM macrocontrole.perfil_estilo`)
+  const perfisbd = await db.sapConn.any(`SELECT id, grupo_estilo_id, subfase_id, lote_id FROM macrocontrole.perfil_estilo`)
 
   perfisbd.forEach(perfilbd => {
     perfilEstilos.forEach(perfil => {
-      if(perfil.grupo_estilo_id === perfilbd.grupo_estilo_id && perfil.subfase_id === perfilbd.subfase_id){
+      if(perfil.grupo_estilo_id === perfilbd.grupo_estilo_id && perfil.subfase_id === perfilbd.subfase_id && perfil.lote_id === perfilbd.lote_id){
         throw new AppError(
           'Já existem perfis estilos com a mesma subfase_id and grupo_estilo_id',
           httpCode.BadRequest
