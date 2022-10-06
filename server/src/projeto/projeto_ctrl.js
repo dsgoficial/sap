@@ -163,7 +163,7 @@ controller.deletaGrupoEstilos = async grupoEstilosId => {
 
 controller.getEstilos = async () => {
   return db.sapConn
-    .any(`SELECT ls.id, ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, gs.nome AS stylename, ls.styleqml, ls.stylesld, ls.ui, ls.owner, ls.update_time
+    .any(`SELECT ls.id, ls.grupo_estilo_id, ls.f_table_schema, ls.f_table_name, ls.f_geometry_column, gs.nome AS stylename, ls.styleqml, ls.stylesld, ls.ui, ls.owner, ls.update_time
     FROM dgeo.layer_styles AS ls
     INNER JOIN dgeo.group_styles AS gs ON gs.id = ls.grupo_estilo_id
     `)
