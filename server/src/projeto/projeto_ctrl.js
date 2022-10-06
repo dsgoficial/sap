@@ -265,9 +265,6 @@ controller.gravaRegras = async (layerRules, usuarioId) => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
-      'cor_rgb',
-      'ordem',
-      'regra',
       { name: 'owner', init: () => usuarioPostoNome },
       { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
     ])
@@ -287,8 +284,6 @@ controller.atualizaRegras = async (layerRules, usuarioId) => {
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
       'nome',
-      'cor_rgb',
-      'ordem',
       'regra',
       { name: 'owner', init: () => usuarioPostoNome },
       { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
@@ -922,7 +917,7 @@ controller.criaPerfilFME = async perfilFME => { // FIXME retornar mensagem de er
 
 controller.getPerfilModelo = async () => {
   return db.sapConn.any(
-    `SELECT pmq.id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.parametros, pmq.tipo_rotina_id, tr.nome as tipo_rotina, pmq.ordem, pmq.subfase_id, qm.nome, qm.descricao
+    `SELECT pmq.id, pmq.lote_id, pmq.qgis_model_id, pmq.requisito_finalizacao, pmq.parametros, pmq.tipo_rotina_id, tr.nome as tipo_rotina, pmq.ordem, pmq.subfase_id, qm.nome, qm.descricao
     FROM macrocontrole.perfil_model_qgis AS pmq
     INNER JOIN dgeo.qgis_models AS qm ON qm.id = pmq.qgis_model_id
     INNER JOIN dominio.tipo_rotina AS tr ON tr.code = pmq.tipo_rotina_id`
@@ -968,11 +963,12 @@ controller.atualizaPerfilModelo = async perfilModelo => { // FIXME REFATORAR
       query.push(
         t.any(
           `UPDATE macrocontrole.perfil_model_qgis
-          SET qgis_model_id = $<qgisModelId>, parametros = $<parametros>, requisito_finalizacao = $<requisitoFinalizacao>, tipo_rotina_id = $<tipoRotinaId>,
+          SET lote_id = $<loteId>, qgis_model_id = $<qgisModelId>, parametros = $<parametros>, requisito_finalizacao = $<requisitoFinalizacao>, tipo_rotina_id = $<tipoRotinaId>,
           subfase_id = $<subfaseId>, ordem = $<ordem>
           where id = $<id>`,
           {
             id: c.id,
+            loteId: c.lote_id,
             qgisModelId: c.qgis_model_id,
             parametros: c.parametros,
             requisitoFinalizacao: c.requisito_finalizacao,
@@ -995,6 +991,7 @@ controller.criaPerfilModelo = async perfilModelo => {
     'requisito_finalizacao',
     'tipo_rotina_id',
     'subfase_id',
+    'lote_id',
     'ordem'
   ])
 
@@ -1008,7 +1005,7 @@ controller.criaPerfilModelo = async perfilModelo => {
 
 controller.getPerfilRegras = async () => {
   return db.sapConn.any(
-    `SELECT pr.id, pr.layer_rules_id, pr.subfase_id
+    `SELECT pr.id, pr.layer_rules_id, pr.subfase_id, pr.lote_id
     FROM macrocontrole.perfil_regras AS pr`
   )
 }
@@ -1052,11 +1049,12 @@ controller.atualizaPerfilRegras = async perfilRegras => { // FIXME REFATORAR
       query.push(
         t.any(
           `UPDATE macrocontrole.perfil_regras
-          SET layer_rules_id = $<layerRulesId>, subfase_id = $<subfaseId>
+          SET layer_rules_id = $<layerRulesId>, subfase_id = $<subfaseId>, lote_id = $<loteId>
           where id = $<id>`,
           {
             id: c.id,
             layerRulesId: c.layer_rules_id,
+            loteId: c.lote_id,
             subfaseId: c.subfase_id
           }
         )
@@ -1070,7 +1068,8 @@ controller.atualizaPerfilRegras = async perfilRegras => { // FIXME REFATORAR
 controller.criaPerfilRegras = async perfilRegras => {
   const cs = new db.pgp.helpers.ColumnSet([
     'layer_rules_id',
-    'subfase_id'
+    'subfase_id',
+    'lote_id'
   ])
 
   const query = db.pgp.helpers.insert(perfilRegras, cs, {
