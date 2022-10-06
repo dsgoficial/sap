@@ -19,6 +19,12 @@ controller.getTipoProduto = async () => {
     .any('SELECT code, nome FROM dominio.tipo_produto')
 }
 
+controller.getTipoRotina = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.tipo_rotina')
+}
+
+
 controller.getTipoCQ = async () => {
   return db.sapConn
     .any('SELECT code, nome FROM dominio.tipo_controle_qualidade')

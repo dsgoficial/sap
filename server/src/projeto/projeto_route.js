@@ -23,6 +23,17 @@ router.get(
 )
 
 router.get(
+  '/tipo_rotina',
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getTipoRotina()
+
+    const msg = 'Tipos de rotina retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
   '/tipo_criacao_unidade_trabalho',
   asyncHandler(async (req, res, next) => {
     const dados = await projetoCtrl.getTipoCriacaoUnidadeTrabalho()
