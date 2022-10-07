@@ -265,6 +265,7 @@ controller.gravaRegras = async (layerRules, usuarioId) => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
+      'regra',
       { name: 'owner', init: () => usuarioPostoNome },
       { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
     ])

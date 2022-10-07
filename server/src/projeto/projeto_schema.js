@@ -105,9 +105,6 @@ models.regras = Joi.object().keys({
     .items(
       Joi.object().keys({
         nome: Joi.string().required(),
-        cor_rgb: Joi.string().required(),
-        atributo: Joi.string().required(),
-        ordem: Joi.number().integer().strict().required(),
         regra: Joi.string().required()
       })
     )
@@ -120,9 +117,6 @@ models.regrasAtualizacao = Joi.object().keys({
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         nome: Joi.string().required(),
-        cor_rgb: Joi.string().required(),
-        atributo: Joi.string().required(),
-        ordem: Joi.number().integer().strict().required(),
         regra: Joi.string().required()
       })
     )
