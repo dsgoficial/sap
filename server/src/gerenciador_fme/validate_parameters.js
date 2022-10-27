@@ -23,7 +23,7 @@ const verifyParameters = parameters => {
 const getRotinas = async servidorId => {
   const serverInfo = await db.sapConn.oneOrNone(
     `
-      SELECT servidor, porta FROM dgeo.gerenciador_fme WHERE id = $<servidorId>
+      SELECT url FROM dgeo.gerenciador_fme WHERE id = $<servidorId>
     `,
     { servidorId }
   )

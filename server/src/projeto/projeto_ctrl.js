@@ -639,7 +639,7 @@ controller.getEtapas = async () => {
 
 controller.getGerenciadorFME = async () => {
   return db.sapConn.any(
-    `SELECT id, servidor, porta
+    `SELECT id, url
     FROM dgeo.gerenciador_fme`
   )
 }

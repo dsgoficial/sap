@@ -139,7 +139,7 @@ const getInfoRegras = async (connection, subfaseId, loteId) => {
 
 const getInfoFME = async (connection, subfaseId, loteId) => {
   return connection.any(
-    `SELECT gf.servidor, gf.porta, pf.rotina, pf.tipo_rotina_id, tr.nome as tipo_rotina, pf.requisito_finalizacao, pf.ordem FROM macrocontrole.perfil_fme AS pf
+    `SELECT gf.url, pf.rotina, pf.tipo_rotina_id, tr.nome as tipo_rotina, pf.requisito_finalizacao, pf.ordem FROM macrocontrole.perfil_fme AS pf
     INNER JOIN dgeo.gerenciador_fme AS gf ON gf.id = pf.gerenciador_fme_id
     INNER JOIN dominio.tipo_rotina AS tr ON tr.code = pf.tipo_rotina_id
     WHERE subfase_id = $<subfaseId> AND lote_id = $<loteId>`,

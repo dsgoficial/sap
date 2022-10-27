@@ -126,9 +126,8 @@ INSERT INTO dgeo.qgis_shortcuts (code, ferramenta, idioma, atalho, owner) VALUES
 
 CREATE TABLE dgeo.gerenciador_fme(
   id SERIAL NOT NULL PRIMARY KEY,
-	servidor VARCHAR(255) NOT NULL,
-	porta VARCHAR(255) NOT NULL,
-  UNIQUE(servidor,porta)
+	url VARCHAR(255) NOT NULL,
+  UNIQUE(url)
 );
 
 CREATE TABLE dgeo.qgis_menus(
