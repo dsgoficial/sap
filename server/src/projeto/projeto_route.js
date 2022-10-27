@@ -1046,6 +1046,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.criaUnidadeTrabalho(
       req.body.unidades_trabalho,
+      req.body.lote_id,
       req.body.subfase_id
     )
 
