@@ -225,8 +225,7 @@ models.gerenciadorFME = Joi.object().keys({
   gerenciador_fme: Joi.array()
     .items(
       Joi.object().keys({
-        servidor: Joi.string().required(),
-        porta: Joi.string().strict().required()
+        url: Joi.string().required()
       })
     )
     .unique((a, b) => a.servidor === b.servidor && a.porta === b.porta)
@@ -239,8 +238,7 @@ models.gerenciadorFMEUpdate = Joi.object().keys({
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        servidor: Joi.string().required(),
-        porta: Joi.string().strict().required()
+        url: Joi.string().required()
       })
     )
     .unique('id')
