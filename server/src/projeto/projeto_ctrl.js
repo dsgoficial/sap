@@ -652,8 +652,8 @@ controller.criaGerenciadorFME = async servidores => {
     for (const s of servidores) {
       const exists = await t.any(
         `SELECT id FROM dgeo.gerenciador_fme
-        WHERE servidor = $<servidor> AND porta = $<porta>`,
-        { servidor: s.servidor, porta: s.porta }
+        WHERE url = $<url>`,
+        { url: s.url }
       )
       if (exists && exists.length > 0) {
         throw new AppError(
@@ -662,10 +662,10 @@ controller.criaGerenciadorFME = async servidores => {
         )
       }
 
-      await checkFMEConnection(s.servidor, s.porta)
+      await checkFMEConnection(s.url)
     }
 
-    const cs = new db.pgp.helpers.ColumnSet(['servidor', 'porta'])
+    const cs = new db.pgp.helpers.ColumnSet(['url'])
 
     const query = db.pgp.helpers.insert(servidores, cs, {
       table: 'gerenciador_fme',
@@ -679,9 +679,9 @@ controller.criaGerenciadorFME = async servidores => {
 controller.atualizaGerenciadorFME = async servidores => {
   return db.sapConn.tx(async t => {
     for (const s of servidores) {
-      await checkFMEConnection(s.servidor, s.porta)
+      await checkFMEConnection(s.url)
     }
-    const cs = new db.pgp.helpers.ColumnSet(['?id', 'servidor', 'porta'])
+    const cs = new db.pgp.helpers.ColumnSet(['?id', 'url'])
 
     const query =
       db.pgp.helpers.update(

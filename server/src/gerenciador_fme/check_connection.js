@@ -4,9 +4,9 @@ const axios = require('axios')
 
 const { AppError, httpCode } = require('../utils')
 
-const checkFMEConnection = async (servidor, porta) => {
+const checkFMEConnection = async (url) => {
   try {
-    const serverurl = `${servidor}:${porta}/api`
+    const serverurl = `${url}/api`
     const response = await axios.get(serverurl)
 
     if (!response ||

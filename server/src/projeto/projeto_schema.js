@@ -228,7 +228,7 @@ models.gerenciadorFME = Joi.object().keys({
         url: Joi.string().required()
       })
     )
-    .unique((a, b) => a.servidor === b.servidor && a.porta === b.porta)
+    .unique((a, b) => a.url === b.url)
     .required()
     .min(1)
 })
@@ -509,7 +509,8 @@ models.unidadesTrabalho = Joi.object().keys({
         dado_producao_id: Joi.number().integer().strict().required(),
         bloco_id: Joi.number().integer().strict().required(),
         disponivel: Joi.boolean().required(),
-        prioridade: Joi.number().integer().strict().required()
+        prioridade: Joi.number().integer().strict().required(),
+        dificuldade: Joi.number().integer().strict().required()
       })
     )
     .required()
