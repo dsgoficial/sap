@@ -613,7 +613,7 @@ controller.getSubfases = async () => {
   return db.sapConn.any(
     `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto,
     f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase, l.id AS lote_id, l.nome AS lote, p.id AS projeto_id, p.nome AS projeto,
-    sf.id AS subfase_id, sf.nome AS subfase
+    sf.id AS subfase_id, sf.nome AS subfase, l.nome_abrev AS lote_nome_abrev, p.nome_abrev AS projeto_nome_abrev
     FROM macrocontrole.linha_producao AS lp
     INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = lp.id
     INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
@@ -1680,7 +1680,7 @@ controller.deletaPlugins = async pluginsId => {
 
 controller.getLote = async () => {
   return db.sapConn.any(
-    'SELECT id, nome, linha_producao_id, projeto_id, descricao  FROM macrocontrole.lote'
+    'SELECT id, nome, linha_producao_id, projeto_id, nome_abrev, descricao  FROM macrocontrole.lote'
   )
 }
 
