@@ -627,7 +627,7 @@ controller.getSubfases = async () => {
 controller.getEtapas = async () => {
   return db.sapConn.any(
     `SELECT e.id AS etapa_id, te.nome AS etapa, e.tipo_etapa_id, e.subfase_id, e.lote_id, s.nome AS subfase, e.ordem,
-    tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem AS ordem_fase, l.lote,
+    tf.nome as fase, f.tipo_fase_id, f.linha_producao_id, f.ordem AS ordem_fase, l.nome AS lote,
     lp.nome AS linha_producao, tp.nome AS tipo_produto
     FROM macrocontrole.etapa AS e
     INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
