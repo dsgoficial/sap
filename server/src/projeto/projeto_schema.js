@@ -489,13 +489,14 @@ models.produtos = Joi.object().keys({
         mi: Joi.string().required().allow(''),
         inom: Joi.string().required().allow(''),
         denominador_escala: Joi.string().required(),
+        edicao: Joi.string().required().allow(''),
         geom: Joi.string().required()
       })
     )
     .unique('uuid')
     .required()
     .min(1),
-  linha_producao_id: Joi.number().integer().strict().required()
+    lote_id: Joi.number().integer().strict().required()
 })
 
 models.unidadesTrabalho = Joi.object().keys({

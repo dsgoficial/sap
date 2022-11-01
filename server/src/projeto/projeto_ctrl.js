@@ -1389,14 +1389,24 @@ controller.copiarUnidadeTrabalho = async (
   })
 }
 
-controller.criaProdutos = async (produtos, linhaProducaoId) => {
+controller.criaProdutos = async (produtos, loteId) => {
+
+  let tipoProdutoId = await t.one(
+    `SELECT tipo_produto_id FROM macrocontrole.lote AS l
+    INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = l.linha_producao_id
+    WHERE l.id = $<loteId>`,
+    { loteId }
+  );
+
   const cs = new db.pgp.helpers.ColumnSet([
     'uuid',
     'nome',
     'mi',
     'inom',
     'denominador_escala',
-    { name: 'linha_producao_id', init: () => linhaProducaoId },
+    'edicao',
+    { name: 'tipo_produto_id', init: () => tipoProdutoId },
+    { name: 'lote_id', init: () => loteId },
     { name: 'geom', mod: ':raw' }
   ])
 

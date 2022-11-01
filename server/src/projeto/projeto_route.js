@@ -1065,7 +1065,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.criaProdutos(
       req.body.produtos,
-      req.body.linha_producao_id
+      req.body.lote_id
     )
 
     const msg = 'Produtos criados com sucesso'
