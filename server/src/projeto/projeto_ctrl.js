@@ -529,7 +529,7 @@ controller.getLogin = async () => {
 }
 
 controller.getBlocos = async () => {
-  return db.sapConn.any('SELECT id, nome, lote_id FROM macrocontrole.bloco')
+  return db.sapConn.any('SELECT id, nome, prioridade, lote_id FROM macrocontrole.bloco')
 }
 
 controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {
