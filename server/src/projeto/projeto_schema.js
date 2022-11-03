@@ -71,7 +71,7 @@ models.menus = Joi.object().keys({
   menus: Joi.array()
     .items(
       Joi.object().keys({
-        nome_menu: Joi.string().required(),
+        nome: Joi.string().required(),
         definicao_menu: Joi.string().required()
       })
     )
@@ -83,7 +83,7 @@ models.menusAtualizacao = Joi.object().keys({
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        nome_menu: Joi.string().required(),
+        nome: Joi.string().required(),
         definicao_menu: Joi.string().required()
       })
     )
@@ -304,6 +304,14 @@ models.perfilModeloIds = Joi.object().keys({
     .min(1)
 })
 
+models.perfilMenuIds = Joi.object().keys({
+  perfil_menu_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 models.perfilRegrasIds = Joi.object().keys({
   perfil_regras_ids: Joi.array()
     .items(Joi.number().integer().strict().required())
@@ -329,6 +337,7 @@ models.perfisFME = Joi.object().keys({
         requisito_finalizacao: Joi.boolean().strict().required(),
         tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
       })
     )
@@ -345,7 +354,22 @@ models.perfisModelo = Joi.object().keys({
         requisito_finalizacao: Joi.boolean().strict().required(),
         tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfisMenu= Joi.object().keys({
+  perfis_menu: Joi.array()
+    .items(
+      Joi.object().keys({
+        menu_id: Joi.number().integer().strict().required(),
+        menu_revisao: Joi.boolean().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
       })
     )
     .required()
@@ -357,7 +381,8 @@ models.perfilRegras = Joi.object().keys({
     .items(
       Joi.object().keys({
         layer_rules_id: Joi.number().integer().strict().required(),
-        subfase_id: Joi.number().integer().strict().required()
+        subfase_id: Joi.number().integer().strict().required(),
+        perfil_id: Joi.number().integer().strict().required(),
       })
     )
     .required()
@@ -370,7 +395,8 @@ models.perfilRegrastualizacao = Joi.object().keys({
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         layer_rules_id: Joi.number().integer().strict().required(),
-        subfase_id: Joi.number().integer().strict().required()
+        subfase_id: Joi.number().integer().strict().required(),
+        perfil_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -382,7 +408,8 @@ models.perfilEstilos = Joi.object().keys({
     .items(
       Joi.object().keys({
         grupo_estilo_id: Joi.number().integer().strict().required(),
-        subfase_id: Joi.number().integer().strict().required()
+        subfase_id: Joi.number().integer().strict().required(),
+        perfil_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -395,7 +422,8 @@ models.perfilEstilostualizacao = Joi.object().keys({
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         grupo_estilo_id: Joi.number().integer().strict().required(),
-        subfase_id: Joi.number().integer().strict().required()
+        subfase_id: Joi.number().integer().strict().required(),
+        perfil_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -412,7 +440,24 @@ models.perfisModeloAtualizacao = Joi.object().keys({
         requisito_finalizacao: Joi.boolean().strict().required(),
         tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
+        perfil_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+models.perfilMenuAtualizacao = Joi.object().keys({
+  perfis_menu: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        menu_id: Joi.number().integer().strict().required(),
+        menu_revisao: Joi.boolean().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
       })
     )
     .unique('id')
@@ -430,6 +475,7 @@ models.perfilFMEAtualizacao = Joi.object().keys({
         requisito_finalizacao: Joi.boolean().strict().required(),
         tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
+        perfil_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
       })
     )

@@ -437,7 +437,7 @@ controller.gravaMenus = async (menus, usuarioId) => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
-      'nome_menu',
+      'nome',
       'definicao_menu',
       { name: 'owner', init: () => usuarioPostoNome },
       { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
@@ -458,7 +458,7 @@ controller.atualizaMenus = async (menus, usuarioId) => {
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
-      'nome_menu',
+      'nome',
       'definicao_menu',
       { name: 'owner', init: () => usuarioPostoNome },
       { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
@@ -913,6 +913,87 @@ controller.criaPerfilFME = async perfilFME => { // FIXME retornar mensagem de er
 
   const query = db.pgp.helpers.insert(perfilFME, cs, {
     table: 'perfil_fme',
+    schema: 'macrocontrole'
+  })
+
+  return db.sapConn.none(query)
+}
+
+controller.getPerfilMenu = async () => {
+  return db.sapConn.any(
+    `SELECT pm.id, qm.nome, qm.definicao_menu, pm.menu_id, pm.menu_revisao, pm.sufase_id, pm.lote_id, 
+    FROM macrocontrole.perfil_menu AS pm
+    INNER JOIN dgeo.qgis_menus AS qm ON qm.id = pm.menu_id`
+  )
+}
+
+controller.deletePerfilMenu = async perfilMenuIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_menu
+      WHERE id in ($<perfilMenuIds:csv>)`,
+      { perfilMenuIds }
+    )
+    if (!exists && exists.length < perfilMenuIds.length) {
+      throw new AppError(
+        'Os ids informados não correspondem a um perfil menu',
+        httpCode.BadRequest
+      )
+    }
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_menu
+      WHERE id IN ($<perfilMenuIds:csv>)`,
+      { perfilMenuIds }
+    )
+  })
+}
+
+controller.atualizaPerfilMenu = async perfilMenu => {
+  return db.sapConn.tx(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_menu
+      WHERE id in ($<perfilMenuIds:csv>)`,
+      { perfilMenuIds: perfilMenu.map(c => c.id) }
+    )
+    if (!exists && exists.length < perfilMenu.length) {
+      throw new AppError(
+        'Os ids informados não correspondem a um perfil menu QGIS',
+        httpCode.BadRequest
+      )
+    }
+    const query = []
+    perfilMenu.forEach(c => {
+      query.push(
+        t.any(
+          `UPDATE macrocontrole.perfil_menu
+          SET lote_id = $<loteId>, menu_id = $<menuId>, menu_revisao = $<menuRevisao>,
+          subfase_id = $<subfaseId>
+          where id = $<id>`,
+          {
+            id: c.id,
+            loteId: c.lote_id,
+            menuId: c.menu_id,
+            menuRevisao: c.menu_revisao,
+            subfaseId: c.subfase_id
+          }
+        )
+      )
+    })
+
+    await t.batch(query)
+  })
+}
+
+controller.criaPerfilMenu = async perfilMenu => {
+  const cs = new db.pgp.helpers.ColumnSet([
+    'menu_id',
+    'menu_revisao',
+    'subfase_id',
+    'lote_id'
+  ])
+
+  const query = db.pgp.helpers.insert(perfilMenu, cs, {
+    table: 'perfil_menu',
     schema: 'macrocontrole'
   })
 
@@ -1391,8 +1472,8 @@ controller.copiarUnidadeTrabalho = async (
 
 controller.criaProdutos = async (produtos, loteId) => {
 
-  let tipoProdutoId = await t.one(
-    `SELECT tipo_produto_id FROM macrocontrole.lote AS l
+  let tipoProdutoId = await db.sapConn.one(
+    `SELECT lp.tipo_produto_id FROM macrocontrole.lote AS l
     INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = l.linha_producao_id
     WHERE l.id = $<loteId>`,
     { loteId }
@@ -1405,7 +1486,7 @@ controller.criaProdutos = async (produtos, loteId) => {
     'inom',
     'denominador_escala',
     'edicao',
-    { name: 'tipo_produto_id', init: () => tipoProdutoId },
+    { name: 'tipo_produto_id', init: () => tipoProdutoId.tipo_produto_id },
     { name: 'lote_id', init: () => loteId },
     { name: 'geom', mod: ':raw' }
   ])

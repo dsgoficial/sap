@@ -729,6 +729,65 @@ router.put(
   })
 )
 
+
+router.get(
+  '/configuracao/perfil_menu',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilMenu()
+
+    const msg = 'Perfil Menu QGIS retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_menu',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilMenuIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilMenu(req.body.perfil_menu_ids)
+
+    const msg = 'Perfil Menu QGIS deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_menu',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfisMenu
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilMenu(req.body.perfis_menu)
+
+    const msg = 'Perfis Menu QGIS criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_menu',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilMenuAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilMenu(req.body.perfis_menu)
+
+    const msg = 'Perfis Menu QGIS atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
 router.get(
   '/configuracao/perfil_modelo',
   verifyAdmin,
