@@ -921,7 +921,7 @@ controller.criaPerfilFME = async perfilFME => { // FIXME retornar mensagem de er
 
 controller.getPerfilMenu = async () => {
   return db.sapConn.any(
-    `SELECT pm.id, qm.nome, qm.definicao_menu, pm.menu_id, pm.menu_revisao, pm.sufase_id, pm.lote_id, 
+    `SELECT pm.id, qm.nome, qm.definicao_menu, pm.menu_id, pm.menu_revisao, pm.subfase_id, pm.lote_id 
     FROM macrocontrole.perfil_menu AS pm
     INNER JOIN dgeo.qgis_menus AS qm ON qm.id = pm.menu_id`
   )
