@@ -46,7 +46,7 @@ controller.getTipoPreRequisito = async () => {
 
 controller.getTipoEtapa = async () => {
   return db.sapConn
-    .any('SELECT code, nome FROM dominio.tipo_pre_requisito')
+    .any('SELECT code, nome FROM dominio.tipo_etapa')
 }
 
 controller.getTipoExibicao = async () => {
