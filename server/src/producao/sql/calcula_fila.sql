@@ -89,7 +89,7 @@ FROM (
     WHERE ppo.usuario_id = $1 AND (
         (re.tipo_restricao_id = 1 AND a_re.usuario_id = $1) OR
         (re.tipo_restricao_id = 2 AND a_re.usuario_id != $1) OR 
-        (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
+        (re.tipo_restricao_id = 3 AND (a_re.usuario_id = $1 OR (u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)))
     ) AND a_re.tipo_situacao_id in (1,2,3,4)  AND a.tipo_situacao_id = 1
   )
   AND a.id NOT IN
@@ -109,7 +109,7 @@ FROM (
     WHERE ppo.usuario_id = $1 AND et_re.subfase_id = et.subfase_id AND (
       (re.tipo_restricao_id = 1 AND a_re.usuario_id = $1) OR
       (re.tipo_restricao_id = 2 AND a_re.usuario_id != $1) OR 
-      (re.tipo_restricao_id = 3 AND u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)
+      (re.tipo_restricao_id = 3 AND (a_re.usuario_id = $1 OR (u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)))
     ) AND a_re.tipo_situacao_id in (1,2,3,4) AND a.tipo_situacao_id = 1
   )
   AND a.id NOT IN
