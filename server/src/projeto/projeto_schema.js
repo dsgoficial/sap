@@ -382,7 +382,7 @@ models.perfilRegras = Joi.object().keys({
       Joi.object().keys({
         layer_rules_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        perfil_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
       })
     )
     .required()
@@ -396,7 +396,7 @@ models.perfilRegrastualizacao = Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         layer_rules_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        perfil_id: Joi.number().integer().strict().required()
+        lote_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -409,7 +409,7 @@ models.perfilEstilos = Joi.object().keys({
       Joi.object().keys({
         grupo_estilo_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        perfil_id: Joi.number().integer().strict().required()
+        lote_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -423,7 +423,7 @@ models.perfilEstilostualizacao = Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         grupo_estilo_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        perfil_id: Joi.number().integer().strict().required()
+        lote_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -440,7 +440,7 @@ models.perfisModeloAtualizacao = Joi.object().keys({
         requisito_finalizacao: Joi.boolean().strict().required(),
         tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        perfil_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
       })
     )
@@ -475,7 +475,7 @@ models.perfilFMEAtualizacao = Joi.object().keys({
         requisito_finalizacao: Joi.boolean().strict().required(),
         tipo_rotina_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        perfil_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
         ordem: Joi.number().integer().strict().required()
       })
     )
