@@ -4880,7 +4880,7 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer legendPlaceholderImage="" hasScaleBasedVisibilityFlag="0" maxScale="0" minScale="1e+08" autoRefreshTime="0" geometry="No geometry" type="vector" readOnly="0" refreshOnNotifyEnabled="0" styleCategories="AllStyleCategories" autoRefreshEnabled="0" refreshOnNotifyMessage="" wkbType="NoGeometry">
       <id>layer_alias_45231028_6a1d_406d_938e_b73728c2e638</id>
-      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='postgres' password='Patolino@@' sslmode=disable key='id' checkPrimaryKeyUnicity='1' table="dgeo"."layer_alias"</datasource>
+      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='postgres' password='{{PASSWORD}}' sslmode=disable key='id' checkPrimaryKeyUnicity='1' table="dgeo"."layer_alias"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -6012,7 +6012,7 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer legendPlaceholderImage="" hasScaleBasedVisibilityFlag="0" maxScale="0" minScale="1e+08" autoRefreshTime="0" geometry="No geometry" type="vector" readOnly="0" refreshOnNotifyEnabled="0" styleCategories="AllStyleCategories" autoRefreshEnabled="0" refreshOnNotifyMessage="" wkbType="NoGeometry">
       <id>perfil_bloco_operador_12d9e7ef_cbf9_4887_b2ee_a7cd2974438a</id>
-      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='postgres' password='Patolino@@' sslmode=disable key='id' checkPrimaryKeyUnicity='1' table="macrocontrole"."perfil_bloco_operador"</datasource>
+      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='postgres' password='{{PASSWORD}}' sslmode=disable key='id' checkPrimaryKeyUnicity='1' table="macrocontrole"."perfil_bloco_operador"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -16021,7 +16021,7 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer legendPlaceholderImage="" hasScaleBasedVisibilityFlag="0" maxScale="0" minScale="1e+08" autoRefreshTime="0" geometry="No geometry" type="vector" readOnly="0" refreshOnNotifyEnabled="0" styleCategories="AllStyleCategories" autoRefreshEnabled="0" refreshOnNotifyMessage="" wkbType="NoGeometry">
       <id>workflow_dsgtools_0f73f7d7_d2ba_42ff_a9e2_da97f9ffd9b5</id>
-      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='postgres' password='Patolino@@' sslmode=disable key='id' checkPrimaryKeyUnicity='1' table="dgeo"."workflow_dsgtools"</datasource>
+      <datasource>dbname='{{DATABASE}}' host={{HOST}} port={{PORT}} user='postgres' password='{{PASSWORD}}' sslmode=disable key='id' checkPrimaryKeyUnicity='1' table="dgeo"."workflow_dsgtools"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
