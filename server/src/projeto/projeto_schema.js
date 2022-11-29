@@ -557,6 +557,8 @@ models.insumos = Joi.object().keys({
     )
     .required()
     .min(1),
+    tipo_insumo: Joi.number().integer().strict().required(),
+    grupo_insumo: Joi.number().integer().strict().required()
 })
 
 models.unidadesTrabalho = Joi.object().keys({
