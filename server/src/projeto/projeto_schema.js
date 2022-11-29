@@ -545,6 +545,20 @@ models.produtos = Joi.object().keys({
     lote_id: Joi.number().integer().strict().required()
 })
 
+models.insumos = Joi.object().keys({
+  insumos: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        caminho: Joi.string().required(),
+        epsg: Joi.string().required().allow(''),
+        geom: Joi.string().required().allow('')
+      })
+    )
+    .required()
+    .min(1),
+})
+
 models.unidadesTrabalho = Joi.object().keys({
   unidades_trabalho: Joi.array()
     .items(
@@ -639,7 +653,7 @@ models.pluginsIds = Joi.object().keys({
 })
 
 models.grupoInsumoId = Joi.object().keys({
-  grupo_insumo_ids: Joi.array()
+  grupo_insumos_ids: Joi.array()
     .items(Joi.number().integer().strict())
     .unique()
     .required()

@@ -110,6 +110,8 @@ router.get(
   })
 )
 
+
+
 router.get(
   '/tipo_insumo',
   asyncHandler(async (req, res, next) => {
@@ -989,6 +991,8 @@ router.get(
   })
 )
 
+
+
 router.put(
   '/grupo_insumo',
   verifyAdmin,
@@ -1112,6 +1116,25 @@ router.post(
     const msg = 'Unidades de trabalho criadas com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/insumo',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.insumos
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaInsumos(
+      req.body.insumos,
+      req.body.tipo_insumo,
+      req.body.grupo_insumo,
+    )
+
+    const msg = 'Insumos criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
 )
 

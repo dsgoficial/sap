@@ -1470,6 +1470,29 @@ controller.copiarUnidadeTrabalho = async (
   })
 }
 
+controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
+
+  const cs = new db.pgp.helpers.ColumnSet([
+    'nome',
+    'caminho',
+    'epsg',
+    { name: 'tipo_insumo_id', init: () => tipo_insumo },
+    { name: 'grupo_insumo_id', init: () => grupo_insumo },
+    { name: 'geom', mod: ':raw' }
+  ])
+
+  insumos.forEach(p => {
+    p.geom = `st_geomfromewkt('${p.geom}')`
+  })
+
+  const query = db.pgp.helpers.insert(insumos, cs, {
+    table: 'insumo',
+    schema: 'macrocontrole'
+  })
+
+  return db.sapConn.none(query)
+}
+
 controller.criaProdutos = async (produtos, loteId) => {
 
   let tipoProdutoId = await db.sapConn.one(
