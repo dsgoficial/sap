@@ -1482,8 +1482,16 @@ controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
   ])
 
   insumos.forEach(p => {
+    if (p.geom.toLowerCase().includes("multipolygon")) {
+      throw new AppError(
+        'Geometria deve ser POLYGON',
+        httpCode.BadRequest
+      )
+    }
     p.geom = `st_geomfromewkt('${p.geom}')`
   })
+
+
 
   const query = db.pgp.helpers.insert(insumos, cs, {
     table: 'insumo',
@@ -1515,6 +1523,12 @@ controller.criaProdutos = async (produtos, loteId) => {
   ])
 
   produtos.forEach(p => {
+    if (p.geom.toLowerCase().includes(";polygon")) {
+      throw new AppError(
+        'Geometria deve ser MULTIPOLYGON',
+        httpCode.BadRequest
+      )
+    }
     p.geom = `st_geomfromewkt('${p.geom}')`
   })
 
