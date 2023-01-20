@@ -460,7 +460,6 @@ $BODY$
     END IF;
 
     EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
-    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || subfase_ident;
 
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;
