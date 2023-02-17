@@ -547,6 +547,21 @@ router.get(
 )
 
 router.get(
+  '/todas_subfases',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getAllSubfases()
+
+    const msg = 'Subfases retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+
+
+
+router.get(
   '/etapas',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {

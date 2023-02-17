@@ -624,6 +624,18 @@ controller.getSubfases = async () => {
   )
 }
 
+controller.getAllSubfases = async () => {
+  return db.sapConn.any(
+    `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.nome_abrev AS linha_producao_nome_abrev,
+    f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase,
+    sf.id AS subfase_id, sf.nome AS subfase,
+    FROM macrocontrole.linha_producao AS lp
+    INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
+    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+    INNER JOIN macrocontrole.subfase AS sf ON sf.fase_id = f.id`
+  )
+}
+
 controller.getEtapas = async () => {
   return db.sapConn.any(
     `SELECT e.id AS etapa_id, te.nome AS etapa, e.tipo_etapa_id, e.subfase_id, e.lote_id, s.nome AS subfase, e.ordem,
