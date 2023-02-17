@@ -632,7 +632,8 @@ controller.getAllSubfases = async () => {
     FROM macrocontrole.linha_producao AS lp
     INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
     INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
-    INNER JOIN macrocontrole.subfase AS sf ON sf.fase_id = f.id`
+    INNER JOIN macrocontrole.subfase AS sf ON sf.fase_id = f.id
+    ORDER BY lp.nome_abrev, f.ordem, sf.nome`
   )
 }
 
