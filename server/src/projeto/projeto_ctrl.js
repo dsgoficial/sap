@@ -1403,18 +1403,9 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
 
 controller.copiarUnidadeTrabalho = async (
   unidadeTrabalhoIds,
-  etapaIds,
   associarInsumos
 ) => {
   return db.sapConn.tx(async t => {
-    const subfase = await t.oneOrNone(
-      'SELECT subfase_id FROM macrocontrole.etapa WHERE id = $1',
-      [etapaIds[0]]
-    )
-
-    if (!subfase) {
-      throw new AppError('Etapa não encontrada', httpCode.BadRequest)
-    }
     const utOldNew = {}
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
       const unidadeTrabalho = await t.oneOrNone(
@@ -1430,28 +1421,6 @@ controller.copiarUnidadeTrabalho = async (
 
       utOldNew[unidadeTrabalhoId] = unidadeTrabalho.id
     }
-    const dados = []
-    etapaIds.forEach(e => {
-      Object.values(utOldNew).forEach(u => {
-        const aux = {}
-        aux.etapa_id = e
-        aux.unidade_trabalho_id = +u
-        dados.push(aux)
-      })
-    })
-
-    const cs = new db.pgp.helpers.ColumnSet([
-      'etapa_id',
-      'unidade_trabalho_id',
-      { name: 'tipo_situacao_id', init: () => 1 }
-    ])
-
-    const query = db.pgp.helpers.insert(dados, cs, {
-      table: 'atividade',
-      schema: 'macrocontrole'
-    })
-
-    await t.none(query)
 
     if (associarInsumos) {
       const insumos = await t.any(

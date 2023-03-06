@@ -498,11 +498,6 @@ models.unidadeTrabalhoCopiar = Joi.object().keys({
     .unique()
     .required()
     .min(1),
-  etapa_ids: Joi.array()
-    .items(Joi.number().integer().strict())
-    .unique()
-    .required()
-    .min(1),
   associar_insumos: Joi.boolean().required()
 })
 
