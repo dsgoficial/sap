@@ -711,7 +711,7 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
     await t.none(
       `
         UPDATE macrocontrole.atividade
-        SET tipo_situacao_id = 4
+        SET tipo_situacao_id = 4, data_inicio = COALESCE(data_inicio, $<dataFim>), data_fim = COALESCE(data_fim, $<dataFim>)
         WHERE id IN (
           SELECT id
           FROM (
@@ -722,7 +722,7 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
             INNER JOIN macrocontrole.etapa AS e_ant ON e_ant.id = a_ant.etapa_id
             WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.data_fim IS NOT NULL
           ) AS foo
-          WHERE r = 1;
+          WHERE r = 1
         )
         `,
       { atividadeIds, comparisonOperator, dataFim }
