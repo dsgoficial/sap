@@ -493,6 +493,11 @@ models.unidadeTrabalhoId = Joi.object().keys({
 })
 
 models.unidadeTrabalhoCopiar = Joi.object().keys({
+  subfase_ids: Joi.array()
+    .items(Joi.number().integer().strict())
+    .unique()
+    .required()
+    .min(1),
   unidade_trabalho_ids: Joi.array()
     .items(Joi.number().integer().strict())
     .unique()

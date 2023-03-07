@@ -1402,24 +1402,29 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
 }
 
 controller.copiarUnidadeTrabalho = async (
+  subfaseIds,
   unidadeTrabalhoIds,
   associarInsumos
 ) => {
   return db.sapConn.tx(async t => {
     const utOldNew = {}
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
-      const unidadeTrabalho = await t.oneOrNone(
-        `
-          INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade)
-          SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade
-          FROM macrocontrole.unidade_trabalho
-          WHERE id = $<unidadeTrabalhoId>
-          RETURNING id
-        `,
-        { subfaseId: subfase.subfase_id, unidadeTrabalhoId }
-      )
-
-      utOldNew[unidadeTrabalhoId] = unidadeTrabalho.id
+      for (const subfaseId of subfaseIds) {
+        const unidadeTrabalho = await t.oneOrNone(
+          `
+            INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade)
+            SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade
+            FROM macrocontrole.unidade_trabalho
+            WHERE id = $<unidadeTrabalhoId>
+            RETURNING id
+          `,
+          { subfaseId, unidadeTrabalhoId }
+        )
+        if(!(unidadeTrabalhoId in utOldNew)) {
+          utOldNew[unidadeTrabalhoId] = []
+        }
+        utOldNew[unidadeTrabalhoId].push(unidadeTrabalho.id)
+      }
     }
 
     if (associarInsumos) {
@@ -1429,10 +1434,12 @@ controller.copiarUnidadeTrabalho = async (
       )
       const dadosInsumos = []
       insumos.forEach(i => {
-        dadosInsumos.push({
-          insumo_id: i.insumo_id,
-          unidade_trabalho_id: utOldNew[i.unidade_trabalho_id],
-          caminho_padrao: i.caminho_padrao
+        utOldNew[i.unidade_trabalho_id].forEach(j => {
+          dadosInsumos.push({
+            insumo_id: i.insumo_id,
+            unidade_trabalho_id: j,
+            caminho_padrao: i.caminho_padrao
+          })
         })
       })
 

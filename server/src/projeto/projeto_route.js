@@ -1104,6 +1104,7 @@ router.post(
   }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.copiarUnidadeTrabalho(
+      req.body.subfase_ids,
       req.body.unidade_trabalho_ids,
       req.body.associar_insumos
     )
