@@ -513,6 +513,24 @@ router.post(
   })
 )
 
+router.post(
+  '/etapas/padrao',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.padrao_etapa }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaEtapasPadrao(
+      req.body.padrao_cq,
+      req.body.fase_id,
+      req.body.lote_id
+    )
+
+    const msg = 'Etapas padrão criadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
 router.get(
   '/projetos',
   verifyAdmin,

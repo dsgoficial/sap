@@ -561,6 +561,71 @@ controller.deletaAtividadesUnidadeTrabalho = async unidadeTrabalhoIds => {
   )
 }
 
+controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
+  let sql;
+
+  switch (padrao_cq) {
+    case 1: //Sem controle de qualidade nas subfases
+      sql = `
+      INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, lote_id, ordem)
+      SELECT 1 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 1 AS ordem
+      FROM macrocontrole.subfase AS s
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      WHERE s.fase_id = $<fase_id> AND e.id IS NULL
+      `
+      break;
+    case 2: //Uma Revisão/Correção em todas as subfases
+      sql = `
+      INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, lote_id, ordem)
+      SELECT 1 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 1 AS ordem
+      FROM macrocontrole.subfase AS s
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      WHERE s.fase_id = $<fase_id> AND e.id IS NULL
+      UNION
+      SELECT 4 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 2 AS ordem
+      FROM macrocontrole.subfase AS s
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      WHERE s.fase_id = $<fase_id> AND e.id IS NULL
+      `
+      break;
+    case 3: //Uma Revisão em todas as subfases
+      sql = `
+      INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, lote_id, ordem)
+      SELECT 1 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 1 AS ordem
+      FROM macrocontrole.subfase AS s
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      WHERE s.fase_id = $<fase_id> AND e.id IS NULL
+      UNION
+      SELECT 2 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 2 AS ordem
+      FROM macrocontrole.subfase AS s
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      WHERE s.fase_id = $<fase_id> AND e.id IS NULL
+      UNION
+      SELECT 3 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 3 AS ordem
+      FROM macrocontrole.subfase AS s
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      WHERE s.fase_id = $<fase_id> AND e.id IS NULL
+      `
+      break;
+    default:
+      throw new AppError(
+        'Valor inválido para Padrão CQ',
+        httpCode.BadRequest
+      )
+  }
+
+  const result = await db.sapConn.result(
+    sql,
+    { fase_id, lote_id }
+  )
+  if (!result.rowCount || result.rowCount === 0) {
+    throw new AppError(
+      'Sem etapas a serem criadas',
+      httpCode.BadRequest
+    )
+  }
+}
+
 controller.criaTodasAtividades = async (lote_id) => {
   const result = await db.sapConn.result(
     `

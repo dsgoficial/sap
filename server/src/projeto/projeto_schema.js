@@ -586,6 +586,12 @@ models.lote = Joi.object().keys({
   lote_id: Joi.number().integer().strict().required()
 })
 
+models.padrao_etapa = Joi.object().keys({
+  padrao_cq: Joi.number().integer().strict().required(),
+  fase_id: Joi.number().integer().strict().required(),
+  lote_id: Joi.number().integer().strict().required(),
+})
+
 models.atalhos = Joi.object().keys({
   atalhos: Joi.array()
     .items(
