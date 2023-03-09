@@ -498,6 +498,21 @@ router.post(
   })
 )
 
+router.post(
+  '/atividades/todas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.lote }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaTodasAtividades(
+      req.body.lote_id
+    )
+
+    const msg = 'Todas Atividades criadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 router.get(
   '/projetos',
   verifyAdmin,

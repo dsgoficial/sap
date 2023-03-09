@@ -561,6 +561,26 @@ controller.deletaAtividadesUnidadeTrabalho = async unidadeTrabalhoIds => {
   )
 }
 
+controller.criaTodasAtividades = async (lote_id) => {
+  const result = await db.sapConn.result(
+    `
+  INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+  SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+  FROM macrocontrole.unidade_trabalho AS ut
+  INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+  LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
+  WHERE ut.lote_id = $<lote_id> AND a.id IS NULL
+  `,
+    { lote_id }
+  )
+  if (!result.rowCount || result.rowCount === 0) {
+    throw new AppError(
+      'Sem atividades a serem criadas',
+      httpCode.BadRequest
+    )
+  }
+}
+
 controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
   const result = await db.sapConn.result(
     `
