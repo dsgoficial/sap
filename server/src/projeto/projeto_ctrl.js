@@ -570,7 +570,7 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
       INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, lote_id, ordem)
       SELECT 1 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 1 AS ordem
       FROM macrocontrole.subfase AS s
-      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id> AND e.tipo_etapa_id = 1
       WHERE s.fase_id = $<fase_id> AND e.id IS NULL
       `
       break;
@@ -579,12 +579,12 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
       INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, lote_id, ordem)
       SELECT 1 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 1 AS ordem
       FROM macrocontrole.subfase AS s
-      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id> AND e.tipo_etapa_id = 1
       WHERE s.fase_id = $<fase_id> AND e.id IS NULL
       UNION
       SELECT 4 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 2 AS ordem
       FROM macrocontrole.subfase AS s
-      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id> AND e.tipo_etapa_id = 2
       WHERE s.fase_id = $<fase_id> AND e.id IS NULL
       `
       break;
@@ -593,17 +593,17 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
       INSERT INTO macrocontrole.etapa(tipo_etapa_id, subfase_id, lote_id, ordem)
       SELECT 1 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 1 AS ordem
       FROM macrocontrole.subfase AS s
-      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id> AND e.tipo_etapa_id = 1
       WHERE s.fase_id = $<fase_id> AND e.id IS NULL
       UNION
       SELECT 2 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 2 AS ordem
       FROM macrocontrole.subfase AS s
-      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id> AND e.tipo_etapa_id = 2
       WHERE s.fase_id = $<fase_id> AND e.id IS NULL
       UNION
       SELECT 3 AS tipo_etapa_id, s.id AS subfase_id, $<lote_id> AS lote_id, 3 AS ordem
       FROM macrocontrole.subfase AS s
-      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id>
+      LEFT JOIN macrocontrole.etapa AS e ON e.subfase_id = s.id AND lote_id = $<lote_id> AND e.tipo_etapa_id = 3
       WHERE s.fase_id = $<fase_id> AND e.id IS NULL
       `
       break;
