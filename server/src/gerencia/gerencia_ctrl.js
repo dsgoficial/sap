@@ -868,6 +868,17 @@ controller.redefinirPermissoes = async () => {
   return managePermissions.revokeAndGrantAllExecution()
 }
 
+controller.refreshViews = async () => {
+  let sql = await db.sapConn.oneOrNone(
+    `SELECT string_agg(query, ' ') AS grant_fk FROM (
+              SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || schemaname || '.' || matviewname || ';' AS query
+              from pg_matviews
+          ) AS foo;`,
+  )
+
+  await db.sapConn.none(sql);
+}
+
 controller.revogarPermissoesDB = async (servidor, porta, banco) => {
   return managePermissions.revokeAllDb(servidor, porta, banco)
 }

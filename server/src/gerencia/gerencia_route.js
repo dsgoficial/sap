@@ -475,6 +475,18 @@ router.put(
   })
 )
 
+router.put(
+  '/refresh_views',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.refreshViews()
+
+    const msg = 'Views atualizadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 router.post(
   '/banco_dados/revogar_permissoes',
   verifyAdmin,
