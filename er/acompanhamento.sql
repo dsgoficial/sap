@@ -130,6 +130,7 @@ $$
         EXECUTE 'GRANT SELECT ON TABLE acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' TO PUBLIC';
         EXECUTE 'CREATE INDEX lote_' || lote_ident || '_subfase_' || subfase_ident || '_geom ON acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' USING gist (geom);';
         EXECUTE 'CREATE UNIQUE INDEX lote_' || lote_ident || '_subfase_' || subfase_ident || '_id ON acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || ' (id);';
+        EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || subfase_ident;
 
         iterator := 3*iterator - 3;
 
@@ -288,6 +289,7 @@ $$
       EXECUTE 'GRANT SELECT ON TABLE acompanhamento.lote_' || lote_ident || ' TO PUBLIC';
       EXECUTE 'CREATE INDEX lote_' || lote_ident || '_geom ON acompanhamento.lote_' || lote_ident || ' USING gist (geom);';
       EXECUTE 'CREATE UNIQUE INDEX lote_' || lote_ident || '_id ON acompanhamento.lote_' || lote_ident || ' (id);';
+      EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
 
       iterator := 2*iterator - 2;
       rules_txt := rules_txt || '<rule symbol="' ||  iterator || '" key="{' || uuid_generate_v4() ||'}" label="Concluído" filter="' || fases_concluidas_txt || ' TRUE"/>';
