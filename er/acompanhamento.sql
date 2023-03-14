@@ -314,6 +314,149 @@ LANGUAGE plpgsql VOLATILE
 ALTER FUNCTION acompanhamento.cria_view_acompanhamento_lote(integer, integer)
   OWNER TO postgres;
 
+CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_bloco()
+  RETURNS void AS
+$$
+  DECLARE view_txt text;
+  DECLARE jointxt text := '';
+  DECLARE nome_fixed text;
+  DECLARE r record;
+  BEGIN
+      view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.bloco AS 
+      SELECT b.id, b.nome, b.prioridade, l.nome AS lote, b.geom';
+
+      FOR r in SELECT pf.id, pf.nome FROM macrocontrole.perfil_producao AS pf
+      LOOP
+
+        nome_fixed := translate(replace(lower(r.nome),' ', '_'),  
+              'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
+              'aaaaaeeeeiiiiooooouuuucc________________________________');
+
+        view_txt := view_txt || ',  operadores_' || r.id || '.operadores AS  ' || nome_fixed || '_operadores';
+        view_txt := view_txt || ',  atividades_' || r.id || '.atividades AS  ' || nome_fixed || '_atividades';
+
+        jointxt := jointxt || ' INNER JOIN 
+            (SELECT b.id, COUNT(pbo.id) AS operadores
+            FROM macrocontrole.bloco AS b
+            LEFT JOIN (
+              SELECT pbo.id, pbo.bloco_id
+              FROM macrocontrole.perfil_bloco_operador AS pbo
+              INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.usuario_id = pbo.usuario_id AND ppo.perfil_producao_id = ' || r.id ||'
+            ) AS pbo ON pbo.bloco_id = b.id
+            GROUP BY b.id) AS operadores_' || r.id || ' ON operadores_' || r.id || '.id = b.id';
+
+        jointxt := jointxt || ' INNER JOIN 
+            (SELECT b.id, COUNT(a.id) AS atividades
+            FROM macrocontrole.bloco AS b
+            LEFT JOIN macrocontrole.unidade_trabalho AS ut ON ut.bloco_id = b.id
+            LEFT JOIN (
+              SELECT a.id, a.unidade_trabalho_id
+              FROM macrocontrole.atividade AS a
+              INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+              INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.subfase_id = e.subfase_id AND ppe.tipo_etapa_id = e.tipo_etapa_id
+              WHERE a.tipo_situacao_id = 1 AND ppe.perfil_producao_id = ' || r.id ||'
+            ) AS a ON a.unidade_trabalho_id = ut.id
+            GROUP BY b.id) AS atividades_' || r.id || ' ON atividades_' || r.id || '.id = b.id';
+
+      END LOOP;
+
+      view_txt := view_txt || ' FROM (SELECT b.id, b.nome, b.lote_id, b.prioridade, ST_UNION(ut.geom) as geom 
+                                FROM macrocontrole.bloco AS b
+                                INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.bloco_id = b.id 
+                                GROUP BY b.id) AS b
+                                INNER JOIN macrocontrole.lote AS l ON l.id = b.lote_id';
+      view_txt := view_txt || jointxt;
+
+      EXECUTE view_txt;
+      EXECUTE 'ALTER TABLE acompanhamento.bloco OWNER TO postgres';
+      EXECUTE 'GRANT SELECT ON TABLE acompanhamento.bloco TO PUBLIC';
+      EXECUTE 'CREATE INDEX bloco_geom ON acompanhamento.bloco USING gist (geom);';
+      EXECUTE 'CREATE UNIQUE INDEX bloco_id ON acompanhamento.bloco (id);';
+      EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco';
+
+  END;
+$$
+LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.cria_view_acompanhamento_bloco()
+  OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION acompanhamento.view_acompanhamento_bloco()
+  RETURNS trigger AS
+$BODY$
+    BEGIN
+    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.bloco';
+
+    IF TG_OP != 'DELETE' THEN
+      PERFORM acompanhamento.cria_view_acompanhamento_bloco();
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.view_acompanhamento_bloco()
+  OWNER TO postgres;
+
+CREATE TRIGGER view_acompanhamento_bloco
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.bloco
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.view_acompanhamento_bloco();
+
+CREATE TRIGGER view_acompanhamento_bloco_perfil
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.perfil_producao
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.view_acompanhamento_bloco();
+
+
+CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_acompanhamento_bloco()
+  RETURNS trigger AS
+$BODY$
+    BEGIN
+    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco';
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.refresh_view_acompanhamento_bloco()
+  OWNER TO postgres;
+
+CREATE TRIGGER refresh_bloco_perfil_bloco
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.perfil_bloco_operador
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_bloco();
+
+CREATE TRIGGER refresh_bloco_unidade_trabalho
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.unidade_trabalho
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_bloco();
+
+CREATE TRIGGER refresh_bloco_atividade
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.atividade
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_bloco();
+
+CREATE TRIGGER refresh_perfil_prod_etapa
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.perfil_producao_etapa
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_bloco();
+
+CREATE TRIGGER refresh_perfil_etapa
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_bloco();
+
+CREATE TRIGGER refresh_perfil_lote
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.lote
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_bloco();
+
+
 CREATE OR REPLACE FUNCTION acompanhamento.trigger_view_acompanhamento_lote()
   RETURNS trigger AS
 $BODY$
@@ -526,5 +669,37 @@ ALTER FUNCTION acompanhamento.refresh_view_acompanhamento_subfase()
 CREATE TRIGGER refresh_view_acompanhamento_subfase
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.subfase
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_subfase();
+
+
+CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_bloco_perfil_bloco_operador()
+  RETURNS trigger AS
+$BODY$
+    DECLARE bloco_ident integer;
+    BEGIN
+
+    IF TG_OP = 'DELETE' THEN
+      bloco_ident := OLD.bloco_id;
+    ELSE
+      bloco_ident := NEW.bloco_id;
+    END IF;
+
+    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco_'|| bloco_ident;
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.refresh_view_bloco()
+  OWNER TO postgres;
+
+CREATE TRIGGER refresh_view_bloco_perfil_bloco_operador
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.perfil_bloco_operador
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_bloco_perfil_bloco_operador();
 
 COMMIT;
