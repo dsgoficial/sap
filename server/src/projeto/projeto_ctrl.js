@@ -542,6 +542,30 @@ controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {
 }
 
 controller.deletaAtividades = async atividadeIds => {
+
+  const result = await db.sapConn.result(
+    `
+    SELECT e.etapa_anterior, e.etapa_posterior FROM
+    (SELECT e.lote_id, e.id AS etapa_anterior, e.tipo_etapa_id AS tipo_etapa_anterior, lead(e.id,2) OVER (PARTITION BY e.lote_id, e.subfase_id ORDER BY e.ordem) AS etapa_posterior
+    FROM macrocontrole.etapa AS e) AS e
+    INNER JOIN macrocontrole.etapa AS e_post ON e_post.id = e.etapa_posterior
+    WHERE e.tipo_etapa_anterior = 2 AND e_post.tipo_etapa_id = 3 AND
+    (
+      (e.etapa_anterior in ($<atividadeIds:csv>) AND e.etapa_posterior not in ($<atividadeIds:csv>))
+      OR
+      (e.etapa_anterior not in ($<atividadeIds:csv>) AND e.etapa_posterior in ($<atividadeIds:csv>))
+    )
+    `,
+    { atividadeIds }
+  )
+  if (result.rowCount && result.rowCount > 0) {
+    throw new AppError(
+      'Atividade de correção e não deve ser deletada',
+      httpCode.BadRequest
+    )
+  }
+
+
   return db.sapConn.none(
     `
   DELETE FROM macrocontrole.atividade
