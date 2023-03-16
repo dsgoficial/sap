@@ -837,14 +837,14 @@ controller.getObservacao = async (atividadeId) => {
 
 controller.getViewsAcompanhamento = async (emAndamento) => {
   let views = await db.sapConn.any(`
-  SELECT schema, nome FROM
+  SELECT schema, nome, tipo FROM
   (SELECT 'acompanhamento' AS schema, mat.matviewname AS nome,
   CASE WHEN mat.matviewname LIKE '%_subfase_%' THEN 'subfase' ELSE 'lote' END AS tipo
   FROM pg_matviews AS mat
   WHERE schemaname = 'acompanhamento' AND matviewname ~ '^lote_'
   ORDER BY mat.matviewname) AS foo
   UNION
-  SELECT 'acompanhamento' AS schema, 'bloco' AS nome;
+  SELECT 'acompanhamento' AS schema, 'bloco' AS nome, 'bloco' AS tipo;
   `)
 
   if (!views) {

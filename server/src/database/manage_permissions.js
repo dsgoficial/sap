@@ -34,7 +34,8 @@ managePermissions.revokeAndGrantAllExecution = async () => {
         ON dp.id = ut.dado_producao_id
         INNER JOIN dgeo.login_temporario AS lt
         ON lt.usuario_id = a.usuario_id AND lt.configuracao = dp.configuracao_producao
-        WHERE a.tipo_situacao_id = 2 AND dp.tipo_dado_producao_id = 2`
+        WHERE a.tipo_situacao_id = 2 AND dp.tipo_dado_producao_id = 2
+      `
   )
 
   if (!dbInfos) {
