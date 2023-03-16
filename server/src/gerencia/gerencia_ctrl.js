@@ -841,7 +841,9 @@ controller.getViewsAcompanhamento = async (emAndamento) => {
   CASE WHEN mat.matviewname LIKE '%_subfase_%' THEN 'subfase' ELSE 'lote' END AS tipo
   FROM pg_matviews AS mat
   WHERE schemaname = 'acompanhamento' AND matviewname ~ '^lote_'
-  ORDER BY mat.matviewname;
+  ORDER BY mat.matviewname
+  UNION
+  SELECT 'acompanhamento' AS schema, 'bloco' AS nome;
   `)
 
   if (!views) {
