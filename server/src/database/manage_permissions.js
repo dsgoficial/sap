@@ -33,7 +33,7 @@ managePermissions.revokeAndGrantAllExecution = async () => {
         INNER JOIN macrocontrole.dado_producao AS dp
         ON dp.id = ut.dado_producao_id
         INNER JOIN dgeo.login_temporario AS lt
-        ON lt.usuario_id = a.usuario_id AND lt.configuracao = dp.configuracao_producao
+        ON lt.usuario_id = a.usuario_id AND lt.configuracao = SPLIT_PART(dp.configuracao_producao, '/',1)
         WHERE a.tipo_situacao_id = 2 AND dp.tipo_dado_producao_id = 2
       `
   )
