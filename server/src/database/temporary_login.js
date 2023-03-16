@@ -121,7 +121,7 @@ const processTempUser = async (
 
   const loginInfo = await db.sapConn.oneOrNone(
     `SELECT login, senha FROM dgeo.login_temporario 
-    WHERE usuario_id = $<usuarioId> AND configuracao = $<configuracao_producao>`,
+    WHERE usuario_id = $<usuarioId> AND configuracao = $<servidorPorta>`,
     { usuarioId, servidorPorta }
   )
 
