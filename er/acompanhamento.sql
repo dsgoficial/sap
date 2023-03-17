@@ -442,8 +442,14 @@ FOR EACH ROW EXECUTE PROCEDURE acompanhamento.view_acompanhamento_bloco();
 CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_acompanhamento_bloco()
   RETURNS trigger AS
 $BODY$
+    DECLARE v_exists BOOLEAN;
     BEGIN
-    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco';
+
+    SELECT EXISTS (SELECT FROM pg_matviews WHERE  schemaname = 'acompanhamento' AND matviewname  = 'bloco') INTO v_exists;
+
+    IF v_exists THEN
+      EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco';
+    END IF;
 
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;
