@@ -593,7 +593,7 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
       WHERE e.lote_id = $<lote_id> AND s.fase_id = $<fase_id>`,
       { fase_id, lote_id }
     )
-    if (exists && exists.length < estilosId.length) {
+    if (exists && exists.length > 0) {
       throw new AppError(
         'Já existem etapas criadas em alguma subfase dessa fase',
         httpCode.BadRequest
