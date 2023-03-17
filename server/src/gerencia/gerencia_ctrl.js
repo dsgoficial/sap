@@ -876,10 +876,10 @@ controller.refreshViews = async () => {
     `SELECT string_agg(query, ' ') AS grant_fk FROM (
               SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || schemaname || '.' || matviewname || ';' AS query
               from pg_matviews
-          ) AS foo;`,
+          ) AS foo;`
   )
 
-  await db.sapConn.none(sql);
+  await db.sapConn.none(sql.grant_fk);
 }
 
 controller.revogarPermissoesDB = async (servidor, porta, banco) => {
