@@ -588,7 +588,7 @@ controller.deletaAtividadesUnidadeTrabalho = async unidadeTrabalhoIds => {
 controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
-      `SELECT id FROM macrocontrole.etapa AS e
+      `SELECT e.id FROM macrocontrole.etapa AS e
        INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
       WHERE e.lote_id = $<lote_id> AND s.fase_id = $<fase_id>`,
       { fase_id, lote_id }
