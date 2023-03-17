@@ -1,4 +1,9 @@
 'use strict'
+const fs = require('fs');
+const util = require('util');
+const path = require('path');
+
+const readFile = util.promisify(fs.readFile);
 
 const { db } = require('../database')
 
@@ -20,6 +25,22 @@ controller.limpaAtividades = async usuarioId => {
       httpCode.BadRequest
     )
   }
+}
+
+controller.limpaLog = async() => {
+  const logDir = path.join(__dirname, '..', '..', 'logs/combined.log')
+  const daysToShow = 3
+  const cutofftimestamp = new Date(Date.now() - daysToShow * 24 * 60 * 60 * 1000);
+
+  let fileData = await readFile(logDir, 'utf8')
+
+  let logData = fileData.split('\n').filter(entry => {
+    const logDate = new Date(entry.split('|')[0])
+    return logDate > cutofftimestamp
+  }).join('\n')
+  
+  fs.writeFileSync(logDir, logData);
+
 }
 
 module.exports = controller

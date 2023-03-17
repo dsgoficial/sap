@@ -26,4 +26,16 @@ router.delete(
   })
 )
 
+router.delete(
+  '/log',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await perigoCtrl.limpaLog()
+
+    const msg = 'Log anterior a 3 dias deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 module.exports = router

@@ -2,6 +2,7 @@
 
 const express = require('express')
 const path = require('path')
+const fs = require('fs')
 //const bodyParser = require('body-parser')
 const cors = require('cors')
 const hpp = require('hpp')
@@ -57,6 +58,26 @@ app.use((req, res, next) => {
 
 // All routes used by the App
 app.use('/api', appRoutes)
+
+app.use('/logs', (req, res) => {
+  const logDir = path.join(__dirname, '..', '..', 'logs/combined.log')
+  const daysToShow = 3
+  const cutofftimestamp = new Date(Date.now() - daysToShow * 24 * 60 * 60 * 1000);
+
+  fs.readFile(logDir, 'utf8', (err, data) => {
+    if(err) {
+      res.status(500).send('Error reading log file')
+    } else {
+      const logData = data.split('\n').filter(entry => {
+        const logDate = new Date(entry.split('|')[0])
+        return logDate > cutofftimestamp
+      }).join('\n')
+
+      res.setHeader('Content-Type', 'text/plain')
+      res.send(logData)
+    }
+  })
+})
 
 // Serve SwaggerDoc
 app.use('/api/api_docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))

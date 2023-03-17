@@ -20,12 +20,20 @@ const rotateTransport = new DailyRotateFile({
   maxFiles: '14d'
 })
 
+const combinedTransport = new transports.File({
+  format: format.printf(info => {
+    const date = new Date(Date.now())
+    return `${date}|${info.message}|${JSON.stringify(info)}`
+}),
+  filename: path.join(logDir, 'combined.log')
+})
+
 const consoleTransport = new transports.Console({
   format: format.combine(format.colorize(), format.timestamp(), format.simple())
 })
 
 const logger = createLogger({
-  transports: [consoleTransport, rotateTransport]
+  transports: [consoleTransport, rotateTransport, combinedTransport]
 })
 
 module.exports = logger
