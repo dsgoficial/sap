@@ -696,36 +696,4 @@ CREATE TRIGGER refresh_view_acompanhamento_subfase
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.subfase
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_subfase();
 
-
-CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_bloco_perfil_bloco_operador()
-  RETURNS trigger AS
-$BODY$
-    DECLARE bloco_ident integer;
-    BEGIN
-
-    IF TG_OP = 'DELETE' THEN
-      bloco_ident := OLD.bloco_id;
-    ELSE
-      bloco_ident := NEW.bloco_id;
-    END IF;
-
-    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco_'|| bloco_ident;
-
-    IF TG_OP = 'DELETE' THEN
-      RETURN OLD;
-    ELSE
-      RETURN NEW;
-    END IF;
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION acompanhamento.refresh_view_bloco()
-  OWNER TO postgres;
-
-CREATE TRIGGER refresh_view_bloco_perfil_bloco_operador
-AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.perfil_bloco_operador
-FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_bloco_perfil_bloco_operador();
-
 COMMIT;
