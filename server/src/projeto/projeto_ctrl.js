@@ -1953,4 +1953,240 @@ controller.getLote = async () => {
   )
 }
 
+controller.criaProjetos = async projetos => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'nome_abrev',
+      'descricao',
+      'finalizado'
+    ])
+
+    const query = db.pgp.helpers.insert(projetos, cs, {
+      table: 'projeto',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaProjetos = async projetos => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'nome_abrev',
+      'descricao',
+      'finalizado'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        projetos,
+        cs,
+        { table: 'projeto', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaProjetos = async projetoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.projeto
+      WHERE id in ($<projetoIds:csv>)`,
+      { projetoIds }
+    )
+    if (exists && exists.length < projetoIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um projeto',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation = await t.any(
+      `SELECT id FROM macrocontrole.lote 
+      WHERE projeto_id in ($<projetoIds:csv>)`,
+      { projetoIds }
+    )
+    if (existsAssociation && existsAssociation.length > 0) {
+      throw new AppError(
+        'O projeto possui lotes associados',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.projeto
+      WHERE id in ($<projetoIds:csv>)`,
+      { projetoIds }
+    )
+  })
+}
+
+controller.criaLotes = async lotes => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'nome_abrev',
+      'denominador_escala',
+      'linha_producao_id',
+      'projeto_id',
+      'descricao'
+    ])
+
+    const query = db.pgp.helpers.insert(lotes, cs, {
+      table: 'lote',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaLotes = async lotes => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'nome_abrev',
+      'denominador_escala',
+      'linha_producao_id',
+      'projeto_id',
+      'descricao'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        lotes,
+        cs,
+        { table: 'lote', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaLotes = async loteIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.lote
+      WHERE id in ($<loteIds:csv>)`,
+      { loteIds }
+    )
+    if (exists && exists.length < loteIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um lote',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation = await t.any(
+      `SELECT id FROM macrocontrole.produto 
+      WHERE lote_id in ($<loteIds:csv>)`,
+      { loteIds }
+    )
+    if (existsAssociation && existsAssociation.length > 0) {
+      throw new AppError(
+        'O lote possui produtos associados',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.lote
+      WHERE id in ($<loteIds:csv>)`,
+      { loteIds }
+    )
+  })
+}
+
+controller.criaBlocos = async blocos => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'prioridade',
+      'lote_id'
+    ])
+
+    const query = db.pgp.helpers.insert(blocos, cs, {
+      table: 'bloco',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaBlocos = async blocos => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'prioridade',
+      'lote_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        blocos,
+        cs,
+        { table: 'bloco', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaBlocos = async blocoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.bloco
+      WHERE id in ($<blocoIds:csv>)`,
+      { blocoIds }
+    )
+    if (exists && exists.length < blocoIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um bloco',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation = await t.any(
+      `SELECT id FROM macrocontrole.unidade_trabalho 
+      WHERE bloco_id in ($<blocoIds:csv>)`,
+      { blocoIds }
+    )
+    if (existsAssociation && existsAssociation.length > 0) {
+      throw new AppError(
+        'O bloco possui unidades de trabalho associadas',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.bloco
+      WHERE id in ($<blocoIds:csv>)`,
+      { blocoIds }
+    )
+  })
+}
+
 module.exports = controller

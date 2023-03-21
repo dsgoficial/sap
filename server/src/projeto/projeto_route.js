@@ -440,6 +440,46 @@ router.get(
   })
 )
 
+router.post(
+  '/bloco',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.blocos }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.criaBlocos(req.body.blocos)
+
+    const msg = 'Blocos criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/bloco',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.blocoUpdate }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.atualizaBlocos(req.body.blocos)
+
+    const msg = 'Blocos atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.delete(
+  '/bloco',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.blocoIds }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.deletaBlocos(req.body.bloco_ids)
+
+    const msg = 'Blocos deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
 router.put(
   '/unidade_trabalho/bloco',
   verifyAdmin,
@@ -530,7 +570,6 @@ router.post(
   })
 )
 
-
 router.get(
   '/projetos',
   verifyAdmin,
@@ -540,6 +579,45 @@ router.get(
     const msg = 'Projetos retornados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/projetos',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.projeto }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.criaProjetos(req.body.projetos)
+
+    const msg = 'Projetos criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/projetos',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.projetoUpdate }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.atualizaProjetos(req.body.projetos)
+
+    const msg = 'Projetos atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.delete(
+  '/projetos',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.projetoIds }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.deletaProjetos(req.body.projetoIds)
+
+    const msg = 'Projetos deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 )
 
@@ -590,9 +668,6 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
-
-
-
 
 router.get(
   '/etapas',
@@ -1340,6 +1415,45 @@ router.get(
     const msg = 'Lotes retornados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/lote',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.lotes }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.criaLotes(req.body.lotes)
+
+    const msg = 'Lotes criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/lote',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.loteUpdate }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.atualizaLotes(req.body.lotes)
+
+    const msg = 'Lotes atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.delete(
+  '/lote',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.loteIds }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.deletaLotes(req.body.lote_ids)
+
+    const msg = 'Lotes deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 )
 
