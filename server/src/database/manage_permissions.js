@@ -52,7 +52,7 @@ managePermissions.revokeAndGrantAllExecution = async () => {
       info.atividade_id,
       info.login,
       conn
-    )
+      )
   }
 }
 
@@ -112,7 +112,7 @@ managePermissions.grantPermissionsUser = async (
       .filter((v, i, array) => array.indexOf(v) === i)
   }
 
-  if (tipoEtapa === 2 || tipoEtapa === 5) {
+  if (tipoEtapa === 2 || tipoEtapa === 5  || tipoEtapa === 3) {
     // Revisão ou Revisão Final
     camadas = grantInfo
       .map((v) => `${v.schema}.${v.nome_camada}`)
