@@ -404,6 +404,46 @@ router.get(
   })
 )
 
+router.post(
+  '/dado_producao',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.dadoProducao }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.criaDadoProducao(req.body.dado_producao)
+
+    const msg = 'Dado de produção criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/dado_producao',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.dadoProducaoUpdate }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.atualizaDadoProducao(req.body.dado_producao)
+
+    const msg = 'Dado de produção atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.delete(
+  '/dado_producao',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.dadoProducaoIds }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.deletaDadoProducao(req.body.dado_producao_ids)
+
+    const msg = 'Dado de produção deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
 router.get(
   '/banco_dados',
   verifyAdmin,

@@ -737,7 +737,7 @@ controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
 
 controller.getProjetos = async () => {
   return db.sapConn.any(
-    'SELECT id, nome FROM macrocontrole.projeto'
+    'SELECT id, nome, nome_abrev, descricao, finalizado FROM macrocontrole.projeto'
   )
 }
 
@@ -1949,7 +1949,7 @@ controller.deletaPlugins = async pluginsId => {
 
 controller.getLote = async () => {
   return db.sapConn.any(
-    'SELECT id, nome, linha_producao_id, projeto_id, nome_abrev, descricao  FROM macrocontrole.lote'
+    'SELECT id, nome, nome_abrev, denominador_escala, linha_producao_id, projeto_id, descricao  FROM macrocontrole.lote'
   )
 }
 
@@ -2188,5 +2188,80 @@ controller.deletaBlocos = async blocoIds => {
     )
   })
 }
+
+controller.criaDadoProducao = async dado_producao => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'tipo_dado_producao_id',
+      'configuracao_producao'
+    ])
+
+    const query = db.pgp.helpers.insert(dado_producao, cs, {
+      table: 'dado_producao',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaDadoProducao = async dado_producao => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'tipo_dado_producao_id',
+      'configuracao_producao'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        dado_producao,
+        cs,
+        { table: 'dado_producao', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaDadoProducao = async dadoProducaoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.dado_producao
+      WHERE id in ($<dadoProducaoIds:csv>)`,
+      { dadoProducaoIds }
+    )
+    if (exists && exists.length < dadoProducaoIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um dado de produção',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation = await t.any(
+      `SELECT id FROM macrocontrole.unidade_trabalho 
+      WHERE dado_producao_id in ($<dadoProducaoIds:csv>)`,
+      { dadoProducaoIds }
+    )
+    if (existsAssociation && existsAssociation.length > 0) {
+      throw new AppError(
+        'O dado_producao_id possui unidades de trabalho associadas',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.bloco
+      WHERE id in ($<dadoProducaoIds:csv>)`,
+      { dadoProducaoIds }
+    )
+  })
+}
+
 
 module.exports = controller

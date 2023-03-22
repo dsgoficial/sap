@@ -811,5 +811,38 @@ models.blocoIds = Joi.object().keys({
     .min(1)
 })
 
+models.dadoProducao = Joi.object().keys({
+  dado_producao: Joi.array()
+    .items(
+      Joi.object().keys({
+        tipo_dado_producao_id: Joi.number().integer().strict().required(),
+        configuracao_producao: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.dadoProducaoUpdate = Joi.object().keys({
+  dado_producao: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        tipo_dado_producao_id: Joi.number().integer().strict().required(),
+        configuracao_producao: Joi.string().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+models.dadoProducaoIds = Joi.object().keys({
+  dado_producao_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 
 module.exports = models
