@@ -734,7 +734,7 @@ models.projetoIds = Joi.object().keys({
     .min(1)
 })
 
-lotes.lotes = Joi.object().keys({
+models.lotes = Joi.object().keys({
   lotes: Joi.array()
     .items(
       Joi.object().keys({
