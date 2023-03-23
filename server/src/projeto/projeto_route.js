@@ -653,7 +653,7 @@ router.delete(
   verifyAdmin,
   schemaValidation({ body: projetoSchema.projetoIds }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.deletaProjetos(req.body.projetoIds)
+    const dados = await projetoCtrl.deletaProjetos(req.body.projeto_ids)
 
     const msg = 'Projetos deletados com sucesso'
 
