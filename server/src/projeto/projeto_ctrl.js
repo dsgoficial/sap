@@ -1785,6 +1785,83 @@ controller.associaInsumos = async (
   }
 }
 
+controller.associaInsumosBloco = async (
+  blocoId,
+  grupoInsumoId,
+  estrategiaId,
+  caminhoPadrao
+) => {
+  // (1, 'Centroide da unidade de trabalho contido no insumo'),
+  // (2, 'Centroide do insumo contido na unidade de trabalho'),
+  // (3, 'Interseção entre insumo e unidade de trabalho'),
+  // (4, 'Sobreposição entre insumo e unidade de trabalho'),
+  // (5, 'Associar insumo a todas as unidades de trabalho');
+  switch (estrategiaId) {
+    case 1:
+      return db.sapConn.none(
+        `
+        INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
+        FROM macrocontrole.unidade_trabalho AS ut
+        INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(ut.geom), i.geom)
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+      `,
+        { blocoId, grupoInsumoId, caminhoPadrao }
+      )
+    case 2:
+      return db.sapConn.none(
+        `
+        INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
+        FROM macrocontrole.unidade_trabalho AS ut
+        INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(i.geom), ut.geom)
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+      `,
+        { blocoId, grupoInsumoId, caminhoPadrao }
+      )
+    case 3:
+      return db.sapConn.none(
+        `
+        INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
+        FROM macrocontrole.unidade_trabalho AS ut
+        INNER JOIN macrocontrole.insumo AS i ON st_intersects(i.geom, ut.geom)
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+      `,
+        { blocoId, grupoInsumoId, caminhoPadrao }
+      )
+    case 4:
+      return db.sapConn.none(
+        `
+        INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
+        FROM macrocontrole.unidade_trabalho AS ut
+        INNER JOIN macrocontrole.insumo AS i ON st_relate(ut.geom, i.geom, '2********')
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+      `,
+        { blocoId, grupoInsumoId, caminhoPadrao }
+      )
+    case 5:
+      return db.sapConn.none(
+        `
+        INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id, insumo_id, caminho_padrao)
+        SELECT ut.id AS unidade_trabalho_id, i.id AS insumo_id, $<caminhoPadrao> AS caminho_padrao
+        FROM macrocontrole.unidade_trabalho AS ut
+        CROSS JOIN macrocontrole.insumo AS i
+        LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
+        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+      `,
+        { blocoId, grupoInsumoId, caminhoPadrao }
+      )
+    default:
+      throw new AppError('Estratégia inválida', httpCode.BadRequest)
+  }
+}
+
 controller.getEstrategiaAssociacao = async () => {
   return db.sapConn.any('SELECT code, nome FROM dominio.tipo_estrategia_associacao')
 }

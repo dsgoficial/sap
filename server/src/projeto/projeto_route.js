@@ -1245,6 +1245,26 @@ router.post(
 )
 
 router.post(
+  '/bloco/insumos',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.associaInsumosBloco
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.associaInsumosBloco(
+      req.body.bloco_id,
+      req.body.grupo_insumo_id,
+      req.body.estrategia_id,
+      req.body.caminho_padrao
+    )
+
+    const msg = 'Insumos do bloco associados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.post(
   '/unidade_trabalho/copiar',
   verifyAdmin,
   schemaValidation({
