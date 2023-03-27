@@ -788,7 +788,7 @@ models.blocos = Joi.object().keys({
     .items(
       Joi.object().keys({
         nome: Joi.string().required(),
-        prioridade: Joi.string().required(),
+        prioridade: Joi.number().integer().strict().required(),
         lote_id: Joi.number().integer().strict().required()
       })
     )
@@ -801,7 +801,7 @@ models.blocoUpdate = Joi.object().keys({
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         nome: Joi.string().required(),
-        prioridade: Joi.string().required(),
+        prioridade: Joi.number().integer().strict().required(),
         lote_id: Joi.number().integer().strict().required()
       })
     )
