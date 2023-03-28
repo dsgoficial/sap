@@ -413,9 +413,7 @@ $BODY$
     BEGIN
     EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.bloco';
 
-    IF TG_OP != 'DELETE' THEN
-      PERFORM acompanhamento.cria_view_acompanhamento_bloco();
-    END IF;
+    PERFORM acompanhamento.cria_view_acompanhamento_bloco();
 
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;
