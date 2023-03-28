@@ -99,6 +99,24 @@ CREATE TABLE macrocontrole.etapa(
 	UNIQUE (subfase_id, lote_id, ordem)
 );
 
+CREATE OR REPLACE FUNCTION macrocontrole.chk_lote(integer, integer)
+  RETURNS BOOLEAN AS
+$$
+	SELECT EXISTS (
+		SELECT 1
+		FROM macrocontrole.subfase AS s
+		INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+		INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
+		WHERE s.id = $1 AND l.id = $2 
+	);
+$$
+  LANGUAGE SQL;
+ALTER FUNCTION macrocontrole.chk_lote(integer, integer)
+  OWNER TO postgres;
+
+ALTER TABLE macrocontrole.etapa
+ADD CONSTRAINT chk_lote_consistency CHECK (macrocontrole.chk_lote(subfase_id, lote_id))
+
 -- Constraint
 CREATE OR REPLACE FUNCTION macrocontrole.etapa_verifica_rev_corr()
   RETURNS trigger AS
