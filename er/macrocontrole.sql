@@ -318,6 +318,25 @@ CREATE INDEX unidade_trabalho_geom
     ON macrocontrole.unidade_trabalho USING gist
     (geom);
 
+CREATE OR REPLACE FUNCTION macrocontrole.chk_lote_ut(integer, integer)
+  RETURNS BOOLEAN AS
+$$
+	SELECT EXISTS (
+		SELECT 1
+		FROM macrocontrole.subfase AS s
+		INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+		INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
+		WHERE s.id = $1 AND l.id = $2 
+	);
+$$
+  LANGUAGE SQL;
+ALTER FUNCTION macrocontrole.chk_lote_ut(integer, integer)
+  OWNER TO postgres;
+
+ALTER TABLE macrocontrole.unidade_trabalho
+ADD CONSTRAINT chk_lote_consistency_ut CHECK (macrocontrole.chk_lote_ut(subfase_id, lote_id))
+
+
 CREATE TABLE macrocontrole.grupo_insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) UNIQUE NOT NULL
