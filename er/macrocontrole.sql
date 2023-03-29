@@ -296,7 +296,7 @@ CREATE TABLE macrocontrole.bloco(
 
 CREATE TABLE macrocontrole.unidade_trabalho(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
+	nome VARCHAR(255),
 	epsg VARCHAR(5) NOT NULL,
 	dado_producao_id INTEGER NOT NULL REFERENCES macrocontrole.dado_producao (id),
  	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),

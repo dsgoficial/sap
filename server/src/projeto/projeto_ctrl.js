@@ -2333,7 +2333,7 @@ controller.deletaDadoProducao = async dadoProducaoIds => {
     }
 
     return t.any(
-      `DELETE FROM macrocontrole.bloco
+      `DELETE FROM macrocontrole.dado_producao
       WHERE id in ($<dadoProducaoIds:csv>)`,
       { dadoProducaoIds }
     )

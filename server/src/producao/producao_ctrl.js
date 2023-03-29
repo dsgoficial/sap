@@ -294,7 +294,6 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.observacao_atividade = dadosut.observacao_atividade
     info.atividade.observacao_unidade_trabalho =
       dadosut.observacao_unidade_trabalho
-    info.atividade.unidade_trabalho = dadosut.unidade_trabalho_nome
     info.atividade.geom = dadosut.unidade_trabalho_geom
     info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id
     info.atividade.lote_id = dadosut.lote_id
@@ -307,7 +306,7 @@ const dadosProducao = async (atividadeId) => {
       ' - ' +
       dadosut.etapa_nome +
       ' - ' +
-      dadosut.unidade_trabalho_nome
+      dadosut.ut_id
     info.atividade.dado_producao = {
       configuracao_producao: dadosut.configuracao_producao,
       tipo_dado_producao_id: dadosut.tipo_dado_producao_id
