@@ -582,6 +582,7 @@ $BODY$
     DECLARE etapa_ident integer;
     DECLARE lote_ident integer;
     DECLARE subfase_ident integer;
+    DECLARE r record;
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
@@ -599,6 +600,12 @@ $BODY$
 
     EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
     EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || subfase_ident;
+
+    FOR r in SELECT prs.subfase_posterior_id FROM macrocontrole.pre_requisito_subfase AS prs
+    WHERE prs.subfase_anterior_id = subfase_ident
+    LOOP
+      EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || r.subfase_posterior_id;
+    END LOOP;
 
     END IF;
 
