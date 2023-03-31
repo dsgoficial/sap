@@ -579,7 +579,7 @@ controller.deletaAtividadesUnidadeTrabalho = async unidadeTrabalhoIds => {
   return db.sapConn.none(
     `
   DELETE FROM macrocontrole.atividade
-  WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id IN (1)
+  WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id IN (1,5)
   `,
     { unidadeTrabalhoIds }
   )
