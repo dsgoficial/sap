@@ -583,6 +583,7 @@ $BODY$
     DECLARE lote_ident integer;
     DECLARE subfase_ident integer;
     DECLARE r record;
+    DECLARE v_exists BOOLEAN;
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
@@ -604,7 +605,10 @@ $BODY$
     FOR r in SELECT prs.subfase_posterior_id FROM macrocontrole.pre_requisito_subfase AS prs
     WHERE prs.subfase_anterior_id = subfase_ident
     LOOP
-      EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || r.subfase_posterior_id;
+      SELECT EXISTS (SELECT FROM pg_matviews WHERE  schemaname = 'acompanhamento' AND matviewname  = 'lote_'|| lote_ident || '_subfase_' || r.subfase_posterior_id) INTO v_exists;
+      IF v_exists THEN
+        EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || r.subfase_posterior_id;
+      END IF;
     END LOOP;
 
     END IF;
