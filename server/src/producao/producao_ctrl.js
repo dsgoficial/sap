@@ -383,13 +383,13 @@ const dadosProducao = async (atividadeId) => {
 controller.getDadosAtividade = async (
   atividadeId,
   usuarioId,
-  resetPassword = false
+  grant
 ) => {
   const dados = await dadosProducao(atividadeId)
   dados.login_info = await temporaryLogin.getLogin(
     atividadeId,
     usuarioId,
-    resetPassword
+    grant
   )
   return dados
 }
@@ -427,7 +427,7 @@ controller.verifica = async (usuarioId) => {
     { usuarioId, emAndamentoId: emAndamento.id }
   )
 
-  return controller.getDadosAtividade(emAndamento.id, usuarioId)
+  return controller.getDadosAtividade(emAndamento.id, usuarioId, false)
 }
 
 controller.finaliza = async (

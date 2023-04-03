@@ -172,7 +172,8 @@ const processTempUserOld = async (
 
 const processTempUser = async (
   atividadeId,
-  usuarioId
+  usuarioId,
+  grant
 ) => {
   const dbInfo = await getDbInfo(atividadeId)
   if (!dbInfo) {
@@ -226,7 +227,9 @@ const processTempUser = async (
 
   await updateTempLogin(usuarioId, servidorPorta, login, senha)
 
-  await grantPermissionsUser(atividadeId, login, conn)
+  if(grant){
+    await grantPermissionsUser(atividadeId, login, conn)
+  }
   
   return { login, senha }
 }
@@ -349,13 +352,9 @@ temporaryLogin.getLoginAdmin = async (
 temporaryLogin.getLogin = async (
   atividadeId,
   usuarioId,
-  resetPassword = false
+  grant
 ) => {
-  return processTempUser(atividadeId, usuarioId, {
-    resetPassword,
-    extendValidity: true,
-    grantPermission: true
-  })
+  return processTempUser(atividadeId, usuarioId, grant)
 }
 
 module.exports = temporaryLogin
