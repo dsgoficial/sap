@@ -289,6 +289,7 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.epsg = dadosut.epsg
     info.atividade.projeto = dadosut.projeto
     info.atividade.lote = dadosut.lote
+    info.atividade.bloco = dadosut.bloco
     info.atividade.denominador_escala = dadosut.denominador_escala
     info.atividade.dificuldade = dadosut.dificuldade
     info.atividade.observacao_atividade = dadosut.observacao_atividade

@@ -170,12 +170,50 @@ const processTempUser = async (
   return { login, senha }
 }
 
+const processTempUserFinaliza = async (
+  atividadeId,
+  usuarioId
+) => {
+  const dbInfo = await getDbInfo(atividadeId)
+  if (!dbInfo) {
+    return null
+  }
+  const { configuracao_producao} = dbInfo
+  const servidor = configuracao_producao.split(':')[0]
+  const porta = configuracao_producao.split(':')[1].split('/')[0]
+  const nomeDb = configuracao_producao.split(':')[1].split('/')[1]
+  const servidorPorta = `${servidor}:${porta}`
+
+  const conn = await db.createAdminConn(servidor, porta, nomeDb, false)
+
+  const loginInfo = await db.sapConn.oneOrNone(
+    `SELECT login, senha FROM dgeo.login_temporario 
+    WHERE usuario_id = $<usuarioId> AND configuracao = $<servidorPorta>`,
+    { usuarioId, servidorPorta }
+  )
+
+  let login
+  let senha =  crypto.randomBytes(20).toString('hex');
+
+  if (!loginInfo) {
+    const usuarioNome = await getUserName(usuarioId)
+    login = `sap_${usuarioNome}`
+  } else {
+    login = loginInfo.login
+  }
+
+  const userExists = await checkUserIfExists(login, conn)
+
+  if (!userExists) {
+    await createDbUser(login, senha, conn)
+  } else {
+    await updatePassword(login, senha, conn)
+  }
+  await revokeAllPermissionsUser(login, conn)
+}
+
 temporaryLogin.resetPassword = async (atividadeId, usuarioId) => {
-  return processTempUser(atividadeId, usuarioId, {
-    resetPassword: true,
-    extendValidity: false,
-    grantPermission: false
-  })
+  return processTempUserFinaliza(atividadeId, usuarioId);
 }
 
 temporaryLogin.getLogin = async (
