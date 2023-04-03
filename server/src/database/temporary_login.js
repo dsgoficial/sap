@@ -102,7 +102,7 @@ const updateValidity = async (login, connection) => {
   })
 }
 
-const processTempUser = async (
+const processTempUserOld = async (
   atividadeId,
   usuarioId,
   { resetPassword, extendValidity, grantPermission }
@@ -170,6 +170,67 @@ const processTempUser = async (
   return { login, senha }
 }
 
+const processTempUser = async (
+  atividadeId,
+  usuarioId
+) => {
+  const dbInfo = await getDbInfo(atividadeId)
+  if (!dbInfo) {
+    return null
+  }
+  const { configuracao_producao} = dbInfo
+  const servidor = configuracao_producao.split(':')[0]
+  const porta = configuracao_producao.split(':')[1].split('/')[0]
+  const nomeDb = configuracao_producao.split(':')[1].split('/')[1]
+  const servidorPorta = `${servidor}:${porta}`
+
+  const conn = await db.createAdminConn(servidor, porta, nomeDb, false)
+
+  const loginInfo = await db.sapConn.oneOrNone(
+    `SELECT login, senha FROM dgeo.login_temporario 
+    WHERE usuario_id = $<usuarioId> AND configuracao = $<servidorPorta>`,
+    { usuarioId, servidorPorta }
+  )
+
+  let login
+  let senha
+  const novaSenha = crypto.randomBytes(20).toString('hex')
+
+  if (!loginInfo) {
+    const usuarioNome = await getUserName(usuarioId)
+    login = `sap_${usuarioNome}`
+    senha = novaSenha
+  } else {
+    login = loginInfo.login
+    senha = loginInfo.senha
+  }
+  const userExists = await checkUserIfExists(login, conn)
+  if (!userExists) {
+    senha = novaSenha
+    await createDbUser(login, senha, conn)
+  }
+  const userConnected = await db.testConn(
+    login,
+    senha,
+    servidor,
+    porta,
+    nomeDb
+  )
+
+  if (!userConnected) {
+    senha = novaSenha
+    await updatePassword(login, senha, conn)
+  }
+
+  await updateValidity(login, conn)
+
+  await updateTempLogin(usuarioId, servidorPorta, login, senha)
+
+  await grantPermissionsUser(atividadeId, login, conn)
+  
+  return { login, senha }
+}
+
 const processTempUserFinaliza = async (
   atividadeId,
   usuarioId
@@ -209,6 +270,7 @@ const processTempUserFinaliza = async (
   } else {
     await updatePassword(login, senha, conn)
   }
+  await updateTempLogin(usuarioId, servidorPorta, login, senha)
   await revokeAllPermissionsUser(login, conn)
 }
 
@@ -266,7 +328,7 @@ const processTempUserAdmin = async (
   }
 
   await updateValidity(login, conn)
-
+  await updateTempLogin(usuarioId, servidorPorta, login, senha)
   await grantPermissionsUser(atividadeId, login, conn)
   
   return { login, senha }
