@@ -33,7 +33,7 @@ controller.getAtividade = async (atividadeId, gerenteId) => {
     throw new AppError('Atividadade não encontrada', httpCode.NotFound)
   }
 
-  return producaoCtrl.getDadosAtividade(atividadeId, gerenteId)
+  return producaoCtrl.getDadosAtividadeAdmin(atividadeId, gerenteId)
 }
 
 controller.getAtividadeUsuario = async (usuarioId, proxima, gerenteId) => {
@@ -57,7 +57,7 @@ controller.getAtividadeUsuario = async (usuarioId, proxima, gerenteId) => {
     atividadeId = emAndamento.id
   }
 
-  return producaoCtrl.getDadosAtividade(atividadeId, gerenteId)
+  return producaoCtrl.getDadosAtividadeAdmin(atividadeId, gerenteId)
 }
 
 controller.getPerfilProducao = async () => {

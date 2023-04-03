@@ -394,6 +394,18 @@ controller.getDadosAtividade = async (
   return dados
 }
 
+controller.getDadosAtividadeAdmin = async (
+  atividadeId,
+  adminId
+) => {
+  const dados = await dadosProducao(atividadeId)
+  dados.login_info = await temporaryLogin.getLoginAdmin(
+    atividadeId,
+    adminId
+  )
+  return dados
+}
+
 controller.verifica = async (usuarioId) => {
   const emAndamento = await db.sapConn.oneOrNone(
     `SELECT a.id
