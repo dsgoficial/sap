@@ -95,6 +95,14 @@ models.bancoDados = Joi.object().keys({
   banco: Joi.string().required()
 })
 
+models.bancoDadosUsuario = Joi.object().keys({
+  servidor: Joi.string().required(),
+  porta: Joi.number().integer().strict().required(),
+  banco: Joi.string().required(),
+  usuario_id: Joi.number().integer().strict().required()
+})
+
+
 models.perfilProducaoIds = Joi.object().keys({
   perfil_producao_ids: Joi.array()
     .items(Joi.number().integer().strict())

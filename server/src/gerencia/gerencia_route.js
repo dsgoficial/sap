@@ -506,4 +506,29 @@ router.post(
   })
 )
 
+router.post(
+  '/banco_dados/revogar_permissoes_usuario',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.bancoDadosUsuario
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.revogarPermissoesDBUser(
+      req.body.servidor,
+      req.body.porta,
+      req.body.banco,
+      req.body_usuario_id
+    )
+
+    const msg = 'Permissões do usuário no banco revogadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
+
+
+
+
 module.exports = router

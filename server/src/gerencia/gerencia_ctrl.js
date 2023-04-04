@@ -886,4 +886,8 @@ controller.revogarPermissoesDB = async (servidor, porta, banco) => {
   return managePermissions.revokeAllDb(servidor, porta, banco)
 }
 
+controller.revogarPermissoesDBUser = async (servidor, porta, banco, usuarioId) => {
+  return managePermissions.revokeAllDbUser(servidor, porta, banco, usuarioId)
+}
+
 module.exports = controller

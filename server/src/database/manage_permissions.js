@@ -24,6 +24,25 @@ managePermissions.revokeAllDb = async (servidor, porta, banco) => {
   return conn.none(query.revoke_query)
 }
 
+managePermissions.revokeAllDbUser = async (servidor, porta, banco, usuarioId) => {
+
+  const dbInfo = await db.sapConn.oneOrNone(
+    `SELECT lt.login
+     FROM dgeo.login_temporario AS lt
+     WHERE lt.usuario_id = $<usuarioId>
+    `, { usuarioId }
+  )
+
+  if (!dbInfo) {
+    return null
+  }
+
+  const conn = await db.createAdminConn(servidor, porta, banco, false)
+
+  return managePermissions.revokeAllPermissionsUser(dbInfo.login, conn)
+}
+
+
 managePermissions.revokeAndGrantAllExecution = async () => {
   const dbInfos = await db.sapConn.any(
     `SELECT dp.configuracao_producao, a.id AS atividade_id, lt.login 
