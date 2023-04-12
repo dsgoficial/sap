@@ -115,7 +115,7 @@ ALTER FUNCTION macrocontrole.chk_lote(integer, integer)
   OWNER TO postgres;
 
 ALTER TABLE macrocontrole.etapa
-ADD CONSTRAINT chk_lote_consistency CHECK (macrocontrole.chk_lote(subfase_id, lote_id))
+ADD CONSTRAINT chk_lote_consistency CHECK (macrocontrole.chk_lote(subfase_id, lote_id));
 
 -- Constraint
 CREATE OR REPLACE FUNCTION macrocontrole.etapa_verifica_rev_corr()
@@ -334,7 +334,7 @@ ALTER FUNCTION macrocontrole.chk_lote_ut(integer, integer)
   OWNER TO postgres;
 
 ALTER TABLE macrocontrole.unidade_trabalho
-ADD CONSTRAINT chk_lote_consistency_ut CHECK (macrocontrole.chk_lote_ut(subfase_id, lote_id))
+ADD CONSTRAINT chk_lote_consistency_ut CHECK (macrocontrole.chk_lote_ut(subfase_id, lote_id));
 
 
 CREATE TABLE macrocontrole.grupo_insumo(
