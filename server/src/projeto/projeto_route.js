@@ -1293,7 +1293,7 @@ router.post(
     await projetoCtrl.criaUnidadeTrabalho(
       req.body.unidades_trabalho,
       req.body.lote_id,
-      req.body.subfase_id
+      req.body.subfase_ids
     )
 
     const msg = 'Unidades de trabalho criadas com sucesso'

@@ -585,7 +585,11 @@ models.unidadesTrabalho = Joi.object().keys({
     )
     .required()
     .min(1),
-  subfase_id: Joi.number().integer().strict().required(),
+  subfase_ids: Joi.array()
+  .items(Joi.number().integer().strict().required())
+  .unique()
+  .required()
+  .min(1),
   lote_id: Joi.number().integer().strict().required()
 })
 

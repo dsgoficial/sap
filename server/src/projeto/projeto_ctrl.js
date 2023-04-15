@@ -1681,13 +1681,13 @@ controller.criaProdutos = async (produtos, loteId) => {
   return db.sapConn.none(query)
 }
 
-controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseId) => {
+controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {
   const cs = new db.pgp.helpers.ColumnSet([
     'nome',
     'epsg',
     'dado_producao_id',
     'bloco_id',
-    { name: 'subfase_id', init: () => subfaseId },
+    'subfase_id',
     { name: 'lote_id', init: () => loteId },
     'disponivel',
     'dificuldade',
@@ -1700,7 +1700,16 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseId) => 
     p.geom = `st_geomfromewkt('${p.geom}')`
   })
 
-  const query = db.pgp.helpers.insert(unidadesTrabalho, cs, {
+  const unidadesTrabalhoTotal = []
+
+  subfaseIds.forEach(s => {
+    unidadesTrabalho.forEach(p => {
+      const newObj = { ...p, subfase_id: s };
+      unidadesTrabalhoTotal.push(newObj);
+    })
+  })
+
+  const query = db.pgp.helpers.insert(unidadesTrabalhoTotal, cs, {
     table: 'unidade_trabalho',
     schema: 'macrocontrole'
   })
