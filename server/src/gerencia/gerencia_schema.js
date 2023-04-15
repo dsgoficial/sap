@@ -102,6 +102,9 @@ models.bancoDadosUsuario = Joi.object().keys({
   usuario_id: Joi.number().integer().strict().required()
 })
 
+models.versaoQGIS = Joi.object().keys({
+  versao_minima: Joi.string().required()
+})
 
 models.perfilProducaoIds = Joi.object().keys({
   perfil_producao_ids: Joi.array()

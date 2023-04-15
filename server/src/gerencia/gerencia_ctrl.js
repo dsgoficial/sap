@@ -890,4 +890,25 @@ controller.revogarPermissoesDBUser = async (servidor, porta, banco, usuarioId) =
   return managePermissions.revokeAllDbUser(servidor, porta, banco, usuarioId)
 }
 
+controller.getVersaoQGIS = async () => {
+  return db.sapConn.one(
+    `SELECT versao_minima
+    FROM dgeo.versao_qgis`
+  )
+}
+
+controller.atualizaVersaoQGIS = async (
+  versaoQGIS
+) => {
+  return db.sapConn.any(
+    `
+    UPDATE dgeo.versao_qgis SET
+    versao_minima = $<versaoQGIS> WHERE code = 1
+    `,
+    { versaoQGIS }
+  )
+}
+
+
+
 module.exports = controller

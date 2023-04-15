@@ -527,8 +527,33 @@ router.post(
 )
 
 
+router.get(
+  '/versao_qgis',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getVersaoQGIS(
+    )
 
+    const msg = 'Versão QGIS retornada com sucesso'
 
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/versao_qgis',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.versaoQGIS
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaVersaoQGIS(req.body.versao_qgis)
+
+    const msg = 'Versão QGIS atualizada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
 
 
 module.exports = router
