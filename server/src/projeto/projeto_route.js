@@ -1124,6 +1124,65 @@ router.put(
   })
 )
 
+
+router.get(
+  '/configuracao/perfil_requisito_finalizacao',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilRequisitoFinalizacao()
+
+    const msg = 'Perfil requisito finalização retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_requisito_finalizacao',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilRequisitoIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilRequisitoFinalizacao(req.body.perfil_requisito_ids)
+
+    const msg = 'Perfil requisito finalização deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_requisito_finalizacao',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfisRequisito
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilRequisitoFinalizacao(req.body.perfis_requisito)
+
+    const msg = 'Perfis requisito finalização criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_requisito_finalizacao',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilRequisitoAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilRequisitoFinalizacao(req.body.perfis_requisito)
+
+    const msg = 'Perfis requisito finalização atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
 router.delete(
   '/unidade_trabalho/insumos',
   verifyAdmin,

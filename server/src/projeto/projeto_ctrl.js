@@ -1084,6 +1084,74 @@ controller.criaPerfilFME = async perfilFME => { // FIXME retornar mensagem de er
   return db.sapConn.none(query)
 }
 
+controller.getPerfilRequisitoFinalizacao = async () => {
+  return db.sapConn.any(
+    `SELECT prf.id, prf.descricao, prf.ordem, prf.subfase_id, prf.lote_id
+    FROM macrocontrole.perfil_requisito_finalizacao AS prf`
+  )
+}
+
+controller.deletePerfilRequisitoFinalizacao = async perfilRequisitosIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_requisito_finalizacao
+      WHERE id in ($<perfilRequisitosIds:csv>)`,
+      { perfilRequisitosIds }
+    )
+    if (!exists && exists.length < perfilRequisitosIds.length) {
+      throw new AppError(
+        'Os ids informados não correspondem a um perfil requisito finalização',
+        httpCode.BadRequest
+      )
+    }
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_requisito_finalizacao
+      WHERE id IN ($<perfilRequisitosIds:csv>)`,
+      { perfilRequisitosIds }
+    )
+  })
+}
+
+controller.atualizaPerfilRequisitoFinalizacao = async perfilRequisitos => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'descricao',
+      'ordem',
+      'subfase_id',
+      'lote_id',
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilRequisitos,
+        cs,
+        { table: 'perfil_requisito_finalizacao', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.criaPerfilRequisitoFinalizacao = async perfilRequisito => {
+  const cs = new db.pgp.helpers.ColumnSet([
+    'descricao',
+    'ordem',
+    'subfase_id',
+    'lote_id'
+  ])
+
+  const query = db.pgp.helpers.insert(perfilRequisito, cs, {
+    table: 'perfil_requisito_finalizacao',
+    schema: 'macrocontrole'
+  })
+
+  return db.sapConn.none(query)
+}
+
 controller.getPerfilMenu = async () => {
   return db.sapConn.any(
     `SELECT pm.id, qm.nome, qm.definicao_menu, pm.menu_id, pm.menu_revisao, pm.subfase_id, pm.lote_id 
@@ -1113,7 +1181,7 @@ controller.deletePerfilMenu = async perfilMenuIds => {
   })
 }
 
-controller.atualizaPerfilMenu = async perfilMenu => {
+controller.atualizaPerfilMenu = async perfilMenu => {//FIXME
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_menu
@@ -1329,6 +1397,7 @@ controller.criaPerfilRegras = async perfilRegras => {
 
   return db.sapConn.none(query)
 }
+
 controller.getPerfilEstilos = async () => {
   return db.sapConn.any(
     `SELECT pe.id, gs.nome, pe.grupo_estilo_id, pe.subfase_id, pe.lote_id
@@ -1358,7 +1427,7 @@ controller.deletePerfilEstilos = async perfilEstilosIds => {
   })
 }
 
-controller.atualizaPerfilEstilos = async perfilEstilos => {
+controller.atualizaPerfilEstilos = async perfilEstilos => {//FIXME
   return db.sapConn.tx(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_estilo

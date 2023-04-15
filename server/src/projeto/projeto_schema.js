@@ -312,6 +312,15 @@ models.perfilMenuIds = Joi.object().keys({
     .min(1)
 })
 
+
+models.perfilRequisitoIds = Joi.object().keys({
+  perfil_requisito_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 models.perfilRegrasIds = Joi.object().keys({
   perfil_regras_ids: Joi.array()
     .items(Joi.number().integer().strict().required())
@@ -429,6 +438,36 @@ models.perfilEstilostualizacao = Joi.object().keys({
     .required()
     .min(1)
 })
+
+models.perfisRequisito = Joi.object().keys({
+  perfis_requisito: Joi.array()
+    .items(
+      Joi.object().keys({
+        descricao: Joi.string().required(),
+        ordem: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilRequisitoAtualizacao = Joi.object().keys({
+  perfis_requisito: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        descricao: Joi.string().required(),
+        ordem: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
 
 models.perfisModeloAtualizacao = Joi.object().keys({
   perfis_modelo: Joi.array()
