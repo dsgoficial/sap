@@ -119,7 +119,7 @@ CREATE TABLE metadado.informacoes_lote(
 	declaracao_linhagem TEXT
 );
 
-CREATE TABLE metadado.informacoes_imagem_insumo(
+CREATE TABLE metadado.informacoes_imagem_insumo( --Modificação da camada de carta ortoimagem com as informacoes da imagem?
 	id SERIAL NOT NULL PRIMARY KEY,
  	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id),
 	data_insumo_primeira timestamp with time zone NOT NULL,

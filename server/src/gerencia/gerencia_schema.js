@@ -106,6 +106,43 @@ models.versaoQGIS = Joi.object().keys({
   versao_minima: Joi.string().required()
 })
 
+models.qgisShortcuts = Joi.object().keys({
+  qgis_shortcuts: Joi.array()
+    .items(
+      Joi.object().keys({
+        ferramenta: Joi.string().required(),
+        idioma: Joi.string().required(),
+        atalho: Joi.string(),
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.qgisShortcutsAtualizacao = Joi.object().keys({
+  qgis_shortcuts: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        ferramenta: Joi.string().required(),
+        idioma: Joi.string().required(),
+        atalho: Joi.string(),
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+
+models.qgisShortcutsIds = Joi.object().keys({
+  qgis_shortcuts_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 models.perfilProducaoIds = Joi.object().keys({
   perfil_producao_ids: Joi.array()
     .items(Joi.number().integer().strict())

@@ -88,20 +88,5 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
-/*
-router.post(
-  '/retorna_atividade_anterior',
-  verifyLogin,
-  schemaValidation({ body: producaoSchema.atividadeId }),
-  asyncHandler(async (req, res, next) => {
-    await producaoCtrl.retornaAtividadeAnterior(
-      req.body.atividade_id,
-      req.usuarioId
-    )
-    const msg = 'Finalização da atividade anterior reportada com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-*/
 module.exports = router

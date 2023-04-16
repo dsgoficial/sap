@@ -547,7 +547,7 @@ router.put(
     body: gerenciaSchema.versaoQGIS
   }),
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaVersaoQGIS(req.body.versao_qgis)
+    await gerenciaCtrl.atualizaVersaoQGIS(req.body.versao_qgis)
 
     const msg = 'Versão QGIS atualizada com sucesso'
 
@@ -555,5 +555,60 @@ router.put(
   })
 )
 
+router.get(
+  '/qgis_shortcuts',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getQGISShortcuts(
+    )
+
+    const msg = 'Shortcuts retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/qgis_shortcuts',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.qgisShortcuts
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.criaQGISShortcuts(req.body.qgis_shortcuts)
+
+    const msg = 'Shortcuts criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/qgis_shortcuts',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.qgisShortcutsAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaQGISShortcuts(req.body.qgis_shortcuts)
+
+    const msg = 'Shortcuts atualizada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/qgis_shortcuts',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.qgisShortcutsIds }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deletaQGISShortcuts(req.body.qgis_shortcuts_ids)
+
+    const msg = 'Shortcuts deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
 
 module.exports = router
