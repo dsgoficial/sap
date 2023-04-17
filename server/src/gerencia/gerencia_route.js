@@ -556,59 +556,107 @@ router.put(
 )
 
 router.get(
-  '/qgis_shortcuts',
+  '/plugins',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getQGISShortcuts(
-    )
+    const dados = await gerenciaCtrl.getPlugins()
 
-    const msg = 'Shortcuts retornados com sucesso'
+    const msg = 'Plugins retornados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
 router.post(
-  '/qgis_shortcuts',
+  '/plugins',
   verifyAdmin,
-  schemaValidation({
-    body: gerenciaSchema.qgisShortcuts
-  }),
+  schemaValidation({ body: gerenciaSchema.plugins }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaQGISShortcuts(req.body.qgis_shortcuts)
+    await gerenciaCtrl.gravaPlugins(req.body.plugins)
 
-    const msg = 'Shortcuts criados com sucesso'
+    const msg = 'Plugins gravados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
 )
 
 router.put(
-  '/qgis_shortcuts',
+  '/plugins',
   verifyAdmin,
-  schemaValidation({
-    body: gerenciaSchema.qgisShortcutsAtualizacao
-  }),
+  schemaValidation({ body: gerenciaSchema.pluginsAtualizacao }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.atualizaQGISShortcuts(req.body.qgis_shortcuts)
+    await gerenciaCtrl.atualizaPlugins(req.body.plugins)
 
-    const msg = 'Shortcuts atualizada com sucesso'
+    const msg = 'Plugins atualizados com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
 )
 
 router.delete(
-  '/qgis_shortcuts',
+  '/plugins',
   verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.qgisShortcutsIds }),
+  schemaValidation({ body: gerenciaSchema.pluginsIds }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.deletaQGISShortcuts(req.body.qgis_shortcuts_ids)
+    await gerenciaCtrl.deletaPlugins(req.body.plugins_ids)
 
-    const msg = 'Shortcuts deletadas com sucesso'
+    const msg = 'Plugins deletados com sucesso'
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK)
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
 )
+
+
+router.get(
+  '/atalhos',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getAtalhos()
+
+    const msg = 'Atalhos retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/atalhos',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.atalhos }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.gravaAtalhos(req.body.atalhos, req.usuarioId)
+
+    const msg = 'Atalhos gravados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/atalhos',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.atalhosAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaAtalhos(req.body.atalhos, req.usuarioId)
+
+    const msg = 'Atalhos atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/atalhos',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.atalhosIds }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deletaAtalhos(req.body.atalhos_ids)
+
+    const msg = 'Atalhos deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
 
 module.exports = router
