@@ -1449,4 +1449,119 @@ router.delete(
   })
 )
 
+
+router.get(
+  '/configuracao/perfil_alias',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilAlias()
+
+    const msg = 'Perfil Alias retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_alias',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilAliasIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilAlias(req.body.perfis_alias_ids)
+
+    const msg = 'Perfil Alias deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_alias',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilAlias
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilAlias(req.body.perfis_alias)
+
+    const msg = 'Perfis Alias criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_alias',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilAliastualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilAlias(req.body.perfis_alias)
+
+    const msg = 'Perfis Alias atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/alias',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getAlias()
+
+    const msg = 'Alias retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/alias',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.aliasIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deleteAlias(req.body.alias_ids)
+
+    const msg = 'Alias deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/alias',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.alias
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaAlias(req.body.alias, req.usuarioId)
+
+    const msg = 'Alias criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/alias',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.aliastualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaAlias(req.body.alias, req.usuarioId)
+
+    const msg = 'Alias atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 module.exports = router

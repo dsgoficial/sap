@@ -1944,6 +1944,74 @@ controller.getEstrategiaAssociacao = async () => {
   return db.sapConn.any('SELECT code, nome FROM dominio.tipo_estrategia_associacao')
 }
 
+controller.getPlugins = async () => {
+  return db.sapConn.any(
+    'SELECT id, nome, versao_minima FROM dgeo.plugin'
+  )
+}
+
+controller.gravaPlugins = async plugins => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'versao_minima'
+    ])
+
+    const query = db.pgp.helpers.insert(plugins, cs, {
+      table: 'plugin',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPlugins = async plugins => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'versao_minima'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        plugins,
+        cs,
+        { table: 'plugin', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaPlugins = async pluginsId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.plugin
+      WHERE id in ($<pluginsId:csv>)`,
+      { pluginsId }
+    )
+    if (exists && exists.length < pluginsId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um plugin',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.plugin
+      WHERE id in ($<pluginsId:csv>)`,
+      { pluginsId }
+    )
+  })
+}
+
 controller.getLote = async () => {
   return db.sapConn.any(
     'SELECT id, nome, nome_abrev, denominador_escala, linha_producao_id, projeto_id, descricao  FROM macrocontrole.lote'
@@ -2256,6 +2324,154 @@ controller.deletaDadoProducao = async dadoProducaoIds => {
       `DELETE FROM macrocontrole.dado_producao
       WHERE id in ($<dadoProducaoIds:csv>)`,
       { dadoProducaoIds }
+    )
+  })
+}
+
+controller.getPerfilAlias = async () => {
+  return db.sapConn.any(
+    `SELECT pa.id, pa.alias_id, pa.subfase_id, pa.lote_id,
+    la.nome 
+    FROM macrocontrole.perfil_alias AS pa
+    INNER JOIN dgeo.layer_alias AS la ON la.id = pa.alias_id`
+  )
+}
+
+controller.criaPerfilAlias = async perfilAlias => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'alias_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilAlias, cs, {
+      table: 'perfil_alias',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilAlias = async perfilAlias => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'alias_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilAlias,
+        cs,
+        { table: 'perfil_alias', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilAlias = async perfilAliasId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_alias
+      WHERE id in ($<perfilAliasId:csv>)`,
+      { perfilAliasId }
+    )
+    if (exists && exists.length < perfilAliasId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil alias',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_alias
+      WHERE id in ($<perfilAliasId:csv>)`,
+      { perfilAliasId }
+    )
+  })
+}
+
+controller.getAlias = async () => {
+  return db.sapConn.any(
+    `SELECT la.id, la.nome, la.definicao_alias
+    FROM dgeo.layer_alias AS la`
+  )
+}
+
+controller.criaAlias = async (alias,usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'definicao_alias',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query = db.pgp.helpers.insert(alias, cs, {
+      table: 'layer_alias',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaAlias = async (alias,usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'definicao_alias',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        alias,
+        cs,
+        { table: 'layer_alias', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deleteAlias = async aliasId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.layer_alias
+      WHERE id in ($<aliasId:csv>)`,
+      { aliasId }
+    )
+    if (exists && exists.length < aliasId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um alias',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.layer_alias
+      WHERE id in ($<aliasId:csv>)`,
+      { aliasId }
     )
   })
 }

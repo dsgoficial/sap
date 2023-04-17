@@ -822,5 +822,72 @@ models.dadoProducaoIds = Joi.object().keys({
     .min(1)
 })
 
+models.perfilAlias = Joi.object().keys({
+  perfis_alias: Joi.array()
+    .items(
+      Joi.object().keys({
+        alias_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilAliastualizacao = Joi.object().keys({
+  perfis_alias: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        alias_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilAliasIds = Joi.object().keys({
+  perfis_alias_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.alias = Joi.object().keys({
+  alias: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        definicao_alias: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.aliastualizacao = Joi.object().keys({
+  alias: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        definicao_alias: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.aliasIds = Joi.object().keys({
+  alias_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
 
 module.exports = models
