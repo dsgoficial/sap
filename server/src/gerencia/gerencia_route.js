@@ -547,7 +547,7 @@ router.put(
     body: gerenciaSchema.versaoQGIS
   }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.atualizaVersaoQGIS(req.body.versao_qgis)
+    await gerenciaCtrl.atualizaVersaoQGIS(req.body.versao_minima)
 
     const msg = 'Versão QGIS atualizada com sucesso'
 
