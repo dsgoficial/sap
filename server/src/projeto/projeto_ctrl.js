@@ -1787,8 +1787,10 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) =>
     table: 'unidade_trabalho',
     schema: 'macrocontrole'
   })
+  let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
+  let pos = `SET LOCAL session_replication_role = 'origin';COMMIT;`
 
-  return db.sapConn.none(query)
+  return db.sapConn.none(pre+query+pos)
 }
 
 controller.associaInsumos = async (
