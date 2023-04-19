@@ -680,8 +680,11 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
         )
     }
 
+    let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
+    let pos = `SET LOCAL session_replication_role = 'origin';COMMIT;`
+
     const result = await t.result(
-      sqlA+sqlB,
+      pre+sqlA+sqlB+pos,
       { fase_id, lote_id }
     )
     if (!result.rowCount || result.rowCount === 0) {
@@ -696,12 +699,14 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
 controller.criaTodasAtividades = async (lote_id) => {
   const result = await db.sapConn.result(
     `
+  BEGIN; SET LOCAL session_replication_role = 'replica';
   INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
   SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
   FROM macrocontrole.unidade_trabalho AS ut
   INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
   LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
   WHERE ut.lote_id = $<lote_id> AND a.id IS NULL
+  SET LOCAL session_replication_role = 'origin';COMMIT;
   `,
     { lote_id }
   )
