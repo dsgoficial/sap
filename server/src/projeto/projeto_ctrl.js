@@ -705,7 +705,7 @@ controller.criaTodasAtividades = async (lote_id) => {
   FROM macrocontrole.unidade_trabalho AS ut
   INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
   LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
-  WHERE ut.lote_id = $<lote_id> AND a.id IS NULL
+  WHERE ut.lote_id = $<lote_id> AND a.id IS NULL;
   SET LOCAL session_replication_role = 'origin';COMMIT;
   `,
     { lote_id }
@@ -1788,7 +1788,7 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) =>
     schema: 'macrocontrole'
   })
   let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
-  let pos = `SET LOCAL session_replication_role = 'origin';COMMIT;`
+  let pos = `;SET LOCAL session_replication_role = 'origin';COMMIT;`
 
   return db.sapConn.none(pre+query+pos)
 }
