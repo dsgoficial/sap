@@ -683,10 +683,26 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
     let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
     let pos = `SET LOCAL session_replication_role = 'origin';COMMIT;`
 
-    const result = await t.result(
+    await t.none(
       pre+sqlA+sqlB+pos,
       { fase_id, lote_id }
     )
+
+    let sqls = await t.any(
+      `
+      SELECT 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || $<lote_id> || '_subfase_'|| s.id || 
+      ';DELETE FROM public.layer_styles WHERE f_table_schema = ''acompanhamento'' AND f_table_name = (''lote_' || $<lote_id> || '_subfase_' || s.id || ''') AND stylename = ''acompanhamento_subfase'';' ||
+      'SELECT acompanhamento.cria_view_acompanhamento_subfase(' || s.id || ', ' || $<lote_id> || ');' AS text
+      FROM macrocontrole.subfase AS s
+      WHERE s.fase_id = $<fase_id>
+    `,
+      { lote_id, fase_id }
+    )
+
+    for (const s of sqls) {
+      await t.none(s.text);
+    }
+
   })
 }
 
