@@ -680,37 +680,54 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
         )
     }
 
-    const result = await t.result(
-      sqlA+sqlB,
+    let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
+    let pos = `SET LOCAL session_replication_role = 'origin';COMMIT;`
+
+    await t.none(
+      pre+sqlA+sqlB+pos,
       { fase_id, lote_id }
     )
-    if (!result.rowCount || result.rowCount === 0) {
-      throw new AppError(
-        'Sem etapas a serem criadas',
-        httpCode.BadRequest
-      )
-    }
+
+    let sqlview = await t.oneOrNone(
+      `
+      SELECT string_agg(query, ' ') AS fix FROM (
+        SELECT 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || $<lote_id> || '_subfase_'|| s.id || 
+      ';DELETE FROM public.layer_styles WHERE f_table_schema = ''acompanhamento'' AND f_table_name = (''lote_' || $<lote_id> || '_subfase_' || s.id || ''') AND stylename = ''acompanhamento_subfase'';' ||
+      'SELECT acompanhamento.cria_view_acompanhamento_subfase(' || s.id || ', ' || $<lote_id> || ');' AS query
+      FROM macrocontrole.subfase AS s
+      WHERE s.fase_id = $<fase_id>) AS foo;
+    `,
+      { lote_id, fase_id }
+    )
+    await t.any(sqlview.fix);
+
   })
 }
 
 controller.criaTodasAtividades = async (lote_id) => {
-  const result = await db.sapConn.result(
+  await db.sapConn.any(
     `
+  BEGIN; SET LOCAL session_replication_role = 'replica';
   INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
   SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
   FROM macrocontrole.unidade_trabalho AS ut
   INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
   LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
-  WHERE ut.lote_id = $<lote_id> AND a.id IS NULL
+  WHERE ut.lote_id = $<lote_id> AND a.id IS NULL;
+  SET LOCAL session_replication_role = 'origin';COMMIT;
   `,
     { lote_id }
   )
-  if (!result.rowCount || result.rowCount === 0) {
-    throw new AppError(
-      'Sem atividades a serem criadas',
-      httpCode.BadRequest
-    )
-  }
+
+  let sql = await db.sapConn.oneOrNone(
+    `SELECT string_agg(query, ' ') AS grant_fk FROM (
+              SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || schemaname || '.' || matviewname || ';' AS query
+              from pg_matviews
+          ) AS foo;`
+  )
+
+  await db.sapConn.none(sql.grant_fk);
+
 }
 
 controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
@@ -1782,8 +1799,20 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) =>
     table: 'unidade_trabalho',
     schema: 'macrocontrole'
   })
+  let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
+  let pos = `;SET LOCAL session_replication_role = 'origin';COMMIT;`
 
-  return db.sapConn.none(query)
+  await db.sapConn.none(pre+query+pos)
+
+  let sql = await db.sapConn.oneOrNone(
+    `SELECT string_agg(query, ' ') AS grant_fk FROM (
+              SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || schemaname || '.' || matviewname || ';' AS query
+              from pg_matviews
+          ) AS foo;`
+  )
+
+  await db.sapConn.none(sql.grant_fk);
+
 }
 
 controller.associaInsumos = async (

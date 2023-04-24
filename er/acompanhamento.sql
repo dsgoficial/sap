@@ -635,6 +635,9 @@ CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_acompanhamento_ut_etapa()
 $BODY$
     DECLARE subfase_ident integer;
     DECLARE lote_ident integer;
+    DECLARE v_exists_1 BOOLEAN;
+    DECLARE v_exists_2 BOOLEAN;
+
     BEGIN
 
     IF TG_OP = 'DELETE' THEN
@@ -645,8 +648,15 @@ $BODY$
       lote_ident := NEW.lote_id;
     END IF;
 
-    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
-    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || subfase_ident;
+    SELECT EXISTS (SELECT FROM pg_matviews WHERE  schemaname = 'acompanhamento' AND matviewname  = 'lote_'|| lote_ident) INTO v_exists_1;
+    IF v_exists_1 THEN
+      EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
+    END IF;
+
+    SELECT EXISTS (SELECT FROM pg_matviews WHERE  schemaname = 'acompanhamento' AND matviewname  = 'lote_'|| lote_ident || '_subfase_' || subfase_ident) INTO v_exists_2;
+    IF v_exists_2 THEN
+      EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident || '_subfase_' || subfase_ident;
+    END IF;
 
     IF TG_OP = 'DELETE' THEN
       RETURN OLD;
