@@ -687,12 +687,6 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
       pre+sqlA+sqlB+pos,
       { fase_id, lote_id }
     )
-    if (!result.rowCount || result.rowCount === 0) {
-      throw new AppError(
-        'Sem etapas a serem criadas',
-        httpCode.BadRequest
-      )
-    }
   })
 }
 
@@ -710,12 +704,6 @@ controller.criaTodasAtividades = async (lote_id) => {
   `,
     { lote_id }
   )
-  if (!result.rowCount || result.rowCount === 0) {
-    throw new AppError(
-      'Sem atividades a serem criadas',
-      httpCode.BadRequest
-    )
-  }
 }
 
 controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
