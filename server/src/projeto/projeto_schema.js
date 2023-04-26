@@ -33,7 +33,7 @@ models.estilos = Joi.object().keys({
         f_geometry_column: Joi.string().required(),
         grupo_estilo_id: Joi.number().integer().strict().required(),
         styleqml: Joi.string().required(),
-        stylesld: Joi.string().required(),
+        stylesld: Joi.string().allow('', null).required(),
         ui: Joi.string().allow('', null).required()
       })
     )
