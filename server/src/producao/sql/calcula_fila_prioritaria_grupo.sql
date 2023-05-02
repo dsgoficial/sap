@@ -28,7 +28,7 @@ FROM (
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = ut.bloco_id AND pbloco.usuario_id = ppo.usuario_id
     INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
     WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 1 AND 
     ut.geom && ut_re.geom AND
@@ -44,7 +44,7 @@ FROM (
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = ut.bloco_id AND pbloco.usuario_id = ppo.usuario_id
     INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
     WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 2 AND 
     ut.geom && ut_re.geom AND

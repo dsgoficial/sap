@@ -45,7 +45,7 @@ FROM (
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = ut.bloco_id AND pbloco.usuario_id = ppo.usuario_id
     INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
     WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 1 AND 
     ut.geom && ut_re.geom AND
@@ -61,7 +61,7 @@ FROM (
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.bloco_id = ut.bloco_id AND pbloco.usuario_id = ppo.usuario_id
     INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
     WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 2 AND 
     ut.geom && ut_re.geom AND
@@ -85,7 +85,6 @@ FROM (
     INNER JOIN macrocontrole.fase AS fa_re ON fa_re.id = sub_re.fase_id AND fa_re.linha_producao_id = fa.linha_producao_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.etapa_id = et_re.id
     INNER JOIN dgeo.usuario AS u_re ON u_re.id = a_re.usuario_id
-    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.id = a_re.unidade_trabalho_id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********')
     WHERE ppo.usuario_id = $1 AND (
         (re.tipo_restricao_id = 1 AND a_re.usuario_id = $1) OR
         (re.tipo_restricao_id = 2 AND a_re.usuario_id != $1) OR 
@@ -110,7 +109,7 @@ FROM (
       (re.tipo_restricao_id = 1 AND a_re.usuario_id = $1) OR
       (re.tipo_restricao_id = 2 AND a_re.usuario_id != $1) OR 
       (re.tipo_restricao_id = 3 AND (a_re.usuario_id = $1 OR (u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)))
-    ) AND a_re.tipo_situacao_id in (1,2,3,4) AND a.tipo_situacao_id = 1
+    ) AND a_re.tipo_situacao_id in (1,2,3,4) AND a.tipo_situacao_id = 1 
   )
   AND a.id NOT IN
   (
