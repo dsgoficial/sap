@@ -1,17 +1,25 @@
 'use strict'
 
-/**
- * Função para facilitar a sintaxe de try/catch com funções assíncronas
- *
- * @description
- *
- * Utilizar esta função sempre utilizar uma função assíncrona em uma rota,
- * não havendo necessidade de try/catch e já enviando o erro para `next`.
- *
- * @param {Function} fn - Função assincrona
- * @returns {RequestHandler} Função que retorna um Promise da execução de fn
- */
-const asyncHandler = fn => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next)
+const BetterQueue = require('better-queue');
+
+const processingQueue = new BetterQueue((task, cb) => {
+  task.fn(task.req, task.res, task.next).then(() => cb(null, 'success')).catch(cb);
+});
+
+const asyncHandler = (fn) => (req, res, next) => {
+  if (req.method === 'GET') {
+    return Promise.resolve(fn(req, res, next)).catch(next);
+  } else {
+    processingQueue.push(
+      { fn, req, res, next },
+      (err, result) => {
+        if (err) {
+          return next(err);
+        }
+      }
+    );
+  }
+};
+
 
 module.exports = asyncHandler
