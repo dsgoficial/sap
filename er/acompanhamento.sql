@@ -2,6 +2,23 @@ BEGIN;
 
 CREATE SCHEMA acompanhamento;
 
+CREATE VIEW atividade_finalizadas_hoje AS
+SELECT u.nome_guerra, a.data_inicio, a.data_fim, te.nome AS etapa, 
+s.nome AS subfase, tf.nome AS fase, b.nome AS bloco, l.nome_abrev AS lote, p.nome_abrev AS projeto
+FROM macrocontrole.atividade AS a
+INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
+INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
+INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+INNER JOIN macrocontrole.lote AS l ON l.id = e.lote_id
+INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
+WHERE a.tipo_situacao_id = 4 AND date_trunc('day', a.data_fim) = current_date
+ORDER BY a.data_fim DESC;
+
 CREATE VIEW atividades_usuarios AS 
 SELECT u.nome_guerra, ativ.data_inicio, ativ.etapa, ativ.subfase, ativ.fase, ativ.bloco, ativ.lote, ativ.projeto
 FROM dgeo.usuario AS u 
