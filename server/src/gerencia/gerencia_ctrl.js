@@ -451,13 +451,15 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
 
   const updatedIds = await connection.any(
     `
+  BEGIN; SET LOCAL session_replication_role = 'replica';
   UPDATE macrocontrole.atividade SET
   data_fim = $<dataFim>, tipo_situacao_id = 5
   WHERE id in (
     SELECT a.id FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
     WHERE ut.id in ($<unidadeTrabalhoIds:csv>) AND a.tipo_situacao_id = 2
-    ) RETURNING id, usuario_id
+    ) RETURNING id, usuario_id;
+  SET LOCAL session_replication_role = 'origin';COMMIT;
   `,
     { dataFim, unidadeTrabalhoIds }
   )
@@ -485,7 +487,10 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
     schema: 'macrocontrole'
   })
 
-  await connection.none(query)
+  let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
+  let pos = `SET LOCAL session_replication_role = 'origin';COMMIT;`
+
+  await connection.none(pre+query+pos)
 
   for (const u of updatedIds) {
     await temporaryLogin.resetPassword(u.id, u.usuario_id)
@@ -500,9 +505,12 @@ controller.unidadeTrabalhoDisponivel = async (
 ) => {
   await db.sapConn.tx(async (t) => {
     await t.none(
-      `UPDATE macrocontrole.unidade_trabalho
+      `
+      BEGIN; SET LOCAL session_replication_role = 'replica';
+      UPDATE macrocontrole.unidade_trabalho
       SET disponivel = $<disponivel>
-      WHERE id in ($<unidadeTrabalhoIds:csv>)`,
+      WHERE id in ($<unidadeTrabalhoIds:csv>);
+      SET LOCAL session_replication_role = 'origin';COMMIT;`,
       { unidadeTrabalhoIds, disponivel }
     )
     if (!disponivel) {
