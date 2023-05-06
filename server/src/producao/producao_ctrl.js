@@ -9,7 +9,7 @@ const prepared = require('./prepared_statements')
 const controller = {}
 
 controller.calculaFila = async (usuarioId) => {
-  const prioridade = await db.sapConn.task(async (t) => {
+  const prioridade = await db.sapConn.task(async t => {
     const filaPrioritaria = await t.oneOrNone(prepared.calculaFilaPrioritaria, [
       usuarioId
     ])
@@ -276,7 +276,7 @@ const getAtalhos = async (connection) => {
 }
 
 const dadosProducao = async (atividadeId) => {
-  const results = await db.sapConn.task(async (t) => {
+  const results = await db.sapConn.task(async t => {
     const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId])
 
     const info = {}
@@ -439,7 +439,7 @@ controller.finaliza = async (
   observacaoProximaAtividade
 ) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async (t) => {
+  await db.sapConn.tx(async t => {
     // Usuário é passado como uma medida de segurança para garantir que quem está finalizando é o usuário da atividade
     const result = await t.result(
       `UPDATE macrocontrole.atividade SET
@@ -538,7 +538,7 @@ controller.inicia = async (usuarioId) => {
   if (!prioridade) {
     return null
   }
-  await db.sapConn.tx(async (t) => {
+  await db.sapConn.tx(async t => {
     const verify = await t.oneOrNone(
       `SELECT id FROM macrocontrole.atividade
       WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 2`,
@@ -586,7 +586,7 @@ controller.problemaAtividade = async (
   usuarioId
 ) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async (t) => {
+  await db.sapConn.tx(async t => {
     const result = await t.result(
       `
       UPDATE macrocontrole.atividade SET

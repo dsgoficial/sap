@@ -498,7 +498,7 @@ controller.unidadeTrabalhoDisponivel = async (
   unidadeTrabalhoIds,
   disponivel
 ) => {
-  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     await t.none(
       `
       UPDATE macrocontrole.unidade_trabalho
@@ -515,7 +515,7 @@ controller.unidadeTrabalhoDisponivel = async (
 }
 
 controller.pausaAtividade = async (unidadeTrabalhoIds) => {
-  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const changed = await pausaAtividadeMethod(unidadeTrabalhoIds, t)
     if (!changed) {
       throw new AppError(
@@ -530,7 +530,7 @@ controller.pausaAtividade = async (unidadeTrabalhoIds) => {
 
 controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
   const dataFim = new Date()
-  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const usersResetPassword = await t.any(
       `
       SELECT DISTINCT ON (ut.id) a.id, a.usuario_id FROM macrocontrole.atividade AS a
@@ -591,7 +591,7 @@ controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
   })
 
 
-  await db.sapConn.tx(async (t) => {
+  await db.sapConn.tx(async t => {
 
   })
 }
@@ -599,7 +599,7 @@ controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
 controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
   const dataFim = new Date()
 
-  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
         FROM macrocontrole.atividade AS a
@@ -669,7 +669,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
 controller.avancaAtividade = async (atividadeIds, concluida) => {
   const comparisonOperator = concluida ? '<=' : '<'
 
-  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
       FROM macrocontrole.atividade AS a
@@ -820,7 +820,7 @@ controller.criaObservacao = async (
   observacaoAtividade,
   observacaoUnidadeTrabalho
 ) => {
-  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     await t.any(
       `
       UPDATE macrocontrole.atividade SET

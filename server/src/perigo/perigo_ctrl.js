@@ -13,8 +13,8 @@ const controller = {}
 
 controller.limpaAtividades = async usuarioId => {
 
-  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
-    const updatedIds = db.sapConn.any(
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    const updatedIds = t.any(
       `UPDATE macrocontrole.atividade
       SET usuario_id = NULL, data_inicio = NULL, data_fim = NULL, tipo_situacao_id = 1
       WHERE usuario_id = $<usuarioId> RETURNING id`,

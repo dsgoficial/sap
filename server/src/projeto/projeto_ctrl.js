@@ -1,6 +1,6 @@
 'use strict'
 
-const { db } = require('../database')
+const { db, disableTriggers } = require('../database')
 
 const { AppError, httpCode } = require('../utils')
 
@@ -23,7 +23,6 @@ controller.getTipoRotina = async () => {
   return db.sapConn
     .any('SELECT code, nome FROM dominio.tipo_rotina')
 }
-
 
 controller.getTipoCQ = async () => {
   return db.sapConn
@@ -83,7 +82,6 @@ controller.getGrupoEstilos = async () => {
   return db.sapConn
     .any('SELECT id, nome FROM dgeo.group_styles')
 }
-
 
 controller.gravaGrupoEstilos = async (grupoEstilos, usuarioId) => {
   return db.sapConn.tx(async t => {
@@ -533,60 +531,73 @@ controller.getBlocos = async () => {
 }
 
 controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {
-  return db.sapConn.none(
-    `UPDATE macrocontrole.unidade_trabalho
-    SET bloco_id = $<bloco>
-    WHERE id in ($<unidadeTrabalhoIds:csv>)`,
-    { unidadeTrabalhoIds, bloco }
-  )
+  return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    return t.none(
+      `UPDATE macrocontrole.unidade_trabalho
+      SET bloco_id = $<bloco>
+      WHERE id in ($<unidadeTrabalhoIds:csv>)`,
+      { unidadeTrabalhoIds, bloco }
+    )
+  })
 }
 
 controller.deletaAtividades = async atividadeIds => {
 
-  const result = await db.sapConn.result(
-    `
-    SELECT e.etapa_anterior, e.etapa_posterior FROM
-    (SELECT e.lote_id, e.id AS etapa_anterior, e.tipo_etapa_id AS tipo_etapa_anterior, lead(e.id,2) OVER (PARTITION BY e.lote_id, e.subfase_id ORDER BY e.ordem) AS etapa_posterior
-    FROM macrocontrole.etapa AS e) AS e
-    INNER JOIN macrocontrole.etapa AS e_post ON e_post.id = e.etapa_posterior
-    WHERE e.tipo_etapa_anterior = 2 AND e_post.tipo_etapa_id = 3 AND
-    (
-      (e.etapa_anterior in ($<atividadeIds:csv>) AND e.etapa_posterior not in ($<atividadeIds:csv>))
-      OR
-      (e.etapa_anterior not in ($<atividadeIds:csv>) AND e.etapa_posterior in ($<atividadeIds:csv>))
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    const result = await t.result(
+      `
+      SELECT e.etapa_anterior, e.etapa_posterior FROM
+      (SELECT e.lote_id, e.id AS etapa_anterior, e.tipo_etapa_id AS tipo_etapa_anterior, lead(e.id,2) OVER (PARTITION BY e.lote_id, e.subfase_id ORDER BY e.ordem) AS etapa_posterior
+      FROM macrocontrole.etapa AS e) AS e
+      INNER JOIN macrocontrole.etapa AS e_post ON e_post.id = e.etapa_posterior
+      WHERE e.tipo_etapa_anterior = 2 AND e_post.tipo_etapa_id = 3 AND
+      (
+        (e.etapa_anterior in ($<atividadeIds:csv>) AND e.etapa_posterior not in ($<atividadeIds:csv>))
+        OR
+        (e.etapa_anterior not in ($<atividadeIds:csv>) AND e.etapa_posterior in ($<atividadeIds:csv>))
+      )
+      `,
+      { atividadeIds }
     )
+    if (result.rowCount && result.rowCount > 0) {
+      throw new AppError(
+        'Atividade de correção e não deve ser deletada',
+        httpCode.BadRequest
+      )
+    }
+  
+  
+    await t.none(
+      `
+    DELETE FROM macrocontrole.atividade
+    WHERE id in ($<atividadeIds:csv>) AND tipo_situacao_id IN (1)
     `,
-    { atividadeIds }
-  )
-  if (result.rowCount && result.rowCount > 0) {
-    throw new AppError(
-      'Atividade de correção e não deve ser deletada',
-      httpCode.BadRequest
+      { atividadeIds }
     )
-  }
 
-
-  return db.sapConn.none(
-    `
-  DELETE FROM macrocontrole.atividade
-  WHERE id in ($<atividadeIds:csv>) AND tipo_situacao_id IN (1)
-  `,
-    { atividadeIds }
-  )
+    await disableTriggers.refreshMaterializedViewFromAtivs(t, atividadeIds)
+  })
 }
 
 controller.deletaAtividadesUnidadeTrabalho = async unidadeTrabalhoIds => {
-  return db.sapConn.none(
-    `
-  DELETE FROM macrocontrole.atividade
-  WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id IN (1,5)
-  `,
-    { unidadeTrabalhoIds }
-  )
+
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    await t.none(
+      `
+    DELETE FROM macrocontrole.atividade
+    WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id IN (1,5)
+    `,
+      { unidadeTrabalhoIds }
+    )
+
+    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
+  })
+
+
 }
 
 controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
-  return db.sapConn.task(async t => {
+  return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const exists = await t.any(
       `SELECT e.id FROM macrocontrole.etapa AS e
        INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
@@ -680,76 +691,59 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
         )
     }
 
-    let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
-    let pos = `SET LOCAL session_replication_role = 'origin';COMMIT;`
 
     await t.none(
-      pre+sqlA+sqlB+pos,
+      sqlA+sqlB,
       { fase_id, lote_id }
     )
 
-    let sqlview = await t.oneOrNone(
-      `
-      SELECT string_agg(query, ' ') AS fix FROM (
-        SELECT 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || $<lote_id> || '_subfase_'|| s.id || 
-      ';DELETE FROM public.layer_styles WHERE f_table_schema = ''acompanhamento'' AND f_table_name = (''lote_' || $<lote_id> || '_subfase_' || s.id || ''') AND stylename = ''acompanhamento_subfase'';' ||
-      'SELECT acompanhamento.cria_view_acompanhamento_subfase(' || s.id || ', ' || $<lote_id> || ');' AS query
-      FROM macrocontrole.subfase AS s
-      WHERE s.fase_id = $<fase_id>) AS foo;
-    `,
-      { lote_id, fase_id }
-    )
-    await t.any(sqlview.fix);
+    await disableTriggers.reCreateSubfaseMaterializedViewFromFases(t, lote_id, fase_id)
 
   })
 }
 
 controller.criaTodasAtividades = async (lote_id) => {
-  await db.sapConn.any(
-    `
-  BEGIN; SET LOCAL session_replication_role = 'replica';
-  INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
-  SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
-  FROM macrocontrole.unidade_trabalho AS ut
-  INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
-  LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
-  WHERE ut.lote_id = $<lote_id> AND a.id IS NULL;
-  SET LOCAL session_replication_role = 'origin';COMMIT;
-  `,
-    { lote_id }
-  )
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    await t.any(
+      `
+    INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+    SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+    FROM macrocontrole.unidade_trabalho AS ut
+    INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+    LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
+    WHERE ut.lote_id = $<lote_id> AND a.id IS NULL;
+    `,
+      { lote_id }
+    )
 
-  let sql = await db.sapConn.oneOrNone(
-    `SELECT string_agg(query, ' ') AS grant_fk FROM (
-              SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || schemaname || '.' || matviewname || ';' AS query
-              from pg_matviews
-          ) AS foo;`
-  )
-
-  await db.sapConn.none(sql.grant_fk);
-
+    await disableTriggers.refreshMaterializedViewFromLote(t, loteId)
+  })
 }
 
 controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
-  const result = await db.sapConn.result(
-    `
-  INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
-  SELECT DISTINCT $<etapaId> AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
-  FROM macrocontrole.unidade_trabalho AS ut
-  INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
-  LEFT JOIN (
-    SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
-    ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
-  WHERE ut.id IN ($<unidadeTrabalhoIds:csv>) AND e.id = $<etapaId> AND a.id IS NULL
-  `,
-    { unidadeTrabalhoIds, etapaId }
-  )
-  if (!result.rowCount || result.rowCount === 0) {
-    throw new AppError(
-      'As atividades não podem ser criadas pois já existem.',
-      httpCode.BadRequest
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    const result = await t.result(
+      `
+    INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+    SELECT DISTINCT $<etapaId> AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+    FROM macrocontrole.unidade_trabalho AS ut
+    INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+    LEFT JOIN (
+      SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+      ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
+    WHERE ut.id IN ($<unidadeTrabalhoIds:csv>) AND e.id = $<etapaId> AND a.id IS NULL
+    `,
+      { unidadeTrabalhoIds, etapaId }
     )
-  }
+    if (!result.rowCount || result.rowCount === 0) {
+      throw new AppError(
+        'As atividades não podem ser criadas pois já existem.',
+        httpCode.BadRequest
+      )
+    }
+
+    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
+  })
 }
 
 controller.getProjetos = async () => {
@@ -1510,7 +1504,6 @@ controller.getGrupoInsumo = async () => {
     FROM macrocontrole.grupo_insumo`)
 }
 
-
 controller.deletaGrupoInsumo = async grupoInsumoIds => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
@@ -1608,13 +1601,13 @@ controller.deletaInsumosAssociados = async (
   )
 }
 
-controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
-  return db.sapConn.tx(async t => {
+controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
+  return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const atividadeAssociada = await t.oneOrNone(
       `SELECT a.id FROM macrocontrole.atividade AS a
-      WHERE a.unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
+      WHERE a.unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>)
       LIMIT 1`,
-      { unidadeTrabalhoId }
+      { unidadeTrabalhoIds }
     )
     if (atividadeAssociada) {
       throw new AppError(
@@ -1623,19 +1616,21 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
       )
     }
 
-    t.any(
+    await t.any(
       `DELETE FROM macrocontrole.insumo_unidade_trabalho
-      WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
+      WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>)
     `,
-      { unidadeTrabalhoId }
+      { unidadeTrabalhoIds }
     )
 
-    return t.any(
+    await t.any(
       `DELETE FROM macrocontrole.unidade_trabalho
-      WHERE id in ($<unidadeTrabalhoId:csv>)
+      WHERE id in ($<unidadeTrabalhoIds:csv>)
     `,
-      { unidadeTrabalhoId }
+      { unidadeTrabalhoIds }
     )
+
+    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
 }
 
@@ -1644,7 +1639,7 @@ controller.copiarUnidadeTrabalho = async (
   unidadeTrabalhoIds,
   associarInsumos
 ) => {
-  return db.sapConn.tx(async t => {
+  return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const utOldNew = {}
     for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
       for (const subfaseId of subfaseIds) {
@@ -1694,6 +1689,8 @@ controller.copiarUnidadeTrabalho = async (
 
       await t.none(query)
     }
+
+    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
 }
 
@@ -1768,51 +1765,43 @@ controller.criaProdutos = async (produtos, loteId) => {
 }
 
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {
-  const cs = new db.pgp.helpers.ColumnSet([
-    'nome',
-    'epsg',
-    'dado_producao_id',
-    'bloco_id',
-    'subfase_id',
-    { name: 'lote_id', init: () => loteId },
-    'disponivel',
-    'dificuldade',
-    'prioridade',
-    'observacao',
-    { name: 'geom', mod: ':raw' }
-  ])
-
-  unidadesTrabalho.forEach(p => {
-    p.geom = `st_geomfromewkt('${p.geom}')`
-  })
-
-  const unidadesTrabalhoTotal = []
-
-  subfaseIds.forEach(s => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'epsg',
+      'dado_producao_id',
+      'bloco_id',
+      'subfase_id',
+      { name: 'lote_id', init: () => loteId },
+      'disponivel',
+      'dificuldade',
+      'prioridade',
+      'observacao',
+      { name: 'geom', mod: ':raw' }
+    ])
+  
     unidadesTrabalho.forEach(p => {
-      const newObj = { ...p, subfase_id: s };
-      unidadesTrabalhoTotal.push(newObj);
+      p.geom = `st_geomfromewkt('${p.geom}')`
     })
+  
+    const unidadesTrabalhoTotal = []
+  
+    subfaseIds.forEach(s => {
+      unidadesTrabalho.forEach(p => {
+        const newObj = { ...p, subfase_id: s };
+        unidadesTrabalhoTotal.push(newObj);
+      })
+    })
+  
+    const query = db.pgp.helpers.insert(unidadesTrabalhoTotal, cs, {
+      table: 'unidade_trabalho',
+      schema: 'macrocontrole'
+    })
+  
+    await t.none(query)
+
+    await disableTriggers.refreshMaterializedViewFromSubfases(t, loteId, subfaseIds)
   })
-
-  const query = db.pgp.helpers.insert(unidadesTrabalhoTotal, cs, {
-    table: 'unidade_trabalho',
-    schema: 'macrocontrole'
-  })
-  let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
-  let pos = `;SET LOCAL session_replication_role = 'origin';COMMIT;`
-
-  await db.sapConn.none(pre+query+pos)
-
-  let sql = await db.sapConn.oneOrNone(
-    `SELECT string_agg(query, ' ') AS grant_fk FROM (
-              SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || schemaname || '.' || matviewname || ';' AS query
-              from pg_matviews
-          ) AS foo;`
-  )
-
-  await db.sapConn.none(sql.grant_fk);
-
 }
 
 controller.associaInsumos = async (
