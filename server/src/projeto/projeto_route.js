@@ -110,8 +110,6 @@ router.get(
   })
 )
 
-
-
 router.get(
   '/tipo_insumo',
   asyncHandler(async (req, res, next) => {
@@ -442,7 +440,6 @@ router.delete(
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 )
-
 
 router.get(
   '/banco_dados',
@@ -952,7 +949,6 @@ router.put(
   })
 )
 
-
 router.get(
   '/configuracao/perfil_modelo',
   verifyAdmin,
@@ -1124,7 +1120,6 @@ router.put(
   })
 )
 
-
 router.get(
   '/configuracao/perfil_requisito_finalizacao',
   verifyAdmin,
@@ -1182,7 +1177,6 @@ router.put(
   })
 )
 
-
 router.delete(
   '/unidade_trabalho/insumos',
   verifyAdmin,
@@ -1212,8 +1206,6 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
-
-
 
 router.put(
   '/grupo_insumo',
@@ -1448,7 +1440,6 @@ router.delete(
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 )
-
 
 router.get(
   '/configuracao/perfil_alias',

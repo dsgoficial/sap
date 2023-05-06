@@ -2,7 +2,7 @@
 
 const express = require('express')
 
-const { schemaValidation, asyncHandler, httpCode } = require('../utils')
+const { schemaValidation, asyncHandler, asyncHandler, httpCode } = require('../utils')
 
 const { verifyAdmin } = require('../login')
 

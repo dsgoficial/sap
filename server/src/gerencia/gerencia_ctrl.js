@@ -510,12 +510,12 @@ controller.unidadeTrabalhoDisponivel = async (
       await pausaAtividadeMethod(unidadeTrabalhoIds, t)
     }
 
-    await disableTriggers.reCreateMaterializedViewFromUTs(t, unidadeTrabalhoIds)
+    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
 }
 
 controller.pausaAtividade = async (unidadeTrabalhoIds) => {
-  await db.sapConn.tx(async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
     const changed = await pausaAtividadeMethod(unidadeTrabalhoIds, t)
     if (!changed) {
       throw new AppError(
@@ -523,12 +523,14 @@ controller.pausaAtividade = async (unidadeTrabalhoIds) => {
         httpCode.NotFound
       )
     }
+
+    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
 }
 
 controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
     const usersResetPassword = await t.any(
       `
       SELECT DISTINCT ON (ut.id) a.id, a.usuario_id FROM macrocontrole.atividade AS a
@@ -585,12 +587,19 @@ controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
     for (const u of usersResetPassword) {
       await temporaryLogin.resetPassword(u.id, u.usuario_id)
     }
+    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
+  })
+
+
+  await db.sapConn.tx(async (t) => {
+
   })
 }
 
 controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async (t) => {
+
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
         FROM macrocontrole.atividade AS a
@@ -652,13 +661,15 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
         { ids }
       )
     }
+
+    await disableTriggers.refreshMaterializedViewFromAtivs(t, atividadeIds)
   })
 }
 
 controller.avancaAtividade = async (atividadeIds, concluida) => {
   const comparisonOperator = concluida ? '<=' : '<'
 
-  await db.sapConn.tx(async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
       FROM macrocontrole.atividade AS a
@@ -724,6 +735,8 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
         `,
       { atividadeIds, comparisonOperator, dataFim }
     )
+
+    await disableTriggers.refreshMaterializedViewFromAtivs(t, atividadeIds)
   })
 }
 
@@ -807,7 +820,7 @@ controller.criaObservacao = async (
   observacaoAtividade,
   observacaoUnidadeTrabalho
 ) => {
-  await db.sapConn.tx(async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async (t) => {
     await t.any(
       `
       UPDATE macrocontrole.atividade SET
@@ -912,7 +925,6 @@ controller.atualizaVersaoQGIS = async (
   )
 }
 
-
 controller.getPlugins = async () => {
   return db.sapConn.any(
     'SELECT id, nome, versao_minima FROM dgeo.plugin'
@@ -980,7 +992,6 @@ controller.deletaPlugins = async pluginsId => {
     )
   })
 }
-
 
 controller.getAtalhos = async () => {
   return db.sapConn.any(

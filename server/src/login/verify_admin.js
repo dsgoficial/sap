@@ -1,13 +1,13 @@
 'use strict'
 
-const { AppError, asyncHandlerNoQueue, httpCode } = require('../utils')
+const { AppError, asyncHandler, httpCode } = require('../utils')
 
 const { db } = require('../database')
 
 const validateToken = require('./validate_token')
 
 // middleware para verificar se o usuário é administrador
-const verifyAdmin = asyncHandlerNoQueue(async (req, res, next) => {
+const verifyAdmin = asyncHandler(async (req, res, next) => {
   const token = req.headers.authorization
 
   const decoded = await validateToken(token)

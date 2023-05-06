@@ -2,7 +2,7 @@
 
 const express = require('express')
 
-const { schemaValidation, asyncHandler, httpCode } = require('../utils')
+const { schemaValidation, asyncHandler, httpCode, asyncHandlerWithQueue } = require('../utils')
 
 const { verifyAdmin } = require('../login')
 
@@ -27,7 +27,7 @@ router.get(
   '/atividade/:id',
   verifyAdmin,
   schemaValidation({ params: gerenciaSchema.idParams }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAtividade(
       req.params.id,
       req.usuarioId // gerenteId
@@ -46,7 +46,7 @@ router.get(
     params: gerenciaSchema.idParams,
     query: gerenciaSchema.proximaQuery
   }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAtividadeUsuario(
       req.params.id,
       req.query.proxima === 'true',
@@ -311,7 +311,7 @@ router.post(
   '/unidade_trabalho/disponivel',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.unidadeTrabalhoDisponivel }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.unidadeTrabalhoDisponivel(
       req.body.unidade_trabalho_ids,
       req.body.disponivel
@@ -328,7 +328,7 @@ router.post(
   '/atividade/pausar',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadePausar }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.pausaAtividade(req.body.unidade_trabalho_ids)
 
     const msg = 'Atividade pausada com sucesso'
@@ -341,7 +341,7 @@ router.post(
   '/atividade/reiniciar',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeReiniciar }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.reiniciaAtividade(req.body.unidade_trabalho_ids)
 
     const msg = 'Atividade reiniciada com sucesso'
@@ -466,7 +466,7 @@ router.get(
 router.put(
   '/atividades/permissoes',
   verifyAdmin,
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.redefinirPermissoes()
 
     const msg = 'Permissões das atividades em execução redefinidas'
@@ -493,7 +493,7 @@ router.post(
   schemaValidation({
     body: gerenciaSchema.bancoDados
   }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.revogarPermissoesDB(
       req.body.servidor,
       req.body.porta,
@@ -512,7 +512,7 @@ router.post(
   schemaValidation({
     body: gerenciaSchema.bancoDadosUsuario
   }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.revogarPermissoesDBUser(
       req.body.servidor,
       req.body.porta,
