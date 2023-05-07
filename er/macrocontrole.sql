@@ -117,40 +117,6 @@ ALTER FUNCTION macrocontrole.chk_lote(integer, integer)
 ALTER TABLE macrocontrole.etapa
 ADD CONSTRAINT chk_lote_consistency CHECK (macrocontrole.chk_lote(subfase_id, lote_id));
 
--- Constraint
-CREATE OR REPLACE FUNCTION macrocontrole.etapa_verifica_rev_corr()
-  RETURNS trigger AS
-$BODY$
-    DECLARE nr_erro integer;
-    BEGIN
-
-	WITH prev as (SELECT tipo_etapa_id, lag(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id, lote_id ORDER BY ordem) as prev_tipo_etapa_id
-	FROM macrocontrole.etapa),
-	prox as (SELECT tipo_etapa_id, lead(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id, lote_id ORDER BY ordem) as prox_tipo_etapa_id
-	FROM macrocontrole.etapa)
-	SELECT count(*) into nr_erro FROM (
-		SELECT 1 FROM prev WHERE tipo_etapa_id = 3 and prev_tipo_etapa_id != 2 and prev_tipo_etapa_id != 5
-	    UNION
-		SELECT 1 FROM prox WHERE (tipo_etapa_id = 2 or tipo_etapa_id = 5 ) and (prox_tipo_etapa_id != 3 OR prox_tipo_etapa_id IS NULL)
-	) as foo;
-
-	IF nr_erro > 0 THEN
-		RAISE EXCEPTION 'Etapa de Correção deve ser imediatamente após a uma etapa de Revisão.';
-	END IF;
-
-    RETURN NULL;
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION macrocontrole.etapa_verifica_rev_corr()
-  OWNER TO postgres;
-
---CREATE TRIGGER etapa_verifica_rev_corr
---AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
---FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
-
 CREATE TABLE macrocontrole.perfil_requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
 	descricao VARCHAR(255) NOT NULL,
@@ -384,6 +350,9 @@ CREATE UNIQUE INDEX atividade_unique_index
 ON macrocontrole.atividade (etapa_id, unidade_trabalho_id) 
 WHERE tipo_situacao_id in (1,2,3,4);
 
+CREATE INDEX atividade_tipo_situacao_id ON atividade ( tipo_situacao_id );
+CREATE INDEX atividade_usuario_id ON atividade ( usuario_id );
+
 -- Constraint
 CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase()
   RETURNS trigger AS
@@ -438,6 +407,8 @@ CREATE TABLE macrocontrole.perfil_bloco_operador(
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
 	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id)
 );
+CREATE INDEX perfil_bloco_operador_usuario_id ON macrocontrole.perfil_bloco_operador ( usuario_id );
+
 
 CREATE TABLE macrocontrole.perfil_dificuldade_operador(
 	id SERIAL NOT NULL PRIMARY KEY,

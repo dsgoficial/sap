@@ -532,12 +532,14 @@ controller.getBlocos = async () => {
 
 controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {
   return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
-    return t.none(
+    await t.none(
       `UPDATE macrocontrole.unidade_trabalho
       SET bloco_id = $<bloco>
       WHERE id in ($<unidadeTrabalhoIds:csv>)`,
       { unidadeTrabalhoIds, bloco }
     )
+
+    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
 }
 
@@ -698,6 +700,7 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
     )
 
     await disableTriggers.reCreateSubfaseMaterializedViewFromFases(t, lote_id, fase_id)
+    await disableTriggers.refreshMaterializedViewFromLoteNoSubfase(t, lote_id)
 
   })
 }
@@ -1761,7 +1764,10 @@ controller.criaProdutos = async (produtos, loteId) => {
     schema: 'macrocontrole'
   })
 
-  return db.sapConn.none(query)
+  await db.sapConn.none(query)
+
+  await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(t, loteId)
+
 }
 
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {

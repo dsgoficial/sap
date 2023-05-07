@@ -63,6 +63,8 @@ dt.refreshMaterializedViewFromAtivs = async (db, ativIds) => {
             FROM macrocontrole.atividade AS a
             INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
             WHERE a.id in ($<ativIds:csv>)
+            UNION
+            SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco;' AS query
         ) AS foo;`,
         { ativIds }
     );
@@ -82,6 +84,8 @@ dt.refreshMaterializedViewFromSubfases = async (db, loteId, subfaseIds) => {
             SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
             FROM macrocontrole.lote AS l
             WHERE l.id = $<loteId>
+            UNION
+            SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco;' AS query
         ) AS foo;`,
         { loteId, subfaseIds }
     );
@@ -98,6 +102,36 @@ dt.refreshMaterializedViewFromLote = async (db, loteId) => {
             INNER JOIN macrocontrole.subfase AS s ON s.fase_id = f.id
             WHERE l.id = $<loteId>
             UNION
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
+            FROM macrocontrole.lote AS l
+            WHERE l.id = $<loteId>
+            UNION
+            SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco;' AS query
+        ) AS foo;`,
+        { loteId }
+    );
+
+    return db.any(sqlview.view);
+}
+
+dt.refreshMaterializedViewFromLoteNoSubfase = async (db, loteId) => {
+    let sqlview = await db.none(
+        `SELECT string_agg(query, ' ') AS view FROM (
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
+            FROM macrocontrole.lote AS l
+            WHERE l.id = $<loteId>
+            UNION
+            SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco;' AS query
+        ) AS foo;`,
+        { loteId }
+    );
+
+    return db.any(sqlview.view);
+}
+
+dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
+    let sqlview = await db.none(
+        `SELECT string_agg(query, ' ') AS view FROM (
             SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
             FROM macrocontrole.lote AS l
             WHERE l.id = $<loteId>

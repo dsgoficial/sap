@@ -505,6 +505,10 @@ CREATE TRIGGER refresh_bloco_perfil_bloco
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.perfil_bloco_operador
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_bloco();
 
+CREATE TRIGGER refresh_bloco_perfil_producao_operador
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.perfil_producao_operador
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_bloco();
+
 CREATE TRIGGER refresh_bloco_unidade_trabalho
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.unidade_trabalho
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_bloco();
@@ -760,5 +764,36 @@ ALTER FUNCTION acompanhamento.refresh_view_acompanhamento_subfase()
 CREATE TRIGGER refresh_view_acompanhamento_subfase
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.subfase
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_subfase();
+
+CREATE OR REPLACE FUNCTION acompanhamento.refresh_view_acompanhamento_produto()
+  RETURNS trigger AS
+$BODY$
+    DECLARE lote_ident integer;
+    BEGIN
+
+    IF TG_OP = 'DELETE' THEN
+      lote_ident := OLD.lote_id;
+    ELSE
+      lote_ident := NEW.lote_id;
+    END IF;
+
+    EXECUTE 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_'|| lote_ident;
+
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+
+    END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION acompanhamento.refresh_view_acompanhamento_produto()
+  OWNER TO postgres;
+
+CREATE TRIGGER refresh_view_acompanhamento_produto
+AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.produto
+FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_produto();
 
 COMMIT;
