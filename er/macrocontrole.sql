@@ -354,32 +354,22 @@ CREATE INDEX atividade_tipo_situacao_id ON atividade ( tipo_situacao_id );
 CREATE INDEX atividade_usuario_id ON atividade ( usuario_id );
 
 -- Constraint
-CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase()
-  RETURNS trigger AS
-$BODY$
-    DECLARE nr_erro integer;
-    BEGIN
-		SELECT count(*) into nr_erro AS ut_sufase_id from macrocontrole.atividade AS a
-		INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-		INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-		WHERE e.subfase_id != ut.subfase_id OR e.lote_id != ut.lote_id;
-
-		IF nr_erro > 0 THEN
-			RAISE EXCEPTION 'Etapa e Unidade de Trabalho não devem possuir subfases ou lotes distintos.';
-		END IF;
-    RETURN NEW;
-
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION macrocontrole.atividade_verifica_subfase()
+CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase(integer, integer)
+  RETURNS BOOLEAN AS
+$$
+    SELECT NOT EXISTS (
+        SELECT 1
+        FROM macrocontrole.etapa AS e
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON $1 = e.id AND $2 = ut.id
+        WHERE e.subfase_id != ut.subfase_id OR e.lote_id != ut.lote_id
+    );
+$$
+LANGUAGE SQL;
+ALTER FUNCTION macrocontrole.chk_subfase_lote(INTEGER, INTEGER)
   OWNER TO postgres;
 
-CREATE TRIGGER atividade_verifica_subfase
-BEFORE UPDATE OR INSERT ON macrocontrole.atividade
-FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
+ALTER TABLE macrocontrole.atividade
+ADD CONSTRAINT chk_subfase_lote_consistency CHECK (macrocontrole.chk_subfase_lote(etapa_id, unidade_trabalho_id));
 
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
