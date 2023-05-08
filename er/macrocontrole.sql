@@ -484,7 +484,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_unidade_trabalho
+CREATE TRIGGER a_relacionamento_unidade_trabalho
 AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.unidade_trabalho
 FOR EACH ROW
 EXECUTE FUNCTION update_relacionamento_ut();
@@ -492,15 +492,20 @@ EXECUTE FUNCTION update_relacionamento_ut();
 CREATE OR REPLACE FUNCTION update_relacionamento_ut_prs()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
-    DELETE FROM macrocontrole.relacionamento_ut
-    WHERE EXISTS (
-      SELECT 1
-      FROM macrocontrole.pre_requisito_subfase
-      WHERE
-        (subfase_anterior_id = OLD.subfase_anterior_id AND subfase_posterior_id = OLD.subfase_posterior_id)
-    );
 
+  IF TG_OP = 'UPDATE' OR TG_OP = 'DELETE' THEN
+    DELETE FROM macrocontrole.relacionamento_ut AS ru
+	WHERE EXISTS (
+		SELECT 1
+		FROM macrocontrole.unidade_trabalho AS ut
+		INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
+		INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
+		WHERE prs.subfase_anterior_id = OLD.subfase_anterior_id AND prs.subfase_posterior_id = OLD.subfase_posterior_id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
+		AND ru.ut_id = ut.id AND ru.ut_re_id = ut_re.id
+	)
+  END IF;
+
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
     INSERT INTO macrocontrole.relacionamento_ut (ut_id, ut_re_id, tipo_pre_requisito_id)
     SELECT ut.id AS ut_id, ut_re.id AS ut_re_id, prs.tipo_pre_requisito_id
     FROM macrocontrole.unidade_trabalho AS ut
@@ -510,14 +515,6 @@ BEGIN
 
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    DELETE FROM macrocontrole.relacionamento_ut
-    WHERE EXISTS (
-      SELECT 1
-      FROM macrocontrole.pre_requisito_subfase
-      WHERE
-        (subfase_anterior_id = OLD.subfase_anterior_id AND subfase_posterior_id = OLD.subfase_posterior_id)
-    );
-
     RETURN OLD;
   END IF;
 
@@ -525,7 +522,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_pre_requisito_subfase
+CREATE TRIGGER a_relacionamento_pre_requisito_subfase
 AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.pre_requisito_subfase
 FOR EACH ROW
 EXECUTE FUNCTION update_relacionamento_ut_prs();
