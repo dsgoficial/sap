@@ -11,13 +11,10 @@ WITH atividade_data AS (
 	WHERE ppo.usuario_id = $1 AND a.tipo_situacao_id = 1 AND ut.disponivel IS TRUE
 ), filtro1 AS (
     SELECT a.id FROM atividade_data AS a
-    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-    INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
-    INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
-    WHERE ut.geom && ut_re.geom AND
-    st_relate(ut.geom, ut_re.geom, '2********') AND
-    ((a_re.tipo_situacao_id IN (1, 2, 3) AND prs.tipo_pre_requisito_id = 1) OR (a_re.tipo_situacao_id IN (2) AND prs.tipo_pre_requisito_id = 2))
+    INNER JOIN macrocontrole.relacionamento_ut AS ut_sr ON ut_sr.ut_id = a.unidade_trabalho_id
+    INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_sr.ut_re_id
+    WHERE
+    ((a_re.tipo_situacao_id IN (1, 2, 3) AND ut_sr.tipo_pre_requisito_id = 1) OR (a_re.tipo_situacao_id IN (2) AND ut_sr.tipo_pre_requisito_id = 2))	
 ), filtro3 AS (
     SELECT a.id FROM atividade_data AS a
     INNER JOIN macrocontrole.subfase AS sub ON sub.id = a.subfase_id
