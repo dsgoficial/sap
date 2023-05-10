@@ -350,8 +350,8 @@ CREATE UNIQUE INDEX atividade_unique_index
 ON macrocontrole.atividade (etapa_id, unidade_trabalho_id) 
 WHERE tipo_situacao_id in (1,2,3,4);
 
-CREATE INDEX atividade_tipo_situacao_id ON atividade ( tipo_situacao_id );
-CREATE INDEX atividade_usuario_id ON atividade ( usuario_id );
+CREATE INDEX atividade_tipo_situacao_id ON macrocontrole.atividade ( tipo_situacao_id );
+CREATE INDEX atividade_usuario_id ON macrocontrole.atividade ( usuario_id );
 
 -- Constraint
 CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase(integer, integer)
