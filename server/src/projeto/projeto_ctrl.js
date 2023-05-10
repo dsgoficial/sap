@@ -719,7 +719,7 @@ controller.criaTodasAtividades = async (lote_id) => {
       { lote_id }
     )
 
-    await disableTriggers.refreshMaterializedViewFromLote(t, loteId)
+    await disableTriggers.refreshMaterializedViewFromLote(t, lote_id)
   })
 }
 
