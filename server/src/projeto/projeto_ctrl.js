@@ -1729,45 +1729,45 @@ controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
 }
 
 controller.criaProdutos = async (produtos, loteId) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    let tipoProdutoId = await t.one(
+      `SELECT lp.tipo_produto_id FROM macrocontrole.lote AS l
+      INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = l.linha_producao_id
+      WHERE l.id = $<loteId>`,
+      { loteId }
+    );
 
-  let tipoProdutoId = await db.sapConn.one(
-    `SELECT lp.tipo_produto_id FROM macrocontrole.lote AS l
-    INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = l.linha_producao_id
-    WHERE l.id = $<loteId>`,
-    { loteId }
-  );
+    const cs = new db.pgp.helpers.ColumnSet([
+      'uuid',
+      'nome',
+      'mi',
+      'inom',
+      'denominador_escala',
+      'edicao',
+      { name: 'tipo_produto_id', init: () => tipoProdutoId.tipo_produto_id },
+      { name: 'lote_id', init: () => loteId },
+      { name: 'geom', mod: ':raw' }
+    ])
 
-  const cs = new db.pgp.helpers.ColumnSet([
-    'uuid',
-    'nome',
-    'mi',
-    'inom',
-    'denominador_escala',
-    'edicao',
-    { name: 'tipo_produto_id', init: () => tipoProdutoId.tipo_produto_id },
-    { name: 'lote_id', init: () => loteId },
-    { name: 'geom', mod: ':raw' }
-  ])
+    produtos.forEach(p => {
+      if (p.geom.toLowerCase().includes(";polygon")) {
+        throw new AppError(
+          'Geometria deve ser MULTIPOLYGON',
+          httpCode.BadRequest
+        )
+      }
+      p.geom = `st_geomfromewkt('${p.geom}')`
+    })
 
-  produtos.forEach(p => {
-    if (p.geom.toLowerCase().includes(";polygon")) {
-      throw new AppError(
-        'Geometria deve ser MULTIPOLYGON',
-        httpCode.BadRequest
-      )
-    }
-    p.geom = `st_geomfromewkt('${p.geom}')`
+    const query = db.pgp.helpers.insert(produtos, cs, {
+      table: 'produto',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+
+    await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(t, loteId)
   })
-
-  const query = db.pgp.helpers.insert(produtos, cs, {
-    table: 'produto',
-    schema: 'macrocontrole'
-  })
-
-  await db.sapConn.none(query)
-
-  await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(t, loteId)
-
 }
 
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {

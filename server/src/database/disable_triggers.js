@@ -17,7 +17,7 @@ dt.disableAllTriggersInTransaction = async (db, operationCallback) => {
 }
 
 dt.reCreateSubfaseMaterializedViewFromFases = async (db, loteId, faseIds) => {
-    let sqlview = await db.none(
+    let sqlview = await db.one(
         `
         SELECT string_agg(query, ' ') AS fix FROM (
           SELECT DISTINCT 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || $<loteId> || '_subfase_'|| s.id || 
@@ -33,7 +33,7 @@ dt.reCreateSubfaseMaterializedViewFromFases = async (db, loteId, faseIds) => {
 }
 
 dt.refreshMaterializedViewFromUTs = async (db, utIds) => {
-    let sqlview = await db.none(
+    let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
             SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || ut.lote_id || '_subfase_' || ut.subfase_id || ';' AS query
             FROM macrocontrole.unidade_trabalho AS ut
@@ -52,7 +52,7 @@ dt.refreshMaterializedViewFromUTs = async (db, utIds) => {
 }
 
 dt.refreshMaterializedViewFromAtivs = async (db, ativIds) => {
-    let sqlview = await db.none(
+    let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
             SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || ut.lote_id || '_subfase_' || ut.subfase_id || ';' AS query
             FROM macrocontrole.atividade AS a
@@ -73,7 +73,7 @@ dt.refreshMaterializedViewFromAtivs = async (db, ativIds) => {
 }
 
 dt.refreshMaterializedViewFromSubfases = async (db, loteId, subfaseIds) => {
-    let sqlview = await db.none(
+    let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
             SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || $<loteId> || '_subfase_' || s.id || ';' AS query
             FROM macrocontrole.subfase AS s
@@ -94,7 +94,7 @@ dt.refreshMaterializedViewFromSubfases = async (db, loteId, subfaseIds) => {
 }
 
 dt.refreshMaterializedViewFromLote = async (db, loteId) => {
-    let sqlview = await db.none(
+    let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
             SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || '_subfase_' || s.id || ';' AS query
             FROM macrocontrole.lote AS l
@@ -115,7 +115,7 @@ dt.refreshMaterializedViewFromLote = async (db, loteId) => {
 }
 
 dt.refreshMaterializedViewFromLoteNoSubfase = async (db, loteId) => {
-    let sqlview = await db.none(
+    let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
             SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
             FROM macrocontrole.lote AS l
@@ -130,7 +130,7 @@ dt.refreshMaterializedViewFromLoteNoSubfase = async (db, loteId) => {
 }
 
 dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
-    let sqlview = await db.none(
+    let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
             SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
             FROM macrocontrole.lote AS l

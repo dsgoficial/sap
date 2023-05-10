@@ -365,11 +365,11 @@ $$
     );
 $$
 LANGUAGE SQL;
-ALTER FUNCTION macrocontrole.chk_subfase_lote(INTEGER, INTEGER)
+ALTER FUNCTION macrocontrole.atividade_verifica_subfase(INTEGER, INTEGER)
   OWNER TO postgres;
 
 ALTER TABLE macrocontrole.atividade
-ADD CONSTRAINT chk_subfase_lote_consistency CHECK (macrocontrole.chk_subfase_lote(etapa_id, unidade_trabalho_id));
+ADD CONSTRAINT chk_subfase_lote_consistency CHECK (macrocontrole.atividade_verifica_subfase(etapa_id, unidade_trabalho_id));
 
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -500,9 +500,9 @@ BEGIN
 		FROM macrocontrole.unidade_trabalho AS ut
 		INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
 		INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
-		WHERE prs.subfase_anterior_id = OLD.subfase_anterior_id AND prs.subfase_posterior_id = OLD.subfase_posterior_id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
+		WHERE prs.subfase_anterior_id = OLD.subfase_anterior_id AND prs.subfase_posterior_id = OLD.subfase_posterior_id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********')
 		AND ru.ut_id = ut.id AND ru.ut_re_id = ut_re.id
-	)
+	);
   END IF;
 
   IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
