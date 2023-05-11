@@ -35,15 +35,34 @@ dt.reCreateSubfaseMaterializedViewFromFases = async (db, loteId, faseIds) => {
 dt.refreshMaterializedViewFromUTs = async (db, utIds) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || ut.lote_id || '_subfase_' || ut.subfase_id || ';' AS query
-            FROM macrocontrole.unidade_trabalho AS ut
-            WHERE ut.id in ($<utIds:csv>)
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || ut.lote_id || '_subfase_' || ut.subfase_id  AS viewname
+               FROM macrocontrole.unidade_trabalho AS ut
+               WHERE ut.id in ($<utIds:csv>)
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS subfase
             UNION
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || ut.lote_id || ';' AS query
-            FROM macrocontrole.unidade_trabalho AS ut
-            WHERE ut.id in ($<utIds:csv>)
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || ut.lote_id AS viewname
+               FROM macrocontrole.unidade_trabalho AS ut
+               WHERE ut.id in ($<utIds:csv>)
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS lote
             UNION
-            SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco;' AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             WHERE pgm.schemaname = 'acompanhamento' AND pgm.matviewname = 'bloco'
+            ) AS bloco
         ) AS foo;`,
         { utIds }
     );
@@ -54,17 +73,36 @@ dt.refreshMaterializedViewFromUTs = async (db, utIds) => {
 dt.refreshMaterializedViewFromAtivs = async (db, ativIds) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || ut.lote_id || '_subfase_' || ut.subfase_id || ';' AS query
-            FROM macrocontrole.atividade AS a
-            INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-            WHERE a.id in ($<ativIds:csv>)
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || ut.lote_id || '_subfase_' || ut.subfase_id  AS viewname
+               FROM macrocontrole.atividade AS a
+               INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+               WHERE a.id in ($<ativIds:csv>)
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS subfase            
             UNION
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || ut.lote_id || ';' AS query
-            FROM macrocontrole.atividade AS a
-            INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-            WHERE a.id in ($<ativIds:csv>)
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || ut.lote_id AS viewname
+               FROM macrocontrole.atividade AS a
+               INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+               WHERE a.id in ($<ativIds:csv>)
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS lote
             UNION
-            SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco;' AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             WHERE pgm.schemaname = 'acompanhamento' AND pgm.matviewname = 'bloco'
+            ) AS bloco
         ) AS foo;`,
         { ativIds }
     );
@@ -75,17 +113,36 @@ dt.refreshMaterializedViewFromAtivs = async (db, ativIds) => {
 dt.refreshMaterializedViewFromSubfases = async (db, loteId, subfaseIds) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || $<loteId> || '_subfase_' || s.id || ';' AS query
-            FROM macrocontrole.subfase AS s
-            INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
-            INNER JOIN macrocontrole.lote AS l ON f.linha_producao_id = l.linha_producao_id
-            WHERE s.id in ($<subfaseIds:csv>) AND l.id = $<loteId>
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || l.id || '_subfase_' || s.id  AS viewname
+               FROM macrocontrole.subfase AS s
+                        INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+                        INNER JOIN macrocontrole.lote AS l ON f.linha_producao_id = l.linha_producao_id
+                        WHERE s.id in ($<subfaseIds:csv>) AND l.id = $<loteId>
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS subfase            
             UNION
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
-            FROM macrocontrole.lote AS l
-            WHERE l.id = $<loteId>
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || l.id AS viewname
+               FROM macrocontrole.lote AS l
+                WHERE l.id = $<loteId>
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS lote
             UNION
-            SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco;' AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             WHERE pgm.schemaname = 'acompanhamento' AND pgm.matviewname = 'bloco'
+            ) AS bloco
         ) AS foo;`,
         { loteId, subfaseIds }
     );
@@ -96,17 +153,36 @@ dt.refreshMaterializedViewFromSubfases = async (db, loteId, subfaseIds) => {
 dt.refreshMaterializedViewFromLote = async (db, loteId) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || '_subfase_' || s.id || ';' AS query
-            FROM macrocontrole.lote AS l
-            INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = l.linha_producao_id
-            INNER JOIN macrocontrole.subfase AS s ON s.fase_id = f.id
-            WHERE l.id = $<loteId>
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || l.id || '_subfase_' || s.id  AS viewname
+               FROM macrocontrole.lote AS l
+                        INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = l.linha_producao_id
+                        INNER JOIN macrocontrole.subfase AS s ON s.fase_id = f.id
+                        WHERE l.id = $<loteId>
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS subfase
             UNION
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
-            FROM macrocontrole.lote AS l
-            WHERE l.id = $<loteId>
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || l.id AS viewname
+               FROM macrocontrole.lote AS l
+                WHERE l.id = $<loteId>
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS lote
             UNION
-            SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco;' AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             WHERE pgm.schemaname = 'acompanhamento' AND pgm.matviewname = 'bloco'
+            ) AS bloco
         ) AS foo;`,
         { loteId }
     );
@@ -117,11 +193,23 @@ dt.refreshMaterializedViewFromLote = async (db, loteId) => {
 dt.refreshMaterializedViewFromLoteNoSubfase = async (db, loteId) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
-            FROM macrocontrole.lote AS l
-            WHERE l.id = $<loteId>
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || l.id AS viewname
+               FROM macrocontrole.lote AS l
+                WHERE l.id = $<loteId>
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS lote
             UNION
-            SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.bloco;' AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             WHERE pgm.schemaname = 'acompanhamento' AND pgm.matviewname = 'bloco'
+            ) AS bloco
         ) AS foo;`,
         { loteId }
     );
@@ -132,9 +220,16 @@ dt.refreshMaterializedViewFromLoteNoSubfase = async (db, loteId) => {
 dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY acompanhamento.lote_' || l.id || ';' AS query
-            FROM macrocontrole.lote AS l
-            WHERE l.id = $<loteId>
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || l.id AS viewname
+               FROM macrocontrole.lote AS l
+                WHERE l.id = $<loteId>
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS lote
         ) AS foo;`,
         { loteId }
     );

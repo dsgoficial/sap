@@ -567,7 +567,27 @@ controller.deletaAtividades = async atividadeIds => {
         httpCode.BadRequest
       )
     }
-  
+
+
+    const lote_subfases = await t.any(
+      `SELECT DISTINCT ut.lote_id, ut.subfase_id
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
+      WHERE ut.id in ($<unidadeTrabalhoIds:csv>)`,
+      { unidadeTrabalhoIds }
+    )
+    
+    let loteId = lote_subfases[0].lote_id
+    let subfaseIds = []
+    lote_subfases.forEach(e => {
+      if(e.lote_id !== loteId){
+        throw new AppError(
+          'Atividades de lotes distintos',
+          httpCode.BadRequest
+        )
+      }
+      subfaseIds.push(e.subfase_id)
+    })
   
     await t.none(
       `
@@ -577,7 +597,7 @@ controller.deletaAtividades = async atividadeIds => {
       { atividadeIds }
     )
 
-    await disableTriggers.refreshMaterializedViewFromAtivs(t, atividadeIds)
+    await disableTriggers.refreshMaterializedViewFromSubfases(t, loteId, subfaseIds)
   })
 }
 
@@ -1619,6 +1639,24 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
       )
     }
 
+    const lote_subfases = await t.any(
+      `SELECT DISTINCT lote_id, subfase_id FROM macrocontrole.unidade_trabalho
+      WHERE id in ($<unidadeTrabalhoIds:csv>)`,
+      { unidadeTrabalhoIds }
+    )
+
+    let loteId = lote_subfases[0].lote_id
+    let subfaseIds = []
+    lote_subfases.forEach(e => {
+      if(e.lote_id !== loteId){
+        throw new AppError(
+          'Unidades de trabalho de lotes distintos',
+          httpCode.BadRequest
+        )
+      }
+      subfaseIds.push(e.subfase_id)
+    })
+
     await t.any(
       `DELETE FROM macrocontrole.insumo_unidade_trabalho
       WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>)
@@ -1633,7 +1671,7 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
       { unidadeTrabalhoIds }
     )
 
-    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
+    await disableTriggers.refreshMaterializedViewFromSubfases(t, loteId, subfaseIds)
   })
 }
 
