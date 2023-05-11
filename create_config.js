@@ -14,6 +14,9 @@ const pgp = require('pg-promise')({
   promiseLib: promise
 })
 
+const { Command } = require('commander')
+const program = new Command()
+
 const readSqlFile = file => {
   const fullPath = path.join(__dirname, file)
   return new pgp.QueryFile(fullPath, { minify: true })
@@ -220,82 +223,106 @@ const handleError = error => {
   process.exit(0)
 }
 
-const createConfig = async () => {
+const getConfigFromUser = options => {
+  const questions = []
+
+  if (!options.dbServer) {
+    questions.push({
+      type: 'input',
+      name: 'dbServer',
+      message: 'Qual o endereço de IP do servidor do banco de dados PostgreSQL?',
+    })
+  }
+  if (!options.dbPort) {
+    questions.push({
+      type: 'input',
+      name: 'dbPort',
+      message: 'Qual a porta do servidor do banco de dados PostgreSQL?',
+      default: 5432
+    })
+  }
+  if (!options.dbUser) {
+    questions.push({
+      type: 'input',
+      name: 'dbUser',
+      message: 'Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?',
+    })
+  }
+  if (!options.dbPassword) {
+    questions.push({
+      type: 'password',
+      name: 'dbPassword',
+      mask: '*',
+      message: 'Qual a senha do usuário do PostgreSQL para interação com o SAP?', 
+    })
+  }
+  if (!options.dbName) {
+    questions.push({
+      type: 'input',
+      name: 'dbName',
+      message: 'Qual o nome do banco de dados do SAP?',
+      default: 'sap'
+    })
+  }
+  if (!options.port) {
+    questions.push({
+      type: 'input',
+      name: 'port',
+      message: 'Qual a porta do servidor do SAP?',
+      default: 3013
+    })
+  }
+  if (options.dbCreate) {
+    questions.push({
+      type: 'confirm',
+      name: 'dbCreate',
+      message: 'Deseja criar o banco de dados do SAP?',
+      default: true
+    })
+  }
+  if (!options.authServerRaw) {
+    questions.push({
+      type: 'input',
+      name: 'authServerRaw',
+      message:
+        'Qual a URL do serviço de autenticação (iniciar com http:// ou https://)?',
+    })
+  }
+  if (!options.authUser) {
+    questions.push({
+      type: 'input',
+      name: 'authUser',
+      message: 'Qual o nome do usuário já existente Serviço de Autenticação que será administrador do SAP?',
+    })
+  }
+  if (!options.authPassword) {
+    questions.push({
+      type: 'password',
+      name: 'authPassword',
+      mask: '*',
+      message: 'Qual a senha do usuário já existente Serviço de Autenticação que será administrador do SAP?',
+    })
+  }
+  
+  return { questions }
+}
+
+
+const createConfig = async (options) => {
   try {
     console.log('Sistema de Apoio a Produção'.blue)
     console.log('Criação do arquivo de configuração'.blue)
-
-    const exists = verifyDotEnv()
-    if (exists) {
-      throw new Error(
-        'Arquivo config.env já existe, apague antes de iniciar a configuração.'
-      )
+    
+    if (!options.overwriteEnv) {
+      const exists = verifyDotEnv()
+      if (exists) {
+        throw new Error(
+          'Arquivo config.env já existe, apague antes de iniciar a configuração.'
+        )
+      }
     }
 
-    const questions = [
-      {
-        type: 'input',
-        name: 'dbServer',
-        message:
-          'Qual o endereço de IP do servidor do banco de dados PostgreSQL?'
-      },
-      {
-        type: 'input',
-        name: 'dbPort',
-        message: 'Qual a porta do servidor do banco de dados PostgreSQL?',
-        default: 5432
-      },
-      {
-        type: 'input',
-        name: 'dbUser',
-        message:
-          'Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?'
-      },
-      {
-        type: 'password',
-        name: 'dbPassword',
-        mask: '*',
-        message:
-          'Qual a senha do usuário do PostgreSQL para interação com o SAP?'
-      },
-      {
-        type: 'input',
-        name: 'dbName',
-        message: 'Qual o nome do banco de dados do SAP?',
-        default: 'sap'
-      },
-      {
-        type: 'input',
-        name: 'port',
-        message: 'Qual a porta do serviço do SAP?',
-        default: 3013
-      },
-      {
-        type: 'confirm',
-        name: 'dbCreate',
-        message: 'Deseja criar o banco de dados do SAP?',
-        default: true
-      },
-      {
-        type: 'input',
-        name: 'authServerRaw',
-        message:
-          'Qual a URL do serviço de autenticação (iniciar com http:// ou https://)?'
-      },
-      {
-        type: 'input',
-        name: 'authUser',
-        message:
-          'Qual o nome do usuário já existente Serviço de Autenticação que será administrador do SAP?'
-      },
-      {
-        type: 'password',
-        name: 'authPassword',
-        mask: '*',
-        message:
-          'Qual a senha do usuário já existente Serviço de Autenticação que será administrador do SAP?'
-      }
-    ]
+    let { questions } = getConfigFromUser(options)
 
     const {
       port,
@@ -308,7 +335,10 @@ const createConfig = async () => {
       authServerRaw,
       authUser,
       authPassword
-    } = await inquirer.prompt(questions)
+    } = await inquirer.prompt(questions).then(async userAnswers => {
+      const answers = { ...userAnswers, ...options }
+      return answers
+    })
 
     const authServer = authServerRaw.endsWith('/') ? authServerRaw.slice(0, -1) : authServerRaw
 
@@ -358,4 +388,21 @@ const createConfig = async () => {
   }
 }
 
-createConfig()
+program
+  .option('-dbServer, --db-server <type>', 'Endereço de IP do servidor do banco de dados PostgreSQL')
+  .option('-dbPort, --db-port <type>', 'Porta do servidor do banco de dados PostgreSQL')
+  .option('-dbUser, --db-user <type>', 'Usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)')
+  .option('-dbPassword, --db-password <type>', 'Senha do usuário do PostgreSQL para interação com o SAP')
+  .option('-dbName, --db-name <type>', 'Nome do banco de dados do SAP')
+  .option('-port, --port <type>', 'Porta do servidor do SAP')
+  .option('-dbCreate, --db-create', 'Criar banco de dados do SAP')
+  .option('--no-db-create', 'Não criar banco de dados do SAP')
+  .option('-authServerRaw, --auth-server-raw <type>', 'URL do serviço de autenticação (iniciar com http:// ou https://)')
+  .option('-authUser, --auth-user <type>', 'Nome do usuário já existente Serviço de Autenticação que será administrador do SAP')
+  .option('-authPassword, --auth-password <type>', 'Senha do usuário já existente Serviço de Autenticação que será administrador do SAP')
+  .option('-overwriteEnv, --overwrite-env', 'Sobrescrever arquivo de configuração')
+  
+
+program.parse(process.argv)
+const options = program.opts()
+createConfig(options)
