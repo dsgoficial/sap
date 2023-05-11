@@ -323,7 +323,6 @@ const createConfig = async (options) => {
     }
 
     let { questions } = getConfigFromUser(options)
-
     const {
       port,
       dbServer,
@@ -336,7 +335,7 @@ const createConfig = async (options) => {
       authUser,
       authPassword
     } = await inquirer.prompt(questions).then(async userAnswers => {
-      const answers = { ...userAnswers, ...options }
+      const answers = { ...options, ...userAnswers }
       return answers
     })
 
