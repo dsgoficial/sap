@@ -167,16 +167,9 @@ $$
       view_txt := view_txt || ' LEFT JOIN (
       SELECT ut.id FROM macrocontrole.unidade_trabalho as ut
       INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
-      INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-      INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
-      INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
-      WHERE ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, ''2********'') AND (
-        (prs.tipo_pre_requisito_id = 1 AND 
-        a_re.tipo_situacao_id IN (1, 2, 3) AND a.tipo_situacao_id = 1)
-        OR
-        (prs.tipo_pre_requisito_id = 2 AND 
-          a_re.tipo_situacao_id IN (2) AND a.tipo_situacao_id = 1)
-      )
+      INNER JOIN macrocontrole.relacionamento_ut AS ut_sr ON ut_sr.ut_id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_sr.ut_re_id
+      WHERE ((a_re.tipo_situacao_id IN (1, 2, 3) AND ut_sr.tipo_pre_requisito_id = 1) OR (a_re.tipo_situacao_id IN (2) AND ut_sr.tipo_pre_requisito_id = 2))	
       AND ut.subfase_id = ' || subfase_ident || ' AND ut.lote_id = ' || lote_ident || '
       GROUP BY ut.id) AS rest ON rest.id = ut.id';
       
