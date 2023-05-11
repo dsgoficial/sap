@@ -46,7 +46,7 @@ dt.refreshMaterializedViewFromUTs = async (db, utIds) => {
              ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
             ) AS subfase
             UNION
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
             FROM (
              SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
              FROM pg_matviews AS pgm
@@ -85,7 +85,7 @@ dt.refreshMaterializedViewFromAtivs = async (db, ativIds) => {
              ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
             ) AS subfase            
             UNION
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
             FROM (
              SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
              FROM pg_matviews AS pgm
@@ -126,7 +126,7 @@ dt.refreshMaterializedViewFromSubfases = async (db, loteId, subfaseIds) => {
              ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
             ) AS subfase            
             UNION
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
             FROM (
              SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
              FROM pg_matviews AS pgm
@@ -166,7 +166,7 @@ dt.refreshMaterializedViewFromLote = async (db, loteId) => {
              ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
             ) AS subfase
             UNION
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
             FROM (
              SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
              FROM pg_matviews AS pgm
@@ -193,7 +193,7 @@ dt.refreshMaterializedViewFromLote = async (db, loteId) => {
 dt.refreshMaterializedViewFromLoteNoSubfase = async (db, loteId) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
             FROM (
              SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
              FROM pg_matviews AS pgm
@@ -220,7 +220,7 @@ dt.refreshMaterializedViewFromLoteNoSubfase = async (db, loteId) => {
 dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
-            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view AS query
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
             FROM (
              SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
              FROM pg_matviews AS pgm
