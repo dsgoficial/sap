@@ -33,20 +33,6 @@ CREATE TABLE macrocontrole.lote(
 	descricao TEXT
 );
 
-CREATE OR REPLACE FUNCTION macrocontrole.chk_scale(integer, integer)
-  RETURNS BOOLEAN AS
-$$
-	SELECT EXISTS (
-		SELECT 1
-		FROM macrocontrole.lote
-		WHERE denominador_escala = $1
-		AND id = $2
-	);
-$$
-  LANGUAGE SQL;
-ALTER FUNCTION macrocontrole.chk_scale(integer, integer)
-  OWNER TO postgres;
-
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	uuid text NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
@@ -57,9 +43,30 @@ CREATE TABLE macrocontrole.produto(
 	edicao VARCHAR(255),
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
-	geom geometry(MULTIPOLYGON, 4326) NOT NULL,
-	CONSTRAINT chk_product_scale CHECK (macrocontrole.chk_scale(denominador_escala, lote_id))
+	geom geometry(MULTIPOLYGON, 4326) NOT NULL
 );
+
+CREATE OR REPLACE FUNCTION macrocontrole.chk_scale() RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM macrocontrole.lote
+        WHERE denominador_escala = NEW.denominador_escala
+        AND id = NEW.lote_id
+    ) THEN
+        RAISE EXCEPTION 'Scale inconsistency detected';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_scale()
+  OWNER TO postgres;
+
+CREATE TRIGGER chk_product_scale
+BEFORE INSERT OR UPDATE ON macrocontrole.produto
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.chk_scale();
+
 
 CREATE INDEX produto_geom
     ON macrocontrole.produto USING gist
@@ -99,23 +106,27 @@ CREATE TABLE macrocontrole.etapa(
 	UNIQUE (subfase_id, lote_id, ordem)
 );
 
-CREATE OR REPLACE FUNCTION macrocontrole.chk_lote(integer, integer)
-  RETURNS BOOLEAN AS
-$$
-	SELECT EXISTS (
-		SELECT 1
-		FROM macrocontrole.subfase AS s
-		INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
-		INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
-		WHERE s.id = $1 AND l.id = $2 
-	);
-$$
-  LANGUAGE SQL;
-ALTER FUNCTION macrocontrole.chk_lote(integer, integer)
+CREATE OR REPLACE FUNCTION macrocontrole.chk_lote() RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM macrocontrole.subfase AS s
+        INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+        INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
+        WHERE s.id = NEW.subfase_id AND l.id = NEW.lote_id 
+    ) THEN
+        RAISE EXCEPTION 'Lote inconsistency detected';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_lote()
   OWNER TO postgres;
 
-ALTER TABLE macrocontrole.etapa
-ADD CONSTRAINT chk_lote_consistency CHECK (macrocontrole.chk_lote(subfase_id, lote_id));
+CREATE TRIGGER chk_lote_consistency
+BEFORE INSERT OR UPDATE ON macrocontrole.etapa
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.chk_lote();
 
 CREATE TABLE macrocontrole.perfil_requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -284,23 +295,27 @@ CREATE INDEX unidade_trabalho_geom
     ON macrocontrole.unidade_trabalho USING gist
     (geom);
 
-CREATE OR REPLACE FUNCTION macrocontrole.chk_lote_ut(integer, integer)
-  RETURNS BOOLEAN AS
-$$
-	SELECT EXISTS (
-		SELECT 1
-		FROM macrocontrole.subfase AS s
-		INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
-		INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
-		WHERE s.id = $1 AND l.id = $2 
-	);
-$$
-  LANGUAGE SQL;
-ALTER FUNCTION macrocontrole.chk_lote_ut(integer, integer)
+CREATE OR REPLACE FUNCTION macrocontrole.chk_lote_ut() RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM macrocontrole.subfase AS s
+        INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+        INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
+        WHERE s.id = NEW.subfase_id AND l.id = NEW.lote_id 
+    ) THEN
+        RAISE EXCEPTION 'Lote inconsistency detected';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_lote_ut()
   OWNER TO postgres;
 
-ALTER TABLE macrocontrole.unidade_trabalho
-ADD CONSTRAINT chk_lote_consistency_ut CHECK (macrocontrole.chk_lote_ut(subfase_id, lote_id));
+CREATE TRIGGER chk_lote_consistency_ut
+BEFORE INSERT OR UPDATE ON macrocontrole.unidade_trabalho
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.chk_lote_ut();
 
 
 CREATE TABLE macrocontrole.grupo_insumo(
@@ -353,23 +368,27 @@ WHERE tipo_situacao_id in (1,2,3,4);
 CREATE INDEX atividade_tipo_situacao_id ON macrocontrole.atividade ( tipo_situacao_id );
 CREATE INDEX atividade_usuario_id ON macrocontrole.atividade ( usuario_id );
 
--- Constraint
-CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase(integer, integer)
-  RETURNS BOOLEAN AS
-$$
-    SELECT NOT EXISTS (
+CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase() RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
         SELECT 1
         FROM macrocontrole.etapa AS e
-        INNER JOIN macrocontrole.unidade_trabalho AS ut ON $1 = e.id AND $2 = ut.id
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON NEW.etapa_id = e.id AND NEW.unidade_trabalho_id = ut.id
         WHERE e.subfase_id != ut.subfase_id OR e.lote_id != ut.lote_id
-    );
-$$
-LANGUAGE SQL;
-ALTER FUNCTION macrocontrole.atividade_verifica_subfase(INTEGER, INTEGER)
+    ) THEN
+        RETURN NEW;
+    ELSE
+        RAISE EXCEPTION 'Subfase or Lote inconsistency detected';
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.atividade_verifica_subfase()
   OWNER TO postgres;
 
-ALTER TABLE macrocontrole.atividade
-ADD CONSTRAINT chk_subfase_lote_consistency CHECK (macrocontrole.atividade_verifica_subfase(etapa_id, unidade_trabalho_id));
+CREATE TRIGGER chk_subfase_lote_consistency
+BEFORE INSERT OR UPDATE ON macrocontrole.atividade
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
 
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
