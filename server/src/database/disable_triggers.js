@@ -238,30 +238,30 @@ dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
 }
 
 dt.handleRelacionamentoUtInsertUpdate = async (db, utIds) => {
-    await db.none(
-        `SELECT macrocontrole.handle_relacionamento_ut_insert_update($<utIds>)`,
-        { utIds }
+    await db.func(
+        `macrocontrole.handle_relacionamento_ut_insert_update`,
+        utIds
     );
 }
 
 dt.handleRelacionamentoUtDelete = async (db, utIds) => {
-    await db.none(
-        `SELECT macrocontrole.handle_relacionamento_ut_delete($<utIds>)`,
-        { utIds }
+    await db.func(
+        `macrocontrole.handle_relacionamento_ut_delete`,
+        utIds    
     );
 }
 
 dt.handleRelacionamentoProdutoInsertUpdate = async (db, produtoIds) => {
-    await db.none(
-        `SELECT macrocontrole.handle_relacionamento_produto_insert_update($<produtoIds>)`,
-        { produtoIds }
+    await db.func(
+        `macrocontrole.handle_relacionamento_produto_insert_update`,
+        produtoIds
     );
 }
 
 dt.handleRelacionamentoProdutoDelete = async (db, produtoIds) => {
-    await db.none(
-        `SELECT macrocontrole.handle_relacionamento_produto_delete($<produtoIds>)`,
-        { produtoIds }
+    await db.func(
+        `macrocontrole.handle_relacionamento_produto_delete`,
+        produtoIds
     );
 }
 
