@@ -479,29 +479,41 @@ CREATE TABLE macrocontrole.relacionamento_ut (
   PRIMARY KEY (ut_id, ut_re_id)
 );
 
-CREATE OR REPLACE FUNCTION handle_relacionamento_ut_insert_update(p_ids INTEGER[])
+CREATE OR REPLACE FUNCTION handle_relacionamento_ut_insert_update(ut_ids INTEGER[])
 RETURNS VOID AS $$
 BEGIN
   DELETE FROM macrocontrole.relacionamento_ut
-  WHERE ut_id = ANY(p_ids) OR ut_re_id = ANY(p_ids);
+  WHERE ut_id = ANY(ut_ids) OR ut_re_id = ANY(ut_ids);
+
+  DELETE FROM macrocontrole.relacionamento_produto
+  WHERE ut_id = ANY(ut_ids);
 
   INSERT INTO macrocontrole.relacionamento_ut (ut_id, ut_re_id, tipo_pre_requisito_id)
   SELECT ut.id AS ut_id, ut_re.id AS ut_re_id, prs.tipo_pre_requisito_id
   FROM macrocontrole.unidade_trabalho AS ut
   INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
   INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
-  WHERE (ut.id = ANY(p_ids) OR ut_re.id = ANY(p_ids)) AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
+  WHERE (ut.id = ANY(ut_ids) OR ut_re.id = ANY(ut_ids)) AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
+
+  INSERT INTO macrocontrole.relacionamento_produto (p_id, ut_id)
+  SELECT p.id AS p_id, ut.id AS ut_id
+  FROM macrocontrole.produto AS p
+  INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = p.lote_id AND p.geom && ut.geom AND st_relate(p.geom, ut.geom, '2********');
+  WHERE ut.id = ANY(ut_ids);
 END;
 $$ LANGUAGE plpgsql;
 
 ALTER FUNCTION macrocontrole.handle_relacionamento_ut_insert_update(INTEGER[])
   OWNER TO postgres;
 
-CREATE OR REPLACE FUNCTION handle_relacionamento_ut_delete(p_ids INTEGER[])
+CREATE OR REPLACE FUNCTION handle_relacionamento_ut_delete(ut_ids INTEGER[])
 RETURNS VOID AS $$
 BEGIN
   DELETE FROM macrocontrole.relacionamento_ut
-  WHERE ut_id = ANY(p_ids) OR ut_re_id = ANY(p_ids);
+  WHERE ut_id = ANY(ut_ids) OR ut_re_id = ANY(ut_ids);
+
+  DELETE FROM macrocontrole.relacionamento_produto
+  WHERE ut_id = ANY(ut_ids);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -580,15 +592,14 @@ CREATE TABLE macrocontrole.relacionamento_produto (
 CREATE OR REPLACE FUNCTION handle_relacionamento_produto_insert_update(p_ids INTEGER[])
 RETURNS VOID AS $$
 BEGIN
-  DELETE FROM macrocontrole.relacionamento_ut
-  WHERE ut_id = ANY(p_ids) OR ut_re_id = ANY(p_ids);
+  DELETE FROM macrocontrole.relacionamento_produto
+  WHERE p_id = ANY(p_ids);
 
-  INSERT INTO macrocontrole.relacionamento_ut (ut_id, ut_re_id, tipo_pre_requisito_id)
-  SELECT ut.id AS ut_id, ut_re.id AS ut_re_id, prs.tipo_pre_requisito_id
-  FROM macrocontrole.unidade_trabalho AS ut
-  INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-  INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
-  WHERE (ut.id = ANY(p_ids) OR ut_re.id = ANY(p_ids)) AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
+  INSERT INTO macrocontrole.relacionamento_produto (p_id, ut_id)
+  SELECT p.id AS p_id, ut.id AS ut_id
+  FROM macrocontrole.produto AS p
+  INNER JOIN macrocontrole.unidade_trabalho AS ut  ON ut.lote_id = p.lote_id AND p.geom && ut.geom AND st_relate(p.geom, ut.geom, '2********');
+  WHERE p.id = ANY(p_ids);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -598,8 +609,8 @@ ALTER FUNCTION macrocontrole.handle_relacionamento_produto_insert_update(INTEGER
 CREATE OR REPLACE FUNCTION handle_relacionamento_produto_delete(p_ids INTEGER[])
 RETURNS VOID AS $$
 BEGIN
-  DELETE FROM macrocontrole.relacionamento_ut
-  WHERE ut_id = ANY(p_ids) OR ut_re_id = ANY(p_ids);
+  DELETE FROM macrocontrole.relacionamento_produto
+  WHERE p_id = ANY(p_ids);
 END;
 $$ LANGUAGE plpgsql;
 
