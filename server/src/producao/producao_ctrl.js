@@ -419,14 +419,6 @@ controller.verifica = async (usuarioId) => {
     return null
   }
 
-  // Medida de segurança para tornar outras atividades que estão em execução como pausadas
-  await db.sapConn.none(
-    `UPDATE macrocontrole.atividade SET
-       tipo_situacao_id = 3 
-       WHERE tipo_situacao_id = 2 AND usuario_id = $<usuarioId> AND id != $<emAndamentoId>`,
-    { usuarioId, emAndamentoId: emAndamento.id }
-  )
-
   return controller.getDadosAtividade(emAndamento.id, usuarioId, false)
 }
 

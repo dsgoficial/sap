@@ -739,8 +739,8 @@ controller.criaTodasAtividades = async (lote_id) => {
       { lote_id }
     )
 
-    await disableTriggers.refreshMaterializedViewFromLote(t, lote_id)
   })
+  await disableTriggers.refreshMaterializedViewFromLote(db.sapConn, lote_id)
 }
 
 controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
