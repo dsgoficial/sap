@@ -479,7 +479,7 @@ CREATE TABLE macrocontrole.relacionamento_ut (
   PRIMARY KEY (ut_id, ut_re_id)
 );
 
-CREATE OR REPLACE FUNCTION handle_relacionamento_ut_insert_update(ut_ids INTEGER[])
+CREATE OR REPLACE FUNCTION macrocontrole.handle_relacionamento_ut_insert_update(ut_ids INTEGER[])
 RETURNS VOID AS $$
 BEGIN
   DELETE FROM macrocontrole.relacionamento_ut
@@ -498,7 +498,7 @@ BEGIN
   INSERT INTO macrocontrole.relacionamento_produto (p_id, ut_id)
   SELECT p.id AS p_id, ut.id AS ut_id
   FROM macrocontrole.produto AS p
-  INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = p.lote_id AND p.geom && ut.geom AND st_relate(p.geom, ut.geom, '2********');
+  INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = p.lote_id AND p.geom && ut.geom AND st_relate(p.geom, ut.geom, '2********')
   WHERE ut.id = ANY(ut_ids);
 END;
 $$ LANGUAGE plpgsql;
@@ -506,7 +506,7 @@ $$ LANGUAGE plpgsql;
 ALTER FUNCTION macrocontrole.handle_relacionamento_ut_insert_update(INTEGER[])
   OWNER TO postgres;
 
-CREATE OR REPLACE FUNCTION handle_relacionamento_ut_delete(ut_ids INTEGER[])
+CREATE OR REPLACE FUNCTION macrocontrole.handle_relacionamento_ut_delete(ut_ids INTEGER[])
 RETURNS VOID AS $$
 BEGIN
   DELETE FROM macrocontrole.relacionamento_ut
@@ -589,7 +589,7 @@ CREATE TABLE macrocontrole.relacionamento_produto (
 );
 
 
-CREATE OR REPLACE FUNCTION handle_relacionamento_produto_insert_update(p_ids INTEGER[])
+CREATE OR REPLACE FUNCTION macrocontrole.handle_relacionamento_produto_insert_update(p_ids INTEGER[])
 RETURNS VOID AS $$
 BEGIN
   DELETE FROM macrocontrole.relacionamento_produto
@@ -598,7 +598,7 @@ BEGIN
   INSERT INTO macrocontrole.relacionamento_produto (p_id, ut_id)
   SELECT p.id AS p_id, ut.id AS ut_id
   FROM macrocontrole.produto AS p
-  INNER JOIN macrocontrole.unidade_trabalho AS ut  ON ut.lote_id = p.lote_id AND p.geom && ut.geom AND st_relate(p.geom, ut.geom, '2********');
+  INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = p.lote_id AND p.geom && ut.geom AND st_relate(p.geom, ut.geom, '2********')
   WHERE p.id = ANY(p_ids);
 END;
 $$ LANGUAGE plpgsql;
@@ -606,7 +606,7 @@ $$ LANGUAGE plpgsql;
 ALTER FUNCTION macrocontrole.handle_relacionamento_produto_insert_update(INTEGER[])
   OWNER TO postgres;
 
-CREATE OR REPLACE FUNCTION handle_relacionamento_produto_delete(p_ids INTEGER[])
+CREATE OR REPLACE FUNCTION macrocontrole.handle_relacionamento_produto_delete(p_ids INTEGER[])
 RETURNS VOID AS $$
 BEGIN
   DELETE FROM macrocontrole.relacionamento_produto

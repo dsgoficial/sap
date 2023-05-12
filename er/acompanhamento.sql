@@ -312,13 +312,13 @@ $$
           (SELECT ut.id, ut.geom, min(a.data_inicio) as data_inicio,
           (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
           FROM macrocontrole.unidade_trabalho AS ut
-          INNER JOIN macrocontrole.relacionamento_produto AS rp ON rp.ut_id = ut.id AND rp.p_id = p.id
+          INNER JOIN macrocontrole.produto AS p ON p.lote_id = ut.lote_id
           INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
           INNER JOIN
           (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
           ON a.unidade_trabalho_id = ut.id
           WHERE s.fase_id = ' || r.id || ' AND ut.lote_id = ' || lote_ident || '
-          GROUP BY ut.id) AS ut' || iterator;
+          GROUP BY ut.id) AS ut' || iterator || ' ON ut' || iterator || '.id = rp.ut_id';
 
         rules_txt := rules_txt || '<rule symbol="' ||  (2*iterator - 2) || '" key="{' || uuid_generate_v4() ||'}" label="' || nome_fixed || ' não iniciada" filter="' || fases_concluidas_txt || nome_fixed || '_data_inicio IS NULL "/>';
         rules_txt := rules_txt || '<rule symbol="' ||  (2*iterator - 1) || '" key="{' || uuid_generate_v4() ||'}" label="' || nome_fixed || ' em execução" filter="' || fases_concluidas_txt || nome_fixed || '_data_fim IS NULL AND ' || nome_fixed || '_data_inicio IS NOT NULL"/>';
@@ -332,7 +332,7 @@ $$
 
       END LOOP;
 
-      view_txt := view_txt || ' FROM macrocontrole.produto AS p INNER JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id';
+      view_txt := view_txt || ' FROM macrocontrole.produto AS p INNER JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id INNER JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id';
       view_txt := view_txt || jointxt;
       view_txt := view_txt || ' WHERE p.lote_id = ' || lote_ident || ' GROUP BY p.id, tp.nome;';
 
