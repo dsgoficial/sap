@@ -237,4 +237,32 @@ dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
     return db.any(sqlview.view);
 }
 
+dt.handleRelacionamentoUtInsertUpdate = async (db, utIds) => {
+    await db.none(
+        `SELECT macrocontrole.handle_relacionamento_ut_insert_update($<utIds>)`,
+        { utIds }
+    );
+}
+
+dt.handleRelacionamentoUtDelete = async (db, utIds) => {
+    await db.none(
+        `SELECT macrocontrole.handle_relacionamento_ut_delete($<utIds>)`,
+        { utIds }
+    );
+}
+
+dt.handleRelacionamentoProdutoInsertUpdate = async (db, produtoIds) => {
+    await db.none(
+        `SELECT macrocontrole.handle_relacionamento_produto_insert_update($<produtoIds>)`,
+        { produtoIds }
+    );
+}
+
+dt.handleRelacionamentoProdutoDelete = async (db, produtoIds) => {
+    await db.none(
+        `SELECT macrocontrole.handle_relacionamento_produto_delete($<produtoIds>)`,
+        { produtoIds }
+    );
+}
+
 module.exports = dt

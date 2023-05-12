@@ -312,13 +312,13 @@ $$
           (SELECT ut.id, ut.geom, min(a.data_inicio) as data_inicio,
           (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
           FROM macrocontrole.unidade_trabalho AS ut
+          INNER JOIN macrocontrole.relacionamento_produto AS rp ON rp.ut_id = ut.id AND rp.p_id = p.id
           INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
           INNER JOIN
           (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
           ON a.unidade_trabalho_id = ut.id
           WHERE s.fase_id = ' || r.id || ' AND ut.lote_id = ' || lote_ident || '
-          GROUP BY ut.id) AS ut' || iterator || '
-          ON ut' || iterator || '.geom && p.geom AND st_relate(ut' || iterator || '.geom, p.geom, ''2********'')';
+          GROUP BY ut.id) AS ut' || iterator;
 
 
 

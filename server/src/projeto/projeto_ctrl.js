@@ -1671,6 +1671,7 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
       { unidadeTrabalhoIds }
     )
 
+    await disableTriggers.handleRelacionamentoUtDelete(t, unidadeTrabalhoIds)
     await disableTriggers.refreshMaterializedViewFromSubfases(t, loteId, subfaseIds)
   })
 }
@@ -1681,25 +1682,32 @@ controller.copiarUnidadeTrabalho = async (
   associarInsumos
 ) => {
   return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
-    const utOldNew = {}
-    for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
-      for (const subfaseId of subfaseIds) {
-        const unidadeTrabalho = await t.oneOrNone(
-          `
-            INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade)
-            SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade
-            FROM macrocontrole.unidade_trabalho
-            WHERE id = $<unidadeTrabalhoId>
-            RETURNING id
-          `,
-          { subfaseId, unidadeTrabalhoId }
-        )
-        if(!(unidadeTrabalhoId in utOldNew)) {
-          utOldNew[unidadeTrabalhoId] = []
-        }
-        utOldNew[unidadeTrabalhoId].push(unidadeTrabalho.id)
+    let utIdSubfaseIdPairs = unidadeTrabalhoIds.flatMap(utId => subfaseIds.map(subfaseId => ({ utId, subfaseId })));
+    let utIdSubfaseIdPairsPg = utIdSubfaseIdPairs.map(pair => `(${pair.utId}, ${pair.subfaseId})`);
+
+    // Insert all rows in a single operation
+    let utOldNew = await t.any(
+      `
+        INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade)
+        SELECT nome, geom, epsg, dado_producao_id, ut_subfases.subfase_id AS subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade
+        FROM macrocontrole.unidade_trabalho
+        JOIN unnest(ARRAY[${utIdSubfaseIdPairsPg.join(',')}]) AS ut_subfases(ut_id, subfase_id)
+        ON macrocontrole.unidade_trabalho.id = ut_subfases.ut_id
+        RETURNING id, ut_subfases.ut_id AS old_id
+      `
+    );
+    // Group the returned rows by old_id
+    let utOldNewGrouped = utOldNew.reduce((acc, row) => {
+      if (!(row.old_id in acc)) {
+        acc[row.old_id] = [];
       }
-    }
+      acc[row.old_id].push(row.id);
+      return acc;
+    }, {});
+
+    // Replace utOldNew with the grouped version
+    utOldNew = utOldNewGrouped;
+    let newUnidadeTrabalhoIds = [].concat(...Object.values(utOldNew));
 
     if (associarInsumos) {
       const insumos = await t.any(
@@ -1731,6 +1739,7 @@ controller.copiarUnidadeTrabalho = async (
       await t.none(query)
     }
 
+    await disableTriggers.handleRelacionamentoUtInsertUpdate(t, newUnidadeTrabalhoIds)
     await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
 }
@@ -1800,10 +1809,11 @@ controller.criaProdutos = async (produtos, loteId) => {
     const query = db.pgp.helpers.insert(produtos, cs, {
       table: 'produto',
       schema: 'macrocontrole'
-    })
+    })  + ' RETURNING id'
+  
+    const produtoIds = await t.map(query, undefined, a => +a.id)
 
-    await t.none(query)
-
+    await disableTriggers.handleRelacionamentoProdutoInsertUpdate(t, produtoIds)
     await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(t, loteId)
   })
 }
@@ -1840,10 +1850,11 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) =>
     const query = db.pgp.helpers.insert(unidadesTrabalhoTotal, cs, {
       table: 'unidade_trabalho',
       schema: 'macrocontrole'
-    })
+    })  + ' RETURNING id'
   
-    await t.none(query)
+    const unidadeTrabalhoIds = await t.map(query, undefined, a => +a.id)
 
+    await disableTriggers.handleRelacionamentoUtInsertUpdate(t, unidadeTrabalhoIds)
     await disableTriggers.refreshMaterializedViewFromSubfases(t, loteId, subfaseIds)
   })
 }

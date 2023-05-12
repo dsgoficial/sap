@@ -589,11 +589,6 @@ controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
     }
     await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
-
-
-  await db.sapConn.tx(async t => {
-
-  })
 }
 
 controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
