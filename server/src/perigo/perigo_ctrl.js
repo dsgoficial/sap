@@ -12,9 +12,9 @@ const { AppError, httpCode } = require('../utils')
 const controller = {}
 
 controller.limpaAtividades = async usuarioId => {
-
+  let ativids;
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
-    const updatedIds = t.any(
+    const updatedIds = await t.any(
       `UPDATE macrocontrole.atividade
       SET usuario_id = NULL, data_inicio = NULL, data_fim = NULL, tipo_situacao_id = 1
       WHERE usuario_id = $<usuarioId> RETURNING id`,
@@ -28,10 +28,10 @@ controller.limpaAtividades = async usuarioId => {
       )
     }
 
-    let ativids = updatedIds.map(row => row.id)
+    ativids = updatedIds.map(row => row.id)
   
-    await disableTriggers.refreshMaterializedViewFromAtivs(t, ativids)
   })
+  await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativids)
 }
 
 controller.limpaLog = async() => {

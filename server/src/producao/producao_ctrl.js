@@ -1,6 +1,6 @@
 'use strict'
 
-const { db, temporaryLogin } = require('../database')
+const { db, temporaryLogin, disableTriggers } = require('../database')
 
 const { AppError, httpCode } = require('../utils')
 
@@ -431,21 +431,23 @@ controller.finaliza = async (
   observacaoProximaAtividade
 ) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async t => {
+  let ativ
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     // Usuário é passado como uma medida de segurança para garantir que quem está finalizando é o usuário da atividade
-    const result = await t.result(
+    const result = await t.any(
       `UPDATE macrocontrole.atividade SET
         data_fim = $<dataFim>, tipo_situacao_id = 4
-        WHERE id = $<atividadeId> AND usuario_id = $<usuarioId> AND tipo_situacao_id in (2)`,
+        WHERE id = $<atividadeId> AND usuario_id = $<usuarioId> AND tipo_situacao_id in (2) RETURNING id`,
       { dataFim, atividadeId, usuarioId }
     )
 
-    if (!result.rowCount || result.rowCount !== 1) {
+    if (!(result && result.length > 0)) {
       throw new AppError(
         'Erro ao finalizar atividade. Atividade não encontrada ou não corresponde a este operador',
         httpCode.BadRequest
       )
     }
+    ativ = result.map(d => d.id)
 
     if (observacaoProximaAtividade) {
       const obsResult = await t.result(
@@ -522,6 +524,8 @@ controller.finaliza = async (
 
     await temporaryLogin.resetPassword(atividadeId, usuarioId)
   })
+  //nonblocking call
+  disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ)
 }
 
 controller.inicia = async (usuarioId) => {
@@ -530,7 +534,8 @@ controller.inicia = async (usuarioId) => {
   if (!prioridade) {
     return null
   }
-  await db.sapConn.tx(async t => {
+  let ativ
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const verify = await t.oneOrNone(
       `SELECT id FROM macrocontrole.atividade
       WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 2`,
@@ -556,17 +561,21 @@ controller.inicia = async (usuarioId) => {
           SELECT id from macrocontrole.atividade WHERE id = $<prioridade>)`,
       { prioridade }
     )
-    const result = await t.result(
+    const result = await t.any(
       `UPDATE macrocontrole.atividade SET
           data_inicio = $<dataInicio>, tipo_situacao_id = 2, usuario_id = $<usuarioId>
-          WHERE id = $<prioridade> and tipo_situacao_id IN (1,3)`,
+          WHERE id = $<prioridade> and tipo_situacao_id IN (1,3) RETURNING id`,
       { dataInicio, prioridade, usuarioId }
     )
 
-    if (!result.rowCount) {
+    if (!(result && result.length > 0)) {
       throw new AppError('Não pode iniciar a tarefa selecionada para a fila')
     }
+
+    ativ = result.map(d => d.id)
   })
+  //nonblocking call
+  disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ)
 
   return controller.getDadosAtividade(prioridade, usuarioId, true)
 }
@@ -578,21 +587,24 @@ controller.problemaAtividade = async (
   usuarioId
 ) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async t => {
-    const result = await t.result(
+  let ativ
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    const result = await t.any(
       `
       UPDATE macrocontrole.atividade SET
       data_fim = $<dataFim>, tipo_situacao_id = 5
-      WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId>
+      WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId> RETURNING id
       `,
       { dataFim, atividadeId, usuarioId }
     )
-    if (!result.rowCount) {
+    if (!(result && result.length > 0)) {
       throw new AppError(
         'Não foi possível de reportar problema, atividade não encontrada ou não corresponde a uma atividade em execução do usuário',
         httpCode.BadRequest
       )
     }
+    ativ = result.map(d => d.id)
+
     const atividade = await t.one(
       `SELECT a.etapa_id, a.unidade_trabalho_id, ST_AsText(ut.geom) AS geom
       FROM macrocontrole.atividade AS a
@@ -636,6 +648,8 @@ controller.problemaAtividade = async (
 
     await temporaryLogin.resetPassword(atividadeId, usuarioId)
   })
+  //nonblocking call
+  disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ)
 }
 
 controller.getTipoProblema = async () => {

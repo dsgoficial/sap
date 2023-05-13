@@ -531,7 +531,7 @@ controller.getBlocos = async () => {
 }
 
 controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {
-  return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     await t.none(
       `UPDATE macrocontrole.unidade_trabalho
       SET bloco_id = $<bloco>
@@ -539,12 +539,13 @@ controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {
       { unidadeTrabalhoIds, bloco }
     )
 
-    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.deletaAtividades = async atividadeIds => {
-
+  let loteId
+  let subfaseIds = []
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const result = await t.result(
       `
@@ -577,8 +578,7 @@ controller.deletaAtividades = async atividadeIds => {
       { unidadeTrabalhoIds }
     )
     
-    let loteId = lote_subfases[0].lote_id
-    let subfaseIds = []
+    loteId = lote_subfases[0].lote_id
     lote_subfases.forEach(e => {
       if(e.lote_id !== loteId){
         throw new AppError(
@@ -597,8 +597,8 @@ controller.deletaAtividades = async atividadeIds => {
       { atividadeIds }
     )
 
-    await disableTriggers.refreshMaterializedViewFromSubfases(t, loteId, subfaseIds)
   })
+  await disableTriggers.refreshMaterializedViewFromSubfases(db.sapConn, loteId, subfaseIds)
 }
 
 controller.deletaAtividadesUnidadeTrabalho = async unidadeTrabalhoIds => {
@@ -612,14 +612,14 @@ controller.deletaAtividadesUnidadeTrabalho = async unidadeTrabalhoIds => {
       { unidadeTrabalhoIds }
     )
 
-    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 
 
 }
 
 controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
-  return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const exists = await t.any(
       `SELECT e.id FROM macrocontrole.etapa AS e
        INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
@@ -719,10 +719,10 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
       { fase_id, lote_id }
     )
 
-    await disableTriggers.reCreateSubfaseMaterializedViewFromFases(t, lote_id, fase_id)
-    await disableTriggers.refreshMaterializedViewFromLoteNoSubfase(t, lote_id)
-
   })
+
+  await disableTriggers.reCreateSubfaseMaterializedViewFromFases(db.sapConn, lote_id, fase_id)
+  await disableTriggers.refreshMaterializedViewFromLoteNoSubfase(db.sapConn, lote_id)
 }
 
 controller.criaTodasAtividades = async (lote_id) => {
@@ -765,8 +765,8 @@ controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
       )
     }
 
-    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.getProjetos = async () => {
@@ -1625,7 +1625,9 @@ controller.deletaInsumosAssociados = async (
 }
 
 controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
-  return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+  let loteId
+  let subfaseIds = []
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const atividadeAssociada = await t.oneOrNone(
       `SELECT a.id FROM macrocontrole.atividade AS a
       WHERE a.unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>)
@@ -1645,8 +1647,7 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
       { unidadeTrabalhoIds }
     )
 
-    let loteId = lote_subfases[0].lote_id
-    let subfaseIds = []
+    loteId = lote_subfases[0].lote_id
     lote_subfases.forEach(e => {
       if(e.lote_id !== loteId){
         throw new AppError(
@@ -1670,10 +1671,9 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
     `,
       { unidadeTrabalhoIds }
     )
-
-    await disableTriggers.handleRelacionamentoUtDelete(t, unidadeTrabalhoIds)
-    await disableTriggers.refreshMaterializedViewFromSubfases(t, loteId, subfaseIds)
   })
+  await disableTriggers.handleRelacionamentoUtDelete(db.sapConn, unidadeTrabalhoIds)
+  await disableTriggers.refreshMaterializedViewFromSubfases(db.sapConn, loteId, subfaseIds)
 }
 
 controller.copiarUnidadeTrabalho = async (
@@ -1681,7 +1681,8 @@ controller.copiarUnidadeTrabalho = async (
   unidadeTrabalhoIds,
   associarInsumos
 ) => {
-  return disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+  let newUnidadeTrabalhoIds 
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     let utIdSubfaseIdPairs = unidadeTrabalhoIds.flatMap(utId => subfaseIds.map(subfaseId => ({ utId, subfaseId })));
     let utIdSubfaseIdPairsPg = utIdSubfaseIdPairs.map(pair => `(${pair.utId}, ${pair.subfaseId})`);
 
@@ -1707,7 +1708,7 @@ controller.copiarUnidadeTrabalho = async (
 
     // Replace utOldNew with the grouped version
     utOldNew = utOldNewGrouped;
-    let newUnidadeTrabalhoIds = [].concat(...Object.values(utOldNew));
+    newUnidadeTrabalhoIds = [].concat(...Object.values(utOldNew));
 
     if (associarInsumos) {
       const insumos = await t.any(
@@ -1738,10 +1739,9 @@ controller.copiarUnidadeTrabalho = async (
 
       await t.none(query)
     }
-
-    await disableTriggers.handleRelacionamentoUtInsertUpdate(t, newUnidadeTrabalhoIds)
-    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, newUnidadeTrabalhoIds)
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, newUnidadeTrabalhoIds)
 }
 
 controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
@@ -1776,6 +1776,7 @@ controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
 }
 
 controller.criaProdutos = async (produtos, loteId) => {
+  let produtoIds
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     let tipoProdutoId = await t.one(
       `SELECT lp.tipo_produto_id FROM macrocontrole.lote AS l
@@ -1811,14 +1812,14 @@ controller.criaProdutos = async (produtos, loteId) => {
       schema: 'macrocontrole'
     })  + ' RETURNING id'
   
-    const produtoIds = await t.map(query, undefined, a => +a.id)
-
-    await disableTriggers.handleRelacionamentoProdutoInsertUpdate(t, produtoIds)
-    await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(t, loteId)
+    produtoIds = await t.map(query, undefined, a => +a.id)
   })
+  await disableTriggers.handleRelacionamentoProdutoInsertUpdate(db.sapConn, produtoIds)
+  await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(db.sapConn, loteId)
 }
 
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {
+  let unidadeTrabalhoIds
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
@@ -1852,11 +1853,10 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) =>
       schema: 'macrocontrole'
     })  + ' RETURNING id'
   
-    const unidadeTrabalhoIds = await t.map(query, undefined, a => +a.id)
-
-    await disableTriggers.handleRelacionamentoUtInsertUpdate(t, unidadeTrabalhoIds)
-    await disableTriggers.refreshMaterializedViewFromSubfases(t, loteId, subfaseIds)
+    unidadeTrabalhoIds = await t.map(query, undefined, a => +a.id)
   })
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, unidadeTrabalhoIds)
+  await disableTriggers.refreshMaterializedViewFromSubfases(db.sapConn, loteId, subfaseIds)
 }
 
 controller.associaInsumos = async (

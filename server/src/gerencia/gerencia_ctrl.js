@@ -510,8 +510,8 @@ controller.unidadeTrabalhoDisponivel = async (
       await pausaAtividadeMethod(unidadeTrabalhoIds, t)
     }
 
-    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.pausaAtividade = async (unidadeTrabalhoIds) => {
@@ -524,8 +524,8 @@ controller.pausaAtividade = async (unidadeTrabalhoIds) => {
       )
     }
 
-    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
@@ -587,8 +587,8 @@ controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
     for (const u of usersResetPassword) {
       await temporaryLogin.resetPassword(u.id, u.usuario_id)
     }
-    await disableTriggers.refreshMaterializedViewFromUTs(t, unidadeTrabalhoIds)
   })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
@@ -657,8 +657,8 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
       )
     }
 
-    await disableTriggers.refreshMaterializedViewFromAtivs(t, atividadeIds)
   })
+  await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, atividadeIds)
 }
 
 controller.avancaAtividade = async (atividadeIds, concluida) => {
@@ -731,8 +731,8 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
       { atividadeIds, comparisonOperator, dataFim }
     )
 
-    await disableTriggers.refreshMaterializedViewFromAtivs(t, atividadeIds)
   })
+  await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, atividadeIds)
 }
 
 controller.criaFilaPrioritaria = async (
