@@ -10,13 +10,13 @@ WITH atividade_data AS (
   INNER JOIN macrocontrole.perfil_bloco_operador AS pbo ON pbo.bloco_id = b.id AND pbo.usuario_id = ppo.usuario_id
 	WHERE ppo.usuario_id = $1 AND a.tipo_situacao_id = 1 AND ut.disponivel IS TRUE
 ), filtro1 AS (
-    SELECT a.id FROM atividade_data AS a
+    SELECT DISTINCT a.id FROM atividade_data AS a
     INNER JOIN macrocontrole.relacionamento_ut AS ut_sr ON ut_sr.ut_id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_sr.ut_re_id
     WHERE
     ((a_re.tipo_situacao_id IN (1, 2, 3) AND ut_sr.tipo_pre_requisito_id = 1) OR (a_re.tipo_situacao_id IN (2) AND ut_sr.tipo_pre_requisito_id = 2))	
 ), filtro3 AS (
-    SELECT a.id FROM atividade_data AS a
+    SELECT DISTINCT a.id FROM atividade_data AS a
     INNER JOIN macrocontrole.subfase AS sub ON sub.id = a.subfase_id
     INNER JOIN macrocontrole.fase AS fa ON fa.id = sub.fase_id
     INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
@@ -33,7 +33,7 @@ WITH atividade_data AS (
         (re.tipo_restricao_id = 3 AND (a_re.usuario_id = $1 OR (u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)))
     ) AND a_re.tipo_situacao_id in (1,2,3,4)
 ), filtro4 AS (
-    SELECT a.id FROM atividade_data AS a
+    SELECT DISTINCT a.id FROM atividade_data AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
     INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
     INNER JOIN macrocontrole.restricao_etapa AS re ON re.etapa_posterior_id = a.etapa_id
@@ -47,16 +47,17 @@ WITH atividade_data AS (
       (re.tipo_restricao_id = 3 AND (a_re.usuario_id = $1 OR (u_re.tipo_turno_id != u.tipo_turno_id AND u_re.tipo_turno_id != 3 AND u.tipo_turno_id != 3)))
     ) AND a_re.tipo_situacao_id in (1,2,3,4)
 ), filtro5 AS (
-  SELECT atividade_id FROM macrocontrole.fila_prioritaria
+  SELECT DISTINCT atividade_id AS id FROM macrocontrole.fila_prioritaria
   UNION
-  SELECT atividade_id FROM macrocontrole.fila_prioritaria_grupo
+  SELECT DISTINCT atividade_id AS id FROM macrocontrole.fila_prioritaria_grupo
 ), atividade_filtered AS (
-  SELECT *
-  FROM atividade_data
-  WHERE id NOT IN (SELECT id FROM filtro1)
-  AND id NOT IN (SELECT id FROM filtro3)
-  AND id NOT IN (SELECT id FROM filtro4)
-  AND id NOT IN (SELECT id FROM filtro5)
+  SELECT ad.*
+  FROM atividade_data AS ad
+  LEFT JOIN filtro1 AS f1 ON ad.id = f1.id
+  LEFT JOIN filtro3 AS f3 ON ad.id = f3.id
+  LEFT JOIN filtro4 AS f4 ON ad.id = f4.id
+  LEFT JOIN filtro5 AS f5 ON ad.id = f5.id
+  WHERE f1.id IS NULL AND f3.id IS NULL AND f4.id IS NULL AND f5.id IS NULL
 ), utstats AS (
   SELECT ut.dificuldade, count(*) AS diff_count
   FROM macrocontrole.perfil_dificuldade_operador AS pdo

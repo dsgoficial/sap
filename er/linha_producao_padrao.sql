@@ -313,7 +313,7 @@ INSERT INTO macrocontrole.camada (id, schema, nome) VALUES
 (91,'edgv', 'infra_vala_l'), -- 91
 (92,'edgv', 'llp_delimitacao_fisica_l'), -- 92
 (93 ,'edgv', 'llp_limite_especial_a'), -- 93
-(94,'edgv', 'llp_limite_especial_l'), -- 94
+(94,'edgv', 'edicao_limite_especial_l'), -- 94
 (95,'edgv', 'llp_ponto_controle_p'), -- 95
 (96,'edgv', 'edicao_borda_elemento_hidrografico_l'), -- 96 inserida
 (97,'edgv', 'delimitador_area_sem_dados_l'), -- 97 inserida
@@ -919,7 +919,6 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (37, NULL, FALSE, NULL, NULL, 28),
 (38, NULL, FALSE, NULL, NULL, 28),
 (39, NULL, FALSE, NULL, NULL, 28),
-(40, NULL, FALSE, NULL, NULL, 28),
 (41, NULL, FALSE, NULL, NULL, 28),
 (42, NULL, FALSE, NULL, NULL, 28),
 (43, NULL, FALSE, NULL, NULL, 28),
@@ -975,7 +974,6 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (37, NULL, FALSE, NULL, NULL, 29),
 (38, NULL, FALSE, NULL, NULL, 29),
 (39, NULL, FALSE, NULL, NULL, 29),
-(40, NULL, FALSE, NULL, NULL, 29),
 (41, NULL, FALSE, NULL, NULL, 29),
 (42, NULL, FALSE, NULL, NULL, 29),
 (43, NULL, FALSE, NULL, NULL, 29),
@@ -1049,7 +1047,6 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (37, NULL, FALSE, NULL, NULL, 30),
 (38, NULL, FALSE, NULL, NULL, 30),
 (39, NULL, FALSE, NULL, NULL, 30),
-(40, NULL, FALSE, NULL, NULL, 30),
 (41, NULL, FALSE, NULL, NULL, 30),
 (42, NULL, FALSE, NULL, NULL, 30),
 (43, NULL, FALSE, NULL, NULL, 30),
@@ -1126,7 +1123,6 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (37, NULL, FALSE, NULL, NULL, 31),
 (38, NULL, FALSE, NULL, NULL, 31),
 (39, NULL, FALSE, NULL, NULL, 31),
-(40, NULL, FALSE, NULL, NULL, 31),
 (41, NULL, FALSE, NULL, NULL, 31),
 (42, NULL, FALSE, NULL, NULL, 31),
 (43, NULL, FALSE, NULL, NULL, 31),
@@ -1209,7 +1205,6 @@ INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase
 (37, NULL, FALSE, NULL, NULL, 34),
 (38, NULL, FALSE, NULL, NULL, 34),
 (39, NULL, FALSE, NULL, NULL, 34),
-(40, NULL, FALSE, NULL, NULL, 34),
 (41, NULL, FALSE, NULL, NULL, 34),
 (42, NULL, FALSE, NULL, NULL, 34),
 (43, NULL, FALSE, NULL, NULL, 34),

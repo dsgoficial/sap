@@ -412,7 +412,7 @@ $$
 
       END LOOP;
 
-      view_txt := view_txt || ' FROM (SELECT b.id, b.nome, b.lote_id, b.prioridade, ST_UNION(ut.geom) as geom 
+      view_txt := view_txt || ' FROM (SELECT b.id, b.nome, b.lote_id, b.prioridade, ST_Collect(ut.geom) as geom 
                                 FROM macrocontrole.bloco AS b
                                 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.bloco_id = b.id 
                                 GROUP BY b.id) AS b
