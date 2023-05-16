@@ -18,6 +18,16 @@ const qgisProject = require('./qgis_project')
 
 const controller = {}
 
+const getUsuarioNomeById = async usuarioId => {
+  const usuario = await db.sapConn.one(
+    `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as posto_nome FROM dgeo.usuario as u
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    WHERE u.id = $<usuarioId>`,
+    { usuarioId }
+  )
+  return usuario.posto_nome
+}
+
 controller.getProject = async () => {
   return { projeto: qgisProject }
 }
