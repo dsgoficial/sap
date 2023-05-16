@@ -320,7 +320,7 @@ models.perfilDificuldadeOperadorAtualizacao = Joi.object().keys({
 })
 
 models.plugins = Joi.object().keys({
-  atalhos: Joi.array()
+  plugins: Joi.array()
     .items(
       Joi.object().keys({
         nome: Joi.string().required(),
@@ -346,41 +346,6 @@ models.pluginsAtualizacao = Joi.object().keys({
 
 models.pluginsIds = Joi.object().keys({
   plugins_ids: Joi.array()
-    .items(Joi.number().integer().strict().required())
-    .unique()
-    .required()
-    .min(1)
-})
-
-models.atalhos = Joi.object().keys({
-  atalhos: Joi.array()
-    .items(
-      Joi.object().keys({
-        ferramenta: Joi.string().required(),
-        idioma: Joi.string().required(),
-        atalho: Joi.string().required()
-      })
-    )
-    .required()
-})
-
-models.atalhosAtualizacao = Joi.object().keys({
-  atalhos: Joi.array()
-    .items(
-      Joi.object().keys({
-        id: Joi.number().integer().strict().required(),
-        ferramenta: Joi.string().required(),
-        idioma: Joi.string().required(),
-        atalho: Joi.string().required()
-      })
-    )
-    .unique('id')
-    .required()
-    .min(1)
-})
-
-models.atalhosIds = Joi.object().keys({
-  atalhos_ids: Joi.array()
     .items(Joi.number().integer().strict().required())
     .unique()
     .required()

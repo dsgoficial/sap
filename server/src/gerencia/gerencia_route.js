@@ -622,7 +622,7 @@ router.get(
 router.post(
   '/atalhos',
   verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.atalhos }),
+  schemaValidation({ body: gerenciaSchema.qgisShortcuts }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.gravaAtalhos(req.body.atalhos, req.usuarioId)
 
@@ -635,7 +635,7 @@ router.post(
 router.put(
   '/atalhos',
   verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.atalhosAtualizacao }),
+  schemaValidation({ body: gerenciaSchema.qgisShortcutsAtualizacao }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.atualizaAtalhos(req.body.atalhos, req.usuarioId)
 
@@ -648,7 +648,7 @@ router.put(
 router.delete(
   '/atalhos',
   verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.atalhosIds }),
+  schemaValidation({ body: gerenciaSchema.qgisShortcutsIds }),
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.deletaAtalhos(req.body.atalhos_ids)
 
