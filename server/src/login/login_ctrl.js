@@ -57,11 +57,11 @@ const verificaPlugins = async (plugins) => {
       const listplugins = []
 
       pluginsMinimos.forEach((pm) => {
-        listplugins.push(pm.nome + '-' + pm.versao_minima)
+        listplugins.push(pm.nome + ' - Versão: ' + pm.versao_minima)
       })
 
-      const msg = `Plugins desatualizados ou não instalados. Os seguintes plugins são necessários: ${listplugins.join(
-        ', '
+      const msg = `Plugins desatualizados, não instalados ou desabilitados. Os seguintes plugins são necessários: \n ${listplugins.join(
+        '\n '
       )}`
       throw new AppError(msg, httpCode.BadRequest)
     }
