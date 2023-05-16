@@ -1006,7 +1006,6 @@ controller.gravaAtalhos = async (atalhos, usuarioId) => {
       { name: 'owner', init: () => usuarioPostoNome },
       { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
     ])
-
     const query = db.pgp.helpers.insert(atalhos, cs, {
       table: 'qgis_shortcuts',
       schema: 'dgeo'
