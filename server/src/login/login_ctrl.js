@@ -116,7 +116,7 @@ controller.login = async (usuario, senha, aplicacao, plugins, qgis) => {
     throw new AppError('Usuário ou senha inválida', httpCode.BadRequest)
   }
 
-  if (aplicacao === 'sap_fp' || aplicacao === 'sap_fg') {
+  if (aplicacao === 'sap_fp') {
     await verificaQGIS(qgis)
 
     await verificaPlugins(plugins)
