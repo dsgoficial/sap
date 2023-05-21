@@ -68,8 +68,8 @@ INSERT INTO dominio.tipo_produto (code, nome) VALUES
 (19, 'Carta ortoimagem de OM'),
 (20, 'Conjunto de dados geoespaciais vetoriais - MUVD'),
 (21, 'Modelo Digital de Superfície - TREx'),
-(22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0');
-
+(22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0'),
+(23, 'Conjunto de dados geoespaciais vetoriais para Trafegabilidade');
 
 -- Fase é somente para agrupar as Subfases
 -- Deve ser correspondente as fases do RTM e a fases previstas no metadado do BDGEx
