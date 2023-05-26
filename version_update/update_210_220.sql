@@ -360,7 +360,8 @@ $$
       INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
       INNER JOIN macrocontrole.relacionamento_ut AS ut_sr ON ut_sr.ut_id = a.unidade_trabalho_id
       INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_sr.ut_re_id
-      WHERE ((a_re.tipo_situacao_id IN (1, 2, 3) AND ut_sr.tipo_pre_requisito_id = 1) OR (a_re.tipo_situacao_id IN (2) AND ut_sr.tipo_pre_requisito_id = 2))	
+      WHERE ((a_re.tipo_situacao_id IN (1, 2, 3) AND ut_sr.tipo_pre_requisito_id = 1) OR (a_re.tipo_situacao_id IN (2) AND ut_sr.tipo_pre_requisito_id = 2))
+      AND a.tipo_situacao_id = 1  	
       AND ut.subfase_id = ' || subfase_ident || ' AND ut.lote_id = ' || lote_ident || '
       GROUP BY ut.id) AS rest ON rest.id = ut.id';
       
@@ -664,6 +665,27 @@ ALTER FUNCTION acompanhamento.refresh_view_acompanhamento_produto()
 CREATE TRIGGER refresh_view_acompanhamento_produto
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.produto
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_produto();
+
+INSERT INTO macrocontrole.relacionamento_ut (ut_id, ut_re_id, tipo_pre_requisito_id)
+SELECT ut.id AS ut_id, ut_re.id AS ut_re_id, prs.tipo_pre_requisito_id
+FROM macrocontrole.unidade_trabalho AS ut
+INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
+INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
+WHERE ut.id != ut_re.id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
+
+INSERT INTO macrocontrole.relacionamento_produto (p_id, ut_id)
+SELECT p.id AS p_id, ut.id AS ut_id
+FROM macrocontrole.produto AS p
+INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = p.lote_id AND p.geom && ut.geom AND st_relate(p.geom, ut.geom, '2********');
+
+DROP MATERIALIZED VIEW IF EXISTS acompanhamento.bloco;
+SELECT acompanhamento.cria_view_acompanhamento_bloco();
+
+UPDATE macrocontrole.etapa
+SET id = id;
+
+UPDATE macrocontrole.lote
+SET id = id;
 
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
