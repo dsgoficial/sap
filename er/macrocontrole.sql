@@ -539,7 +539,7 @@ ALTER FUNCTION macrocontrole.update_relacionamento_ut()
 CREATE TRIGGER a_relacionamento_unidade_trabalho
 AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.unidade_trabalho
 FOR EACH ROW
-EXECUTE FUNCTION macrocontrole.update_relacionamento_ut();
+EXECUTE PROCEDURE macrocontrole.update_relacionamento_ut();
 
 CREATE OR REPLACE FUNCTION macrocontrole.update_relacionamento_ut_prs()
 RETURNS TRIGGER AS $$
@@ -580,7 +580,7 @@ ALTER FUNCTION macrocontrole.update_relacionamento_ut_prs()
 CREATE TRIGGER a_relacionamento_pre_requisito_subfase
 AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.pre_requisito_subfase
 FOR EACH ROW
-EXECUTE FUNCTION macrocontrole.update_relacionamento_ut_prs();
+EXECUTE PROCEDURE macrocontrole.update_relacionamento_ut_prs();
 
 CREATE TABLE macrocontrole.relacionamento_produto (
   p_id INTEGER NOT NULL,
@@ -636,6 +636,6 @@ ALTER FUNCTION macrocontrole.update_relacionamento_produto()
 CREATE TRIGGER a_relacionamento_produto
 AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.produto
 FOR EACH ROW
-EXECUTE FUNCTION macrocontrole.update_relacionamento_produto();
+EXECUTE PROCEDURE macrocontrole.update_relacionamento_produto();
 
 COMMIT;
