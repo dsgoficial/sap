@@ -493,7 +493,7 @@ BEGIN
   FROM macrocontrole.unidade_trabalho AS ut
   INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
   INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
-  WHERE (ut.id = ANY(ut_ids) OR ut_re.id = ANY(ut_ids)) AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
+  WHERE (ut.id = ANY(ut_ids) OR ut_re.id = ANY(ut_ids)) AND ut.id != ut_re.id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
 
   INSERT INTO macrocontrole.relacionamento_produto (p_id, ut_id)
   SELECT p.id AS p_id, ut.id AS ut_id
