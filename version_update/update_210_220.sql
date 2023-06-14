@@ -143,10 +143,10 @@ CREATE OR REPLACE FUNCTION macrocontrole.update_relacionamento_ut()
 RETURNS TRIGGER AS $$
 BEGIN
   IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
-    PERFORM handle_relacionamento_ut_insert_update(ARRAY[NEW.id]);
+    PERFORM macrocontrole.handle_relacionamento_ut_insert_update(ARRAY[NEW.id]);
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    PERFORM handle_relacionamento_ut_delete(ARRAY[OLD.id]);
+    PERFORM macrocontrole.handle_relacionamento_ut_delete(ARRAY[OLD.id]);
     RETURN OLD;
   END IF;
 END;
