@@ -574,8 +574,8 @@ controller.deletaAtividades = async atividadeIds => {
       `SELECT DISTINCT ut.lote_id, ut.subfase_id
       FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
-      WHERE ut.id in ($<unidadeTrabalhoIds:csv>)`,
-      { unidadeTrabalhoIds }
+      WHERE a.id in ($<atividadeIds:csv>)`,
+      { atividadeIds }
     )
     
     loteId = lote_subfases[0].lote_id
