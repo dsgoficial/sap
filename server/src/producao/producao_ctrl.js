@@ -213,37 +213,51 @@ const getInfoLinhagem = async (
       perfilLinhagem.tipo_exibicao_id === 3)
   ) {
     linhagem = await connection.any(
-      `SELECT a_ant.data_inicio, a_ant.data_fim, u.nome_guerra, tpg.nome_abrev AS posto_grad,
-        replace(etapa.nome || ' - ' || etapa.numero, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
+      `SELECT a.data_inicio, a.data_fim, u.nome_guerra, tpg.nome_abrev AS posto_grad,
+      tf.nome AS fase, sf.nome AS subfase, ut.lote_id,
+      replace(te.nome || ' - ' || e.ordem, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
+      FROM macrocontrole.atividade AS a
+      INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a.tipo_situacao_id
+      INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
+      INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.etapa AS e ON a.etapa_id = e.id
+      INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+      INNER JOIN macrocontrole.subfase AS sf ON sf.id = e.subfase_id
+      INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
+      INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+      INNER JOIN (
+        SELECT ut.geom, ut.lote_id
         FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
-        INNER JOIN (
-          SELECT e.nome, se.id, se.ordem,
-          rank() OVER (PARTITION BY e.nome ORDER BY se.ordem) as numero 
-          FROM dominio.tipo_etapa AS e
-          INNER JOIN macrocontrole.etapa AS se ON e.code = se.tipo_etapa_id) AS etapa ON etapa.id = a_ant.etapa_id
-        INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a_ant.tipo_situacao_id
-        INNER JOIN dgeo.usuario AS u ON u.id = a_ant.usuario_id
-        INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
         WHERE a.id = $1
-        ORDER BY etapa.ordem, a_ant.data_fim
+      ) AS ut_ref ON ut_ref.lote_id = ut.lote_id AND ut.geom && ut_ref.geom AND st_relate(ut.geom, ut_ref.geom, '2********')
+      WHERE ts.code != 5
+      ORDER BY f.ordem, sf.nome, a.data_fim
         `,
       [atividadeId]
     )
   } else {
     linhagem = await connection.any(
-      `SELECT a_ant.data_inicio, a_ant.data_fim,
-        replace(etapa.nome || ' - ' || etapa.numero, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
+      `SELECT a.data_inicio, a.data_fim,
+      tf.nome AS fase, sf.nome AS subfase, ut.lote_id,
+      replace(te.nome || ' - ' || e.ordem, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
+      FROM macrocontrole.atividade AS a
+      INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a.tipo_situacao_id
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.etapa AS e ON a.etapa_id = e.id
+      INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+      INNER JOIN macrocontrole.subfase AS sf ON sf.id = e.subfase_id
+      INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
+      INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+      INNER JOIN (
+        SELECT ut.geom, ut.lote_id
         FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
-        INNER JOIN (
-          SELECT e.nome, se.id, se.ordem,
-          rank() OVER (PARTITION BY e.nome ORDER BY se.ordem) as numero 
-          FROM dominio.tipo_etapa AS e
-          INNER JOIN macrocontrole.etapa AS se ON e.code = se.tipo_etapa_id) AS etapa ON etapa.id = a_ant.etapa_id
-        INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a_ant.tipo_situacao_id
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
         WHERE a.id = $1
-        ORDER BY etapa.ordem, a_ant.data_fim
+      ) AS ut_ref ON ut_ref.lote_id = ut.lote_id AND ut.geom && ut_ref.geom AND st_relate(ut.geom, ut_ref.geom, '2********')
+      WHERE ts.code != 5
+      ORDER BY f.ordem, sf.nome, a.data_fim
         `,
       [atividadeId]
     )

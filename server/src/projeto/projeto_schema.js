@@ -312,6 +312,13 @@ models.perfilMenuIds = Joi.object().keys({
     .min(1)
 })
 
+models.perfilLinhagemIds = Joi.object().keys({
+  perfil_linhagem_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
 
 models.perfilRequisitoIds = Joi.object().keys({
   perfil_requisito_ids: Joi.array()
@@ -377,6 +384,19 @@ models.perfisMenu= Joi.object().keys({
       Joi.object().keys({
         menu_id: Joi.number().integer().strict().required(),
         menu_revisao: Joi.boolean().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfisLinhagem= Joi.object().keys({
+  perfis_linhagem: Joi.array()
+    .items(
+      Joi.object().keys({
+        tipo_exibicao_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         lote_id: Joi.number().integer().strict().required(),
       })
@@ -503,6 +523,23 @@ models.perfilMenuAtualizacao = Joi.object().keys({
     .required()
     .min(1)
 })
+
+models.perfilLinhagemAtualizacao = Joi.object().keys({
+  perfis_linhagem: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        tipo_exibicao_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+
 
 models.perfilFMEAtualizacao = Joi.object().keys({
   perfis_fme: Joi.array()

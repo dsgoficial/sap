@@ -950,6 +950,63 @@ router.put(
 )
 
 router.get(
+  '/configuracao/perfil_linhagem',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilLinhagem()
+
+    const msg = 'Perfil Linhagem QGIS retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_linhagem',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilLinhagemIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilLinhagem(req.body.perfil_linhagem_ids)
+
+    const msg = 'Perfil Linhagem QGIS deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_linhagem',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfisLinhagem
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilLinhagem(req.body.perfis_linhagem)
+
+    const msg = 'Perfis Linhagem QGIS criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_linhagem',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilLinhagemAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilLinhagem(req.body.perfis_linhagem)
+
+    const msg = 'Perfis Linhagem atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
   '/configuracao/perfil_modelo',
   verifyAdmin,
   asyncHandler(async (req, res, next) => {

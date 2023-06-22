@@ -2549,5 +2549,77 @@ controller.deleteAlias = async aliasId => {
   })
 }
 
+controller.getPerfilLinhagem = async () => {
+  return db.sapConn.any(
+    `SELECT pl.id, te.nome AS tipo_exibicao, pl.tipo_exibicao_id, pl.subfase_id, pl.lote_id
+    FROM macrocontrole.perfil_linhagem AS pl
+    INNER JOIN dominio.tipo_exibicao AS te ON te.code = pl.tipo_exibicao_id`
+  )
+}
+
+controller.criaPerfilLinhagem = async perfilLinhagem => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'tipo_exibicao_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilLinhagem, cs, {
+      table: 'perfil_linhagem',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilLinhagem = async perfilLinhagem => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'tipo_exibicao_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilLinhagem,
+        cs,
+        { table: 'perfil_linhagem', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilLinhagem= async perfilLinhagemId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_linhagem
+      WHERE id in ($<perfilLinhagemId:csv>)`,
+      { perfilLinhagemId }
+    )
+    if (exists && exists.length < perfilLinhagemId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil linhagem',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_linhagem
+      WHERE id in ($<perfilLinhagemId:csv>)`,
+      { perfilLinhagemId }
+    )
+  })
+}
+
 
 module.exports = controller
