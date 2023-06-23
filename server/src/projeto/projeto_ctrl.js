@@ -177,6 +177,22 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
+    const f_table_schema = estilos.f_table_schema
+    const f_table_name = estilos.f_table_name
+    const grupo_estilo_id = estilos.grupo_estilo_id
+
+    const exists = await t.any(
+      `SELECT id FROM dgeo.layer_styles
+      WHERE f_table_schema = $<f_table_schema> AND f_table_name = $<f_table_name> AND grupo_estilo_id = $<grupo_estilo_id>`,
+      { f_table_schema, f_table_name, grupo_estilo_id }
+    )
+    if (exists && exists.length < estilosId.length) {
+      throw new AppError(
+        'O estilo já foi cadastrado',
+        httpCode.BadRequest
+      )
+    }
+
     const cs = new db.pgp.helpers.ColumnSet([
       'f_table_schema',
       'f_table_name',
