@@ -1073,6 +1073,37 @@ controller.deletaAtalhos = async atalhoIds => {
   })
 }
 
+controller.getProblemaAtividade = async () => {
+  return db.sapConn.any(
+    `SELECT pa.id, tpg.nome_abrev || ' ' || u.nome_guerra AS usuario, pa.atividade_id, pa.descricao, pa.data, pa.resolvido, tp.nome AS tipo_problema
+    FROM macrocontrole.problema_atividade AS pa
+    INNER JOIN dominio.tipo_problema AS tp ON tp.code = pa.tipo_problema_id
+    INNER JOIN dgeo.usuario AS u ON u.id = pa.usuario_id
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id`
+  )
+}
+
+controller.atualizaProblemaAtividade = async (problemaAtividade) => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'resolvido',
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        problemaAtividade,
+        cs,
+        { table: 'problema_atividade', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
 
 
 module.exports = controller

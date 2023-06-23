@@ -134,6 +134,20 @@ models.qgisShortcutsAtualizacao = Joi.object().keys({
     .min(1)
 })
 
+models.problemaAtividadeAtualizacao = Joi.object().keys({
+  problema_atividade: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        resolvido: Joi.boolean().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+
 
 models.qgisShortcutsIds = Joi.object().keys({
   qgis_shortcuts_ids: Joi.array()

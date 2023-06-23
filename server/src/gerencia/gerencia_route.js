@@ -658,5 +658,29 @@ router.delete(
   })
 )
 
+router.get(
+  '/problema_atividade',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getProblemaAtividade()
+
+    const msg = 'Problema atividade retornada'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/problema_atividade',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.problemaAtividadeAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaProblemaAtividade(req.body.problema_atividade)
+
+    const msg = 'Problema atividade atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
 
 module.exports = router
