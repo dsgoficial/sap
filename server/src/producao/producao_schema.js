@@ -35,7 +35,8 @@ models.finaliza = Joi.object().keys({
 models.problemaAtividade = Joi.object().keys({
   atividade_id: Joi.number().integer().strict().required(),
   tipo_problema_id: Joi.number().integer().strict().required(),
-  descricao: Joi.string().required()
+  descricao: Joi.string().required(),
+  polygon_ewkt: Joi.string().required()
 })
 
 models.atividadeId = Joi.object().keys({

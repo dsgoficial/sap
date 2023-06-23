@@ -69,6 +69,7 @@ router.post(
       req.body.atividade_id,
       req.body.tipo_problema_id,
       req.body.descricao,
+      req.body.polygon_ewkt,
       req.usuarioId
     )
     const msg = 'Problema de atividade reportado com sucesso'

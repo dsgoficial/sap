@@ -703,6 +703,17 @@ SET id = id;
 UPDATE macrocontrole.lote
 SET id = id;
 
+ALTER TABLE macrocontrole.problema_atividade
+ADD COLUMN usuario_id INTEGER NOT NULL DEFAULT 1;
+
+ALTER TABLE macrocontrole.problema_atividade
+ADD CONSTRAINT problema_atividade_usuario_id_fkey FOREIGN KEY (usuario_id)
+        REFERENCES dgeo.usuario (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION;
+
+ALTER TABLE macrocontrole.problema_atividade ALTER COLUMN usuario_id DROP DEFAULT;
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

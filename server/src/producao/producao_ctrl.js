@@ -599,6 +599,7 @@ controller.problemaAtividade = async (
   atividadeId,
   tipoProblemaId,
   descricao,
+  polygonEwkt,
   usuarioId
 ) => {
   const dataFim = new Date()
@@ -641,17 +642,19 @@ controller.problemaAtividade = async (
     )
     await t.any(
       `
-      INSERT INTO macrocontrole.problema_atividade(atividade_id, tipo_problema_id, descricao, data, resolvido, geom)
-      VALUES($<id>,$<tipoProblemaId>,$<descricao>, NOW(), FALSE, ST_GEOMFROMEWKT($<geom>))
+      INSERT INTO macrocontrole.problema_atividade(atividade_id, usuario_id, tipo_problema_id, descricao, data, resolvido, geom)
+      VALUES($<id>,$<usuarioId>,$<tipoProblemaId>,$<descricao>, NOW(), FALSE, ST_GEOMFROMEWKT($<geom>))
       `,
       {
         id: newId.id,
+        usuarioId: usuarioId,
         unidadeTrabalhoId: atividade.unidade_trabalho_id,
         tipoProblemaId,
         descricao,
-        geom: `SRID=4326;${atividade.geom}`
+        geom: polygonEwkt
       }
     )
+
     await t.any(
       `
         UPDATE macrocontrole.unidade_trabalho SET
@@ -663,6 +666,7 @@ controller.problemaAtividade = async (
 
     await temporaryLogin.resetPassword(atividadeId, usuarioId)
   })
+
   //nonblocking call
   disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ)
 }

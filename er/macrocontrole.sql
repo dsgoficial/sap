@@ -447,6 +447,7 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
+ 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	tipo_problema_id SMALLINT NOT NULL REFERENCES dominio.tipo_problema (code),
 	descricao TEXT NOT NULL,
 	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
