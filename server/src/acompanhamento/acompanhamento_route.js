@@ -152,6 +152,18 @@ router.get(
   })
 )
 
+router.get(
+  '/grade_acompanhamento',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.acompanhamentoGrade()
+
+    const msg = 'Grades de acompanhamento retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+
 /*
 router.get(
   '/projetos',

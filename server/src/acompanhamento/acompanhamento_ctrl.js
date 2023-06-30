@@ -1,6 +1,6 @@
 'use strict'
 
-const {format, subWeeks, subMonths} = require('date-fns');
+const { format, subWeeks, subMonths } = require('date-fns');
 
 const { db } = require('../database')
 
@@ -9,7 +9,7 @@ const { AppError, httpCode } = require('../utils')
 const controller = {}
 
 
-controller.getInfoSubfaseLote = async (subfaseId, loteId) => {
+controller.getInfoSubfaseLote = async (subfaseId, loteId) => {//Verificar
   const atividades = db.sapConn.any(
     `SELECT a.etapa_id, e.ordem AS etapa_ordem, te.nome AS etapa_nome, a.tipo_situacao_id, a.data_inicio, a.data_fim
     FROM macrocontrole.atividade AS a
@@ -19,12 +19,12 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {
     WHERE ut.subfase_id = $<subfaseId> AND ut.lote_id = $<loteId> AND a.tipo_situacao_id != 5
     ORDER BY e.ordem
     `,
-    {subfaseId, loteId}
+    { subfaseId, loteId }
   )
   const estatisticas = {}
 
   atividades.forEach(a => {
-    if(!(a.etapa_id in estatisticas)){
+    if (!(a.etapa_id in estatisticas)) {
       estatisticas[a.etapa_id] = {}
       estatisticas[a.etapa_id].nome = a.etapa_nome
       estatisticas[a.etapa_id].atividades_em_execucao = 0
@@ -36,34 +36,34 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {
       estatisticas[a.etapa_id].atividades_finalizadas_semana_anterior = 0
     }
 
-    if(a.tipo_situacao === 2){
+    if (a.tipo_situacao === 2) {
       estatisticas[a.etapa_id].atividades_em_execucao += 1
     }
-    if(a.tipo_situacao === 3){
+    if (a.tipo_situacao === 3) {
       estatisticas[a.etapa_id].atividades_pausadas += 1
     }
-    if(a.tipo_situacao === 1){
+    if (a.tipo_situacao === 1) {
       estatisticas[a.etapa_id].atividades_restantes += 1
     }
-    const dataFim = format(a.data_fim,'dd.MM.yyyy')
-    const hoje = format(new Date(),'dd.MM.yyyy')
-    const semanaFim = format(a.data_fim,'I.yyyy')
-    const semana = format(new Date(),'I.yyyy')
+    const dataFim = format(a.data_fim, 'dd.MM.yyyy')
+    const hoje = format(new Date(), 'dd.MM.yyyy')
+    const semanaFim = format(a.data_fim, 'I.yyyy')
+    const semana = format(new Date(), 'I.yyyy')
     const semanaAnterior = subWeeks(new Date(), 1)
 
-    if(a.tipo_situacao === 4){
+    if (a.tipo_situacao === 4) {
       estatisticas[a.etapa_id].atividades_finalizada += 1
     }
 
-    if(a.tipo_situacao === 4 && dataFim === hoje){
+    if (a.tipo_situacao === 4 && dataFim === hoje) {
       estatisticas[a.etapa_id].atividades_finalizadas_hoje += 1
     }
 
-    if(a.tipo_situacao === 4 && semanaFim === semana){
+    if (a.tipo_situacao === 4 && semanaFim === semana) {
       estatisticas[a.etapa_id].atividades_finalizadas_semana += 1
     }
 
-    if(a.tipo_situacao === 4 && semanaFim === semanaAnterior){
+    if (a.tipo_situacao === 4 && semanaFim === semanaAnterior) {
       estatisticas[a.etapa_id].atividades_finalizadas_semana_anterior += 1
     }
   })
@@ -71,7 +71,7 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {
   return estatisticas
 }
 
-controller.getInfoLote = async loteId => {
+controller.getInfoLote = async loteId => {//Verificar
   const atividades = db.sapConn.any(
     `SELECT p.id, s.fase_id, f.ordem AS fase_ordem, tf.nome AS fase_nome, min(a.data_inicio) as data_inicio, 
     (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
@@ -85,12 +85,12 @@ controller.getInfoLote = async loteId => {
     GROUP BY p.id, s.fase_id, f.ordem, tf.nome
     ORDER BY f.ordem
     `,
-    {loteId}
+    { loteId }
   )
   const estatisticas = {}
 
   atividades.forEach(a => {
-    if(!(a.fase_id in estatisticas)){
+    if (!(a.fase_id in estatisticas)) {
       estatisticas[a.fase_id] = {}
       estatisticas[a.fase_id].nome = a.fase_nome
       estatisticas[a.fase_id].atividades_finalizadas = 0
@@ -102,35 +102,35 @@ controller.getInfoLote = async loteId => {
       estatisticas[a.fase_id].atividades_finalizadas_mes_anterior = 0
     }
 
-    if(a.data_inicio && a.data_fim){
+    if (a.data_inicio && a.data_fim) {
       estatisticas[a.fase_id].atividades_finalizadas += 1
     }
-    if(a.data_inicio && !a.data_fim){
+    if (a.data_inicio && !a.data_fim) {
       estatisticas[a.fase_id].atividades_em_execucao += 1
     }
-    if(!a.data_inicio && !a.data_fim){
+    if (!a.data_inicio && !a.data_fim) {
       estatisticas[a.fase_id].atividades_restantes += 1
     }
-    const semanaFim = format(a.data_fim,'I.yyyy')
-    const semana = format(new Date(),'I.yyyy')
-    const mesFim = format(a.data_fim,'M.yyyy')
-    const mes = format(new Date(),'M.yyyy')
+    const semanaFim = format(a.data_fim, 'I.yyyy')
+    const semana = format(new Date(), 'I.yyyy')
+    const mesFim = format(a.data_fim, 'M.yyyy')
+    const mes = format(new Date(), 'M.yyyy')
     const semanaAnterior = subWeeks(new Date(), 1)
     const mesAnterior = subMonths(new Date(), 1)
 
 
 
-    if(a.data_inicio && a.data_fim && semanaFim === semana){
+    if (a.data_inicio && a.data_fim && semanaFim === semana) {
       estatisticas[a.fase_id].atividades_finalizada_semana += 1
     }
-    if(a.data_inicio && a.data_fim && mesFim === mes){
+    if (a.data_inicio && a.data_fim && mesFim === mes) {
       estatisticas[a.fase_id].atividades_finalizadas_mes += 1
     }
 
-    if(a.data_inicio && a.data_fim && semanaFim === semanaAnterior){
+    if (a.data_inicio && a.data_fim && semanaFim === semanaAnterior) {
       estatisticas[a.fase_id].atividades_finalizadas_semana_anterior += 1
     }
-    if(a.data_inicio && a.data_fim && mesFim === mesAnterior){
+    if (a.data_inicio && a.data_fim && mesFim === mesAnterior) {
       estatisticas[a.fase_id].atividades_finalizadas_mes_anterior += 1
     }
   })
@@ -138,25 +138,6 @@ controller.getInfoLote = async loteId => {
   return estatisticas
 }
 
-
-controller.usuariosSemAtividade = async () => {
-  return db.sapConn.any(
-    `SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno
-    FROM dgeo.usuario AS u
-    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-    INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-    LEFT JOIN 
-    (
-      SELECT id, usuario_id 
-      FROM macrocontrole.atividade AS ee 
-      WHERE ee.tipo_situacao_id = 2
-      ) AS ee
-    ON ee.usuario_id = u.id
-    WHERE ee.id IS NULL AND u.ativo IS TRUE
-    ORDER BY u.nome_guerra;
-    `
-  )
-}
 controller.ultimosLogin = async () => {
   return db.sapConn.any(
     `SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno, l.data_login
@@ -172,37 +153,7 @@ controller.ultimosLogin = async () => {
   )
 }
 
-controller.usuariosLogadosHoje = async () => {
-  return db.sapConn.any(
-    `SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno, l.data_ultimo_login
-    FROM dgeo.usuario AS u
-    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-    INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-    INNER JOIN
-    (SELECT usuario_id, max(data_login) as data_ultimo_login FROM acompanhamento.login GROUP BY usuario_id) AS l
-    ON l.usuario_id = u.id
-    WHERE l.data_ultimo_login::date = now()::date
-    ORDER BY l.data_ultimo_login DESC;
-    `
-  )
-}
-
-controller.usuariosNaoLogadosHoje = async () => {
-  return db.sapConn.any(
-    `SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno, l.data_login
-    FROM dgeo.usuario AS u
-    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-    INNER JOIN dominio.tipo_turno AS tt ON tt.code = u.tipo_turno_id
-    INNER JOIN
-    (SELECT usuario_id, max(data_login) as data_login FROM acompanhamento.login GROUP BY usuario_id) AS l
-    ON l.usuario_id = u.id
-    WHERE u.ativo IS TRUE and l.data_login::date != now()::date
-    ORDER BY l.data_login DESC;
-    `
-  )
-}
-
-controller.quantitativoFilaDistribuicao = async () => {
+controller.quantitativoFilaDistribuicao = async () => {//Verificar
   return db.sapConn.any(
     `SELECT ROW_NUMBER () OVER (ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.bloco_id) AS id,
     ativ.perfil_producao_id, pp.nome AS perfil_producao, 
@@ -275,7 +226,7 @@ controller.quantitativoFilaDistribuicao = async () => {
   )
 }
 
-controller.quantitativoAtividades = async () => {
+controller.quantitativoAtividades = async () => {//Verificar
   return db.sapConn.any(
     `SELECT ROW_NUMBER () OVER (ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.bloco_id) AS id, 
     ativ.etapa_id, te.nome as etapa,
@@ -405,18 +356,120 @@ controller.usuariosSemPerfil = async () => {
   return db.sapConn.any(
     `SELECT u.id AS usuario_id, tpg.nome_abrev || ' ' || u.nome_guerra as usuario,
     (CASE 
-      WHEN ppo.id IS NULL AND pproj.id IS NULL THEN 'Usuário sem perfil de produção e perfil de projeto' 
+      WHEN ppo.id IS NULL AND pbloco.id IS NULL THEN 'Usuário sem perfil de produção e perfil de bloco' 
       WHEN ppo.id IS NULL THEN 'Usuário sem perfil de produção'
-      ELSE 'Usuário sem perfil de projeto'
+      ELSE 'Usuário sem perfil de bloco'
     END) AS situacao
     FROM dgeo.usuario AS u
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
     LEFT JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.usuario_id = u.id
-    LEFT JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.usuario_id = u.id
-    WHERE ppo.id IS NULL OR pproj.id IS NULL AND u.ativo IS TRUE
+    LEFT JOIN macrocontrole.perfil_bloco_operador AS pbloco ON pbloco.usuario_id = u.id
+    WHERE ppo.id IS NULL OR pbloco.id IS NULL AND u.ativo IS TRUE
     `
   )
 }
+
+controller.atividadeUsuarios = async () => {
+  return db.sapConn.any(
+    `SELECT tpg.nome_abrev || ' ' || u.nome_guerra as usuario, ativ.data_inicio, ativ.etapa, ativ.subfase, ativ.fase, ativ.bloco, ativ.lote, ativ.projeto
+    FROM dgeo.usuario AS u 
+    LEFT JOIN (
+      SELECT a.usuario_id, a.data_inicio, te.nome AS etapa, s.nome AS subfase, 
+      tf.nome AS fase, l.nome_abrev AS lote, p.nome_abrev AS projeto, b.nome AS bloco
+      FROM macrocontrole.atividade AS a
+      INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
+      INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+      INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+      INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+      INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
+      INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+      INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+      INNER JOIN macrocontrole.lote AS l ON l.id = e.lote_id
+      INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
+      WHERE a.tipo_situacao_id = 2
+    ) AS ativ ON ativ.usuario_id = u.id
+    WHERE u.ativo is TRUE
+    ORDER BY ativ.data_inicio;
+    `
+  )
+}
+
+controller.acompanhamentoGrade = async () => {
+  const dado_producao = await db.sapConn.any(
+    `SELECT a.id AS atividade_id, dp.configuracao_producao, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, a.data_inicio,
+    te.nome AS etapa, s.nome AS subfase, tf.nome AS fase, l.nome_abrev AS lote, p.nome_abrev AS projeto, b.nome AS bloco
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut on ut.id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.dado_producao AS dp ON dp.id = ut.dado_producao_id
+      INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
+      INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+      INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+      INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+      INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
+      INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+      INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+      INNER JOIN macrocontrole.lote AS l ON l.id = e.lote_id
+      INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
+      INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
+      WHERE a.tipo_situacao_id = 2 AND dp.tipo_dado_producao_id in (2,3);
+      `
+  )
+  if (!dado_producao) {
+    return null
+  }
+  const grades = []
+
+  for (const info of dado_producao) {
+    const servidor = info.configuracao_producao.split(':')[0]
+    const porta_banco = info.configuracao_producao.split(':')[1]
+    const porta = porta_banco.split('/')[0]
+    const banco = porta_banco.split('/')[1]
+    const gridConn = await db.createAdminConn(servidor, porta, banco, false)
+
+    try {
+      const grade = await gridConn.any(
+        `WITH
+        xrank AS (
+          SELECT 
+            id,
+            data_atualizacao,
+            visited
+            DENSE_RANK() OVER (ORDER BY ST_XMin(geom)) AS j
+          FROM public.aux_grid_revisao_a
+          WHERE atividade_id = $1
+        ),
+        yrank AS (
+          SELECT 
+            id,
+            DENSE_RANK() OVER (ORDER BY ST_YMin(geom) DESC) AS i
+          FROM public.aux_grid_revisao_a
+          WHERE atividade_id = $1
+        )
+        SELECT 
+          x.j,
+          y.i,
+          x.data_atualizacao,
+          x.visited
+        FROM xrank AS x
+        JOIN yrank AS y ON x.id = y.id
+        ORDER BY j,i        
+        `, info.atividade_id
+      )
+
+      info.grade = grade;
+
+      grades.append(info)
+
+    } catch (error) {
+    }
+  }
+
+  return grades
+
+}
+
 
 /*
 const fixActivity = (noActivity, minMaxPoints) => {
