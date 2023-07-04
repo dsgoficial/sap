@@ -78,6 +78,22 @@ router.post(
   })
 )
 
+router.post(
+  '/finalizacao_incorreta',
+  verifyLogin,
+  schemaValidation({ body: producaoSchema.finalizacaoIncorreta }),
+  asyncHandler(async (req, res, next) => {
+    await producaoCtrl.finalizacaoIncorreta(
+      req.body.descricao,
+      req.usuarioId
+    )
+    const msg = 'Problema de finalização incorreta reportado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+
 router.get(
   '/tipo_problema',
   verifyLogin,

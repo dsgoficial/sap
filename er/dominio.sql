@@ -233,6 +233,7 @@ INSERT INTO dominio.tipo_problema (code, nome) VALUES
 (4, 'Problema em unidade de trabalho vizinha'),
 (5, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida'),
 (6, 'Problema nas rotinas'),
+(7, 'Finalizei a atividade incorretamente'),
 (99, 'Outros');
 
 CREATE TABLE dominio.tipo_estrategia_associacao(	

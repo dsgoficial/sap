@@ -731,6 +731,9 @@ CREATE TABLE macrocontrole.perfil_tema(
 	UNIQUE(tema_id,subfase_id,lote_id)
 );
 
+INSERT INTO dominio.tipo_problema (code, nome) VALUES
+(7, 'Finalizei a atividade incorretamente');
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

@@ -39,6 +39,10 @@ models.problemaAtividade = Joi.object().keys({
   polygon_ewkt: Joi.string().required()
 })
 
+models.finalizacaoIncorreta = Joi.object().keys({
+  descricao: Joi.string().required(),
+})
+
 models.atividadeId = Joi.object().keys({
   atividade_id: Joi.number().integer().strict().required()
 })

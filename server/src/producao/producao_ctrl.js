@@ -682,4 +682,36 @@ controller.getTipoProblema = async () => {
   return dados
 }
 
+controller.finalizacaoIncorreta = async (descricao, usuarioId) => {
+  return db.sapConn.task(async t => {
+    const atividade = await t.one(
+      `SELECT a.id, a.unidade_trabalho_id, ST_AsEWKT(ut.geom) AS polygonEwkt
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      WHERE a.usuario_id = $<usuarioId> AND a.tipo_situacao = 4
+      ORDER BY a.data_fim DESC
+      LIMIT 1`,
+      { usuarioId }
+    )
+
+    await t.any(
+      `
+      INSERT INTO macrocontrole.problema_atividade(atividade_id, usuario_id, tipo_problema_id, descricao, data, resolvido, geom)
+      VALUES($<id>,$<usuarioId>,$<tipoProblemaId>,$<descricao>, NOW(), FALSE, ST_GEOMFROMEWKT($<geom>))
+      `,
+      {
+        id: atividade.id,
+        usuarioId: usuarioId,
+        unidadeTrabalhoId: atividade.unidade_trabalho_id,
+        tipoProblemaId: 7,
+        descricao,
+        geom: atividade.polygonEwkt
+      }
+    )
+
+  })
+}
+
+
+
 module.exports = controller
