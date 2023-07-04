@@ -683,4 +683,23 @@ router.put(
   })
 )
 
+router.put(
+  '/atividade_modo_local',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.atualizaAtivModoLocal }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.atualizaAtividadeModoLocal(
+      req.body.unidade_trabalho_id,
+      req.body.atividade_id,
+      req.body.usuario_uuid,
+      req.body.data_inicio,
+      req.body.data_fim
+    )
+
+    const msg = 'Atividade do modo local atualizadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 module.exports = router

@@ -28,6 +28,15 @@ const getUsuarioNomeById = async usuarioId => {
   return usuario.posto_nome
 }
 
+const getUsuarioIdbyUUID = async usuarioUUID => {
+  const usuario = await db.sapConn.one(
+    `SELECT id FROM dgeo.usuario as u
+    WHERE u.uuid = $<usuarioUUID>`,
+    { usuarioUUID }
+  )
+  return usuario.id
+}
+
 controller.getProject = async () => {
   return { projeto: qgisProject }
 }
@@ -1102,6 +1111,25 @@ controller.atualizaProblemaAtividade = async (problemaAtividade) => {
         }
       ) + 'WHERE Y.id = X.id'
     await t.none(query)
+  })
+}
+
+controller.atualizaAtividadeModoLocal = async (unidadeTrabalhoId, atividadeId, usuarioUUID, dataInicio, dataFim) => {
+  return db.sapConn.tx(async t => {
+    const usuarioId = getUsuarioIdbyUUID(usuarioUUID)
+
+    await t.any(
+      `
+    UPDATE macrocontrole.atividade SET
+    data_fim = $<dataFim>, data_inicio = $<dataInicio>, tipo_situacao_id = 5, usuario_id = $<usuarioId>
+    WHERE id in (
+      SELECT a.id FROM macrocontrole.atividade AS a
+      WHERE ut.id = $<unidadeTrabalhoId> AND a.id = $<atividadeId>
+      );
+    `,
+      { dataFim, dataInicio, unidadeTrabalhoId, atividadeId, usuarioId}
+    )
+
   })
 }
 

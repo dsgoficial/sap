@@ -189,6 +189,14 @@ models.perfilProducaoAtualizacao = Joi.object().keys({
     .min(1)
 })
 
+models.atualizaAtivModoLocal = Joi.object().keys({
+  unidade_trabalho_id: Joi.number().integer().strict().required(),
+  atividade_id: Joi.number().integer().strict().required(),
+  usuario_uuid: Joi.string().guid({ version: 'uuidv4' }).required().allow(''),
+  data_inicio: Joi.date().required(),
+  data_fim: Joi.date().required()
+})
+
 models.perfilBlocoOperadorIds = Joi.object().keys({
   perfil_bloco_operador_ids: Joi.array()
     .items(Joi.number().integer().strict())
