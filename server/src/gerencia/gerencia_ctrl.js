@@ -183,7 +183,11 @@ controller.deletaPerfilProducao = async perfilProducaoId => {
 }
 
 controller.getPerfilBlocoOperador = async () => {
-  return db.sapConn.any('SELECT id, usuario_id, bloco_id FROM macrocontrole.perfil_bloco_operador')
+  return db.sapConn.any(`
+    SELECT id, usuario_id, bloco_id, b.prioridade, b.nome AS bloco
+    FROM macrocontrole.perfil_bloco_operador AS pbo
+    INNER JOIN macrocontrole.bloco AS b ON b.id = pbo.bloco_id
+  `)
 }
 
 controller.criaPerfilBlocoOperador = async perfilBlocoOperador => {
