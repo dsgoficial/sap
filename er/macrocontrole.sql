@@ -181,6 +181,14 @@ CREATE TABLE macrocontrole.perfil_menu(
 	UNIQUE(menu_id,subfase_id,lote_id)
 );
 
+CREATE TABLE macrocontrole.perfil_tema(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tema_id INTEGER NOT NULL REFERENCES dgeo.qgis_themes (id),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(tema_id,subfase_id,lote_id)
+);
+
 CREATE TABLE macrocontrole.perfil_model_qgis(
 	id SERIAL NOT NULL PRIMARY KEY,
 	qgis_model_id INTEGER NOT NULL REFERENCES dgeo.qgis_models (id),

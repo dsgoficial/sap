@@ -100,6 +100,40 @@ models.menusIds = Joi.object().keys({
     .min(1)
 })
 
+models.temas = Joi.object().keys({
+  temas: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        definicao_tema: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.temasAtualizacao = Joi.object().keys({
+  temas: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        definicao_tema: Joi.string().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+models.temasIds = Joi.object().keys({
+  temas_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+
 models.regras = Joi.object().keys({
   regras: Joi.array()
     .items(
@@ -344,6 +378,14 @@ models.perfilEstilosIds = Joi.object().keys({
     .min(1)
 })
 
+models.perfilTemasIds = Joi.object().keys({
+  perfil_temas_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 models.perfisFME = Joi.object().keys({
   perfis_fme: Joi.array()
     .items(
@@ -451,6 +493,33 @@ models.perfilEstilostualizacao = Joi.object().keys({
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         grupo_estilo_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilTemas = Joi.object().keys({
+  perfis_temas: Joi.array()
+    .items(
+      Joi.object().keys({
+        tema_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilTemasAtualizacao = Joi.object().keys({
+  perfis_temas: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        tema_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         lote_id: Joi.number().integer().strict().required()
       })

@@ -142,6 +142,15 @@ CREATE TABLE dgeo.qgis_menus(
     CONSTRAINT unique_menus UNIQUE (nome)
 );
 
+CREATE TABLE dgeo.qgis_themes(
+	  id SERIAL NOT NULL PRIMARY KEY,
+    nome text NOT NULL,
+    definicao_tema text NOT NULL,
+    owner varchar(255) NOT NULL,
+	  update_time timestamp without time zone NOT NULL DEFAULT now(),
+    CONSTRAINT unique_themes UNIQUE (nome)
+);
+
 CREATE TABLE dgeo.layer_alias(
 	  id SERIAL NOT NULL PRIMARY KEY,
     nome text NOT NULL,

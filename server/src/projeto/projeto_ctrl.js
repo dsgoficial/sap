@@ -2637,5 +2637,151 @@ controller.deletePerfilLinhagem= async perfilLinhagemId => {
   })
 }
 
+controller.getPerfilTemas = async () => {
+  return db.sapConn.any(
+    `SELECT pt.id, te.nome AS tipo_exibicao, pt.tema_id, pt.subfase_id, pt.lote_id,
+    qt.nome AS tema, qt.definicao_tema
+    FROM macrocontrole.perfil_tema AS pt
+    INNER JOIN dgeo.qgis_themes AS qt ON qt.id = pt.tema_id`
+  )
+}
+
+controller.criaPerfilTemas = async perfilTema => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'tema_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilTema, cs, {
+      table: 'perfil_tema',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilTemas = async perfilTema => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'tema_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilTema,
+        cs,
+        { table: 'perfil_tema', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilTemas= async perfilTemaId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_tema
+      WHERE id in ($<perfilTemaId:csv>)`,
+      { perfilTemaId }
+    )
+    if (exists && exists.length < perfilTemaId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil tema',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_tema
+      WHERE id in ($<perfilTemaId:csv>)`,
+      { perfilTemaId }
+    )
+  })
+}
+
+controller.getTemas = async () => {
+  return db.sapConn.any(
+    'SELECT id, nome, definicao_tema, owner, update_time FROM dgeo.qgis_themes'
+  )
+}
+
+controller.gravaTemas = async (temas, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'definicao_tema',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query = db.pgp.helpers.insert(temas, cs, {
+      table: 'qgis_themes',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaTemas = async (temas, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'definicao_tema',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        temas,
+        cs,
+        { table: 'qgis_themes', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaMenus = async temasId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.qgis_themes
+      WHERE id in ($<temasId:csv>)`,
+      { temasId }
+    )
+    if (exists && exists.length < temasId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um tema',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.qgis_themes
+      WHERE id in ($<temasId:csv>)`,
+      { temasId }
+    )
+  })
+}
 
 module.exports = controller

@@ -714,6 +714,23 @@ ADD CONSTRAINT problema_atividade_usuario_id_fkey FOREIGN KEY (usuario_id)
 
 ALTER TABLE macrocontrole.problema_atividade ALTER COLUMN usuario_id DROP DEFAULT;
 
+CREATE TABLE dgeo.qgis_themes(
+	  id SERIAL NOT NULL PRIMARY KEY,
+    nome text NOT NULL,
+    definicao_tema text NOT NULL,
+    owner varchar(255) NOT NULL,
+	  update_time timestamp without time zone NOT NULL DEFAULT now(),
+    CONSTRAINT unique_themes UNIQUE (nome)
+);
+
+CREATE TABLE macrocontrole.perfil_tema(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tema_id INTEGER NOT NULL REFERENCES dgeo.qgis_themes (id),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(tema_id,subfase_id,lote_id)
+);
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

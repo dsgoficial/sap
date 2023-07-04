@@ -1612,4 +1612,113 @@ router.put(
   })
 )
 
+
+router.get(
+  '/temas',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getTemas()
+
+    const msg = 'Temas retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/temas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.temas }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaTemas(req.body.temas, req.usuarioId)
+
+    const msg = 'Temas gravados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/temas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.temasAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaTemas(req.body.temas, req.usuarioId)
+
+    const msg = 'Temas atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/temas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.temasIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaTemas(req.body.temas_ids)
+
+    const msg = 'Temas deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.get(
+  '/configuracao/perfil_temas',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilTemas()
+
+    const msg = 'Perfil de Temas retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_temas',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilTemasIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilTemas(req.body.perfil_temas_ids)
+
+    const msg = 'Perfil de Temas deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_temas',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilTemas
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilTemas(req.body.perfis_temas)
+
+    const msg = 'Perfis de Temas criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_temas',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilTemasAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilTemas(req.body.perfis_temas)
+
+    const msg = 'Perfis de Temas atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 module.exports = router
