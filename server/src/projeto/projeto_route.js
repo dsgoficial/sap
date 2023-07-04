@@ -1361,6 +1361,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.associaInsumosBloco(
       req.body.bloco_id,
+      req.body.subfase_ids,
       req.body.grupo_insumo_id,
       req.body.estrategia_id,
       req.body.caminho_padrao

@@ -1954,6 +1954,7 @@ controller.associaInsumos = async (
 
 controller.associaInsumosBloco = async (
   blocoId,
+  subfaseIds,
   grupoInsumoId,
   estrategiaId,
   caminhoPadrao
@@ -1972,9 +1973,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(ut.geom), i.geom)
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     case 2:
       return db.sapConn.none(
@@ -1984,9 +1985,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(i.geom), ut.geom)
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     case 3:
       return db.sapConn.none(
@@ -1996,9 +1997,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(i.geom, ut.geom)
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     case 4:
       return db.sapConn.none(
@@ -2008,9 +2009,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_relate(ut.geom, i.geom, '2********')
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     case 5:
       return db.sapConn.none(
@@ -2020,9 +2021,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         CROSS JOIN macrocontrole.insumo AS i
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     default:
       throw new AppError('Estratégia inválida', httpCode.BadRequest)

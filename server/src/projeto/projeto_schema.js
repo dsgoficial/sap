@@ -664,6 +664,11 @@ models.associaInsumos = Joi.object().keys({
 
 models.associaInsumosBloco = Joi.object().keys({
   bloco_id: Joi.number().integer().strict().required(),
+  subfase_ids: Joi.array()
+  .items(Joi.number().integer().strict())
+  .unique()
+  .required()
+  .min(1),
   grupo_insumo_id: Joi.number().integer().strict().required(),
   estrategia_id: Joi.number().integer().strict().required(),
   caminho_padrao: Joi.string().required().allow('')
