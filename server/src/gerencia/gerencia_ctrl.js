@@ -1089,7 +1089,7 @@ controller.deletaAtalhos = async atalhoIds => {
 controller.getProblemaAtividade = async () => {
   return db.sapConn.any(
     `SELECT pa.id, tpg.nome_abrev || ' ' || u.nome_guerra AS usuario, pa.atividade_id, pa.descricao, pa.data, pa.resolvido, tp.nome AS tipo_problema,
-    pa.geom
+    ST_ASEWKT(pa.geom) AS geom
     FROM macrocontrole.problema_atividade AS pa
     INNER JOIN dominio.tipo_problema AS tp ON tp.code = pa.tipo_problema_id
     INNER JOIN dgeo.usuario AS u ON u.id = pa.usuario_id
