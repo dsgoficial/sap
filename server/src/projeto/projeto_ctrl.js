@@ -2785,4 +2785,226 @@ controller.deletaMenus = async temasId => {
   })
 }
 
+controller.reshapeUnidadeTrabalho = async (unidadeTrabalhoId, reshapeGeom) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    let execution = await t.any(
+      `SELECT 1 FROM macrocontrole.atividade AS a
+      WHERE a.unidade_trabalho_id = $<unidadeTrabalhoId> AND a.tipo_situacao_id IN (2,3)`,
+      { unidadeTrabalhoId }
+    )
+    if (execution && execution.length > 0) {
+      throw new AppError(
+        'A Unidade de Trabalho possui atividades em execução ou pausada',
+        httpCode.BadRequest
+      )
+    }
+
+    await t.none(
+      `UPDATE macrocontrole.unidade_trabalho
+      SET geom = ST_GEOMFROMEWKT($<reshapeGeom>)
+      WHERE id = $<unidadeTrabalhoId>`,
+      { unidadeTrabalhoId, reshapeGeom }
+    )
+
+  })- 
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, [unidadeTrabalhoId])
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, [unidadeTrabalhoId])
+}
+
+controller.cutUnidadeTrabalho = async (unidadeTrabalhoId, cutGeoms) => {
+  let utIdsFixed;
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    let execution = await t.any(
+      `SELECT 1 FROM macrocontrole.atividade AS a
+      WHERE a.unidade_trabalho_id = $<unidadeTrabalhoId> AND a.tipo_situacao_id IN (2,3)`,
+      { unidadeTrabalhoId }
+    )
+    if (execution && execution.length > 0) {
+      throw new AppError(
+        'A Unidade de Trabalho possui atividades em execução ou pausada',
+        httpCode.BadRequest
+      )
+    }
+
+    let firstGeom = cutGeoms.shift()
+    
+    await t.none(
+      `UPDATE macrocontrole.unidade_trabalho
+      SET geom = ST_GEOMFROMEWKT($<firstGeom>)
+      WHERE id = $<unidadeTrabalhoId>`,
+      { unidadeTrabalhoId, firstGeom }
+    )
+
+    let novasUtId = await t.any(
+      `INSERT INTO macrocontrole.unidade_trabalho(nome,epsg,dado_producao_id,sufase_id,lote_id,bloco_id,disponivel,dificuldade,prioridade,observacao,geom)
+       SELECT ut.nome,ut.epsg,ut.dado_producao_id,ut.subfase_id,ut.lote_id,ut.bloco_id,ut.disponivel,ut.dificuldade,ut.prioridade,ut.observacao,
+       ST_GEOMFROMEWKT(ref.geom) as geom
+       FROM macrocontrole.unidade_trabalho AS ut
+       CROSS JOIN (SELECT v as geom FROM UNNEST($<cutGeoms>::text[]) AS t(v)) AS ref
+       WHERE ut.id = $<unidadeTrabalhoId> RETURNING id;
+      `,
+      { unidadeTrabalhoId, cutGeoms }
+    )
+    utIdsFixed = [...novasUtId.map(obj => obj.id)]
+
+    await t.none(
+      `INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id,insumo_id,caminho_padrao)
+       SELECT ref.unidade_trabalho_id, iut.insumo_id, iut.caminho_padrao
+       FROM macrocontrole.insumo_unidade_trabalho AS iut
+       CROSS JOIN (SELECT v as unidade_trabalho_id FROM UNNEST($<utIdsFixed>::integer[]) AS t(v)) AS ref
+       WHERE iut.unidade_trabalho_id = $<unidadeTrabalhoId>;
+      `,
+      { unidadeTrabalhoId, utIdsFixed }
+    )
+
+    await t.none(
+      `INSERT INTO macrocontrole.atividade(etapa_id,unidade_trabalho_id,usuario_id,tipo_situacao_id,data_inicio,data_fim,observacao)
+       SELECT a.etapa_id,ref.unidade_trabalho_id,a.usuario_id,a.tipo_situacao_id,a.data_inicio,a.data_fim,a.observacao
+       FROM macrocontrole.atividade AS a
+       CROSS JOIN (SELECT v as unidade_trabalho_id FROM UNNEST($<utIdsFixed>::integer[]) AS t(v)) AS ref
+       WHERE a.unidade_trabalho_id = $<unidadeTrabalhoId>;
+      `,
+      { unidadeTrabalhoId, utIdsFixed }
+    )
+
+    utIdsFixed.push(unidadeTrabalhoId)
+
+  })
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, utIdsFixed)
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, utIdsFixed)
+}
+
+controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
+  let firstId
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    let execution = await t.any(
+      `SELECT 1 FROM macrocontrole.atividade AS a
+      WHERE a.unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND a.tipo_situacao_id IN (2,3)`,
+      { unidadeTrabalhoIds }
+    )
+    if (execution && execution.length > 0) {
+      throw new AppError(
+        'A Unidade de Trabalho possui atividades em execução ou pausada',
+        httpCode.BadRequest
+      )
+    }
+
+    let consistency = await t.any(
+      `SELECT DISTINCT ON (subfase_id, lote_id, bloco_id) 1 FROM macrocontrole.unidade_trabalho
+      WHERE id IN ($<unidadeTrabalhoIds:csv>)`,
+      { unidadeTrabalhoIds }
+    )
+    if (consistency && consistency.length > 1) {
+      throw new AppError(
+        'A Unidade de Trabalho são de subfases, lotes ou blocos divergentes',
+        httpCode.BadRequest
+      )
+    }
+
+    firstId = unidadeTrabalhoIds.shift()
+    
+    await t.none(
+      `UPDATE macrocontrole.unidade_trabalho
+      SET geom = ST_GEOMFROMEWKT($<firstGeom>)
+      WHERE id = $<unidadeTrabalhoId>`,
+      { firstId, mergeGeom }
+    )
+
+    let updatedIds = await t.any(
+      `UPDATE macrocontrole.atividade AS a
+      SET a.tipo_situacao_id = 5
+      FROM (
+        SELECT etapa_id, MIN(tipo_situacao_id)
+        FROM macrocontrole.atividade
+        WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>, $<firstId>) AND tipo_situacao_id != 5
+        GROUP BY etapa_id
+        HAVING MIN(tipo_situacao_id) = 1
+      ) AS sub
+      WHERE a.unidade_trabalho_id = $<firstId> AND a.etapa_id = sub.etapa_id
+      AND a.tipo_situacao_id = 4 RETURNING id`,
+      { firstId, unidadeTrabalhoIds }
+    )
+    let fixedIds = updatedIds.map(c => c.id);
+
+    await t.none(
+      `INSERT INTO macrocontrole.atividade(etapa_id,unidade_trabalho_id,tipo_situacao_id,observacao)
+      SELECT a.etapa_id, $<firstId> AS unidade_trabalho_id, 1, a.observacao
+      FROM macrocontrole.atividade AS a
+      WHERE a.id in ($<fixedIds:csv>)`,
+      { firstId, fixedIds }
+    )
+
+    await t.any(
+      `UPDATE macrocontrole.atividade AS a
+      SET a.observacao = concat_ws(' | ', observacao, sub.observacao_agg)
+      FROM (
+        SELECT etapa_id, string_agg(observacao, ' | ') AS observacao_agg
+        FROM macrocontrole.atividade
+        WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id = 1
+        GROUP BY etapa_id
+      ) AS sub
+      WHERE a.unidade_trabalho_id = $<firstId> AND a.etapa_id = sub.etapa_id
+      AND a.tipo_situacao_id = 1`,
+      { firstId, unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id,insumo_id,caminho_padrao)
+      SELECT DISTINCT ON (iut.insumo_id, iut.caminho_padrao) $<firstId> AS unidade_trabalho_id, iut.insumo_id, iut.caminho_padrao
+      FROM macrocontrole.insumo_unidade_trabalho AS iut
+      WHERE iut.unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND 
+      (iut.insumo_id, iut.caminho_padrao) NOT IN (
+        SELECT insumo_id, caminho_padrao FROM macrocontrole.insumo_unidade_trabalho
+        WHERE unidade_trabalho_id = $<firstId>
+      )`,
+      { firstId, unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `UPDATE macrocontrole.insumo_unidade_trabalho
+      SET unidade_trabalho_id = $<firstId>
+      WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND 
+      (insumo_id, caminho_padrao) NOT IN (
+        SELECT insumo_id, caminho_padrao FROM macrocontrole.insumo_unidade_trabalho
+        WHERE unidade_trabalho_id = $<firstId>
+      )`,
+      { firstId, unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `DELETE FROM macrocontrole.insumo_unidade_trabalho
+       WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>);
+      `,
+      { unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `UPDATE macrocontrole.atividade
+       SET tipo_situacao_id = 5, unidade_trabalho = $<firstId>
+       WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id in (4,5);
+      `,
+      { firstId, unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `DELETE FROM macrocontrole.atividade AS a
+       WHERE a.unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND a.tipo_situacao_id = 1;
+      `,
+      { unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `DELETE FROM macrocontrole.unidade_trabalho
+       WHERE id IN ($<unidadeTrabalhoIds:csv>);
+      `,
+      { unidadeTrabalhoIds }
+    )
+
+  })
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, [firstId])
+  await disableTriggers.handleRelacionamentoUtDelete(db.sapConn, unidadeTrabalhoIds)
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, [firstId])
+}
+
+
 module.exports = controller

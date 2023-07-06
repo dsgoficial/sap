@@ -1722,4 +1722,52 @@ router.put(
   })
 )
 
+router.put(
+  '/unidade_trabalho/reshape',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.unidadeTrabalhoReshape }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.reshapeUnidadeTrabalho(
+      req.body.unidade_trabalho_id,
+      req.body.reshape_geom
+    )
+
+    const msg = 'Unidade de trabalho atualizada com sucesso'
+er/macrocontrole.sql
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.put(
+  '/unidade_trabalho/cut',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.unidadeTrabalhoCut }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.cutUnidadeTrabalho(
+      req.body.unidade_trabalho_id,
+      req.body.cut_geoms
+    )
+
+    const msg = 'Unidade de trabalho atualizada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.put(
+  '/unidade_trabalho/merge',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.unidadeTrabalhoMerge }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.mergeUnidadeTrabalho(
+      req.body.unidade_trabalho_ids,
+      req.body.merge_geom
+    )
+
+    const msg = 'Unidade de trabalho atualizada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 module.exports = router
