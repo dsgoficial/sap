@@ -460,9 +460,10 @@ controller.acompanhamentoGrade = async () => {
 
       info.grade = grade;
 
-      grades.append(info)
+      grades.push(info)
 
     } catch (error) {
+      console.log(error)
     }
   }
 
