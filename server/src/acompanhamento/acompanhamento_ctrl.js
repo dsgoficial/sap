@@ -435,7 +435,7 @@ controller.acompanhamentoGrade = async () => {
           SELECT 
             id,
             data_atualizacao,
-            visited
+            visited,
             DENSE_RANK() OVER (ORDER BY ST_XMin(geom)) AS j
           FROM public.aux_grid_revisao_a
           WHERE atividade_id = $1
@@ -460,9 +460,10 @@ controller.acompanhamentoGrade = async () => {
 
       info.grade = grade;
 
-      grades.append(info)
+      grades.push(info)
 
     } catch (error) {
+      console.log(error)
     }
   }
 

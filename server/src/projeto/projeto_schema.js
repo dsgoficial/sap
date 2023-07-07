@@ -238,6 +238,30 @@ models.unidadeTrabalhoBloco = Joi.object().keys({
   bloco_id: Joi.number().integer().strict().required()
 })
 
+models.unidadeTrabalhoReshape = Joi.object().keys({
+  unidade_trabalho_id: Joi.number().integer().strict().required(),
+  reshape_geom: Joi.string().required()
+})
+
+models.unidadeTrabalhoCut = Joi.object().keys({
+  unidade_trabalho_id: Joi.number().integer().strict().required(),
+  cut_geoms: Joi.array()
+  .items(Joi.string())
+  .unique()
+  .required()
+  .min(2)
+})
+
+models.unidadeTrabalhoMerge = Joi.object().keys({
+  unidade_trabalho_ids: Joi.array()
+  .items(Joi.number().integer().strict())
+  .unique()
+  .required()
+  .min(2),
+  merge_geom: Joi.string().required()
+})
+
+
 models.listaAtividades = Joi.object().keys({
   atividades_ids: Joi.array()
     .items(Joi.number().integer().strict())
