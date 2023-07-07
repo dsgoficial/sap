@@ -15,6 +15,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import { styled, useTheme } from '@mui/material/styles';
+import { useAPI } from '../../contexts/apiContext'
 
 const drawerWidth = 280
 
@@ -70,6 +71,10 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
 
     const { pathname } = useLocation();
 
+    const {
+        getAuthorization
+    } = useAPI()
+
     useEffect(() => {
         if (isOpenSidebar) {
             onCloseSidebar();
@@ -115,6 +120,7 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                     <ListItemText primary={'SAP'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
                 </ListItemButton>
                 <ListItemButton
+                    style={getAuthorization() == 'ADMIN' ? {} : { display: 'none' }}
                     sx={{
                         minHeight: 48,
                         justifyContent: isOpenSidebar ? 'initial' : 'center',

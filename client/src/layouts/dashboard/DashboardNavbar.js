@@ -45,7 +45,10 @@ const IconMenuStyled = styled(IconButton, {
 
 export default function DashboardNavbar({ isOpenSidebar, onOpenSidebar }) {
 
-    const { logout, history } = useAPI()
+    const {
+        logout,
+        history
+    } = useAPI()
 
     const clickLogout = () => {
         logout();

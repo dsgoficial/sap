@@ -15,14 +15,21 @@ import {
     Alert,
     IconButton
 } from '@mui/material';
+
+import { useNavigate } from "react-router-dom";
+
 export default function Grid() {
 
     const {
-        getStatisticsGrid
+        getStatisticsGrid,
+        getAuthorization,
+        history
     } = useAPI()
 
     const [wait, setWait] = React.useState(true)
     const [data, setData] = React.useState([])
+
+    const navigate = useNavigate();
 
     const loadGrids = async () => {
         setWait(true)
@@ -36,6 +43,11 @@ export default function Grid() {
     React.useEffect(() => {
         loadGrids()
     }, []);// eslint-disable-line react-hooks/exhaustive-deps
+
+    if (getAuthorization() != 'ADMIN') {
+        navigate('/login')
+        return null
+    }
 
     return (
         <Page title="Sistema de Apoio à Produção">
