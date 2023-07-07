@@ -23,7 +23,8 @@ export default function ActivityCard() {
         getCurrentActivity,
         startActivity,
         finishActivity,
-        reportError
+        reportError,
+        getStatisticsGrid
     } = useAPI()
     const [subtitle, setSubtitle] = useState('')
     const [message, setMessage] = useState({ severity: 'info', text: '' })
@@ -35,6 +36,7 @@ export default function ActivityCard() {
     const [wait, setWait] = useState(true)
 
     useEffect(() => {
+        getStatisticsGrid()
         loadCurrentActivity()
     }, []);// eslint-disable-line react-hooks/exhaustive-deps
 
@@ -102,7 +104,7 @@ export default function ActivityCard() {
 
     return (
         <>
-            <Loading open={wait} />
+            <Loading style={wait ? {} : { display: 'none' }} />
             <Card>
                 <CardContent>
                     <Typography align={'center'} variant='h6'>{subtitle}</Typography>
@@ -189,7 +191,7 @@ export default function ActivityCard() {
                 setOpen={setShowStartActivity}
                 onSubmit={() => handleStartActivity()}
             />
-             <ReportErrorForm
+            <ReportErrorForm
                 open={showReportError}
                 setOpen={setShowReportError}
                 onSubmit={(data) => handleReportError(data)}

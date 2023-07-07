@@ -59,7 +59,7 @@ export default function DashboardNavbar({ isOpenSidebar, onOpenSidebar }) {
             }}
         >
             <AppBarStyled
-                position="absolute"
+                position="fixed"
                 isOpenSidebar={isOpenSidebar}
             >
                 <Toolbar
