@@ -77,7 +77,8 @@ export default function GridCard({ id, grid }) {
                     padding: '0px',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    gap: 1
                 }}
             >
                 {
@@ -85,16 +86,23 @@ export default function GridCard({ id, grid }) {
                         grid.data_inicio,
                         grid.usuario,
                         `${grid.projeto}-${grid.lote}`,
-                        `${grid.fase}-${grid.bloco}`
+                        `${grid.fase}-${grid.bloco}`,
+                        `${grid.subfase}-${grid.etapa}`
                     ].map((label, idx) => {
                         return (
-                            <Typography key={idx}>
+                            <Typography key={idx}
+                                sx={{
+                                    textAlign: 'center',
+                                    inlineSize: '250px',
+                                    overflowWrap: 'break-word'
+                                }}
+                            >
                                 {label}
                             </Typography>
                         )
                     })
                 }
             </CardContent>
-        </Card>
+        </Card >
     );
 }
