@@ -2763,7 +2763,7 @@ controller.atualizaTemas = async (temas, usuarioId) => {
   })
 }
 
-controller.deletaMenus = async temasId => {
+controller.deletaTemas = async temasId => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
       `SELECT id FROM dgeo.qgis_themes

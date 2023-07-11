@@ -471,6 +471,128 @@ controller.acompanhamentoGrade = async () => {
 
 }
 
+controller.getDadosSiteAcompanhamento = async () => {
+
+  const dados = await db.sapConn.any(
+    `
+    SELECT p.id AS projeto_id, p.nome AS projeto, p.descricao AS descricao_projeto, l.id AS lote_id, l.nome AS lote, l.descricao AS descricao_lote,
+    f.id AS fase_id, 
+    json_build_array(json_build_array(ST_XMin(prod.bounds), ST_YMin(prod.bounds)), json_build_array(ST_XMax(prod.bounds), ST_YMax(prod.bounds))) AS bounds
+    FROM macrocontrole.projeto AS p
+    INNER JOIN macrocontrole.lote AS l ON l.projeto_id = p.id
+    INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = l.linha_producao_id
+    INNER JOIN (
+      SELECT lote_id, ST_Envelope(ST_Collect(geom)) AS bounds
+      FROM macrocontrole.produto
+      GROUP BY lote_id
+      ) AS prod ON prod.lote_id = l.id
+    WHERE p.finalizado IS FALSE
+    ORDER BY p.id, l.id, f.ordem;
+  `)
+
+  let dados_organizados = {}
+  let aux_lotes = {}
+  dados.forEach(d => {
+    if(!(d.projeto_id in dados_organizados)){
+      dados_organizados[d.projeto_id] = {}
+      dados_organizados[d.projeto_id]['lotes'] = []
+      aux_lotes[d.projeto_id] = {}
+    }
+    dados_organizados[d.projeto_id]['title'] = d.projeto
+    dados_organizados[d.projeto_id]['description'] = d.descricao_projeto
+
+    if(!(d.lote_id in aux_lotes[d.projeto_id])){
+      aux_lotes[d.projeto_id][d.lote_id] = {}
+      aux_lotes[d.projeto_id][d.lote_id]['legend'] = [0]
+    }
+    aux_lotes[d.projeto_id][d.lote_id]['name'] = d.lote_id
+    aux_lotes[d.projeto_id][d.lote_id]['subtitle'] = d.subtitle
+    aux_lotes[d.projeto_id][d.lote_id]['description'] = d.descricao_lote
+    aux_lotes[d.projeto_id][d.lote_id]['legend'].push(d.fase_id)
+
+    aux_lotes[d.projeto_id][d.lote_id]['zoom'] =  d.bounds;
+
+  })
+  Object.keys(aux_lotes).forEach(pkey => {
+    Object.keys(aux_lotes[pkey]).forEach(lkey => {
+      dados_organizados[pkey][lkey].append(aux_lotes[pkey][lkey])
+    })
+  })
+
+  const geojsonQuery = await db.sapConn.any(
+    `
+    SELECT p.lote_id, json_build_object(
+      'type', 'FeatureCollection',
+      'features', json_agg(
+          json_build_object(
+              'type', 'Feature',
+              'geometry', ST_AsGeoJSON(geom)::json,
+              'properties', json_build_object(
+                  'id', p.id,
+                  'identificador', p.mi,
+                  'situacao', sit.fase_atual
+                )
+            )
+        )
+      ) AS json
+    FROM macrocontrole.produto AS p
+    INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id
+    INNER JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id
+    INNER JOIN (
+      SELECT sit.id, CASE WHEN sit.completed THEN max(sit.fase_id) ELSE NULL END AS fase_atual
+      FROM (
+      SELECT p.id, sf.fase_id, bool_and(ut.completed) AS completed
+      FROM macrocontrole.produto AS p
+      LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+      LEFT JOIN (
+        SELECT ut.id, ut.subfase_id, (CASE WHEN count(*) - count(a.data_fim) = 0 THEN TRUE ELSE FALSE END) AS completed 
+        FROM macrocontrole.unidade_trabalho AS ut
+        INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+        GROUP BY ut.id
+      ) AS ut ON rp.ut_id = ut.id
+      LEFT JOIN macrocontrole.subfase AS sf ON sf.id = ut.subfase_id
+      GROUP BY p.id, sf.fase_id
+      ORDER BY p.id, sf.fase_id) AS sit
+      GROUP BY sit.id, sit.completed
+      ORDER BY sit.id
+    ) AS sit ON sit.id = p.id
+    WHERE proj.finalizado IS FALSE
+    GROUP BY p.lote_id;
+  `)
+
+  let retorno = []
+  retorno.append({
+    'nome': 'dados.json',
+    'dados': dados_organizados
+  })
+
+  geojsonQuery.forEach(g => {
+    let aux = {}
+    aux['nome'] = `${g.lote_id}.geojson`
+    aux['dados'] = g.json
+    retorno.append(aux)
+  })
+
+  return retorno
+}
+
+
+
+
+controller.getInfoPIT = async ano => {
+  // TODO
+
+  const dados = await db.sapConn.any(
+    `
+    SELECT *
+    FROM macrocontrole.projeto AS p
+    WHERE EXTRACT(YEAR FROM l.data_login) = $<ano>
+  `,
+    { ano }
+  )
+  
+}
+
 
 /*
 const fixActivity = (noActivity, minMaxPoints) => {

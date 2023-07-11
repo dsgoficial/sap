@@ -163,6 +163,40 @@ router.get(
   })
 )
 
+router.get(
+  '/pit/:ano',
+  schemaValidation({
+    params: acompanhamentoSchema.anoParam
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getInfoPIT(
+      req.params.anoParam
+    )
+
+    const msg = 'Informações do PIT retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/dados_site_acompanhamento',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getDadosSiteAcompanhamento()
+
+    const archive = archiver('zip');
+    archive.on('error', (err) => { throw err; });
+    res.attachment('dados_acompanhamento.zip');
+    archive.pipe(res);
+
+    dados.forEach(d => {
+      archive.append(JSON.stringify(d.dados), { name: d.nome });
+    })
+
+    archive.finalize();
+
+  })
+)
 
 /*
 router.get(
