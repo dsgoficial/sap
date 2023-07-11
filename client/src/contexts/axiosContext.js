@@ -54,7 +54,7 @@ const AxiosProvider = ({
                 signal: controllerRef.current.signal,
                 data: payload,
                 method,
-                url,
+                url: url,
             });
             return { data: response.data, error }
         } catch (error) {

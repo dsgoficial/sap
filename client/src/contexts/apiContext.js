@@ -148,6 +148,19 @@ export default function APIProvider({ children }) {
     return response.data
   }
 
+  const getStatisticsGrid = async () => {
+    const response = await callAxios(
+      '/api/acompanhamento/grade_acompanhamento/',
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
   return (
     <APIContext.Provider
       value={{
@@ -160,7 +173,8 @@ export default function APIProvider({ children }) {
         startActivity,
         finishActivity,
         reportError,
-        getErrorTypes
+        getErrorTypes,
+        getStatisticsGrid
       }}>
       {children}
     </APIContext.Provider>

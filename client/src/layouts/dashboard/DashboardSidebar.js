@@ -13,8 +13,9 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
-
+import GridOnIcon from '@mui/icons-material/GridOn';
 import { styled, useTheme } from '@mui/material/styles';
+import { useAPI } from '../../contexts/apiContext'
 
 const drawerWidth = 280
 
@@ -70,6 +71,10 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
 
     const { pathname } = useLocation();
 
+    const {
+        getAuthorization
+    } = useAPI()
+
     useEffect(() => {
         if (isOpenSidebar) {
             onCloseSidebar();
@@ -100,7 +105,7 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                         justifyContent: isOpenSidebar ? 'initial' : 'center',
                         px: 2.5,
                     }}
-                    to="/" 
+                    to="/"
                     component={RouterLink}
                 >
                     <ListItemIcon
@@ -110,10 +115,32 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                             justifyContent: 'center',
                         }}
                     >
-                       <AutoGraphIcon />
+                        <AutoGraphIcon />
                     </ListItemIcon>
                     <ListItemText primary={'SAP'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
                 </ListItemButton>
+                <ListItemButton
+                    style={getAuthorization() == 'ADMIN' ? {} : { display: 'none' }}
+                    sx={{
+                        minHeight: 48,
+                        justifyContent: isOpenSidebar ? 'initial' : 'center',
+                        px: 2.5,
+                    }}
+                    to="/grid"
+                    component={RouterLink}
+                >
+                    <ListItemIcon
+                        sx={{
+                            minWidth: 0,
+                            mr: isOpenSidebar ? 3 : 'auto',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <GridOnIcon />
+                    </ListItemIcon>
+                    <ListItemText primary={'Grade de Acompanhamento'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
+                </ListItemButton>
+
             </List>
             <Divider />
         </Drawer>

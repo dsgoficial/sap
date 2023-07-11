@@ -6,6 +6,7 @@ const DashboardLayout = lazy(() => import('./layouts/dashboard'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Login = lazy(() => import('./pages/Login'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const Grids = lazy(() => import('./pages/Grids'))
 // ----------------------------------------------------------------------
 
 export default function Router() {
@@ -15,6 +16,7 @@ export default function Router() {
       element: <DashboardLayout />,
       children: [
         { path: '/', element: <PrivateRoute><Dashboard /></PrivateRoute> },
+        { path: '/grid', element: <PrivateRoute><Grids /></PrivateRoute> }
       ]
     },
     {
