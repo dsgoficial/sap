@@ -304,7 +304,7 @@ controller.atividadesEmExecucao = async () => {
     te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, a.id as atividade_id,
     u.id AS usuario_id, 
     tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-    a.data_inicio, ut.geom
+    a.data_inicio, CURRENT_TIMESTAMP - start_time AS duracao
     FROM macrocontrole.atividade AS a
     INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
@@ -330,7 +330,7 @@ controller.ultimasAtividadesFinalizadas = async () => {
     `SELECT ROW_NUMBER () OVER (ORDER BY ee.data_fim DESC) AS id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
     te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,  u.id AS usuario_id, 
     tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-    ee.data_inicio, ee.data_fim, ut.geom
+    ee.data_inicio, ee.data_fim
     FROM macrocontrole.atividade AS ee
     INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id

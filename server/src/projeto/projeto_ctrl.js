@@ -2640,7 +2640,7 @@ controller.deletePerfilLinhagem= async perfilLinhagemId => {
 
 controller.getPerfilTemas = async () => {
   return db.sapConn.any(
-    `SELECT pt.id, te.nome AS tipo_exibicao, pt.tema_id, pt.subfase_id, pt.lote_id,
+    `SELECT pt.id, pt.tema_id, pt.subfase_id, pt.lote_id,
     qt.nome AS tema, qt.definicao_tema
     FROM macrocontrole.perfil_tema AS pt
     INNER JOIN dgeo.qgis_themes AS qt ON qt.id = pt.tema_id`
