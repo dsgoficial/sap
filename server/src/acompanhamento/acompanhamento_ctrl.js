@@ -304,7 +304,7 @@ controller.atividadesEmExecucao = async () => {
     te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, a.id as atividade_id,
     u.id AS usuario_id, 
     tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-    a.data_inicio, CURRENT_TIMESTAMP - start_time AS duracao
+    a.data_inicio, CURRENT_TIMESTAMP - a.data_inicio AS duracao
     FROM macrocontrole.atividade AS a
     INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id

@@ -147,6 +147,16 @@ const getInfoFME = async (connection, subfaseId, loteId) => {
   )
 }
 
+const getInfoTemas = async (connection, subfaseId, loteId) => {
+  return connection.any(
+    `SELECT qt.nome, qt.definicao_tema
+    FROM macrocontrole.perfil_tema AS pt
+    INNER JOIN dgeo.qgis_themes AS qt ON qt.id = pt.tema_id
+    WHERE pt.subfase_id = $<subfaseId> AND pt.lote_id = $<loteId>`,
+    { subfaseId, loteId }
+  )
+}
+
 const getInfoConfigQGIS = async (connection, subfaseId, loteId) => {
   return connection.any(
     'SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId> AND lote_id = $<loteId>',
@@ -352,6 +362,8 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.regras = await getInfoRegras(t, dadosut.subfase_id, dadosut.lote_id)
 
     info.atividade.fme = await getInfoFME(t, dadosut.subfase_id, dadosut.lote_id)
+
+    info.atividade.temas = await getInfoTemas(t, dadosut.subfase_id, dadosut.lote_id)
 
     info.atividade.configuracao_qgis = await getInfoConfigQGIS(
       t,
