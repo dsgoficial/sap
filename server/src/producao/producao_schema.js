@@ -18,11 +18,11 @@ models.finaliza = Joi.object().keys({
       palavras_chave: Joi.array()
         .items(
           Joi.object().keys({
-            palavra_chave: Joi.string().required(),
-            tipo_palavra_chave: Joi.number().integer().strict().required()
+            nome: Joi.string().required(),
+            tipo_palavra_chave_id: Joi.number().integer().strict().required()
           })
         )
-        .unique('palavra_chave')
+        .unique('nome')
         .required()
         .min(1)
     })

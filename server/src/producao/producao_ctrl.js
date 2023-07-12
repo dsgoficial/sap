@@ -489,7 +489,33 @@ controller.finaliza = async (
     }
 
     if (infoEdicao) {
-      // TODO
+      const prodNameResult = await t.result(
+        `UPDATE macrocontrole.produto SET
+          nome = $<nome_produto>
+          WHERE id = $<produto_id>`,
+        { produto_id: info_edicao.produto_id, nome_produto: info_edicao.nome_produto }
+      )
+
+      if (!prodNameResult.rowCount || prodNameResult.rowCount !== 1) {
+        throw new AppError(
+          'Erro ao finalizar atividade. Não foi encontrado o produto para atualizar a informação de edição.',
+          httpCode.BadRequest
+        )
+      }
+
+      const cs = new db.pgp.helpers.ColumnSet([
+        'nome',
+        'tipo_palavra_chave_id',
+        { name: 'produto_id', init: () => info_edicao.produto_id }
+      ])
+
+      const query = pgp.helpers.insert(infoEdicao.palavras_chave, cs, {
+        table: 'palavra_chave_produto',
+        schema: 'metadado'
+      }) + ' ON CONFLICT (nome, produto_id) DO UPDATE SET tipo_palavra_chave_id = EXCLUDED.tipo_palavra_chave_id';
+
+      await t.none(query)
+
     }
 
     if (semCorrecao) {
