@@ -471,6 +471,39 @@ controller.acompanhamentoGrade = async () => {
 
 }
 
+controller.atividadeSubfase = async () => {
+  return await db.sapConn.any(
+    `
+    WITH dates AS (
+      SELECT generate_series(date_trunc('year', CURRENT_DATE), CURRENT_DATE, '1 day')::date AS day
+    ),
+    activity_intervals AS (
+      SELECT ut.lote_id, ut.subfase_id, a.data_inicio, COALESCE(a.data_fim, NOW()) AS data_fim
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut On ut.id = a.unidade_trabalho_id
+      WHERE a.data_inicio IS NOT NULL
+    ),
+    activity_days AS (
+      SELECT DISTINCT dates.day, activity_intervals.lote_id, activity_intervals.subfase_id
+      FROM dates
+      INNER JOIN activity_intervals ON dates.day BETWEEN activity_intervals.data_inicio AND activity_intervals.data_fim
+      ORDER BY dates.day
+    ),
+    activity_groups AS (
+    SELECT l.nome AS lote, s.nome AS subfase, array_agg(array[ad.day::text, 1::text, (ad.day + INTERVAL '1 day')::date::text]) AS data, MIN(ad.day) AS min_date
+    FROM activity_days AS ad
+    INNER JOIN macrocontrole.lote AS l ON l.id = ad.lote_id
+    INNER JOIN macrocontrole.subfase AS s ON s.id = ad.subfase_id
+    GROUP BY lote, subfase
+    )
+    SELECT lote, subfase, data
+    FROM activity_groups
+    ORDER BY lote, min_date;
+  `)
+
+}
+
+
 controller.getDadosSiteAcompanhamento = async () => {
 
   const dados = await db.sapConn.any(
