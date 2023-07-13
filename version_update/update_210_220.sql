@@ -921,6 +921,19 @@ CREATE TABLE metadado.perfil_classes_complementares_orto(
 	classes_complementares_orto_id INTEGER NOT NULL REFERENCES metadado.classes_complementares_orto (id)
 );
 
+CREATE TABLE macrocontrole.pit(
+	id INTEGER NOT NULL PRIMARY KEY,
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
+	meta INTEGER NOT NULL,
+	ano INTEGER NOT NULL
+);
+
+ALTER TABLE macrocontrole.subfase
+ADD COLUMN ordem INTEGER NOT NULL DEFAULT 1;
+
+ALTER TABLE macrocontrole.subfase ALTER COLUMN ordem DROP DEFAULT;
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

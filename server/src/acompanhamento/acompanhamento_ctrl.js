@@ -612,14 +612,27 @@ controller.getDadosSiteAcompanhamento = async () => {
 
 
 
-controller.getInfoPIT = async ano => {
-  // TODO
-
-  const dados = await db.sapConn.any(
+controller.getInfoSubfasePIT = async ano => {
+  return await db.sapConn.any(
     `
-    SELECT *
-    FROM macrocontrole.projeto AS p
-    WHERE EXTRACT(YEAR FROM l.data_login) = $<ano>
+    SELECT l.nome AS lote, s.nome AS subfase, EXTRACT(MONTH FROM sit.data_fim) AS month, COUNT(sit.id) AS count
+    FROM (SELECT p.id, p.lote_id, ut.subfase_id, bool_and(ut.completed) AS completed, max(ut.data_fim) AS data_fim
+          FROM macrocontrole.produto AS p
+          LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+          LEFT JOIN (
+            SELECT ut.id, ut.subfase_id, (CASE WHEN count(*) - count(a.data_fim) = 0 THEN TRUE ELSE FALSE END) AS completed, max(a.data_fim) AS data_fim
+            FROM macrocontrole.unidade_trabalho AS ut 
+            INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+            GROUP BY ut.id
+          ) AS ut ON rp.ut_id = ut.id
+          GROUP BY p.id, ut.subfase_id, p.lote_id
+          ORDER BY p.id, ut.subfase_id, p.lote_id
+      ) AS sit
+    INNER JOIN macrocontrole.lote AS l ON l.id = sit.lote_id
+    INNER JOIN macrocontrole.subfase AS s ON s.id = sit.subfase_id
+    WHERE sit.completed = TRUE AND EXTRACT(YEAR FROM sit.data_fim) = $<ano>
+    GROUP BY l.nome, s.nome, s.ordem, EXTRACT(MONTH FROM sit.data_fim)
+    ORDER BY l.nome, s.ordem, EXTRACT(MONTH FROM sit.data_fim)
   `,
     { ano }
   )

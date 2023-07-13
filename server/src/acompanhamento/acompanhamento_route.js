@@ -175,12 +175,12 @@ router.get(
 )
 
 router.get(
-  '/pit/:ano',
+  '/pit/subfase/:ano',
   schemaValidation({
     params: acompanhamentoSchema.anoParam
   }),
   asyncHandler(async (req, res, next) => {
-    const dados = await acompanhamentoCtrl.getInfoPIT(
+    const dados = await acompanhamentoCtrl.getInfoSubfasePIT(
       req.params.anoParam
     )
 
