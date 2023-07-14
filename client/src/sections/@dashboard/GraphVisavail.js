@@ -1,6 +1,6 @@
 import React from 'react'
-import * as visavail from "visavail";
-import "../../../node_modules/visavail/visavail.min.css";
+import * as visavail from "../../vendors/visavail/visavail.js";
+import "../../vendors/visavail/visavail.min.css";
 import { Box } from '@mui/material';
 
 const GraphVisavail = (props) => {
