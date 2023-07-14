@@ -7,6 +7,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Login = lazy(() => import('./pages/Login'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const Grids = lazy(() => import('./pages/Grids'))
+const Subphases = lazy(() => import('./pages/Subphases'))
 // ----------------------------------------------------------------------
 
 export default function Router() {
@@ -16,7 +17,8 @@ export default function Router() {
       element: <DashboardLayout />,
       children: [
         { path: '/', element: <PrivateRoute><Dashboard /></PrivateRoute> },
-        { path: '/grid', element: <PrivateRoute><Grids /></PrivateRoute> }
+        { path: '/grid', element: <PrivateRoute><Grids /></PrivateRoute> },
+        { path: '/subphases', element: <PrivateRoute><Subphases /></PrivateRoute> }
       ]
     },
     {

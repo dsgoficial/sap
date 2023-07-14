@@ -161,6 +161,19 @@ export default function APIProvider({ children }) {
     return response.data
   }
 
+  const getActivitySubphase = async () => {
+    const response = await callAxios(
+      '/api/acompanhamento/atividade_subfase',
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
   return (
     <APIContext.Provider
       value={{
@@ -174,7 +187,8 @@ export default function APIProvider({ children }) {
         finishActivity,
         reportError,
         getErrorTypes,
-        getStatisticsGrid
+        getStatisticsGrid,
+        getActivitySubphase
       }}>
       {children}
     </APIContext.Provider>

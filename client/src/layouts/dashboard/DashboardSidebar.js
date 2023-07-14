@@ -7,7 +7,8 @@ import {
     Divider,
     IconButton,
     ListItemText,
-    ListItemButton
+    ListItemButton,
+    Box
 } from '@mui/material';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -140,7 +141,27 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                     </ListItemIcon>
                     <ListItemText primary={'Grade de Acompanhamento'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
                 </ListItemButton>
-
+                <ListItemButton
+                    style={getAuthorization() == 'ADMIN' ? {} : { display: 'none' }}
+                    sx={{
+                        minHeight: 48,
+                        justifyContent: isOpenSidebar ? 'initial' : 'center',
+                        px: 2.5,
+                    }}
+                    to="/subphases"
+                    component={RouterLink}
+                >
+                    <ListItemIcon
+                        sx={{
+                            minWidth: 0,
+                            mr: isOpenSidebar ? 3 : 'auto',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <Box component={'img'} src={`${process.env.PUBLIC_URL}/bar.png` }sx={{width: '25px'}}/>
+                    </ListItemIcon>
+                    <ListItemText primary={'Acompanhamento de Execução'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
+                </ListItemButton>
             </List>
             <Divider />
         </Drawer>
