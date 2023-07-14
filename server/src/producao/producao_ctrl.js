@@ -147,6 +147,16 @@ const getInfoFME = async (connection, subfaseId, loteId) => {
   )
 }
 
+const getInfoTemas = async (connection, subfaseId, loteId) => {
+  return connection.any(
+    `SELECT qt.nome, qt.definicao_tema
+    FROM macrocontrole.perfil_tema AS pt
+    INNER JOIN dgeo.qgis_themes AS qt ON qt.id = pt.tema_id
+    WHERE pt.subfase_id = $<subfaseId> AND pt.lote_id = $<loteId>`,
+    { subfaseId, loteId }
+  )
+}
+
 const getInfoConfigQGIS = async (connection, subfaseId, loteId) => {
   return connection.any(
     'SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId> AND lote_id = $<loteId>',
@@ -353,6 +363,8 @@ const dadosProducao = async (atividadeId) => {
 
     info.atividade.fme = await getInfoFME(t, dadosut.subfase_id, dadosut.lote_id)
 
+    info.atividade.temas = await getInfoTemas(t, dadosut.subfase_id, dadosut.lote_id)
+
     info.atividade.configuracao_qgis = await getInfoConfigQGIS(
       t,
       dadosut.subfase_id,
@@ -489,7 +501,33 @@ controller.finaliza = async (
     }
 
     if (infoEdicao) {
-      // TODO
+      const prodNameResult = await t.result(
+        `UPDATE macrocontrole.produto SET
+          nome = $<nome_produto>
+          WHERE id = $<produto_id>`,
+        { produto_id: info_edicao.produto_id, nome_produto: info_edicao.nome_produto }
+      )
+
+      if (!prodNameResult.rowCount || prodNameResult.rowCount !== 1) {
+        throw new AppError(
+          'Erro ao finalizar atividade. Não foi encontrado o produto para atualizar a informação de edição.',
+          httpCode.BadRequest
+        )
+      }
+
+      const cs = new db.pgp.helpers.ColumnSet([
+        'nome',
+        'tipo_palavra_chave_id',
+        { name: 'produto_id', init: () => info_edicao.produto_id }
+      ])
+
+      const query = pgp.helpers.insert(infoEdicao.palavras_chave, cs, {
+        table: 'palavra_chave_produto',
+        schema: 'metadado'
+      }) + ' ON CONFLICT (nome, produto_id) DO UPDATE SET tipo_palavra_chave_id = EXCLUDED.tipo_palavra_chave_id';
+
+      await t.none(query)
+
     }
 
     if (semCorrecao) {

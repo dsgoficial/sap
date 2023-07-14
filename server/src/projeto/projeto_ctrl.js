@@ -177,16 +177,12 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
-    const f_table_schema = estilos.f_table_schema
-    const f_table_name = estilos.f_table_name
-    const grupo_estilo_id = estilos.grupo_estilo_id
+    const query_test = db.pgp.as.format(`SELECT 1 FROM dgeo.layer_styles AS v WHERE (v.f_table_schema, v.f_table_name, v.grupo_estilo_id) IN ($1:raw)`, 
+                                    db.pgp.as.format(estilos.map(r => `('${r.f_table_schema}', '${r.f_table_name}', ${r.grupo_estilo_id})`).join()));
+    
+    const exists = await t.any(query_test);
 
-    const exists = await t.any(
-      `SELECT id FROM dgeo.layer_styles
-      WHERE f_table_schema = $<f_table_schema> AND f_table_name = $<f_table_name> AND grupo_estilo_id = $<grupo_estilo_id>`,
-      { f_table_schema, f_table_name, grupo_estilo_id }
-    )
-    if (exists && exists.length < estilosId.length) {
+    if (exists && exists.length > 0) {
       throw new AppError(
         'O estilo já foi cadastrado',
         httpCode.BadRequest
@@ -2640,7 +2636,7 @@ controller.deletePerfilLinhagem= async perfilLinhagemId => {
 
 controller.getPerfilTemas = async () => {
   return db.sapConn.any(
-    `SELECT pt.id, te.nome AS tipo_exibicao, pt.tema_id, pt.subfase_id, pt.lote_id,
+    `SELECT pt.id, pt.tema_id, pt.subfase_id, pt.lote_id,
     qt.nome AS tema, qt.definicao_tema
     FROM macrocontrole.perfil_tema AS pt
     INNER JOIN dgeo.qgis_themes AS qt ON qt.id = pt.tema_id`
@@ -2763,7 +2759,7 @@ controller.atualizaTemas = async (temas, usuarioId) => {
   })
 }
 
-controller.deletaMenus = async temasId => {
+controller.deletaTemas = async temasId => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
       `SELECT id FROM dgeo.qgis_themes

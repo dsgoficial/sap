@@ -83,6 +83,7 @@ CREATE TABLE macrocontrole.subfase(
 	id INTEGER NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
+    ordem INTEGER NOT NULL,
 	UNIQUE (nome, fase_id)
 );
 
@@ -646,5 +647,13 @@ CREATE TRIGGER a_relacionamento_produto
 AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.produto
 FOR EACH ROW
 EXECUTE PROCEDURE macrocontrole.update_relacionamento_produto();
+
+CREATE TABLE macrocontrole.pit(
+	id INTEGER NOT NULL PRIMARY KEY,
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
+	meta INTEGER NOT NULL,
+	ano INTEGER NOT NULL
+);
 
 COMMIT;

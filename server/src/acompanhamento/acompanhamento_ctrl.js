@@ -304,7 +304,7 @@ controller.atividadesEmExecucao = async () => {
     te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, a.id as atividade_id,
     u.id AS usuario_id, 
     tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-    a.data_inicio, ut.geom
+    a.data_inicio, CURRENT_TIMESTAMP - a.data_inicio AS duracao
     FROM macrocontrole.atividade AS a
     INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
@@ -330,7 +330,7 @@ controller.ultimasAtividadesFinalizadas = async () => {
     `SELECT ROW_NUMBER () OVER (ORDER BY ee.data_fim DESC) AS id, p.nome AS projeto_nome, l.nome AS lote, lp.nome AS linha_producao_nome, tf.nome AS fase_nome, s.nome AS subfase_nome,
     te.nome AS etapa_nome, b.nome AS bloco, ut.id as unidade_trabalho_id, ut.nome AS unidade_trabalho_nome, ee.id as atividade_id,  u.id AS usuario_id, 
     tpg.nome_abrev || ' ' || u.nome_guerra as usuario, tt.nome AS turno,
-    ee.data_inicio, ee.data_fim, ut.geom
+    ee.data_inicio, ee.data_fim
     FROM macrocontrole.atividade AS ee
     INNER JOIN dgeo.usuario AS u ON u.id = ee.usuario_id
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
@@ -469,6 +469,233 @@ controller.acompanhamentoGrade = async () => {
 
   return grades
 
+}
+
+controller.atividadeSubfase = async () => {
+  const result = await db.sapConn.any(
+    `
+    WITH dates AS (
+      SELECT generate_series(date_trunc('year', CURRENT_DATE), CURRENT_DATE, '1 day')::date AS day
+    ),
+    activity_intervals AS (
+      SELECT ut.lote_id, ut.subfase_id, a.data_inicio, COALESCE(a.data_fim, NOW()) AS data_fim
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut On ut.id = a.unidade_trabalho_id
+      WHERE a.data_inicio IS NOT NULL
+    ),
+    activity_days AS (
+      SELECT DISTINCT dates.day, activity_intervals.lote_id, activity_intervals.subfase_id
+      FROM dates
+      INNER JOIN activity_intervals ON dates.day BETWEEN activity_intervals.data_inicio AND activity_intervals.data_fim
+      ORDER BY dates.day
+    ),
+    activity_groups AS (
+    SELECT l.nome AS lote, s.nome AS subfase, array_agg(array[ad.day::text, 1::text, (ad.day + INTERVAL '1 day')::date::text]) AS data, MIN(ad.day) AS min_date
+    FROM activity_days AS ad
+    INNER JOIN macrocontrole.lote AS l ON l.id = ad.lote_id
+    INNER JOIN macrocontrole.subfase AS s ON s.id = ad.subfase_id
+    GROUP BY lote, subfase
+    )
+    SELECT lote, subfase, data
+    FROM activity_groups
+    ORDER BY lote, min_date;
+  `)
+
+  let today = new Date();
+  function* dateGenerator() {
+    let date = new Date(today.getFullYear(), 0, 1);  // Start from January 1st
+    while (date <= today) {
+      yield date.toISOString().split('T')[0];
+      date.setDate(date.getDate() + 1);  // Move to next day
+    }
+  }
+
+  result.forEach(d => {
+  
+    let fixed = [];
+    let current = d.data.shift();
+    let gen = dateGenerator();
+
+    // Loop over all days from January 1st to today
+    for (let date of gen) {
+      if (current && current[0] === date) {
+        // If current date is in our data, add it to the result
+        fixed.push(current);
+        current = d.data.shift();
+      } else {
+        // If current date is not in our data, add a placeholder with zero
+        let nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+        fixed.push([date, 0, nextDate.toISOString().split('T')[0]]);
+      }
+    }
+  
+    // Add any remaining data
+    if (current) {
+      fixed.push(current);
+    }
+    d.data = fixed
+  })
+    
+
+  result.forEach(d => {
+    let fixed = [];
+    let current = d.data[0];
+    current[1] = parseInt(current[1]); // Convert string to integer
+
+    for (let i = 1; i < d.data.length; i++) {
+      d.data[i][1] = parseInt(d.data[i][1]); // Convert string to integer
+      if (current[2] === d.data[i][0] && current[1] == d.data[i][1]) {
+        current[2] = d.data[i][2];
+      } else {
+        fixed.push(current);
+        current = d.data[i];
+      }
+    }
+  
+    // Push the last range to the result
+    fixed.push(current);
+    d.data = fixed
+  })
+
+  return result
+
+}
+
+
+controller.getDadosSiteAcompanhamento = async () => {
+
+  const dados = await db.sapConn.any(
+    `
+    SELECT p.id AS projeto_id, p.nome AS projeto, p.descricao AS descricao_projeto, l.id AS lote_id, l.nome AS lote, l.descricao AS descricao_lote,
+    f.id AS fase_id, 
+    json_build_array(json_build_array(ST_XMin(prod.bounds), ST_YMin(prod.bounds)), json_build_array(ST_XMax(prod.bounds), ST_YMax(prod.bounds))) AS bounds
+    FROM macrocontrole.projeto AS p
+    INNER JOIN macrocontrole.lote AS l ON l.projeto_id = p.id
+    INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = l.linha_producao_id
+    INNER JOIN (
+      SELECT lote_id, ST_Envelope(ST_Collect(geom)) AS bounds
+      FROM macrocontrole.produto
+      GROUP BY lote_id
+      ) AS prod ON prod.lote_id = l.id
+    WHERE p.finalizado IS FALSE
+    ORDER BY p.id, l.id, f.ordem;
+  `)
+
+  let dados_organizados = {}
+  let aux_lotes = {}
+  dados.forEach(d => {
+    if(!(d.projeto_id in dados_organizados)){
+      dados_organizados[d.projeto_id] = {}
+      dados_organizados[d.projeto_id]['lotes'] = []
+      aux_lotes[d.projeto_id] = {}
+    }
+    dados_organizados[d.projeto_id]['title'] = d.projeto
+    dados_organizados[d.projeto_id]['description'] = d.descricao_projeto
+
+    if(!(d.lote_id in aux_lotes[d.projeto_id])){
+      aux_lotes[d.projeto_id][d.lote_id] = {}
+      aux_lotes[d.projeto_id][d.lote_id]['legend'] = [0]
+    }
+    aux_lotes[d.projeto_id][d.lote_id]['name'] = d.lote_id
+    aux_lotes[d.projeto_id][d.lote_id]['subtitle'] = d.subtitle
+    aux_lotes[d.projeto_id][d.lote_id]['description'] = d.descricao_lote
+    aux_lotes[d.projeto_id][d.lote_id]['legend'].push(d.fase_id)
+
+    aux_lotes[d.projeto_id][d.lote_id]['zoom'] =  d.bounds;
+
+  })
+  Object.keys(aux_lotes).forEach(pkey => {
+    Object.keys(aux_lotes[pkey]).forEach(lkey => {
+      dados_organizados[pkey][lkey].append(aux_lotes[pkey][lkey])
+    })
+  })
+
+  const geojsonQuery = await db.sapConn.any(
+    `
+    SELECT p.lote_id, json_build_object(
+      'type', 'FeatureCollection',
+      'features', json_agg(
+          json_build_object(
+              'type', 'Feature',
+              'geometry', ST_AsGeoJSON(geom)::json,
+              'properties', json_build_object(
+                  'id', p.id,
+                  'identificador', p.mi,
+                  'situacao', sit.fase_atual
+                )
+            )
+        )
+      ) AS json
+    FROM macrocontrole.produto AS p
+    INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id
+    INNER JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id
+    INNER JOIN (
+      SELECT sit.id, CASE WHEN sit.completed THEN max(sit.fase_id) ELSE NULL END AS fase_atual
+      FROM (
+      SELECT p.id, sf.fase_id, bool_and(ut.completed) AS completed
+      FROM macrocontrole.produto AS p
+      LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+      LEFT JOIN (
+        SELECT ut.id, ut.subfase_id, (CASE WHEN count(*) - count(a.data_fim) = 0 THEN TRUE ELSE FALSE END) AS completed 
+        FROM macrocontrole.unidade_trabalho AS ut
+        INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+        GROUP BY ut.id
+      ) AS ut ON rp.ut_id = ut.id
+      LEFT JOIN macrocontrole.subfase AS sf ON sf.id = ut.subfase_id
+      GROUP BY p.id, sf.fase_id
+      ORDER BY p.id, sf.fase_id) AS sit
+      GROUP BY sit.id, sit.completed
+      ORDER BY sit.id
+    ) AS sit ON sit.id = p.id
+    WHERE proj.finalizado IS FALSE
+    GROUP BY p.lote_id;
+  `)
+
+  let retorno = []
+  retorno.append({
+    'nome': 'dados.json',
+    'dados': dados_organizados
+  })
+
+  geojsonQuery.forEach(g => {
+    let aux = {}
+    aux['nome'] = `${g.lote_id}.geojson`
+    aux['dados'] = g.json
+    retorno.append(aux)
+  })
+
+  return retorno
+}
+
+
+
+
+controller.getInfoSubfasePIT = async ano => {
+  return await db.sapConn.any(
+    `
+    SELECT l.nome AS lote, s.nome AS subfase, EXTRACT(MONTH FROM sit.data_fim) AS month, COUNT(sit.id) AS count
+    FROM (SELECT p.id, p.lote_id, ut.subfase_id, bool_and(ut.completed) AS completed, max(ut.data_fim) AS data_fim
+          FROM macrocontrole.produto AS p
+          LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+          LEFT JOIN (
+            SELECT ut.id, ut.subfase_id, (CASE WHEN count(*) - count(a.data_fim) = 0 THEN TRUE ELSE FALSE END) AS completed, max(a.data_fim) AS data_fim
+            FROM macrocontrole.unidade_trabalho AS ut 
+            INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+            GROUP BY ut.id
+          ) AS ut ON rp.ut_id = ut.id
+          GROUP BY p.id, ut.subfase_id, p.lote_id
+          ORDER BY p.id, ut.subfase_id, p.lote_id
+      ) AS sit
+    INNER JOIN macrocontrole.lote AS l ON l.id = sit.lote_id
+    INNER JOIN macrocontrole.subfase AS s ON s.id = sit.subfase_id
+    WHERE sit.completed = TRUE AND EXTRACT(YEAR FROM sit.data_fim) = $<ano>
+    GROUP BY l.nome, s.nome, s.ordem, EXTRACT(MONTH FROM sit.data_fim)
+    ORDER BY l.nome, s.ordem, EXTRACT(MONTH FROM sit.data_fim)
+  `,
+    { ano }
+  )
+  
 }
 
 

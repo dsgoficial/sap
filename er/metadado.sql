@@ -2,19 +2,6 @@ BEGIN;
 
 CREATE SCHEMA metadado;
 
-CREATE TABLE metadado.responsavel_fase(
-  id SERIAL NOT NULL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-  fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
-  lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id)
-);
-
-CREATE TABLE metadado.insumo_interno(
-	id SERIAL NOT NULL PRIMARY KEY,
- 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
- 	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
-);
-
 -- Tipos de palavra chave previstos na ISO19115 / PCDG
 CREATE TABLE metadado.tipo_palavra_chave(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -33,7 +20,8 @@ CREATE TABLE metadado.palavra_chave_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
  	tipo_palavra_chave_id SMALLINT NOT NULL REFERENCES metadado.tipo_palavra_chave (code),
- 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
+ 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+	UNIQUE(nome,produto_id)
 );
 
 -- MD_ClassificationCode
@@ -100,9 +88,25 @@ INSERT INTO metadado.organizacao (id, nome) VALUES
 (4, '4º Centro de Geoinformação'),
 (5, '5º Centro de Geoinformação');
 
-CREATE TABLE metadado.informacoes_lote(
+CREATE TABLE metadado.usuario(
+  id SERIAL NOT NULL PRIMARY KEY,
+  usuario_sap_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+  nome VARCHAR(255) NOT NULL,
+  funcao VARCHAR(255) NOT NULL,
+  organizacao_id INTEGER NOT NULL REFERENCES metadado.organizacao (id)
+);
+
+CREATE TABLE metadado.responsavel_fase_produto(
+  id SERIAL NOT NULL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES metadado.usuario (id),
+  fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
+  produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
+);
+
+
+CREATE TABLE metadado.informacoes_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+ 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
 	resumo TEXT,
 	proposito TEXT,
 	creditos TEXT,
@@ -115,22 +119,72 @@ CREATE TABLE metadado.informacoes_lote(
 	organizacao_distribuicao_id  INTEGER NOT NULL REFERENCES metadado.organizacao (id),
 	datum_vertical_id SMALLINT NOT NULL REFERENCES metadado.datum_vertical (code),
 	especificacao_id SMALLINT NOT NULL REFERENCES metadado.especificacao (code),
-	responsavel_lote_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-	declaracao_linhagem TEXT
+	responsavel_produto_id INTEGER NOT NULL REFERENCES metadado.usuario (id),
+	declaracao_linhagem TEXT,
+	projeto_bdgex VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE metadado.informacoes_imagem_insumo( --Modificação da camada de carta ortoimagem com as informacoes da imagem?
+CREATE TABLE metadado.creditos_qpt(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	insumo_id INTEGER NOT NULL REFERENCES macrocontrole.insumo (id),
-	data_insumo_primeira timestamp with time zone NOT NULL,
-	data_insumo_ultima timestamp with time zone NOT NULL,
-	nome_sensor VARCHAR(255) NOT NULL,
-	tipo_sensor VARCHAR(255) NOT NULL,
-	plataforma_sensor VARCHAR(255) NOT NULL,
-	resolucao VARCHAR(255) NOT NULL,
-	bandas VARCHAR(255) NOT NULL,
-	nivel_produto VARCHAR(255) NOT NULL,
-	geom geometry(POLYGON, 4326) NOT NULL -- geometria para indicar a região subregião se for necessário
+	qpt text NOT NULL
+);
+
+CREATE TABLE metadado.informacoes_edicao(
+	id SERIAL NOT NULL PRIMARY KEY,
+ 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+	pec_planimetrico VARCHAR(255) NOT NULL,
+    pec_altimetrico VARCHAR(255) NOT NULL,
+    origem_dados_altimetricos VARCHAR(255) NOT NULL,
+    territorio_internacional BOOLEAN NOT NULL,
+    acesso_restrito BOOLEAN NOT NULL,
+    carta_militar BOOLEAN NOT NULL,
+	data_criacao VARCHAR(255) NOT NULL,
+	creditos_id SMALLINT NOT NULL REFERENCES metadado.creditos_qpt (id),
+	epsg_mde VARCHAR(255) NOT NULL,
+	caminho_mde VARCHAR(255) NOT NULL,
+	dados_terceiro text ARRAY,
+	quadro_fases JSON NOT NULL
+);
+
+CREATE TABLE metadado.imagens_carta_ortoimagem(
+	id SERIAL NOT NULL PRIMARY KEY,
+    produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+	caminho_imagem VARCHAR(255) NOT NULL,
+	caminho_estilo VARCHAR(255),
+	epsg VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE metadado.classes_complementares_orto(
+	id SERIAL NOT NULL PRIMARY KEY,
+	nome text ARRAY NOT NULL
+);
+
+INSERT INTO metadado.classes_complementares_orto (nome)
+VALUES (ARRAY [
+	'llp_unidade_federacao_a',
+	'elemnat_curva_nivel_l',
+	'elemnat_ponto_cotado_p',
+	'infra_pista_pouso_p',
+	'infra_pista_pouso_l',
+	'infra_pista_pouso_a',
+	'elemnat_toponimo_fisiografico_natural_p',
+	'elemnat_toponimo_fisiografico_natural_l',
+	'elemnat_ilha_p',
+	'elemnat_ilha_a',
+	'llp_aglomerado_rural_p',
+	'llp_area_pub_militar_a',
+	'llp_terra_indigena_a',
+	'llp_unidade_conservacao_a',
+	'infra_elemento_energia_p',
+	'infra_elemento_energia_l',
+	'infra_elemento_energia_a',
+	'constr_extracao_mineral'
+]);
+
+CREATE TABLE metadado.perfil_classes_complementares_orto(
+	id SERIAL NOT NULL PRIMARY KEY,
+    produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+	classes_complementares_orto_id INTEGER NOT NULL REFERENCES metadado.classes_complementares_orto (id)
 );
 
 COMMIT;
