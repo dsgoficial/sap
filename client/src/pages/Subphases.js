@@ -22,7 +22,7 @@ export default function Dashboard() {
         let lastLotName = null
         let lastLot = null
         let count = 0
-        for (let lot of res.dados) {
+        for (let [i, lot] of res.dados.entries()) {
             if (!lastLot || lastLotName != lot.lote) {
                 if (lastLot) graphs.push(lastLot)
                 lastLotName = lot.lote
@@ -60,8 +60,10 @@ export default function Dashboard() {
                     return [item[0], +item[1], item[2]]
                 })
             })
+            if ((res.dados.length - 1) == i) {
+                if (lastLot) graphs.push(lastLot)
+            }
         }
-        console.log(graphs[0])
         setGraphs(graphs)
     }
 
