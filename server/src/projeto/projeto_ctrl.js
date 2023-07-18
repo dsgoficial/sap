@@ -177,9 +177,9 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
-    const query_test = db.pgp.as.format(`SELECT 1 FROM dgeo.layer_styles AS v WHERE (v.f_table_schema, v.f_table_name, v.grupo_estilo_id) IN ($1:raw)`, 
-                                    db.pgp.as.format(estilos.map(r => `('${r.f_table_schema}', '${r.f_table_name}', ${r.grupo_estilo_id})`).join()));
-    
+    const query_test = db.pgp.as.format(`SELECT 1 FROM dgeo.layer_styles AS v WHERE (v.f_table_schema, v.f_table_name, v.grupo_estilo_id) IN ($1:raw)`,
+      db.pgp.as.format(estilos.map(r => `('${r.f_table_schema}', '${r.f_table_name}', ${r.grupo_estilo_id})`).join()));
+
     const exists = await t.any(query_test);
 
     if (exists && exists.length > 0) {
@@ -589,10 +589,10 @@ controller.deletaAtividades = async atividadeIds => {
       WHERE a.id in ($<atividadeIds:csv>)`,
       { atividadeIds }
     )
-    
+
     loteId = lote_subfases[0].lote_id
     lote_subfases.forEach(e => {
-      if(e.lote_id !== loteId){
+      if (e.lote_id !== loteId) {
         throw new AppError(
           'Atividades de lotes distintos',
           httpCode.BadRequest
@@ -600,7 +600,7 @@ controller.deletaAtividades = async atividadeIds => {
       }
       subfaseIds.push(e.subfase_id)
     })
-  
+
     await t.none(
       `
     DELETE FROM macrocontrole.atividade
@@ -727,7 +727,7 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
 
 
     await t.none(
-      sqlA+sqlB,
+      sqlA + sqlB,
       { fase_id, lote_id }
     )
 
@@ -1517,7 +1517,7 @@ controller.criaPerfilEstilos = async perfilEstilos => {
 
   perfisbd.forEach(perfilbd => {
     perfilEstilos.forEach(perfil => {
-      if(perfil.grupo_estilo_id === perfilbd.grupo_estilo_id && perfil.subfase_id === perfilbd.subfase_id && perfil.lote_id === perfilbd.lote_id){
+      if (perfil.grupo_estilo_id === perfilbd.grupo_estilo_id && perfil.subfase_id === perfilbd.subfase_id && perfil.lote_id === perfilbd.lote_id) {
         throw new AppError(
           'Já existem perfis estilos com a mesma subfase_id and grupo_estilo_id',
           httpCode.BadRequest
@@ -1661,7 +1661,7 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
 
     loteId = lote_subfases[0].lote_id
     lote_subfases.forEach(e => {
-      if(e.lote_id !== loteId){
+      if (e.lote_id !== loteId) {
         throw new AppError(
           'Unidades de trabalho de lotes distintos',
           httpCode.BadRequest
@@ -1693,7 +1693,7 @@ controller.copiarUnidadeTrabalho = async (
   unidadeTrabalhoIds,
   associarInsumos
 ) => {
-  let newUnidadeTrabalhoIds 
+  let newUnidadeTrabalhoIds
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     let utIdSubfaseIdPairs = unidadeTrabalhoIds.flatMap(utId => subfaseIds.map(subfaseId => ({ utId, subfaseId })));
     let utIdSubfaseIdPairsPg = utIdSubfaseIdPairs.map(pair => `(${pair.utId}, ${pair.subfaseId})`);
@@ -1822,8 +1822,8 @@ controller.criaProdutos = async (produtos, loteId) => {
     const query = db.pgp.helpers.insert(produtos, cs, {
       table: 'produto',
       schema: 'macrocontrole'
-    })  + ' RETURNING id'
-  
+    }) + ' RETURNING id'
+
     produtoIds = await t.map(query, undefined, a => +a.id)
   })
   await disableTriggers.handleRelacionamentoProdutoInsertUpdate(db.sapConn, produtoIds)
@@ -1846,25 +1846,25 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) =>
       'observacao',
       { name: 'geom', mod: ':raw' }
     ])
-  
+
     unidadesTrabalho.forEach(p => {
       p.geom = `st_geomfromewkt('${p.geom}')`
     })
-  
+
     const unidadesTrabalhoTotal = []
-  
+
     subfaseIds.forEach(s => {
       unidadesTrabalho.forEach(p => {
         const newObj = { ...p, subfase_id: s };
         unidadesTrabalhoTotal.push(newObj);
       })
     })
-  
+
     const query = db.pgp.helpers.insert(unidadesTrabalhoTotal, cs, {
       table: 'unidade_trabalho',
       schema: 'macrocontrole'
-    })  + ' RETURNING id'
-  
+    }) + ' RETURNING id'
+
     unidadeTrabalhoIds = await t.map(query, undefined, a => +a.id)
   })
   await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, unidadeTrabalhoIds)
@@ -2494,7 +2494,7 @@ controller.getAlias = async () => {
   )
 }
 
-controller.criaAlias = async (alias,usuarioId) => {
+controller.criaAlias = async (alias, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
@@ -2514,7 +2514,7 @@ controller.criaAlias = async (alias,usuarioId) => {
   })
 }
 
-controller.atualizaAlias = async (alias,usuarioId) => {
+controller.atualizaAlias = async (alias, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
@@ -2612,7 +2612,7 @@ controller.atualizaPerfilLinhagem = async perfilLinhagem => {
   })
 }
 
-controller.deletePerfilLinhagem= async perfilLinhagemId => {
+controller.deletePerfilLinhagem = async perfilLinhagemId => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_linhagem
@@ -2685,7 +2685,7 @@ controller.atualizaPerfilTemas = async perfilTema => {
   })
 }
 
-controller.deletePerfilTemas= async perfilTemaId => {
+controller.deletePerfilTemas = async perfilTemaId => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_tema
@@ -2802,8 +2802,8 @@ controller.reshapeUnidadeTrabalho = async (unidadeTrabalhoId, reshapeGeom) => {
       { unidadeTrabalhoId, reshapeGeom }
     )
 
-  })- 
-  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, [unidadeTrabalhoId])
+  }) -
+    await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, [unidadeTrabalhoId])
   await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, [unidadeTrabalhoId])
 }
 
@@ -2823,7 +2823,7 @@ controller.cutUnidadeTrabalho = async (unidadeTrabalhoId, cutGeoms) => {
     }
 
     let firstGeom = cutGeoms.shift()
-    
+
     await t.none(
       `UPDATE macrocontrole.unidade_trabalho
       SET geom = ST_GEOMFROMEWKT($<firstGeom>)
@@ -2898,7 +2898,7 @@ controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
     }
 
     firstId = unidadeTrabalhoIds.shift()
-    
+
     await t.none(
       `UPDATE macrocontrole.unidade_trabalho
       SET geom = ST_GEOMFROMEWKT($<firstGeom>)
@@ -3002,5 +3002,50 @@ controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
   await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, [firstId])
 }
 
+controller.insereLinhaProducao = async linha_producao => {
+  return db.sapConn.tx(async t => {
+    const linha = await t.one(
+      `INSERT INTO macrocontrole.linha_producao(nome, descricao, nome_abrev, tipo_produto_id) VALUES($1, $2, $3, $4) RETURNING id`, 
+      [linha_producao.nome, linha_producao.descricao, linha_producao.nome_abrev, linha_producao.tipo_produto_id]
+      );
+
+    let subfaseMap = {};
+    for (const fase of linha_producao.fases) {
+      const faseInserted = await t.one(
+        `INSERT INTO macrocontrole.fase(tipo_fase_id, linha_producao_id, ordem) VALUES($1, $2, $3) RETURNING id`,
+        [fase.tipo_fase_id, linha.id, fase.ordem]
+        );
+
+      for (const subfase of fase.subfases) {
+        const subfaseInserted = await t.one(
+          `INSERT INTO macrocontrole.subfase(nome, fase_id, ordem) VALUES($1, $2, $3) RETURNING id`, 
+          [subfase.nome, faseInserted.id, subfase.ordem]
+          );
+        subfaseMap[subfase.nome] = subfaseInserted.id;
+      }
+
+      for (const preReq of fase.pre_requisito_subfase) {
+        const anteriorId = subfaseMap[preReq.subfase_anterior];
+        const posteriorId = subfaseMap[preReq.subfase_posterior];
+        await t.none(
+          `INSERT INTO macrocontrole.pre_requisito_subfase(tipo_pre_requisito_id, subfase_anterior_id, subfase_posterior_id) VALUES($1, $2, $3)`,
+          [preReq.tipo_pre_requisito_id, anteriorId, posteriorId]
+          );
+      }
+    }
+
+    for (const prop of linha_producao.propriedades_camadas) {
+      const camadaId = await t.one(`SELECT id FROM macrocontrole.camada WHERE nome = $1`, 
+          [prop.camada], a => a && a.id
+        );
+      const subfaseId = subfaseMap[prop.subfase];
+      await t.none(
+        `INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) 
+        VALUES($1, $2, $3, $4, $5, $6)`,
+        [camadaId, prop.atributo_filtro_subfase, prop.camada_apontamento, prop.atributo_situacao_correcao, prop.atributo_justificativa_apontamento, subfaseId]);
+    }
+
+  })
+}
 
 module.exports = controller

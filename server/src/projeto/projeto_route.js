@@ -1770,4 +1770,19 @@ router.put(
   })
 )
 
+router.post(
+  '/linha_producao',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.linhaProducao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.insereLinhaProducao(
+      req.body.linha_producao
+    )
+
+    const msg = 'Linha de produção inserida com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 module.exports = router

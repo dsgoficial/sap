@@ -246,19 +246,62 @@ models.unidadeTrabalhoReshape = Joi.object().keys({
 models.unidadeTrabalhoCut = Joi.object().keys({
   unidade_trabalho_id: Joi.number().integer().strict().required(),
   cut_geoms: Joi.array()
-  .items(Joi.string())
-  .unique()
-  .required()
-  .min(2)
+    .items(Joi.string())
+    .unique()
+    .required()
+    .min(2)
 })
 
 models.unidadeTrabalhoMerge = Joi.object().keys({
   unidade_trabalho_ids: Joi.array()
-  .items(Joi.number().integer().strict())
-  .unique()
-  .required()
-  .min(2),
+    .items(Joi.number().integer().strict())
+    .unique()
+    .required()
+    .min(2),
   merge_geom: Joi.string().required()
+})
+
+models.linhaProducao = Joi.object().keys({
+  linha_producao: Joi.object({
+    nome: Joi.string().required(),
+    descricao: Joi.string().required(),
+    nome_abrev: Joi.string().required(),
+    tipo_produto_id: Joi.number().integer().required(),
+    fases: Joi.array().items(Joi.object({
+      tipo_fase_id: Joi.number().integer().required(),
+      ordem: Joi.number().integer().required(),
+      subfases: Joi.array().items(Joi.object({
+        nome: Joi.string().required(),
+        ordem: Joi.number().integer().required()
+      })).required(),
+      pre_requisito_subfase: Joi.array().items(Joi.object({
+        subfase_anterior: Joi.string().required(),
+        subfase_posterior: Joi.string().required(),
+        tipo_pre_requisito_id: Joi.number().integer().required()
+      }))
+    })).required(),
+    propriedades_camadas: Joi.array().items(Joi.object({
+      camada: Joi.string().required(),
+      subfase: Joi.string().required(),
+      camada_apontamento: Joi.boolean().required(),
+      atributo_filtro_subfase: Joi.string(),
+      atributo_situacao_correcao: Joi.string(),
+      atributo_justificativa_apontamento: Joi.string()
+    }).when(Joi.object({
+      camada_apontamento: Joi.boolean().valid(true).required()
+    }), {
+      then: Joi.object({
+        atributo_filtro_subfase: Joi.string().required(),
+        atributo_situacao_correcao: Joi.string().required(),
+        atributo_justificativa_apontamento: Joi.string().required()
+      }),
+      otherwise: Joi.object({
+        atributo_filtro_subfase: Joi.string().forbidden(),
+        atributo_situacao_correcao: Joi.string().forbidden(),
+        atributo_justificativa_apontamento: Joi.string().forbidden()
+      })
+    }))
+  })
 })
 
 
@@ -444,7 +487,7 @@ models.perfisModelo = Joi.object().keys({
     .min(1)
 })
 
-models.perfisMenu= Joi.object().keys({
+models.perfisMenu = Joi.object().keys({
   perfis_menu: Joi.array()
     .items(
       Joi.object().keys({
@@ -458,7 +501,7 @@ models.perfisMenu= Joi.object().keys({
     .min(1)
 })
 
-models.perfisLinhagem= Joi.object().keys({
+models.perfisLinhagem = Joi.object().keys({
   perfis_linhagem: Joi.array()
     .items(
       Joi.object().keys({
@@ -689,10 +732,10 @@ models.associaInsumos = Joi.object().keys({
 models.associaInsumosBloco = Joi.object().keys({
   bloco_id: Joi.number().integer().strict().required(),
   subfase_ids: Joi.array()
-  .items(Joi.number().integer().strict())
-  .unique()
-  .required()
-  .min(1),
+    .items(Joi.number().integer().strict())
+    .unique()
+    .required()
+    .min(1),
   grupo_insumo_id: Joi.number().integer().strict().required(),
   estrategia_id: Joi.number().integer().strict().required(),
   caminho_padrao: Joi.string().required().allow('')
@@ -723,7 +766,7 @@ models.produtos = Joi.object().keys({
     .unique('uuid')
     .required()
     .min(1),
-    lote_id: Joi.number().integer().strict().required()
+  lote_id: Joi.number().integer().strict().required()
 })
 
 models.insumos = Joi.object().keys({
@@ -738,8 +781,8 @@ models.insumos = Joi.object().keys({
     )
     .required()
     .min(1),
-    tipo_insumo: Joi.number().integer().strict().required(),
-    grupo_insumo: Joi.number().integer().strict().required()
+  tipo_insumo: Joi.number().integer().strict().required(),
+  grupo_insumo: Joi.number().integer().strict().required()
 })
 
 models.unidadesTrabalho = Joi.object().keys({
@@ -760,10 +803,10 @@ models.unidadesTrabalho = Joi.object().keys({
     .required()
     .min(1),
   subfase_ids: Joi.array()
-  .items(Joi.number().integer().strict().required())
-  .unique()
-  .required()
-  .min(1),
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
   lote_id: Joi.number().integer().strict().required()
 })
 

@@ -15,25 +15,25 @@ INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
 (6,4,2,2), --6 Edição
 (7,5,2,3); --7 Disseminação
 
-INSERT INTO macrocontrole.subfase (id,nome,fase_id) VALUES
+INSERT INTO macrocontrole.subfase (id,nome,fase_id,ordem) VALUES
 -- Linha de produção 1
-(1,'Preparo imagens', 1), --1
-(2,'Preparo altimetria', 1), --2
-(3,'Coleta de insumos externos', 1), --3
-(4,'Extração da Hidrografia e Altimetria', 2), --4
-(5,'Extração de Ferrovias', 2), --5
-(6,'Extração de Vias de Deslocamento', 2), --6
-(7,'Extração de Topônimos', 2), --7
-(8,'Extração de Limites', 2), --8
-(9,'Extração de Planimetria', 2), --9
-(10,'Verificação final', 2), --10
-(11,'Validação nível produto', 3), --11
-(12,'Validação da ligação', 3), --12
-(13,'Disseminação', 4), --13
+(1,'Preparo imagens', 1, 1), --1
+(2,'Preparo altimetria', 1, 2), --2
+(3,'Coleta de insumos externos', 1, 3), --3
+(4,'Extração da Hidrografia e Altimetria', 2, 1), --4
+(5,'Extração de Ferrovias', 2, 2), --5
+(6,'Extração de Vias de Deslocamento', 2, 3), --6
+(7,'Extração de Topônimos', 2, 4), --7
+(8,'Extração de Limites', 2, 5), --8
+(9,'Extração de Planimetria', 2, 6), --9
+(10,'Verificação final', 2, 7), --10
+(11,'Validação nível produto', 3, 1), --11
+(12,'Validação da ligação', 3, 2), --12
+(13,'Disseminação', 4, 1), --13
 -- Linha de produção 2
-(14,'Preparo para edição', 5), --14
-(15,'Edição', 6), --15
-(16,'Disseminação', 7); --16
+(14,'Preparo para edição', 5, 1), --14
+(15,'Edição', 6, 1), --15
+(16,'Disseminação', 7, 1); --16
 
 INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
 -- Linha de produção 1
@@ -85,26 +85,26 @@ INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
 (13,4,4,2), --13 Edição - Carta topográfica ET-RDG
 (14,5,4,3); --14 Disseminação - Carta topográfica ET-RDG
 
-INSERT INTO macrocontrole.subfase (id,nome,fase_id) VALUES
-(17,'Preparo imagens', 8), --17
-(18,'Preparo altimetria', 8), --18
-(19,'Coleta de insumos externos', 8), --19
-(20,'Extração da Hidrografia e Altimetria', 9), --20
-(21,'Extração de Ferrovias', 9), --21
-(22,'Extração de Vias de Deslocamento', 9), --22
-(23,'Extração de Topônimos', 9), --23
-(24,'Extração de Limites', 9), --24
-(25,'Extração de interseção de hidrografia e transportes', 9), --25
-(26,'Extração de Área Edificada', 9), --26
-(27,'Extração de Vegetação', 9), --27
-(28,'Extração de Planimetria',9), --28
-(29,'Verificação final', 9), --29
-(30,'Validação nível produto', 10), --30
-(31,'Validação da ligação', 10), --31
-(32,'Disseminação', 11), --32
-(33,'Preparo para edição', 12), --33
-(34,'Edição', 13), --34
-(35,'Disseminação', 14); --35
+INSERT INTO macrocontrole.subfase (id,nome,fase_id,ordem) VALUES
+(17,'Preparo imagens', 8, 1), --17
+(18,'Preparo altimetria', 8, 2), --18
+(19,'Coleta de insumos externos', 8, 3), --19
+(20,'Extração da Hidrografia e Altimetria', 9, 1), --20
+(21,'Extração de Ferrovias', 9, 2), --21
+(22,'Extração de Vias de Deslocamento', 9, 3), --22
+(23,'Extração de Topônimos', 9, 4), --23
+(24,'Extração de Limites', 9, 5), --24
+(25,'Extração de interseção de hidrografia e transportes', 9, 6), --25
+(26,'Extração de Área Edificada', 9, 7), --26
+(27,'Extração de Vegetação', 9, 8), --27
+(28,'Extração de Planimetria',9, 9), --28
+(29,'Verificação final', 9, 10), --29
+(30,'Validação nível produto', 10, 1), --30
+(31,'Validação da ligação', 10, 2), --31
+(32,'Disseminação', 11, 1), --32
+(33,'Preparo para edição', 12, 1), --33
+(34,'Edição', 13, 1), --34
+(35,'Disseminação', 14, 1); --35
 
 INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
 -- Linha de produção 3
@@ -160,24 +160,24 @@ INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
 (19,3,5,5), --19 Validação Área Contínua
 (20,5,5,6); --20 Disseminação - Conjunto de dados vetoriais 2.1.3 / Carta topográfica T34-700 
 
-INSERT INTO macrocontrole.subfase (id,nome,fase_id) VALUES
-(36,'Preparo imagens', 15), 
-(37,'Preparo altimetria', 15), 
-(38,'Coleta de insumos externos', 15), 
-(39,'Extração da Hidrografia e Altimetria', 16), 
-(40,'Extração de Ferrovias', 16), 
-(41,'Extração de Vias de Deslocamento', 16), 
-(42,'Extração de Topônimos', 16), 
-(43,'Extração de Limites', 16), 
-(44,'Extração de interseção de hidrografia e transportes', 16), 
-(45,'Extração de Área Edificada', 16), 
-(46,'Extração de Vegetação', 16), 
-(47,'Extração de Planimetria',16), 
-(48,'Verificação final', 16), 
-(49,'Validação Gothic', 17), 
-(50,'Edição', 18), 
-(51,'Validação Área Contínua Gothic', 19), 
-(52,'Disseminação', 20); 
+INSERT INTO macrocontrole.subfase (id,nome,fase_id,ordem) VALUES
+(36,'Preparo imagens', 15, 1), 
+(37,'Preparo altimetria', 15, 2), 
+(38,'Coleta de insumos externos', 15, 3), 
+(39,'Extração da Hidrografia e Altimetria', 16, 1), 
+(40,'Extração de Ferrovias', 16, 2), 
+(41,'Extração de Vias de Deslocamento', 16, 3), 
+(42,'Extração de Topônimos', 16, 4), 
+(43,'Extração de Limites', 16, 5), 
+(44,'Extração de interseção de hidrografia e transportes', 16, 6), 
+(45,'Extração de Área Edificada', 16, 7), 
+(46,'Extração de Vegetação', 16, 8), 
+(47,'Extração de Planimetria',16, 9), 
+(48,'Verificação final', 16, 10), 
+(49,'Validação Gothic', 17, 1), 
+(50,'Edição', 18, 1), 
+(51,'Validação Área Contínua Gothic', 19, 1), 
+(52,'Disseminação', 20, 1); 
 
 
 INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
