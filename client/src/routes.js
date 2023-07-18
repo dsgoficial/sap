@@ -8,6 +8,10 @@ const Login = lazy(() => import('./pages/Login'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const Grids = lazy(() => import('./pages/Grids'))
 const Subphases = lazy(() => import('./pages/Subphases'))
+const UserActivities = lazy(() => import('./pages/UserActivities'))
+const Lot = lazy(() => import('./pages/Lot'))
+const SubphaseSituation = lazy(() => import('./pages/SubphaseSituation'))
+
 // ----------------------------------------------------------------------
 
 export default function Router() {
@@ -18,7 +22,10 @@ export default function Router() {
       children: [
         { path: '/', element: <PrivateRoute><Dashboard /></PrivateRoute> },
         { path: '/grid', element: <PrivateRoute><Grids /></PrivateRoute> },
-        { path: '/subphases', element: <PrivateRoute><Subphases /></PrivateRoute> }
+        { path: '/subphases', element: <PrivateRoute><Subphases /></PrivateRoute> },
+        { path: '/user-activities', element: <PrivateRoute><UserActivities /></PrivateRoute> },
+        { path: '/lot', element: <PrivateRoute><Lot /></PrivateRoute> },
+        { path: '/subphases-situation', element: <PrivateRoute><SubphaseSituation /></PrivateRoute> }
       ]
     },
     {
