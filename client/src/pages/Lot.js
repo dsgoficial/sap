@@ -7,19 +7,19 @@ import { useNavigate } from "react-router-dom";
 
 const months = [
     {
-        label: 'Janeiro',
+        label: 'Jan',
         id: 'jan'
     },
     {
-        label: 'Fevereiro',
+        label: 'Fev',
         id: 'fev'
     },
     {
-        label: 'Março',
+        label: 'Mar',
         id: 'mar'
     },
     {
-        label: 'Abril',
+        label: 'Abr',
         id: 'abr'
     },
     {
@@ -27,31 +27,31 @@ const months = [
         id: 'mai'
     },
     {
-        label: 'Junho',
+        label: 'Jun',
         id: 'jun'
     },
     {
-        label: 'Julho',
+        label: 'Jul',
         id: 'jul'
     },
     {
-        label: 'Agosto',
+        label: 'Ago',
         id: 'ago'
     },
     {
-        label: 'Setembro',
+        label: 'Set',
         id: 'set'
     },
     {
-        label: 'Outubro',
+        label: 'Out',
         id: 'out'
     },
     {
-        label: 'Novembro',
+        label: 'Nov',
         id: 'nov'
     },
     {
-        label: 'Dezembro',
+        label: 'Dez',
         id: 'dez'
     }
 ]
@@ -117,37 +117,44 @@ export default function Dashboard() {
     return (
         <Page title="Sistema de Apoio à Produção">
             <Container
-                maxWidth={'100%'}
             >
                 <Box
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
+                        justifyContent: 'center',
                         gap: 2
                     }}
                 >
                     {
                         dataset.map((item, idx) => {
                             return (
-                                <MaterialTable
+                                <Box
                                     key={idx}
-                                    title={item.lot}
-                                    loaded={loaded}
-                                    columns={[
-                                        { title: 'Subfase', field: 'subphase' },
-                                        ...months.map(m => {
-                                            return {
-                                                title: m.label,
-                                                field: m.id
-                                            }
-                                        })
-                                    ]}
-                                    data={item.rows}
-                                    actions={[]}
-                                    options={{
-                                        selection: false
+                                    sx={{
+                                        width: '90%'
                                     }}
-                                />
+                                >
+                                    <MaterialTable
+                                        title={item.lot}
+                                        loaded={loaded}
+                                        columns={[
+                                            { title: 'Subfase', field: 'subphase' },
+                                            ...months.map(m => {
+                                                return {
+                                                    title: m.label,
+                                                    field: m.id,
+                                                    maxWidth: '10px'
+                                                }
+                                            })
+                                        ]}
+                                        data={item.rows}
+                                        actions={[]}
+                                        options={{
+                                            selection: false
+                                        }}
+                                    />
+                                </Box>
                             )
                         })
                     }

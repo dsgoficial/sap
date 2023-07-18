@@ -102,13 +102,11 @@ const Table = (props) => {
                 draggable: false,
                 cellStyle: {
                     textAlign: 'center',
-                    border: '1px solid black',
-                    padding: '2px'
+                    border: '1px solid black'
                 },
                 headerStyle: {
                     textAlign: 'center',
-                    borderBottom: '1px solid black',
-                    padding: '2px'
+                    borderBottom: '1px solid black'
                 },
                 rowStyle: (rowData, idx) => ({
                     backgroundColor: idx % 2 == 0 ? '#EEE' : '#FFF'
