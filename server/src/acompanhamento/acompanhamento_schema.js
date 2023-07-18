@@ -17,7 +17,7 @@ models.loteParams = Joi.object().keys({
 })
 
 models.anoParam = Joi.object().keys({
-  ano: Joi.string()
+  anoParam: Joi.string()
     .regex(/^20[0-3][0-9]$/)
     .required()
 })

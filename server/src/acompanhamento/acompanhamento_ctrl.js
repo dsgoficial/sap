@@ -652,6 +652,46 @@ controller.atividadeUsuario = async () => {
 
 }
 
+controller.situacaoSubfase = async () => {
+  return await db.sapConn.any(
+    `
+    WITH finalizadas AS 
+    (
+      SELECT ut.bloco_id, ut.subfase_id, COUNT(a.tipo_situacao_id) AS finalizadas
+    FROM macrocontrole.atividade AS a
+    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+    WHERE a.tipo_situacao_id = 4
+    GROUP BY ut.bloco_id, ut.subfase_id
+    ),
+    nao_finalizadas AS (
+    SELECT ut.bloco_id, ut.subfase_id, COUNT(a.tipo_situacao_id) AS nao_finalizadas
+    FROM macrocontrole.atividade AS a
+    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+    WHERE a.tipo_situacao_id not in (4,5)
+    GROUP BY ut.bloco_id, ut.subfase_id
+    ),
+    combined AS (
+    SELECT 
+        COALESCE(t1.bloco_id, t2.bloco_id) as bloco_id, 
+        COALESCE(t1.subfase_id, t2.subfase_id) as subfase_id, 
+        t1.finalizadas, 
+        t2.nao_finalizadas
+    FROM finalizadas t1
+    FULL OUTER JOIN nao_finalizadas t2  ON t1.bloco_id = t2.bloco_id AND t1.subfase_id = t2.subfase_id
+    )
+    SELECT b.nome AS bloco, s.nome AS subfase, c.finalizadas, c.nao_finalizadas
+    FROM combined AS c
+    INNER JOIN macrocontrole.bloco AS b ON b.id = c.bloco_id
+    INNER JOIN macrocontrole.subfase AS s ON s.id = c.subfase_id
+    INNER JOIN macrocontrole.lote AS l ON l.id = b.lote_id
+    INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
+    WHERE p.finalizado IS FALSE
+    ORDER BY bloco,subfase
+  `,
+  )
+  
+}
+
 
 controller.getDadosSiteAcompanhamento = async () => {
 
