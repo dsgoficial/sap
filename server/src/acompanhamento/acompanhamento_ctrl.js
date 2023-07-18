@@ -562,6 +562,96 @@ controller.atividadeSubfase = async () => {
 
 }
 
+controller.atividadeUsuario = async () => {
+  const result = await db.sapConn.any(
+    `
+    WITH dates AS (
+      SELECT generate_series(date_trunc('year', CURRENT_DATE), CURRENT_DATE, '1 day')::date AS day
+    ),
+    activity_intervals AS (
+      SELECT a.usuario_id, a.data_inicio, COALESCE(a.data_fim, NOW()) AS data_fim
+      FROM macrocontrole.atividade AS a
+      WHERE a.data_inicio IS NOT NULL
+    ),
+    activity_days AS (
+      SELECT DISTINCT dates.day, activity_intervals.usuario_id
+      FROM dates
+      INNER JOIN activity_intervals ON dates.day BETWEEN activity_intervals.data_inicio AND activity_intervals.data_fim
+      ORDER BY dates.day
+    ),
+    activity_groups AS (
+    SELECT tpg.nome_abrev || ' ' || u.nome_guerra as usuario, array_agg(array[ad.day::text, 1::text, (ad.day + INTERVAL '1 day')::date::text]) AS data, MIN(ad.day) AS min_date
+    FROM activity_days AS ad
+    INNER JOIN dgeo.usuario AS u ON u.id = ad.usuario_id
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    GROUP BY usuario
+    )
+    SELECT usuario, data
+    FROM activity_groups
+    ORDER BY usuario, min_date;
+  `)
+
+  let today = new Date();
+  function* dateGenerator() {
+    let date = new Date(today.getFullYear(), 0, 1);  // Start from January 1st
+    while (date <= today) {
+      yield date.toISOString().split('T')[0];
+      date.setDate(date.getDate() + 1);  // Move to next day
+    }
+  }
+
+  result.forEach(d => {
+  
+    let fixed = [];
+    let current = d.data.shift();
+    let gen = dateGenerator();
+
+    // Loop over all days from January 1st to today
+    for (let date of gen) {
+      if (current && current[0] === date) {
+        // If current date is in our data, add it to the result
+        fixed.push(current);
+        current = d.data.shift();
+      } else {
+        // If current date is not in our data, add a placeholder with zero
+        let nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+        fixed.push([date, 0, nextDate.toISOString().split('T')[0]]);
+      }
+    }
+  
+    // Add any remaining data
+    if (current) {
+      fixed.push(current);
+    }
+    d.data = fixed
+  })
+    
+
+  result.forEach(d => {
+    let fixed = [];
+    let current = d.data[0];
+    current[1] = parseInt(current[1]); // Convert string to integer
+
+    for (let i = 1; i < d.data.length; i++) {
+      d.data[i][1] = parseInt(d.data[i][1]); // Convert string to integer
+      if (current[2] === d.data[i][0] && current[1] == d.data[i][1]) {
+        current[2] = d.data[i][2];
+      } else {
+        fixed.push(current);
+        current = d.data[i];
+      }
+    }
+  
+    // Push the last range to the result
+    fixed.push(current);
+    d.data = fixed
+  })
+
+  return result
+
+}
+
 
 controller.getDadosSiteAcompanhamento = async () => {
 

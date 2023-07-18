@@ -175,6 +175,17 @@ router.get(
 )
 
 router.get(
+  '/atividade_usuario',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.atividadeUsuario()
+
+    const msg = 'Dados de atividade por usuario retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
   '/pit/subfase/:ano',
   schemaValidation({
     params: acompanhamentoSchema.anoParam
