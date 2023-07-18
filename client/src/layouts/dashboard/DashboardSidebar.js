@@ -120,48 +120,60 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                     </ListItemIcon>
                     <ListItemText primary={'SAP'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
                 </ListItemButton>
-                <ListItemButton
-                    style={getAuthorization() == 'ADMIN' ? {} : { display: 'none' }}
-                    sx={{
-                        minHeight: 48,
-                        justifyContent: isOpenSidebar ? 'initial' : 'center',
-                        px: 2.5,
-                    }}
-                    to="/grid"
-                    component={RouterLink}
-                >
-                    <ListItemIcon
-                        sx={{
-                            minWidth: 0,
-                            mr: isOpenSidebar ? 3 : 'auto',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <GridOnIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={'Grade de Acompanhamento'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
-                </ListItemButton>
-                <ListItemButton
-                    style={getAuthorization() == 'ADMIN' ? {} : { display: 'none' }}
-                    sx={{
-                        minHeight: 48,
-                        justifyContent: isOpenSidebar ? 'initial' : 'center',
-                        px: 2.5,
-                    }}
-                    to="/subphases"
-                    component={RouterLink}
-                >
-                    <ListItemIcon
-                        sx={{
-                            minWidth: 0,
-                            mr: isOpenSidebar ? 3 : 'auto',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <Box component={'img'} src={`${process.env.PUBLIC_URL}/bar.png` }sx={{width: '25px'}}/>
-                    </ListItemIcon>
-                    <ListItemText primary={'Acompanhamento de Execução'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
-                </ListItemButton>
+                {
+                    [
+                        {
+                            label: 'Grade de Acompanhamento',
+                            path: '/grid',
+                            icon:  <GridOnIcon />
+                        },
+                        {
+                            label: 'Atividade por Subfase',
+                            path: '/subphases',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/bar.png` }sx={{width: '25px'}}/>
+                        },
+                        {
+                            label: 'Atividades por Usuário',
+                            path: '/user-activities',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/users.png` }sx={{width: '25px'}}/>
+                        },
+                        {
+                            label: 'Lotes',
+                            path: '/lot',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table.png` }sx={{width: '25px'}}/>
+                        },
+                        {
+                            label: 'Situação Subfase',
+                            path: '/subphases-situation',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/situation.png` }sx={{width: '25px'}}/>
+                        }
+                    ].map((item, idx) => {
+                        return (
+                            <ListItemButton
+                                key={idx}
+                                style={getAuthorization() == 'ADMIN' ? {} : { display: 'none' }}
+                                sx={{
+                                    minHeight: 48,
+                                    justifyContent: isOpenSidebar ? 'initial' : 'center',
+                                    px: 2.5,
+                                }}
+                                to={item.path}
+                                component={RouterLink}
+                            >
+                                <ListItemIcon
+                                    sx={{
+                                        minWidth: 0,
+                                        mr: isOpenSidebar ? 3 : 'auto',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText primary={item.label} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
+                            </ListItemButton>
+                        )
+                    })
+                }
             </List>
             <Divider />
         </Drawer>
