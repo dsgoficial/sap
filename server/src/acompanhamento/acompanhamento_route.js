@@ -213,6 +213,22 @@ router.get(
 )
 
 router.get(
+  '/pit/:anoParam',
+  schemaValidation({
+    params: acompanhamentoSchema.anoParam
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getInfoPIT(
+      req.params.anoParam
+    )
+
+    const msg = 'Informações do PIT retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
   '/dados_site_acompanhamento',
   asyncHandler(async (req, res, next) => {
     const dados = await acompanhamentoCtrl.getDadosSiteAcompanhamento()

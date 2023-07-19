@@ -686,7 +686,7 @@ controller.situacaoSubfase = async () => {
     INNER JOIN macrocontrole.lote AS l ON l.id = b.lote_id
     INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
     WHERE p.finalizado IS FALSE
-    ORDER BY bloco,subfase
+    ORDER BY b.prioridade,s.ordem
   `,
   )
   
@@ -822,6 +822,52 @@ controller.getInfoSubfasePIT = async ano => {
     WHERE sit.completed = TRUE AND EXTRACT(YEAR FROM sit.data_fim) = $<ano>
     GROUP BY l.nome, s.nome, s.ordem, EXTRACT(MONTH FROM sit.data_fim)
     ORDER BY l.nome, s.ordem, EXTRACT(MONTH FROM sit.data_fim)
+  `,
+    { ano }
+  )
+  
+}
+
+controller.getInfoPIT = async ano => {
+  return await db.sapConn.any(
+    `
+    WITH months AS (
+      SELECT generate_series(1, EXTRACT(MONTH FROM current_date)::int) AS month
+  ),
+  projects_lotes_meta AS (
+      SELECT DISTINCT pr.nome AS projeto, l.nome AS lote, pit.meta
+      FROM macrocontrole.lote AS l
+      JOIN macrocontrole.projeto AS pr ON pr.id = l.projeto_id
+      LEFT JOIN macrocontrole.pit AS pit ON pit.lote_id = l.id AND pit.ano = EXTRACT(YEAR FROM current_date)::int
+  ),
+  data AS (
+      SELECT pit.meta, pr.nome AS projeto, l.nome AS lote, EXTRACT(MONTH FROM sit.data_fim) AS month, COUNT(sit.id) AS finalizadas
+      FROM (
+            SELECT p.id, p.lote_id, ut.projeto_id, bool_and(ut.completed) AS completed, max(ut.data_fim) AS data_fim
+            FROM macrocontrole.produto AS p
+            LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+            LEFT JOIN (
+              SELECT ut.id, l.projeto_id, (CASE WHEN count(*) - count(a.data_fim) = 0 THEN TRUE ELSE FALSE END) AS completed, max(a.data_fim) AS data_fim
+              FROM macrocontrole.unidade_trabalho AS ut 
+              INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+              INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+              GROUP BY ut.id, l.projeto_id
+            ) AS ut ON rp.ut_id = ut.id
+            GROUP BY p.id, ut.projeto_id, p.lote_id
+            ORDER BY p.id, ut.projeto_id, p.lote_id
+        ) AS sit
+      INNER JOIN macrocontrole.lote AS l ON l.id = sit.lote_id
+      INNER JOIN macrocontrole.projeto AS pr ON pr.id = sit.projeto_id
+    LEFT JOIN macrocontrole.pit AS pit ON pit.lote_id = sit.lote_id AND pit.ano = 2023
+      WHERE sit.completed = TRUE AND EXTRACT(YEAR FROM sit.data_fim) = 2023
+      GROUP BY pr.nome, l.nome, pit.meta, EXTRACT(MONTH FROM sit.data_fim)
+      ORDER BY pr.nome, l.nome, EXTRACT(MONTH FROM sit.data_fim)
+  )
+  SELECT plm.projeto, plm.lote, plm.meta, m.month, COALESCE(d.finalizadas, 0) AS finalizadas
+  FROM projects_lotes_meta AS plm
+  CROSS JOIN months AS m
+  LEFT JOIN data AS d ON d.projeto = plm.projeto AND d.lote = plm.lote AND d.month = m.month
+  ORDER BY plm.projeto, plm.lote, m.month
   `,
     { ano }
   )

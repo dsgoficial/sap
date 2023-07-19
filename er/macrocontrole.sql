@@ -651,7 +651,6 @@ EXECUTE PROCEDURE macrocontrole.update_relacionamento_produto();
 CREATE TABLE macrocontrole.pit(
 	id INTEGER NOT NULL PRIMARY KEY,
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
-	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
 	meta INTEGER NOT NULL,
 	ano INTEGER NOT NULL
 );
