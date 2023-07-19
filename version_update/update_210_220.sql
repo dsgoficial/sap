@@ -860,6 +860,7 @@ CREATE TABLE metadado.informacoes_produto(
 
 CREATE TABLE metadado.creditos_qpt(
 	id SERIAL NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL,
 	qpt text NOT NULL
 );
 
@@ -890,11 +891,12 @@ CREATE TABLE metadado.imagens_carta_ortoimagem(
 
 CREATE TABLE metadado.classes_complementares_orto(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome text ARRAY NOT NULL
+  nome VARCHAR(255) NOT NULL,
+	classes text ARRAY NOT NULL
 );
 
-INSERT INTO metadado.classes_complementares_orto (nome)
-VALUES (ARRAY [
+INSERT INTO metadado.classes_complementares_orto (nome, classes)
+VALUES ('Padrão DSG', ARRAY [
 	'llp_unidade_federacao_a',
 	'elemnat_curva_nivel_l',
 	'elemnat_ponto_cotado_p',
@@ -917,7 +919,7 @@ VALUES (ARRAY [
 
 CREATE TABLE metadado.perfil_classes_complementares_orto(
 	id SERIAL NOT NULL PRIMARY KEY,
-    produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+  produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
 	classes_complementares_orto_id INTEGER NOT NULL REFERENCES metadado.classes_complementares_orto (id)
 );
 
