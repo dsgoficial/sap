@@ -138,7 +138,7 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                             icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/users.png` }sx={{width: '25px'}}/>
                         },
                         {
-                            label: 'Lotes',
+                            label: 'Acompanhamento Lote',
                             path: '/lot',
                             icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table.png` }sx={{width: '25px'}}/>
                         },
@@ -146,6 +146,11 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                             label: 'Situação Subfase',
                             path: '/subphases-situation',
                             icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/situation.png` }sx={{width: '25px'}}/>
+                        },
+                        {
+                            label: 'PIT',
+                            path: '/pit',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table2.png` }sx={{width: '25px'}}/>
                         }
                     ].map((item, idx) => {
                         return (

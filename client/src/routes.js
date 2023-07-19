@@ -11,7 +11,7 @@ const Subphases = lazy(() => import('./pages/Subphases'))
 const UserActivities = lazy(() => import('./pages/UserActivities'))
 const Lot = lazy(() => import('./pages/Lot'))
 const SubphaseSituation = lazy(() => import('./pages/SubphaseSituation'))
-
+const PIT = lazy(() => import('./pages/PIT'))
 // ----------------------------------------------------------------------
 
 export default function Router() {
@@ -25,7 +25,8 @@ export default function Router() {
         { path: '/subphases', element: <PrivateRoute><Subphases /></PrivateRoute> },
         { path: '/user-activities', element: <PrivateRoute><UserActivities /></PrivateRoute> },
         { path: '/lot', element: <PrivateRoute><Lot /></PrivateRoute> },
-        { path: '/subphases-situation', element: <PrivateRoute><SubphaseSituation /></PrivateRoute> }
+        { path: '/subphases-situation', element: <PrivateRoute><SubphaseSituation /></PrivateRoute> },
+        { path: '/pit', element: <PrivateRoute><PIT /></PrivateRoute> }
       ]
     },
     {
