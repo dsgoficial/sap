@@ -511,7 +511,7 @@ controller.atividadeSubfase = async () => {
   }
 
   result.forEach(d => {
-  
+
     let fixed = [];
     let current = d.data.shift();
     let gen = dateGenerator();
@@ -529,14 +529,14 @@ controller.atividadeSubfase = async () => {
         fixed.push([date, 0, nextDate.toISOString().split('T')[0]]);
       }
     }
-  
+
     // Add any remaining data
     if (current) {
       fixed.push(current);
     }
     d.data = fixed
   })
-    
+
 
   result.forEach(d => {
     let fixed = [];
@@ -552,7 +552,7 @@ controller.atividadeSubfase = async () => {
         current = d.data[i];
       }
     }
-  
+
     // Push the last range to the result
     fixed.push(current);
     d.data = fixed
@@ -601,7 +601,7 @@ controller.atividadeUsuario = async () => {
   }
 
   result.forEach(d => {
-  
+
     let fixed = [];
     let current = d.data.shift();
     let gen = dateGenerator();
@@ -619,14 +619,14 @@ controller.atividadeUsuario = async () => {
         fixed.push([date, 0, nextDate.toISOString().split('T')[0]]);
       }
     }
-  
+
     // Add any remaining data
     if (current) {
       fixed.push(current);
     }
     d.data = fixed
   })
-    
+
 
   result.forEach(d => {
     let fixed = [];
@@ -642,7 +642,7 @@ controller.atividadeUsuario = async () => {
         current = d.data[i];
       }
     }
-  
+
     // Push the last range to the result
     fixed.push(current);
     d.data = fixed
@@ -689,7 +689,7 @@ controller.situacaoSubfase = async () => {
     ORDER BY b.prioridade,s.ordem
   `,
   )
-  
+
 }
 
 
@@ -715,7 +715,7 @@ controller.getDadosSiteAcompanhamento = async () => {
   let dados_organizados = {}
   let aux_lotes = {}
   dados.forEach(d => {
-    if(!(d.projeto_id in dados_organizados)){
+    if (!(d.projeto_id in dados_organizados)) {
       dados_organizados[d.projeto_id] = {}
       dados_organizados[d.projeto_id]['lotes'] = []
       aux_lotes[d.projeto_id] = {}
@@ -723,7 +723,7 @@ controller.getDadosSiteAcompanhamento = async () => {
     dados_organizados[d.projeto_id]['title'] = d.projeto
     dados_organizados[d.projeto_id]['description'] = d.descricao_projeto
 
-    if(!(d.lote_id in aux_lotes[d.projeto_id])){
+    if (!(d.lote_id in aux_lotes[d.projeto_id])) {
       aux_lotes[d.projeto_id][d.lote_id] = {}
       aux_lotes[d.projeto_id][d.lote_id]['legend'] = [0]
     }
@@ -732,7 +732,7 @@ controller.getDadosSiteAcompanhamento = async () => {
     aux_lotes[d.projeto_id][d.lote_id]['description'] = d.descricao_lote
     aux_lotes[d.projeto_id][d.lote_id]['legend'].push(d.fase_id)
 
-    aux_lotes[d.projeto_id][d.lote_id]['zoom'] =  d.bounds;
+    aux_lotes[d.projeto_id][d.lote_id]['zoom'] = d.bounds;
 
   })
   Object.keys(aux_lotes).forEach(pkey => {
@@ -825,7 +825,7 @@ controller.getInfoSubfasePIT = async ano => {
   `,
     { ano }
   )
-  
+
 }
 
 controller.getInfoPIT = async ano => {
@@ -858,8 +858,8 @@ controller.getInfoPIT = async ano => {
         ) AS sit
       INNER JOIN macrocontrole.lote AS l ON l.id = sit.lote_id
       INNER JOIN macrocontrole.projeto AS pr ON pr.id = sit.projeto_id
-    LEFT JOIN macrocontrole.pit AS pit ON pit.lote_id = sit.lote_id AND pit.ano = 2023
-      WHERE sit.completed = TRUE AND EXTRACT(YEAR FROM sit.data_fim) = 2023
+    LEFT JOIN macrocontrole.pit AS pit ON pit.lote_id = sit.lote_id AND pit.ano = $<ano>
+      WHERE sit.completed = TRUE AND EXTRACT(YEAR FROM sit.data_fim) = $<ano>
       GROUP BY pr.nome, l.nome, pit.meta, EXTRACT(MONTH FROM sit.data_fim)
       ORDER BY pr.nome, l.nome, EXTRACT(MONTH FROM sit.data_fim)
   )
@@ -871,8 +871,72 @@ controller.getInfoPIT = async ano => {
   `,
     { ano }
   )
-  
+
 }
+
+controller.getQuantidadeAno = async ano => {
+  return await db.sapConn.any(
+    `
+    SELECT l.nome AS lote, lote_id, sum(meta) AS quantidade
+    FROM macrocontrole.pit
+	  INNER JOIN macrocontrole.lote AS l ON l.id = pit.lote_id
+    GROUP BY ano, lote_id, l.nome
+    HAVING ano = $<ano>
+  `,
+    { ano }
+  )
+
+}
+
+controller.getFinalizadasAno = async ano => {
+  return await db.sapConn.any(
+    `
+    WITH ut_fin AS (
+      SELECT ut.id, (CASE WHEN count(*) - count(a.data_fim) = 0 THEN TRUE ELSE FALSE END) AS finalizada, max(a.data_fim) AS data_fim
+      FROM macrocontrole.unidade_trabalho AS ut 
+      INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+      GROUP BY ut.id
+    ),
+    prod_fin AS (
+      SELECT p.id, bool_and(ut.finalizada) AS finalizada, max(ut.data_fim) AS data_fim
+      FROM macrocontrole.produto AS p
+      INNER JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+      INNER JOIN ut_fin AS ut ON ut.id = rp.ut_id
+      GROUP BY p.id
+    )
+    SELECT l.nome AS lote, pr.lote_id, COUNT(DISTINCT p.id) AS finalizadas
+    FROM prod_fin AS p
+    INNER JOIN macrocontrole.produto AS pr ON pr.id = p.id
+	  INNER JOIN macrocontrole.lote AS l ON l.id = pr.lote_id
+    WHERE p.finalizada IS TRUE AND EXTRACT(YEAR FROM p.data_fim) = $<ano>
+    GROUP BY pr.lote_id, l.nome
+  `,
+    { ano }
+  )
+
+}
+
+controller.getExecucao = async () => {
+  return await db.sapConn.any(
+    `
+    WITH ut_exec AS (
+      SELECT ut.id, (CASE WHEN count(*) - count(a.data_fim) = 0 THEN TRUE ELSE FALSE END) AS finalizada, min(data_inicio) IS NOT NULL iniciada
+      FROM macrocontrole.unidade_trabalho AS ut 
+      INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+      GROUP BY ut.id
+    )
+    SELECT l.nome AS lote, p.lote_id, COUNT(DISTINCT p.id)
+    FROM macrocontrole.produto AS p
+	INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id
+    INNER JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+    INNER JOIN ut_exec AS ut ON ut.id = rp.ut_id
+    WHERE ut.iniciada IS TRUE and ut.finalizada IS FALSE
+	GROUP BY p.lote_id, l.nome
+  `
+  )
+
+}
+
 
 
 /*

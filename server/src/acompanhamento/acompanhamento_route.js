@@ -247,6 +247,50 @@ router.get(
   })
 )
 
+router.get(
+  '/dashboard/quantidade/:anoParam',
+  schemaValidation({
+    params: acompanhamentoSchema.anoParam
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getQuantidadeAno(
+      req.params.anoParam
+    )
+
+    const msg = 'Informações do Dashboard de quantidade retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/dashboard/finalizadas/:anoParam',
+  schemaValidation({
+    params: acompanhamentoSchema.anoParam
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getFinalizadasAno(
+      req.params.anoParam
+    )
+
+    const msg = 'Informações do Dashboard de finalizadas retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/dashboard/execucao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getExecucao()
+
+    const msg = 'Informações do Dashboard de execução retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+
 /*
 router.get(
   '/projetos',
