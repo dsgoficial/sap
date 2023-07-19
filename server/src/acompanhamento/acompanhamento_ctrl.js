@@ -737,7 +737,7 @@ controller.getDadosSiteAcompanhamento = async () => {
   })
   Object.keys(aux_lotes).forEach(pkey => {
     Object.keys(aux_lotes[pkey]).forEach(lkey => {
-      dados_organizados[pkey][lkey].append(aux_lotes[pkey][lkey])
+      dados_organizados[pkey]['lotes'].push(aux_lotes[pkey][lkey])
     })
   })
 
@@ -752,7 +752,7 @@ controller.getDadosSiteAcompanhamento = async () => {
               'properties', json_build_object(
                   'id', p.id,
                   'identificador', p.mi,
-                  'situacao', sit.fase_atual
+                  'situacao', COALESCE(tf.nome, 'Previsto')
                 )
             )
         )
@@ -778,12 +778,14 @@ controller.getDadosSiteAcompanhamento = async () => {
       GROUP BY sit.id, sit.completed
       ORDER BY sit.id
     ) AS sit ON sit.id = p.id
+	  LEFT JOIN macrocontrole.fase AS f ON f.id = sit.fase_atual
+	  LEFT JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
     WHERE proj.finalizado IS FALSE
     GROUP BY p.lote_id;
   `)
 
   let retorno = []
-  retorno.append({
+  retorno.push({
     'nome': 'dados.json',
     'dados': dados_organizados
   })
@@ -792,7 +794,7 @@ controller.getDadosSiteAcompanhamento = async () => {
     let aux = {}
     aux['nome'] = `${g.lote_id}.geojson`
     aux['dados'] = g.json
-    retorno.append(aux)
+    retorno.push(aux)
   })
 
   return retorno

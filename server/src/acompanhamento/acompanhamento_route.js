@@ -11,6 +11,8 @@ const acompanhamentoCtrl = require('./acompanhamento_ctrl')
 
 const router = express.Router()
 
+const archiver = require('archiver')
+
 router.get(
   '/informacoes/:lote/:subfase',
   schemaValidation({
@@ -235,11 +237,14 @@ router.get(
 
     const archive = archiver('zip');
     archive.on('error', (err) => { throw err; });
-    res.attachment('dados_acompanhamento.zip');
+
+    res.setHeader('Content-Disposition', 'attachment; filename=dados_acompanhamento.zip');
+    res.setHeader('Content-Type', 'application/zip');
+
     archive.pipe(res);
 
     dados.forEach(d => {
-      archive.append(JSON.stringify(d.dados), { name: d.nome });
+      archive.append(JSON.stringify(d.dados, null, 2), { name: d.nome });
     })
 
     archive.finalize();
