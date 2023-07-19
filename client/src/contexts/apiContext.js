@@ -213,6 +213,19 @@ export default function APIProvider({ children }) {
     return response.data
   }
 
+  const getPIT = async () => {
+    const response = await callAxios(
+      `/api/acompanhamento/pit/${new Date().getFullYear()}`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
   return (
     <APIContext.Provider
       value={{
@@ -230,7 +243,8 @@ export default function APIProvider({ children }) {
         getActivitySubphase,
         getUserActivities,
         getLots,
-        getSubphasesSituation
+        getSubphasesSituation,
+        getPIT
       }}>
       {children}
     </APIContext.Provider>

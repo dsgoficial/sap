@@ -59,7 +59,7 @@ const months = [
 export default function Dashboard() {
 
     const {
-        getLots,
+        getPIT,
         getAuthorization
     } = useAPI()
 
@@ -70,36 +70,44 @@ export default function Dashboard() {
 
     const loadDataset = async () => {
         let curreMonthIdx = (new Date()).getMonth()
-        const res = await getLots()
+        const res = await getPIT()
         let data = {}
         res.dados.forEach(element => {
-            if (!Object.keys(data).includes(element.lote)) {
-                data[element.lote] = {}
+            if (!Object.keys(data).includes(element.projeto)) {
+                data[element.projeto] = {}
             }
-            if (!Object.keys(data[element.lote]).includes(element.subfase)) {
-                data[element.lote][element.subfase] = months.map((month, idx) => {
+            if (!Object.keys(data[element.projeto]).includes(element.lote)) {
+                data[element.projeto][element.lote] = months.map((month, idx) => {
                     return {
                         month: month.id,
-                        count: element.month == (idx + 1) ? element.count : idx > curreMonthIdx ? '' : 0
+                        count: element.month == (idx + 1) ? element.finalizadas : idx > curreMonthIdx ? '' : 0,
+                        meta: element?.meta
                     }
                 })
                 return
             }
-            data[element.lote][element.subfase][element.month].count = element?.count
+            data[element.projeto][element.lote][element.month].count = element?.finalizadas
         });
         setDataset(
             Object.keys(data).map(k => {
                 return {
-                    lot: k,
+                    project: k,
                     rows: Object.keys(data[k]).map(s => {
+                        let meta = data[k][s][0]?.meta ? data[k][s][0].meta : 0
                         let row = {
-                            subphase: s
+                            lot: s,
+                            meta
                         }
+                        let count = 0
                         data[k][s].forEach(m => {
                             row[m.month] = m.count
+                            count += +m.count
                         })
+                        row.count = count
+                        row.percent = `${(meta == 0 ? 0 : (count / meta * 100)).toFixed(2)}%`
                         return row
-                    })
+                    }),
+
                 }
             })
         )
@@ -137,17 +145,20 @@ export default function Dashboard() {
                                     }}
                                 >
                                     <MaterialTable
-                                        title={item.lot}
+                                        title={item.project}
                                         loaded={loaded}
                                         columns={[
-                                            { title: 'Subfase', field: 'subphase' },
+                                            { title: 'Unidade Produção', field: 'lot' },
+                                            { title: 'Meta', field: 'meta', maxWidth: '40px' },
                                             ...months.map(m => {
                                                 return {
                                                     title: m.label,
                                                     field: m.id,
                                                     maxWidth: '10px'
                                                 }
-                                            })
+                                            }),
+                                            { title: 'Quantitativo', field: 'count', maxWidth: '80px' },
+                                            { title: '(%)', field: 'percent', maxWidth: '60px' }
                                         ]}
                                         data={item.rows}
                                         actions={[]}
