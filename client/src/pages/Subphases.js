@@ -80,18 +80,37 @@ export default function Dashboard() {
     return (
         <Page title="Sistema de Apoio à Produção">
             <Container>
-                {
-                    graphs.map((graph, idx) => {
-                        return (
-                            <GraphVisavail
-                                key={idx}
-                                {...{
-                                    ...graph
-                                }}
-                            />
-                        )
-                    })
-                }
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2
+                    }}
+                >
+                    {
+                        graphs.map((graph, idx) => {
+                            return (
+                                <Box
+                                    key={idx}
+                                    sx={{
+                                        backgroundColor: '#fff',
+                                        padding: '20px',
+                                        height: '100%',
+                                        width: '100%',
+                                        borderRadius: '8px'
+                                    }}
+                                >
+                                    <GraphVisavail
+
+                                        {...{
+                                            ...graph
+                                        }}
+                                    />
+                                </Box>
+                            )
+                        })
+                    }
+                </Box>
             </Container>
         </Page>
     );

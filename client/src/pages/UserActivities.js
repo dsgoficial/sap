@@ -65,18 +65,28 @@ export default function UserAcitivities() {
     return (
         <Page title="Sistema de Apoio à Produção">
             <Container>
-                {
-                    graphs.map((graph, idx) => {
-                        return (
-                            <GraphVisavail
-                                key={idx}
-                                {...{
-                                    ...graph
-                                }}
-                            />
-                        )
-                    })
-                }
+                <Box
+                    sx={{
+                        backgroundColor: '#fff',
+                        padding: '20px',
+                        height: '100%',
+                        width: '100%',
+                        borderRadius: '8px'
+                    }}
+                >
+                    {
+                        graphs.map((graph, idx) => {
+                            return (
+                                <GraphVisavail
+                                    key={idx}
+                                    {...{
+                                        ...graph
+                                    }}
+                                />
+                            )
+                        })
+                    }
+                </Box>
             </Container>
         </Page>
     );

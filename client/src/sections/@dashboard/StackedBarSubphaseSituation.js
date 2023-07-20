@@ -4,7 +4,7 @@ import CanvasJSReact from '@canvasjs/react-charts';
 var CanvasJS = CanvasJSReact.CanvasJS;
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
-const StackedBar = ({ title, dataPointA, dataPointB }) => {
+const StackedBarSubphaseSituation = ({ title, dataPointA, dataPointB }) => {
 
     const [options, setOptions] = React.useState({})
 
@@ -52,4 +52,4 @@ const StackedBar = ({ title, dataPointA, dataPointB }) => {
     );
 }
 
-export default StackedBar
+export default StackedBarSubphaseSituation

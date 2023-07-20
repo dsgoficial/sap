@@ -51,14 +51,18 @@ export default function Grid() {
 
     return (
         <Page title="Sistema de Apoio à Produção">
-            <Container>
+            <Container
+                maxWidth="xl"
+            >
                 <Loading style={wait ? {} : { display: 'none' }} />
                 <Box
                     style={!wait ? {} : { display: 'none' }}
                     sx={{
                         display: 'flex',
                         flexWrap: 'wrap',
-                        gap: 2
+                        justifyContent: 'center',
+                        gap: 2,
+                        width: '100%'
                     }}
                 >
                     {

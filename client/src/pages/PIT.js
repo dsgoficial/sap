@@ -72,22 +72,24 @@ export default function Dashboard() {
         let curreMonthIdx = (new Date()).getMonth()
         const res = await getPIT()
         let data = {}
-        res.dados.forEach(element => {
+        res.dados.forEach((element) => {
             if (!Object.keys(data).includes(element.projeto)) {
                 data[element.projeto] = {}
             }
             if (!Object.keys(data[element.projeto]).includes(element.lote)) {
                 data[element.projeto][element.lote] = months.map((month, idx) => {
+                    let amount = element.month == (idx + 1) ? element.finalizadas : '-'
                     return {
                         month: month.id,
-                        count: element.month == (idx + 1) ? element.finalizadas : idx > curreMonthIdx ? '' : 0,
+                        count: amount,
                         meta: element?.meta
                     }
                 })
                 return
             }
-            data[element.projeto][element.lote][element.month].count = element?.finalizadas
-        });
+            data[element.projeto][element.lote][element.month - 1].count = element?.finalizadas
+        })
+        
         setDataset(
             Object.keys(data).map(k => {
                 return {
@@ -101,7 +103,7 @@ export default function Dashboard() {
                         let count = 0
                         data[k][s].forEach(m => {
                             row[m.month] = m.count
-                            count += +m.count
+                            count += m.count == '-' ? 0 : +m.count
                         })
                         row.count = count
                         row.percent = `${(meta == 0 ? 0 : (count / meta * 100)).toFixed(2)}%`
@@ -148,7 +150,7 @@ export default function Dashboard() {
                                         title={item.project}
                                         loaded={loaded}
                                         columns={[
-                                            { title: 'Unidade Produção', field: 'lot' },
+                                            { title: 'Lote', field: 'lot' },
                                             { title: 'Meta', field: 'meta', maxWidth: '40px' },
                                             ...months.map(m => {
                                                 return {

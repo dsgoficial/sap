@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Container, Box } from '@mui/material';
 import Page from '../components/Page';
-import StackedBar from '../components/StackedBar';
+import { StackedBarSubphaseSituation } from '../sections/@dashboard';
 import { useAPI } from '../contexts/apiContext'
 import { useNavigate } from "react-router-dom";
 
@@ -39,8 +39,8 @@ export default function SubphaseSituation() {
             Object.keys(data).map(k => {
                 return {
                     title: k,
-                    dataPointA: data[k].dataPointA,
-                    dataPointB: data[k].dataPointB
+                    dataPointA: data[k].dataPointA.reverse(),
+                    dataPointB: data[k].dataPointB.reverse()
 
                 }
             })
@@ -70,7 +70,7 @@ export default function SubphaseSituation() {
                     {
                         dataset.map((item, idx) => {
                             return (
-                                <StackedBar
+                                <StackedBarSubphaseSituation
                                     key={idx}
                                     {...item}
                                 />

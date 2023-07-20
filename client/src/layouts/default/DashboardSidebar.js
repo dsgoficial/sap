@@ -17,6 +17,7 @@ import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import { styled, useTheme } from '@mui/material/styles';
 import { useAPI } from '../../contexts/apiContext'
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 const drawerWidth = 280
 
@@ -116,7 +117,7 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                             justifyContent: 'center',
                         }}
                     >
-                        <AutoGraphIcon />
+                        <AutoGraphIcon sx={{ color: 'black' }} />
                     </ListItemIcon>
                     <ListItemText primary={'SAP'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
                 </ListItemButton>
@@ -125,32 +126,37 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                         {
                             label: 'Grade de Acompanhamento',
                             path: '/grid',
-                            icon:  <GridOnIcon />
+                            icon: <GridOnIcon sx={{ color: 'black' }} />
                         },
                         {
                             label: 'Atividade por Subfase',
                             path: '/subphases',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/bar.png` }sx={{width: '25px'}}/>
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/bar.png`} sx={{ width: '25px' }} />
                         },
                         {
                             label: 'Atividades por Usuário',
                             path: '/user-activities',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/users.png` }sx={{width: '25px'}}/>
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/users.png`} sx={{ width: '25px' }} />
                         },
                         {
                             label: 'Acompanhamento Lote',
                             path: '/lot',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table.png` }sx={{width: '25px'}}/>
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table.png`} sx={{ width: '25px' }} />
                         },
                         {
                             label: 'Situação Subfase',
                             path: '/subphases-situation',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/situation.png` }sx={{width: '25px'}}/>
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/situation.png`} sx={{ width: '25px' }} />
                         },
                         {
                             label: 'PIT',
                             path: '/pit',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table2.png` }sx={{width: '25px'}}/>
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table2.png`} sx={{ width: '25px' }} />
+                        },
+                        {
+                            label: 'Dashboard',
+                            path: '/dashboard',
+                            icon: <DashboardIcon sx={{ color: 'black' }} />
                         }
                     ].map((item, idx) => {
                         return (

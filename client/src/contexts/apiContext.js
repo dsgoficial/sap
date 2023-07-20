@@ -226,6 +226,38 @@ export default function APIProvider({ children }) {
     return response.data
   }
 
+  const getDashboard = async () => {
+    const allReponse = await Promise.all([
+      callAxios(
+        `/api/acompanhamento/dashboard/quantidade/${new Date().getFullYear()}`,
+        "GET",
+        {}
+      ),
+      callAxios(
+        `/api/acompanhamento/dashboard/finalizadas/${new Date().getFullYear()}`,
+        "GET",
+        {}
+      ),
+      callAxios(
+        `/api/acompanhamento/dashboard/execucao`,
+        "GET",
+        {}
+      ),
+      callAxios(
+        `/api/acompanhamento/pit/${new Date().getFullYear()}`,
+        "GET",
+        {}
+      ),
+    ])
+
+    let hasError = allReponse.find(res => res.error)
+    if (hasError) {
+      handleError(hasError.error)
+      return
+    }
+    return allReponse.map(res => res.data)
+  }
+
   return (
     <APIContext.Provider
       value={{
@@ -244,7 +276,8 @@ export default function APIProvider({ children }) {
         getUserActivities,
         getLots,
         getSubphasesSituation,
-        getPIT
+        getPIT,
+        getDashboard
       }}>
       {children}
     </APIContext.Provider>

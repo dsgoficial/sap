@@ -25,7 +25,8 @@ export default function GridCard({ id, grid }) {
             sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 3
+                gap: 3,
+                padding: '5px'
             }}
         >
             <CardContent
