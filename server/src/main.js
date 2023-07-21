@@ -6,6 +6,7 @@ const { db, databaseVersion } = require('./database')
 const { verifyAuthServer } = require('./authentication')
 
 db.createSapConn()
+  .then(createMicroConn)
   .then(databaseVersion.load)
   .then(verifyAuthServer)
   .then(startServer)

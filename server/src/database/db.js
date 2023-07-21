@@ -2,7 +2,7 @@
 
 const { errorHandler } = require('../utils')
 
-const { DB_USER, DB_PASSWORD, DB_SERVER, DB_PORT, DB_NAME } = require('../config')
+const { DB_USER, DB_PASSWORD, DB_SERVER, DB_PORT, DB_NAME, DB_NAME_MICROCONTROLE } = require('../config')
 
 const promise = require('bluebird')
 
@@ -59,6 +59,10 @@ db.createAdminConn = async (server, port, dbname, handle) => {
 
 db.createSapConn = async () => {
   db.sapConn = await db.createAdminConn(DB_SERVER, DB_PORT, DB_NAME, true)
+}
+
+db.createMicroConn = async () => {
+  db.microConn = await db.createAdminConn(DB_SERVER, DB_PORT, DB_NAME_MICROCONTROLE, true)
 }
 
 module.exports = db
