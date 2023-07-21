@@ -281,6 +281,7 @@ models.linhaProducao = Joi.object().keys({
       }))
     })).required(),
     propriedades_camadas: Joi.array().items(Joi.object({
+      schema: Joi.string().required(),
       camada: Joi.string().required(),
       subfase: Joi.string().required(),
       camada_apontamento: Joi.boolean().required(),

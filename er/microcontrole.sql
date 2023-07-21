@@ -10,7 +10,8 @@ CREATE TABLE microcontrole.tipo_operacao(
 INSERT INTO microcontrole.tipo_operacao (code, nome) VALUES
 (1, 'INSERT'),
 (2, 'DELETE'),
-(3, 'UPDATE');
+(3, 'UPDATE ATRIBUTE');
+(4, 'UPDATE GEOM');
 
 CREATE TABLE microcontrole.tipo_monitoramento(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -19,15 +20,15 @@ CREATE TABLE microcontrole.tipo_monitoramento(
 
 INSERT INTO microcontrole.tipo_monitoramento (code, nome) VALUES
 (1, 'Monitoramento de feição'),
-(2, 'Monitoramento de tela'),
+(2, 'Monitoramento de tela');
 
 CREATE TABLE microcontrole.monitoramento_feicao(
   id SERIAL NOT NULL PRIMARY KEY,
   tipo_operacao_id SMALLINT NOT NULL REFERENCES microcontrole.tipo_operacao (code),
   camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
   quantidade integer NOT NULL,
-  comprimento real,
-  vertices integer,
+  comprimento real NOT NULL,
+  vertices integer NOT NULL,
   data timestamp with time zone NOT NULL,
   atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
   usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id)

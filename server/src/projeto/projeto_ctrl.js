@@ -3035,8 +3035,8 @@ controller.insereLinhaProducao = async linha_producao => {
     }
 
     for (const prop of linha_producao.propriedades_camadas) {
-      const camadaId = await t.one(`SELECT id FROM macrocontrole.camada WHERE nome = $1`, 
-          [prop.camada], a => a && a.id
+      const camadaId = await t.one(`SELECT id FROM macrocontrole.camada WHERE nome = $1 and schema = $2`, 
+          [prop.camada, prop.schema], a => a && a.id
         );
       const subfaseId = subfaseMap[prop.subfase];
       await t.none(
