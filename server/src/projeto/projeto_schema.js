@@ -320,7 +320,11 @@ models.unidadeTrabalhoEtapa = Joi.object().keys({
     .unique()
     .required()
     .min(1),
-  etapa_id: Joi.number().integer().strict().required()
+  etapa_ids: Joi.array()
+  .items(Joi.number().integer().strict())
+  .unique()
+  .required()
+  .min(1)
 })
 
 models.gerenciadorFME = Joi.object().keys({
@@ -811,8 +815,11 @@ models.unidadesTrabalho = Joi.object().keys({
   lote_id: Joi.number().integer().strict().required()
 })
 
-models.lote = Joi.object().keys({
-  lote_id: Joi.number().integer().strict().required()
+models.todasAtividades = Joi.object().keys({
+  lote_id: Joi.number().integer().strict().required(),
+  atividades_revisao: Joi.boolean().strict().required(),
+  atividades_revisao_correcao: Joi.boolean().strict().required(),
+  atividades_revisao_final: Joi.boolean().strict().required()
 })
 
 models.padrao_etapa = Joi.object().keys({

@@ -737,8 +737,9 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
   await disableTriggers.refreshMaterializedViewFromLoteNoSubfase(db.sapConn, lote_id)
 }
 
-controller.criaTodasAtividades = async (lote_id) => {
+controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRevCor, atividadeRefFin) => {
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+
     await t.any(
       `
     INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
@@ -746,29 +747,71 @@ controller.criaTodasAtividades = async (lote_id) => {
     FROM macrocontrole.unidade_trabalho AS ut
     INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
     LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
-    WHERE ut.lote_id = $<lote_id> AND a.id IS NULL;
+    WHERE e.tipo_etapa_id in (1) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
     `,
       { lote_id }
     )
+
+    if(atividadesRevisao){
+      await t.any(
+        `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+      SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+      FROM macrocontrole.unidade_trabalho AS ut
+      INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+      LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
+      WHERE e.tipo_etapa_id in (2,3) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
+      `,
+        { lote_id }
+      )
+    }
+
+    if(atividadeRevCor){
+      await t.any(
+        `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+      SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+      FROM macrocontrole.unidade_trabalho AS ut
+      INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+      LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
+      WHERE e.tipo_etapa_id in (4) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
+      `,
+        { lote_id }
+      )
+    }
+
+    if(atividadeRefFin){
+      await t.any(
+        `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+      SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+      FROM macrocontrole.unidade_trabalho AS ut
+      INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+      LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
+      WHERE e.tipo_etapa_id in (5) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
+      `,
+        { lote_id }
+      )
+    }
 
   })
   await disableTriggers.refreshMaterializedViewFromLote(db.sapConn, lote_id)
 }
 
-controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
+controller.criaAtividades = async (unidadeTrabalhoIds, etapaIds) => {
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const result = await t.result(
       `
     INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
-    SELECT DISTINCT $<etapaId> AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+    SELECT DISTINCT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
     FROM macrocontrole.unidade_trabalho AS ut
     INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
     LEFT JOIN (
       SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
       ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
-    WHERE ut.id IN ($<unidadeTrabalhoIds:csv>) AND e.id = $<etapaId> AND a.id IS NULL
+    WHERE ut.id IN ($<unidadeTrabalhoIds:csv>) AND e.id IN ($<etapaIds:csv>) AND a.id IS NULL
     `,
-      { unidadeTrabalhoIds, etapaId }
+      { unidadeTrabalhoIds, etapaIds }
     )
     if (!result.rowCount || result.rowCount === 0) {
       throw new AppError(

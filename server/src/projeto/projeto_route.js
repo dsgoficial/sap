@@ -566,7 +566,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.criaAtividades(
       req.body.unidade_trabalho_ids,
-      req.body.etapa_id
+      req.body.etapa_ids
     )
 
     const msg = 'Atividades criadas com sucesso'
@@ -578,10 +578,13 @@ router.post(
 router.post(
   '/atividades/todas',
   verifyAdmin,
-  schemaValidation({ body: projetoSchema.lote }),
+  schemaValidation({ body: projetoSchema.todasAtividades }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.criaTodasAtividades(
-      req.body.lote_id
+      req.body.lote_id,
+      req.body.atividades_revisao,
+      req.body.atividades_revisao_correcao,
+      req.body.atividades_revisao_final
     )
 
     const msg = 'Todas Atividades criadas com sucesso'
