@@ -1,7 +1,7 @@
 'use strict'
 const express = require('express')
 
-const { databaseVersion } = require('./database')
+const { databaseVersion, microcontroleDatabaseVersion } = require('./database')
 const {
   httpCode
 } = require('./utils')
@@ -25,7 +25,8 @@ router.get('/', (req, res, next) => {
     'Sistema de Apoio a produção operacional',
     httpCode.OK,
     {
-      database_version: databaseVersion.nome
+      database_version: databaseVersion.nome,
+      microcontrole_version: microcontroleDatabaseVersion.nome
     }
   )
 })
