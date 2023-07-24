@@ -101,68 +101,63 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
             </DrawerHeader>
             <Divider />
             <List>
-                <ListItemButton
-                    sx={{
-                        minHeight: 48,
-                        justifyContent: isOpenSidebar ? 'initial' : 'center',
-                        px: 2.5,
-                    }}
-                    to="/"
-                    component={RouterLink}
-                >
-                    <ListItemIcon
-                        sx={{
-                            minWidth: 0,
-                            mr: isOpenSidebar ? 3 : 'auto',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <AutoGraphIcon sx={{ color: 'black' }} />
-                    </ListItemIcon>
-                    <ListItemText primary={'SAP'} sx={{ opacity: isOpenSidebar ? 1 : 0 }} />
-                </ListItemButton>
                 {
                     [
                         {
-                            label: 'Grade de Acompanhamento',
-                            path: '/grid',
-                            icon: <GridOnIcon sx={{ color: 'black' }} />
-                        },
-                        {
-                            label: 'Atividade por Subfase',
-                            path: '/subphases',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/bar.png`} sx={{ width: '25px' }} />
-                        },
-                        {
-                            label: 'Atividades por Usuário',
-                            path: '/user-activities',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/users.png`} sx={{ width: '25px' }} />
-                        },
-                        {
-                            label: 'Acompanhamento Lote',
-                            path: '/lot',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table.png`} sx={{ width: '25px' }} />
-                        },
-                        {
-                            label: 'Situação Subfase',
-                            path: '/subphases-situation',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/situation.png`} sx={{ width: '25px' }} />
+                            label: 'Dashboard',
+                            path: '/dashboard',
+                            icon: <DashboardIcon sx={{ color: 'black' }} />,
+                            style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
                         },
                         {
                             label: 'PIT',
                             path: '/pit',
-                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table2.png`} sx={{ width: '25px' }} />
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table2.png`} sx={{ width: '25px' }} />,
+                            style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
                         },
                         {
-                            label: 'Dashboard',
-                            path: '/dashboard',
-                            icon: <DashboardIcon sx={{ color: 'black' }} />
+                            label: 'SAP',
+                            path: '/activity',
+                            icon:  <AutoGraphIcon sx={{ color: 'black' }} />,
+                            style: {}
+                        },
+                        {
+                            label: 'Grade de Acompanhamento',
+                            path: '/grid',
+                            icon: <GridOnIcon sx={{ color: 'black' }} />,
+                            style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
+                        },
+                        {
+                            label: 'Atividade por Subfase',
+                            path: '/subphases',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/bar.png`} sx={{ width: '25px' }} />,
+                            style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
+                        },
+                        {
+                            label: 'Atividades por Usuário',
+                            path: '/user-activities',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/users.png`} sx={{ width: '25px' }} />,
+                            style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
+                        },
+                        {
+                            label: 'Acompanhamento Lote',
+                            path: '/lot',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/table.png`} sx={{ width: '25px' }} />,
+                            style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
+                        },
+                        {
+                            label: 'Situação Subfase',
+                            path: '/subphases-situation',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/situation.png`} sx={{ width: '25px' }} />,
+                            style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
                         }
+                        
+                        
                     ].map((item, idx) => {
                         return (
                             <ListItemButton
                                 key={idx}
-                                style={getAuthorization() == 'ADMIN' ? {} : { display: 'none' }}
+                                style={item.style}
                                 sx={{
                                     minHeight: 48,
                                     justifyContent: isOpenSidebar ? 'initial' : 'center',

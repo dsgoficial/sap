@@ -69,7 +69,6 @@ export default function Dashboard() {
     const [loaded, setLoaded] = React.useState(true);
 
     const loadDataset = async () => {
-        let curreMonthIdx = (new Date()).getMonth()
         const res = await getLots()
         let data = {}
         res.dados.forEach(element => {
@@ -79,14 +78,17 @@ export default function Dashboard() {
             if (!Object.keys(data[element.lote]).includes(element.subfase)) {
                 data[element.lote][element.subfase] = months.map((month, idx) => {
                     return {
+                        idx: idx,
                         month: month.id,
-                        count: element.month == (idx + 1) ? element.count : idx > curreMonthIdx ? '' : 0
+                        count: element.month == (idx + 1) ? element.count : 0
                     }
                 })
                 return
             }
-            data[element.lote][element.subfase][element.month].count = element?.count
+            data[element.lote][element.subfase][element.month - 1].count = element?.count
         });
+
+        let curreMonthIdx = (new Date()).getMonth()
         setDataset(
             Object.keys(data).map(k => {
                 return {
@@ -96,7 +98,7 @@ export default function Dashboard() {
                             subphase: s
                         }
                         data[k][s].forEach(m => {
-                            row[m.month] = m.count
+                            row[m.month] = m.idx > curreMonthIdx ? '-' : m.count
                         })
                         return row
                     })

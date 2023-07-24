@@ -96,9 +96,12 @@ const Table = (props) => {
                 },
             }}
             actions={props.actions}
+            
             options={{
-                pageSize: 10,
-                pageSizeOptions: [5, 10, 20, 50],
+                padding: 'dense',
+                paging: false,
+                /* pageSize: 10,
+                pageSizeOptions: [5, 10, 20, 50], */
                 draggable: false,
                 cellStyle: {
                     textAlign: 'center',
@@ -110,7 +113,7 @@ const Table = (props) => {
                 },
                 rowStyle: (rowData, idx) => ({
                     backgroundColor: idx % 2 == 0 ? '#EEE' : '#FFF'
-                    
+
                 }),
                 ...props.options,
             }}
