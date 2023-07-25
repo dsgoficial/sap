@@ -118,7 +118,7 @@ managePermissions.grantPermissionsUser = async (
 
   grantSQL += schemasSQL
 
-  grantSQL += `GRANT USAGE ON SCHEMA PUBLIC TO ${login}; GRANT SELECT ON public.geometry_columns TO ${login};`
+  grantSQL += `GRANT USAGE ON SCHEMA PUBLIC TO ${login}; GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO ${login};`
 
   let camadas
   const tipoEtapa = grantInfo[0].tipo_etapa_id

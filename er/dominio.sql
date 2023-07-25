@@ -183,7 +183,7 @@ CREATE TABLE dominio.tipo_configuracao(
 );
 
 INSERT INTO dominio.tipo_configuracao (code, nome) VALUES
-(1, 'Grid'),
+(1, 'DSGTools - Centroide'),
 (2, 'DSGTools - Mão livre'),
 (3, 'DSGTools - Seletor Genérico'),
 (4, 'DSGTools - Ângulo Reto');

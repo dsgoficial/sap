@@ -935,6 +935,10 @@ ADD COLUMN ordem INTEGER NOT NULL DEFAULT 1;
 
 ALTER TABLE macrocontrole.subfase ALTER COLUMN ordem DROP DEFAULT;
 
+UPDATE dominio.tipo_configuracao
+SET nome = 'DSGTools - Centroide'
+where code = 1
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 
