@@ -163,17 +163,17 @@ const getInfoConfigQGIS = async (connection, subfaseId, loteId) => {
     { subfaseId, loteId }
   )
 }
-/**
+
 const getInfoMonitoramento = async (connection, subfaseId, loteId) => {
   return connection.any(
     `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
-      FROM macrocontrole.perfil_monitoramento AS pm
-      INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
+      FROM microcontrole.perfil_monitoramento AS pm
+      INNER JOIN microcontrole.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
       WHERE subfase_id = $1 AND lote_id = $2`,
     [subfaseId, loteId]
   )
 }
- */
+
 const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
   return connection.any(
     `SELECT i.id, i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
@@ -371,12 +371,11 @@ const dadosProducao = async (atividadeId) => {
       dadosut.lote_id
     )
 
-    /*
     info.atividade.monitoramento = await getInfoMonitoramento(
       t,
       dadosut.subfase_id,
       dadosut.lote_id
-    )*/
+    )
 
     info.atividade.insumos = await getInfoInsumos(
       t,
