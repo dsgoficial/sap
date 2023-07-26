@@ -219,14 +219,6 @@ CREATE TABLE macrocontrole.perfil_workflow_dsgtools(
 	UNIQUE(workflow_dsgtools_id,subfase_id,lote_id)
 );
 
---CREATE TABLE macrocontrole.perfil_monitoramento(
---	id SERIAL NOT NULL PRIMARY KEY,
---	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),
---	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
---	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
---	UNIQUE(tipo_monitoramento_id,subfase_id,lote_id)
---);
-
 CREATE TABLE macrocontrole.camada(
 	id INTEGER NOT NULL PRIMARY KEY,
 	schema VARCHAR(255) NOT NULL,
@@ -653,6 +645,12 @@ CREATE TABLE macrocontrole.pit(
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	meta INTEGER NOT NULL,
 	ano INTEGER NOT NULL
+);
+
+CREATE TABLE macrocontrole.relatorio_alteracao(
+	id INTEGER NOT NULL PRIMARY KEY,
+	data timestamp with time zone NOT NULL,
+	descricao TEXT NOT NULL
 );
 
 COMMIT;

@@ -939,6 +939,12 @@ UPDATE dominio.tipo_configuracao
 SET nome = 'DSGTools - Centroide'
 where code = 1
 
+CREATE TABLE macrocontrole.relatorio_alteracao(
+	id INTEGER NOT NULL PRIMARY KEY,
+	data_inicio timestamp with time zone NOT NULL,
+	descricao TEXT NOT NULL
+);
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

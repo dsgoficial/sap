@@ -378,4 +378,38 @@ models.pluginsIds = Joi.object().keys({
     .min(1)
 })
 
+models.relatorioAlteracao = Joi.object().keys({
+  relatorio_alteracao: Joi.array()
+    .items(
+      Joi.object().keys({
+        data: Joi.date().required(),
+        descricao: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.relatorioAlteracaoAtualizacao = Joi.object().keys({
+  relatorio_alteracao: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        data: Joi.date().required(),
+        descricao: Joi.string().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+models.relatorioAlteracaoIds = Joi.object().keys({
+  relatorio_alteracao_ids: Joi.array()
+    .items(Joi.number().integer().strict())
+    .unique()
+    .required()
+    .min(1)
+})
+
 module.exports = models

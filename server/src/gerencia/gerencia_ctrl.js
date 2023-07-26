@@ -1168,5 +1168,72 @@ controller.finalizaAtividadeModoLocal = async (atividadeId, usuarioUUID, dataIni
   })
 }
 
+controller.getRelatorioAlteracao = async () => {
+  return db.sapConn.any(
+    'SELECT id, data, descricao FROM macrocontrole.relatorio_alteracao'
+  )
+}
+
+controller.gravaRelatorioAlteracao = async relatorios => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'data',
+      'descricao'
+    ])
+
+    const query = db.pgp.helpers.insert(relatorios, cs, {
+      table: 'relatorio_alteracao',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaRelatorioAlteracao = async relatorios => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'data',
+      'descricao'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        relatorios,
+        cs,
+        { table: 'relatorio_alteracao', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaRelatorioAlteracao = async relatorioIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.relatorio_alteracao
+      WHERE id in ($<relatorioIds:csv>)`,
+      { relatorioIds }
+    )
+    if (exists && exists.length < relatorioIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um relatório de alteração',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.relatorio_alteracao
+      WHERE id in ($<relatorioIds:csv>)`,
+      { relatorioIds }
+    )
+  })
+}
 
 module.exports = controller

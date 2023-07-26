@@ -717,4 +717,55 @@ router.put(
   })
 )
 
+router.get(
+  '/relatorio_alteracao',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getRelatorioAlteracao()
+
+    const msg = 'Relatório de alteração retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/relatorio_alteracao',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.relatorioAlteracao }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.gravaRelatorioAlteracao(req.body.relatorio_alteracao, req.usuarioId)
+
+    const msg = 'Relatório de alteração gravados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/relatorio_alteracao',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.relatorioAlteracaoAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaRelatorioAlteracao(req.body.relatorio_alteracao, req.usuarioId)
+
+    const msg = 'Relatório de alteração atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/relatorio_alteracao',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.relatorioAlteracaoIds }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deletaRelatorioAlteracao(req.body.relatorio_alteracao_ids)
+
+    const msg = 'Relatório de alteração deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
 module.exports = router
