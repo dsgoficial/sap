@@ -71,7 +71,7 @@ app.use('/logs', (req, res) => {
       const logData = data.split('\n').filter(entry => {
         const logDate = new Date(entry.split('|')[0])
         return logDate > cutofftimestamp
-      }).join('\n')
+      }).reverse().join('\n')
 
       res.setHeader('Content-Type', 'text/plain')
       res.send(logData)
