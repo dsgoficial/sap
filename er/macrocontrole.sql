@@ -282,10 +282,12 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	dificuldade INTEGER NOT NULL DEFAULT 0,
+	tempo_estimado_minutos INTEGER NOT NULL DEFAULT 0,
 	prioridade INTEGER NOT NULL,
 	observacao text,
     geom geometry(POLYGON, 4326) NOT NULL,
-	CONSTRAINT dificuldade CHECK (dificuldade >= 0)
+	CONSTRAINT dificuldade CHECK (dificuldade >= 0),
+	CONSTRAINT tempo_estimado CHECK (tempo_estimado_minutos >= 0)
 );
 
 CREATE INDEX unidade_trabalho_subfase_id

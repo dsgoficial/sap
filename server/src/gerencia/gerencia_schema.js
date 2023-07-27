@@ -412,4 +412,18 @@ models.relatorioAlteracaoIds = Joi.object().keys({
     .min(1)
 })
 
+models.dificuldadeTempoEstimadoAtualizacao = Joi.object().keys({
+  unidades_trabalho: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        dificuldade: Joi.number().integer().required(),
+        tempo_estimado_minutos: Joi.number().integer().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
 module.exports = models

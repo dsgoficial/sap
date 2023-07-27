@@ -802,7 +802,8 @@ models.unidadesTrabalho = Joi.object().keys({
         bloco_id: Joi.number().integer().strict().required(),
         disponivel: Joi.boolean().required(),
         prioridade: Joi.number().integer().strict().required(),
-        dificuldade: Joi.number().integer().strict().required()
+        dificuldade: Joi.number().integer().strict().required(),
+        tempo_estimado_minutos: Joi.number().integer().strict().required()
       })
     )
     .required()

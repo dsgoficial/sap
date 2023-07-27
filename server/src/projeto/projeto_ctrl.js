@@ -1744,8 +1744,8 @@ controller.copiarUnidadeTrabalho = async (
     // Insert all rows in a single operation
     let utOldNew = await t.any(
       `
-        INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade)
-        SELECT nome, geom, epsg, dado_producao_id, ut_subfases.subfase_id AS subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade
+        INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, tempo_estimado_minutos, lote_id, bloco_id, disponivel, prioridade)
+        SELECT nome, geom, epsg, dado_producao_id, ut_subfases.subfase_id AS subfase_id, dificuldade, tempo_estimado_minutos, lote_id, bloco_id, disponivel, prioridade
         FROM macrocontrole.unidade_trabalho
         JOIN unnest(ARRAY[${utIdSubfaseIdPairsPg.join(',')}]) AS ut_subfases(ut_id, subfase_id)
         ON macrocontrole.unidade_trabalho.id = ut_subfases.ut_id
@@ -1885,6 +1885,7 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) =>
       { name: 'lote_id', init: () => loteId },
       'disponivel',
       'dificuldade',
+      'tempo_estimado_minutos',
       'prioridade',
       'observacao',
       { name: 'geom', mod: ':raw' }
@@ -2875,8 +2876,8 @@ controller.cutUnidadeTrabalho = async (unidadeTrabalhoId, cutGeoms) => {
     )
 
     let novasUtId = await t.any(
-      `INSERT INTO macrocontrole.unidade_trabalho(nome,epsg,dado_producao_id,sufase_id,lote_id,bloco_id,disponivel,dificuldade,prioridade,observacao,geom)
-       SELECT ut.nome,ut.epsg,ut.dado_producao_id,ut.subfase_id,ut.lote_id,ut.bloco_id,ut.disponivel,ut.dificuldade,ut.prioridade,ut.observacao,
+      `INSERT INTO macrocontrole.unidade_trabalho(nome,epsg,dado_producao_id,sufase_id,lote_id,bloco_id,disponivel,dificuldade,tempo_estimado_minutos,prioridade,observacao,geom)
+       SELECT ut.nome,ut.epsg,ut.dado_producao_id,ut.subfase_id,ut.lote_id,ut.bloco_id,ut.disponivel,ut.dificuldade,ut.tempo_estimado_minutos,ut.prioridade,ut.observacao,
        ST_GEOMFROMEWKT(ref.geom) as geom
        FROM macrocontrole.unidade_trabalho AS ut
        CROSS JOIN (SELECT v as geom FROM UNNEST($<cutGeoms>::text[]) AS t(v)) AS ref
@@ -2944,14 +2945,14 @@ controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
 
     await t.none(
       `UPDATE macrocontrole.unidade_trabalho
-      SET geom = ST_GEOMFROMEWKT($<firstGeom>)
-      WHERE id = $<unidadeTrabalhoId>`,
+      SET geom = ST_GEOMFROMEWKT($<mergeGeom>)
+      WHERE id = $<firstId>`,
       { firstId, mergeGeom }
     )
 
     let updatedIds = await t.any(
       `UPDATE macrocontrole.atividade AS a
-      SET a.tipo_situacao_id = 5
+      SET tipo_situacao_id = 5
       FROM (
         SELECT etapa_id, MIN(tipo_situacao_id)
         FROM macrocontrole.atividade
@@ -2964,18 +2965,19 @@ controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
       { firstId, unidadeTrabalhoIds }
     )
     let fixedIds = updatedIds.map(c => c.id);
-
-    await t.none(
-      `INSERT INTO macrocontrole.atividade(etapa_id,unidade_trabalho_id,tipo_situacao_id,observacao)
-      SELECT a.etapa_id, $<firstId> AS unidade_trabalho_id, 1, a.observacao
-      FROM macrocontrole.atividade AS a
-      WHERE a.id in ($<fixedIds:csv>)`,
-      { firstId, fixedIds }
-    )
+    if(fixedIds.length > 0){
+      await t.none(
+        `INSERT INTO macrocontrole.atividade(etapa_id,unidade_trabalho_id,tipo_situacao_id,observacao)
+        SELECT a.etapa_id, $<firstId> AS unidade_trabalho_id, 1, a.observacao
+        FROM macrocontrole.atividade AS a
+        WHERE a.id in ($<fixedIds:csv>)`,
+        { firstId, fixedIds }
+      )
+    }
 
     await t.any(
       `UPDATE macrocontrole.atividade AS a
-      SET a.observacao = concat_ws(' | ', observacao, sub.observacao_agg)
+      SET observacao = concat_ws(' | ', observacao, sub.observacao_agg)
       FROM (
         SELECT etapa_id, string_agg(observacao, ' | ') AS observacao_agg
         FROM macrocontrole.atividade
@@ -3019,15 +3021,15 @@ controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
 
     await t.none(
       `UPDATE macrocontrole.atividade
-       SET tipo_situacao_id = 5, unidade_trabalho = $<firstId>
+       SET tipo_situacao_id = 5, unidade_trabalho_id = $<firstId>
        WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id in (4,5);
       `,
       { firstId, unidadeTrabalhoIds }
     )
 
     await t.none(
-      `DELETE FROM macrocontrole.atividade AS a
-       WHERE a.unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND a.tipo_situacao_id = 1;
+      `DELETE FROM macrocontrole.atividade
+       WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id = 1;
       `,
       { unidadeTrabalhoIds }
     )

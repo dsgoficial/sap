@@ -1736,7 +1736,6 @@ router.put(
     )
 
     const msg = 'Unidade de trabalho atualizada com sucesso'
-er/macrocontrole.sql
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 )

@@ -2,7 +2,7 @@
     Retorna oa dados de produção correspondentes a atividade
 */
 SELECT a.unidade_trabalho_id, a.etapa_id, e.subfase_id, u.login, u.id as usuario_id, u.nome_guerra, s.id as subfase_id, s.nome as subfase_nome, ut.epsg, 
-ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom, ut.lote_id, l.nome AS lote, l.denominador_escala, s.fase_id, ut.dificuldade, 
+ST_ASEWKT(ST_Transform(ut.geom,ut.epsg::integer)) as unidade_trabalho_geom, ut.lote_id, l.nome AS lote, l.denominador_escala, s.fase_id, ut.dificuldade, ut.tempo_estimado_minutos,
 dp.configuracao_producao, ut.id AS ut_id, dp.tipo_dado_producao_id, p.nome AS projeto, b.nome AS bloco, tpro.nome AS tipo_produto,
 e.tipo_etapa_id, te.nome as etapa_nome, a.observacao as observacao_atividade, ut.observacao AS observacao_unidade_trabalho
 FROM macrocontrole.atividade as a

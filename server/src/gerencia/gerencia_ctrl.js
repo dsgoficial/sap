@@ -1129,7 +1129,7 @@ controller.iniciaAtividadeModoLocal = async (atividadeId, usuarioId) => {
   return db.sapConn.tx(async t => {
     const dataInicio = new Date()
     try {
-      await t.one(
+      await t.none(
         `
       UPDATE macrocontrole.atividade SET
       data_inicio = $<dataInicio>, tipo_situacao_id = 2, usuario_id = $<usuarioId>
@@ -1233,6 +1233,30 @@ controller.deletaRelatorioAlteracao = async relatorioIds => {
       WHERE id in ($<relatorioIds:csv>)`,
       { relatorioIds }
     )
+  })
+}
+
+
+controller.atualizaDificuldadeTempoEstimado = async unidadesTrabalho => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'dificuldade',
+      'tempo_estimado_minutos'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        unidadesTrabalho,
+        cs,
+        { table: 'unidade_trabalho', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
   })
 }
 

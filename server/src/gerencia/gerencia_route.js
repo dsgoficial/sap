@@ -768,4 +768,17 @@ router.delete(
   })
 )
 
+router.put(
+  '/unidade_trabalho/dificuldade_tempo_estimado',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.dificuldadeTempoEstimadoAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaDificuldadeTempoEstimado(req.body.unidades_trabalho)
+
+    const msg = 'Dificuldade e tempo estimado atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
 module.exports = router

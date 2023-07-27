@@ -1,5 +1,5 @@
 WITH atividade_data AS (
-  SELECT a.id, a.etapa_id, e.subfase_id, e.ordem, a.tipo_situacao_id, a.unidade_trabalho_id, ppo.usuario_id, ut.dificuldade,
+  SELECT a.id, a.etapa_id, e.subfase_id, e.ordem, a.tipo_situacao_id, a.unidade_trabalho_id, ppo.usuario_id, ut.dificuldade, ut.tempo_estimado_minutos,
 	b.prioridade as b_prioridade, ut.prioridade AS ut_prioridade, pse.prioridade as pse_prioridade, b.id AS bloco_id
   FROM macrocontrole.atividade AS a
   INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id

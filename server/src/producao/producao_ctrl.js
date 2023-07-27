@@ -317,6 +317,7 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.tipo_produto = dadosut.tipo_produto
     info.atividade.denominador_escala = dadosut.denominador_escala
     info.atividade.dificuldade = dadosut.dificuldade
+    info.atividade.tempo_estimado_minutos = dadosut.tempo_estimado_minutos
     info.atividade.observacao_atividade = dadosut.observacao_atividade
     info.atividade.observacao_unidade_trabalho =
       dadosut.observacao_unidade_trabalho
