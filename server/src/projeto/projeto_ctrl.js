@@ -3093,4 +3093,78 @@ controller.insereLinhaProducao = async linha_producao => {
   })
 }
 
+controller.getPerfilConfiguracaoQgis = async () => {
+  return db.sapConn.any(
+    `SELECT pcg.tipo_configuracao_id, tc.nome AS tipo_configuracao, pcg.parametros, pcg.subfase_id, pcg.lote_id
+    FROM macrocontrole.perfil_configuracao_qgis AS pcg
+    INNER JOIN dominio.tipo_configuracao AS tc ON tc.code = pa.tipo_configuracao_id`
+  )
+}
+
+controller.criaPerfilConfiguracaoQgis = async perfisConfiguracaoQgis => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'tipo_configuracao_id',
+      'parametros',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfisConfiguracaoQgis, cs, {
+      table: 'perfil_configuracao_qgis',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilConfiguracaoQgis = async perfisConfiguracaoQgisId => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'tipo_configuracao_id',
+      'parametros',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfisConfiguracaoQgisId,
+        cs,
+        { table: 'perfil_configuracao_qgis', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilConfiguracaoQgis = async perfisConfiguracaoQgisId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_configuracao_qgis
+      WHERE id in ($<perfisConfiguracaoQgisId:csv>)`,
+      { perfisConfiguracaoQgisId }
+    )
+    if (exists && exists.length < perfisConfiguracaoQgisId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil configuracao id',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfisConfiguracaoQgisId
+      WHERE id in ($<perfisConfiguracaoQgisId:csv>)`,
+      { perfisConfiguracaoQgisId }
+    )
+  })
+}
+
 module.exports = controller

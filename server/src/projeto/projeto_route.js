@@ -1787,4 +1787,62 @@ router.post(
   })
 )
 
+router.get(
+  '/configuracao/perfil_configuracao_qgis',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilConfiguracaoQgis()
+
+    const msg = 'Perfil configuração QGIS retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_configuracao_qgis',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilConfiguracaoQgisIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilConfiguracaoQgis(req.body.perfis_configuracao_qgis_ids)
+
+    const msg = 'Perfil configuração QGIS deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_configuracao_qgis',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilConfiguracaoQgis
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilConfiguracaoQgis(req.body.perfis_configuracao_qgis)
+
+    const msg = 'Perfis configuração QGIS criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_configuracao_qgis',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilConfiguracaoQgisAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilConfiguracaoQgis(req.body.perfis_configuracao_qgis)
+
+    const msg = 'Perfis configuração QGIS atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
 module.exports = router

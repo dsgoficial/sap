@@ -1077,4 +1077,41 @@ models.aliasIds = Joi.object().keys({
     .min(1)
 })
 
+models.perfilConfiguracaoQgis = Joi.object().keys({
+  perfis_configuracao_qgis: Joi.array()
+    .items(
+      Joi.object().keys({
+        tipo_configuracao_id: Joi.number().integer().strict().required(),
+        parametros: Joi.string().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilConfiguracaoQgisAtualizacao = Joi.object().keys({
+  perfis_configuracao_qgis: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        tipo_configuracao_id: Joi.number().integer().strict().required(),
+        parametros: Joi.string().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilConfiguracaoQgisIds = Joi.object().keys({
+  perfis_configuracao_qgis_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 module.exports = models
