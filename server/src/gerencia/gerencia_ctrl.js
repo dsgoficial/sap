@@ -1148,8 +1148,7 @@ controller.iniciaAtividadeModoLocal = async (atividadeId, usuarioId) => {
 
 controller.finalizaAtividadeModoLocal = async (atividadeId, usuarioUUID, dataInicio, dataFim) => {
   return db.sapConn.tx(async t => {
-    const usuarioId = getUsuarioIdbyUUID(usuarioUUID)
-
+    const usuarioId = await getUsuarioIdbyUUID(usuarioUUID)
     try {
       await t.none(
         `
@@ -1160,6 +1159,7 @@ controller.finalizaAtividadeModoLocal = async (atividadeId, usuarioUUID, dataIni
         { dataFim, dataInicio, atividadeId, usuarioId}
       )
     } catch (error) {
+      console.log(error)
       throw new AppError(
         'Atividade inválida',
         httpCode.BadRequest
