@@ -1151,7 +1151,7 @@ controller.finalizaAtividadeModoLocal = async (atividadeId, usuarioUUID, dataIni
     const usuarioId = getUsuarioIdbyUUID(usuarioUUID)
 
     try {
-      await t.one(
+      await t.none(
         `
       UPDATE macrocontrole.atividade SET
       data_fim = $<dataFim>, data_inicio = $<dataInicio>, tipo_situacao_id = 4, usuario_id = $<usuarioId>
