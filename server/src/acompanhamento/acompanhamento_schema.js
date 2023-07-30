@@ -22,6 +22,9 @@ models.anoParam = Joi.object().keys({
     .required()
 })
 
+models.nomeParams = Joi.object().keys({
+  nome: Joi.string().required()
+})
 
 /*
 

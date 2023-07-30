@@ -295,6 +295,19 @@ router.get(
   })
 )
 
+router.get(
+  '/mapa/:nome',
+  verifyAdmin,
+  schemaValidation({ params: acompanhamentoSchema.nomeParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getLayerGeoJSON(req.params.nome)
+
+    const msg = 'Geojson da camada retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 
 /*
 router.get(
