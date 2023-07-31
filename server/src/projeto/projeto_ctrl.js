@@ -2855,8 +2855,8 @@ controller.cutUnidadeTrabalho = async (unidadeTrabalhoId, cutGeoms) => {
   let utIdsFixed;
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     let execution = await t.any(
-      `SELECT 1 FROM macrocontrole.atividade AS a
-      WHERE a.unidade_trabalho_id = $<unidadeTrabalhoId> AND a.tipo_situacao_id IN (2,3)`,
+        `SELECT 1 FROM macrocontrole.atividade AS a
+        WHERE a.unidade_trabalho_id = $<unidadeTrabalhoId> AND a.tipo_situacao_id IN (2,3)`,
       { unidadeTrabalhoId }
     )
     if (execution && execution.length > 0) {
@@ -2876,7 +2876,7 @@ controller.cutUnidadeTrabalho = async (unidadeTrabalhoId, cutGeoms) => {
     )
 
     let novasUtId = await t.any(
-      `INSERT INTO macrocontrole.unidade_trabalho(nome,epsg,dado_producao_id,sufase_id,lote_id,bloco_id,disponivel,dificuldade,tempo_estimado_minutos,prioridade,observacao,geom)
+      `INSERT INTO macrocontrole.unidade_trabalho(nome,epsg,dado_producao_id,subfase_id,lote_id,bloco_id,disponivel,dificuldade,tempo_estimado_minutos,prioridade,observacao,geom)
        SELECT ut.nome,ut.epsg,ut.dado_producao_id,ut.subfase_id,ut.lote_id,ut.bloco_id,ut.disponivel,ut.dificuldade,ut.tempo_estimado_minutos,ut.prioridade,ut.observacao,
        ST_GEOMFROMEWKT(ref.geom) as geom
        FROM macrocontrole.unidade_trabalho AS ut
