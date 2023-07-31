@@ -106,6 +106,10 @@ models.versaoQGIS = Joi.object().keys({
   versao_minima: Joi.string().required()
 })
 
+models.pluginPath = Joi.object().keys({
+  plugin_path: Joi.string().required()
+})
+
 models.qgisShortcuts = Joi.object().keys({
   qgis_shortcuts: Joi.array()
     .items(

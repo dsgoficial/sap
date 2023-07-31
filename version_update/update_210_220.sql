@@ -949,6 +949,14 @@ ALTER TABLE macrocontrole.unidade_trabalho
 ADD COLUMN tempo_estimado_minutos INTEGER NOT NULL DEFAULT 0,
 ADD CONSTRAINT tempo_estimado CHECK (tempo_estimado_minutos >= 0);
 
+CREATE TABLE dgeo.plugin_path(
+  code SMALLINT NOT NULL PRIMARY KEY,
+  path TEXT,
+  CHECK (code = 1)
+);
+INSERT INTO dgeo.plugin_path (code, path) VALUES
+(1, '');
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

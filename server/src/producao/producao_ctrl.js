@@ -299,6 +299,14 @@ const getAtalhos = async (connection) => {
   )
 }
 
+const getPluginPath = async (connection) => {
+  let p = await connection.one(
+    `SELECT path
+      FROM dgeo.plugin_path WHERE code = 1`
+  )
+  return p.path
+}
+
 const dadosProducao = async (atividadeId) => {
   const results = await db.sapConn.task(async t => {
     const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId])
@@ -338,6 +346,8 @@ const dadosProducao = async (atividadeId) => {
       configuracao_producao: dadosut.configuracao_producao,
       tipo_dado_producao_id: dadosut.tipo_dado_producao_id
     }
+
+    info.atividade.plugin_path = await getPluginPath(t)
 
     info.atividade.camadas = await getInfoCamadas(
       t,

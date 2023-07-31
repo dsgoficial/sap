@@ -1260,4 +1260,24 @@ controller.atualizaDificuldadeTempoEstimado = async unidadesTrabalho => {
   })
 }
 
+controller.getPluginPath = async () => {
+  return db.sapConn.one(
+    `SELECT path
+      FROM dgeo.plugin_path WHERE code = 1`
+  )
+}
+
+controller.atualizaPluginPath = async (
+  path
+) => {
+  return db.sapConn.any(
+    `
+    UPDATE dgeo.plugin_path SET
+    path = $<versaoQGIS> WHERE code = 1
+    `,
+    { path }
+  )
+}
+
+
 module.exports = controller

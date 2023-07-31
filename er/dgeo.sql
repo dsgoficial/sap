@@ -207,5 +207,13 @@ CREATE TABLE dgeo.workflow_dsgtools(
 	update_time timestamp without time zone NOT NULL DEFAULT now()
 );
 
+CREATE TABLE dgeo.plugin_path(
+  code SMALLINT NOT NULL PRIMARY KEY,
+  path TEXT,
+  CHECK (code = 1)
+);
+INSERT INTO dgeo.plugin_path (code, path) VALUES
+(1, '');
+
 
 COMMIT;

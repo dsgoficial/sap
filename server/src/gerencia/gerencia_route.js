@@ -781,4 +781,32 @@ router.put(
   })
 )
 
+router.get(
+  '/plugin_path',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getPluginPath(
+    )
+
+    const msg = 'Plugin Path retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/plugin_path',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.pluginPath
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaPluginPath(req.body.plugin_path)
+
+    const msg = 'Plugin Path atualizado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 module.exports = router
