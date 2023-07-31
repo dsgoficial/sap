@@ -74,7 +74,7 @@ $$
       WHERE se.subfase_id = subfase_ident AND se.lote_id = lote_ident
       ORDER BY se.ordem
       LOOP
-        SELECT replace(translate(replace(lower(r.nome),' ', '_'),  
+        SELECT 's_' || iterator - 2 || '_' || replace(translate(replace(lower(r.nome),' ', '_'),  
           'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
           'aaaaaeeeeiiiiooooouuuucc________________________________') || '_' || r.numero, 'execucao_1', 'execucao')
           INTO nome_fixed;
@@ -273,11 +273,11 @@ $$
       LOOP
 
         IF r.numero > 1 THEN
-          nome_fixed := translate(replace(lower(r.nome),' ', '_'),  
+          nome_fixed := 'f_' || iterator || '_' || translate(replace(lower(r.nome),' ', '_'),  
                 'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
                 'aaaaaeeeeiiiiooooouuuucc________________________________') || '_' || r.numero;
         ELSE
-          nome_fixed := translate(replace(lower(r.nome),' ', '_'),  
+          nome_fixed := 'f_' || iterator || '_' || translate(replace(lower(r.nome),' ', '_'),  
                 'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
                 'aaaaaeeeeiiiiooooouuuucc________________________________');
         END IF;

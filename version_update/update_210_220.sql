@@ -272,7 +272,7 @@ $$
     SELECT count(*) INTO num FROM macrocontrole.etapa WHERE subfase_id = subfase_ident AND lote_id = lote_ident;
     IF num > 0 THEN
       view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.lote_' || lote_ident || '_subfase_' || subfase_ident || '  AS 
-      SELECT ut.id, ut.lote_id, ut.subfase_id, ut.disponivel, rest_pre.id IS NOT NULL AS restrito_pre, rest_exec.id IS NOT NULL AS restrito_exec, l.nome AS bloco, ut.nome, ut.dificuldade, ut.tempo_estimado_minutos, dp.configuracao_producao AS dado_producao, dp.configuracao_producao, tdp.nome AS tipo_dado_producao, ut.prioridade, ut.geom';
+      SELECT ut.id, ut.lote_id, ut.subfase_id, ut.disponivel, rest_pre.id IS NOT NULL AS restrito_pre, rest_exec.id IS NOT NULL AS restrito_exec, l.nome AS bloco, ut.nome, ut.dificuldade,ut.tempo_estimado_minutos, dp.configuracao_producao AS dado_producao, dp.configuracao_producao, tdp.nome AS tipo_dado_producao, ut.prioridade, ut.geom';
 
       exec_txt := '<symbol force_rhr="0" name="{{NUMERACAO}}" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="215,25,28,128"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol>';
       exec_andamento_txt := '<symbol force_rhr="0" name="{{NUMERACAO}}" type="fill" clip_to_extent="1" alpha="1"> <layer class="SimpleFill" locked="0" enabled="1" pass="0"> <prop k="border_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="color" v="215,25,28,128"/> <prop k="joinstyle" v="bevel"/> <prop k="offset" v="0,0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_color" v="0,0,0,255"/> <prop k="outline_style" v="solid"/> <prop k="outline_width" v="0.26"/> <prop k="outline_width_unit" v="MM"/> <prop k="style" v="solid"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> <layer class="LinePatternFill" locked="0" enabled="1" pass="0"> <prop k="angle" v="45"/> <prop k="color" v="0,0,255,255"/> <prop k="distance" v="1"/> <prop k="distance_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="distance_unit" v="MM"/> <prop k="line_width" v="0.26"/> <prop k="line_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="line_width_unit" v="MM"/> <prop k="offset" v="0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="outline_width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="outline_width_unit" v="MM"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> <symbol force_rhr="0" name="@{{NUMERACAO}}@1" type="line" clip_to_extent="1" alpha="1"> <layer class="SimpleLine" locked="0" enabled="1" pass="0"> <prop k="capstyle" v="square"/> <prop k="customdash" v="5;2"/> <prop k="customdash_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="customdash_unit" v="MM"/> <prop k="draw_inside_polygon" v="0"/> <prop k="joinstyle" v="bevel"/> <prop k="line_color" v="0,0,0,255"/> <prop k="line_style" v="solid"/> <prop k="line_width" v="0.26"/> <prop k="line_width_unit" v="MM"/> <prop k="offset" v="0"/> <prop k="offset_map_unit_scale" v="3x:0,0,0,0,0,0"/> <prop k="offset_unit" v="MM"/> <prop k="ring_filter" v="0"/> <prop k="use_custom_dash" v="0"/> <prop k="width_map_unit_scale" v="3x:0,0,0,0,0,0"/> <data_defined_properties> <Option type="Map"> <Option name="name" type="QString" value=""/> <Option name="properties"/> <Option name="type" type="QString" value="collection"/> </Option> </data_defined_properties> </layer> </symbol> </layer> </symbol>';
@@ -304,7 +304,7 @@ $$
       WHERE se.subfase_id = subfase_ident AND se.lote_id = lote_ident
       ORDER BY se.ordem
       LOOP
-        SELECT replace(translate(replace(lower(r.nome),' ', '_'),  
+        SELECT 's_' || iterator - 2 || '_' || replace(translate(replace(lower(r.nome),' ', '_'),  
           'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
           'aaaaaeeeeiiiiooooouuuucc________________________________') || '_' || r.numero, 'execucao_1', 'execucao')
           INTO nome_fixed;
@@ -497,11 +497,11 @@ $$
       LOOP
 
         IF r.numero > 1 THEN
-          nome_fixed := translate(replace(lower(r.nome),' ', '_'),  
+          nome_fixed := 'f_' || iterator || '_' || translate(replace(lower(r.nome),' ', '_'),  
                 'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
                 'aaaaaeeeeiiiiooooouuuucc________________________________') || '_' || r.numero;
         ELSE
-          nome_fixed := translate(replace(lower(r.nome),' ', '_'),  
+          nome_fixed := 'f_' || iterator || '_' || translate(replace(lower(r.nome),' ', '_'),  
                 'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\,.;:<>?!`{}[]()~`@#$%^&*+=''',  
                 'aaaaaeeeeiiiiooooouuuucc________________________________');
         END IF;
@@ -681,6 +681,16 @@ ALTER FUNCTION acompanhamento.refresh_view_acompanhamento_produto()
 CREATE TRIGGER refresh_view_acompanhamento_produto
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.produto
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_produto();
+
+UPDATE macrocontrole.etapa
+SET id=id;
+
+UPDATE macrocontrole.lote
+SET id=id;
+
+UPDATE macrocontrole.bloco
+SET id=id;
+
 
 INSERT INTO macrocontrole.relacionamento_ut (ut_id, ut_re_id, tipo_pre_requisito_id)
 SELECT ut.id AS ut_id, ut_re.id AS ut_re_id, prs.tipo_pre_requisito_id
