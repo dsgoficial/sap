@@ -1844,5 +1844,73 @@ router.put(
   })
 )
 
+router.get(
+  '/tipo_perfil_dificuldade',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getTipoPerfilDificuldade()
+
+    const msg = 'Tipo perfil dificuldade retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/configuracao/perfil_dificuldade_operador',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilDificuldadeOperador()
+
+    const msg = 'Perfil dificuldade operador retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_dificuldade_operador',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilDificuldadeOperadorIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilDificuldadeOperador(req.body.perfis_dificuldade_operador_ids)
+
+    const msg = 'Perfil dificuldade operador deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_dificuldade_operador',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilDificuldadeOperador
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilDificuldadeOperador(req.body.perfis_dificuldade_operador)
+
+    const msg = 'Perfis dificuldade operador criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_dificuldade_operador',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilDificuldadeOperadorAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilDificuldadeOperador(req.body.perfis_dificuldade_operador)
+
+    const msg = 'Perfis dificuldade operador atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
 
 module.exports = router

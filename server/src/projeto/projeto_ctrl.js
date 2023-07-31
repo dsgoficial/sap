@@ -3160,11 +3160,94 @@ controller.deletePerfilConfiguracaoQgis = async perfisConfiguracaoQgisId => {
     }
 
     return t.any(
-      `DELETE FROM macrocontrole.perfisConfiguracaoQgisId
+      `DELETE FROM macrocontrole.perfil_configuracao_qgis
       WHERE id in ($<perfisConfiguracaoQgisId:csv>)`,
       { perfisConfiguracaoQgisId }
     )
   })
+}
+
+controller.getPerfilDificuldadeOperador = async () => {
+  return db.sapConn.any(
+    `SELECT pdo.id, pdo.usuario_id, pdo.subfase_id, pdo.bloco_id, pdo.tipo_perfil_dificuldade_id,
+     tpd.nome AS tipo_perfil_dificuldade
+     FROM macrocontrole.perfil_dificuldade_operador AS pdo
+     INNER JOIN dominio.tipo_perfil_dificuldade AS tpd
+     ON tpd.code = pdo.tipo_perfil_dificuldade_id
+    `)
+}
+
+controller.criaPerfilDificuldadeOperador = async perfisDificuldadeOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'usuario_id',
+      'subfase_id',
+      'bloco_id',
+      'tipo_perfil_dificuldade_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfisDificuldadeOperador, cs, {
+      table: 'perfil_dificuldade_operador',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilDificuldadeOperador = async perfisDificuldadeOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'usuario_id',
+      'subfase_id',
+      'bloco_id',
+      'tipo_perfil_dificuldade_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfisDificuldadeOperador,
+        cs,
+        { table: 'perfil_dificuldade_operador', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilDificuldadeOperador = async perfisDificuldadeOperadorId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_dificuldade_operador
+      WHERE id in ($<perfisConfiguracaoQgisId:csv>)`,
+      { perfisDificuldadeOperadorId }
+    )
+    if (exists && exists.length < perfisDificuldadeOperadorId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil configuracao id',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_dificuldade_operador
+      WHERE id in ($<perfisDificuldadeOperadorId:csv>)`,
+      { perfisDificuldadeOperadorId }
+    )
+  })
+}
+
+controller.getTipoPerfilDificuldade = async () => {
+  return db.sapConn.any(
+    `SELECT tpd.code, tpd.nome AS tipo_perfil_dificuldade
+     FROM dominio.tipo_perfil_dificuldade AS tpd
+    `)
 }
 
 module.exports = controller

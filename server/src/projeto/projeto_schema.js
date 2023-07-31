@@ -1114,4 +1114,40 @@ models.perfilConfiguracaoQgisIds = Joi.object().keys({
     .min(1)
 })
 
+models.perfilDificuldadeOperador = Joi.object().keys({
+  perfis_dificuldade_operador: Joi.array()
+    .items(
+      Joi.object().keys({
+        usuario_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        bloco_id: Joi.number().integer().strict().required(),
+        tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilDificuldadeOperadorAtualizacao = Joi.object().keys({
+  perfis_dificuldade_operador: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        usuario_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        bloco_id: Joi.number().integer().strict().required(),
+        tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilDificuldadeOperadorIds = Joi.object().keys({
+  perfis_dificuldade_operador_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
 module.exports = models
