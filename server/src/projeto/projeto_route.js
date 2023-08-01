@@ -1913,4 +1913,34 @@ router.put(
   })
 )
 
+router.post(
+  '/configuracao/lote/copiar',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.configuracaoLoteCopiar
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.copiarConfiguracaoLote(
+      req.body.lote_id_origem,
+      req.body.lote_id_destino,
+      req.body.copiar_estilo,
+      req.body.copiar_menu,
+      req.body.copiar_regra,
+      req.body.copiar_modelo,
+      req.body.copiar_workflow,
+      req.body.copiar_alias,
+      req.body.copiar_linhagem,
+      req.body.copiar_finalizacao,
+      req.body.copiar_tema,
+      req.body.copiar_fme,
+      req.body.copiar_configuracao_qgis,
+      req.body.copiar_monitoramento
+    )
+
+    const msg = 'Unidades de trabalho copiadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 module.exports = router

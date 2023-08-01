@@ -1150,4 +1150,21 @@ models.perfilDificuldadeOperadorIds = Joi.object().keys({
     .required()
     .min(1)
 })
+
+models.configuracaoLoteCopiar = Joi.object().keys({
+  lote_id_origem: Joi.number().integer().strict().required(),
+  lote_id_destino: Joi.number().integer().strict().required(),
+  copiar_estilo: Joi.boolean().strict().required(),
+  copiar_menu: Joi.boolean().strict().required(),
+  copiar_regra: Joi.boolean().strict().required(),
+  copiar_modelo: Joi.boolean().strict().required(),
+  copiar_workflow: Joi.boolean().strict().required(),
+  copiar_alias: Joi.boolean().strict().required(),
+  copiar_linhagem: Joi.boolean().strict().required(),
+  copiar_finalizacao: Joi.boolean().strict().required(),
+  copiar_tema: Joi.boolean().strict().required(),
+  copiar_fme: Joi.boolean().strict().required(),
+  copiar_configuracao_qgis: Joi.boolean().strict().required(),
+  copiar_monitoramento: Joi.boolean().strict().required()
+})
 module.exports = models

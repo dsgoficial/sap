@@ -1275,7 +1275,7 @@ controller.atualizaPluginPath = async (
   return db.sapConn.any(
     `
     UPDATE dgeo.plugin_path SET
-    path = $<versaoQGIS> WHERE code = 1
+    path = $<path> WHERE code = 1
     `,
     { path }
   )
