@@ -682,16 +682,6 @@ CREATE TRIGGER refresh_view_acompanhamento_produto
 AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.produto
 FOR EACH ROW EXECUTE PROCEDURE acompanhamento.refresh_view_acompanhamento_produto();
 
-UPDATE macrocontrole.etapa
-SET id=id;
-
-UPDATE macrocontrole.lote
-SET id=id;
-
-UPDATE macrocontrole.bloco
-SET id=id;
-
-
 INSERT INTO macrocontrole.relacionamento_ut (ut_id, ut_re_id, tipo_pre_requisito_id)
 SELECT ut.id AS ut_id, ut_re.id AS ut_re_id, prs.tipo_pre_requisito_id
 FROM macrocontrole.unidade_trabalho AS ut
@@ -708,10 +698,13 @@ DROP MATERIALIZED VIEW IF EXISTS acompanhamento.bloco;
 SELECT acompanhamento.cria_view_acompanhamento_bloco();
 
 UPDATE macrocontrole.etapa
-SET id = id;
+SET id=id;
 
 UPDATE macrocontrole.lote
-SET id = id;
+SET id=id;
+
+UPDATE macrocontrole.bloco
+SET id=id;
 
 ALTER TABLE macrocontrole.problema_atividade
 ADD COLUMN usuario_id INTEGER NOT NULL DEFAULT 1;
@@ -934,7 +927,7 @@ CREATE TABLE metadado.perfil_classes_complementares_orto(
 );
 
 CREATE TABLE macrocontrole.pit(
-	id INTEGER NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	meta INTEGER NOT NULL,
 	ano INTEGER NOT NULL
@@ -950,8 +943,8 @@ SET nome = 'DSGTools - Centroide'
 where code = 1
 
 CREATE TABLE macrocontrole.relatorio_alteracao(
-	id INTEGER NOT NULL PRIMARY KEY,
-	data_inicio timestamp with time zone NOT NULL,
+	id SERIAL NOT NULL PRIMARY KEY,
+	data timestamp with time zone NOT NULL,
 	descricao TEXT NOT NULL
 );
 
@@ -966,6 +959,26 @@ CREATE TABLE dgeo.plugin_path(
 );
 INSERT INTO dgeo.plugin_path (code, path) VALUES
 (1, '');
+
+
+CREATE SCHEMA microcontrole;
+
+CREATE TABLE microcontrole.tipo_monitoramento(
+	code SMALLINT NOT NULL PRIMARY KEY,
+	nome VARCHAR(255) NOT NULL
+);
+
+INSERT INTO microcontrole.tipo_monitoramento (code, nome) VALUES
+(1, 'Monitoramento de feição'),
+(2, 'Monitoramento de tela');
+
+CREATE TABLE microcontrole.perfil_monitoramento(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES microcontrole.tipo_monitoramento (code),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(tipo_monitoramento_id,subfase_id,lote_id)
+);
 
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;

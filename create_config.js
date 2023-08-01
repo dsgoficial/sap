@@ -167,7 +167,7 @@ const givePermissionMicrocontrole = async ({
 
   console.log('Executando permissões de microcontrole...')
 
-  await connection.none(readSqlFile('./er/permissao_microcontrole.sql'), [dbUser])
+  await connection.none(readSqlFile('./er_microcontrole/permissao.sql'), [dbUser])
 }
 
 const insertAdminUser = async (authUserData, connection) => {
@@ -213,6 +213,7 @@ const createDatabase = async (
     await t.none(readSqlFile('./er/linha_producao_padrao.sql'))
     await t.none(readSqlFile('./er/metadado.sql'))
     await t.none(readSqlFile('./er/acompanhamento.sql'))
+    await t.none(readSqlFile('./er/microcontrole.sql'))
     await givePermission({ dbUser, connection: t })
     await insertAdminUser(authUserData, t)
   })
@@ -245,8 +246,8 @@ const createMicrocontroleDatabase = async (
 
   const db = pgp(connectionString)
   await db.tx(async t => {
-    await t.none(readSqlFile('./er/versao_microcontrole.sql'))
-    await t.none(readSqlFile('./er/microcontrole.sql'))
+    await t.none(readSqlFile('./er_microcontrole/versao.sql'))
+    await t.none(readSqlFile('./er_microcontrole/microcontrole.sql'))
     await givePermissionMicrocontrole({ dbUser, dbPassword, dbPort, dbServer, dbName })
   })
 }

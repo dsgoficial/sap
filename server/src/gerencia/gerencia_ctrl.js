@@ -1191,12 +1191,14 @@ controller.gravaRelatorioAlteracao = async relatorios => {
   })
 }
 
-controller.atualizaRelatorioAlteracao = async relatorios => {
+controller.atualizaRelatorioAlteracao = async (relatorios, usuario_id) => {
   return db.sapConn.tx(async t => {
-
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
-      'data',
+      {
+        name: 'data',
+        cast: 'timestamptz' // use SQL type casting '::timestamp with timezone'
+      },
       'descricao'
     ])
 

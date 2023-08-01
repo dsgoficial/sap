@@ -643,14 +643,14 @@ FOR EACH ROW
 EXECUTE PROCEDURE macrocontrole.update_relacionamento_produto();
 
 CREATE TABLE macrocontrole.pit(
-	id INTEGER NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	meta INTEGER NOT NULL,
 	ano INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.relatorio_alteracao(
-	id INTEGER NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	data timestamp with time zone NOT NULL,
 	descricao TEXT NOT NULL
 );
