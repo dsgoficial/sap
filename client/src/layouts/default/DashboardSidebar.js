@@ -150,9 +150,13 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                             path: '/subphases-situation',
                             icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/situation.png`} sx={{ width: '25px' }} />,
                             style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
+                        },
+                        {
+                            label: 'Micro Controle',
+                            path: '/micro-control',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/adm.png`} sx={{ width: '25px' }} />,
+                            style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
                         }
-                        
-                        
                     ].map((item, idx) => {
                         return (
                             <ListItemButton

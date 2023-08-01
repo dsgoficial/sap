@@ -15,6 +15,7 @@ const Lot = lazy(() => import('./pages/Lot'))
 const SubphaseSituation = lazy(() => import('./pages/SubphaseSituation'))
 const PIT = lazy(() => import('./pages/PIT'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
+const MicroControl = lazy(() => import('./pages/MicroControl'))
 // ----------------------------------------------------------------------
 
 export default function Router() {
@@ -39,7 +40,8 @@ export default function Router() {
         { path: '/subphases-situation', element: <PrivateRoute><SubphaseSituation /></PrivateRoute> },
         { path: '/pit', element: <PrivateRoute><PIT /></PrivateRoute> },
         { path: '/dashboard', element: <PrivateRoute><Dashboard /></PrivateRoute> },
-        { path: '/activity', element: <PrivateRoute><Activity /></PrivateRoute> }
+        { path: '/activity', element: <PrivateRoute><Activity /></PrivateRoute> },
+        { path: '/micro-control', element: <PrivateRoute><MicroControl /></PrivateRoute> }
       ]
     },
     {
