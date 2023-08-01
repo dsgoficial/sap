@@ -258,6 +258,32 @@ export default function APIProvider({ children }) {
     return allReponse.map(res => res.data)
   }
 
+  const getRunningActivities = async () => {
+    const response = await callAxios(
+      `/api/acompanhamento/atividades_em_execucao`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getLastCompletedActivities = async () => {
+    const response = await callAxios(
+      `/api/acompanhamento/ultimas_atividades_finalizadas`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
   return (
     <APIContext.Provider
       value={{
@@ -277,7 +303,9 @@ export default function APIProvider({ children }) {
         getLots,
         getSubphasesSituation,
         getPIT,
-        getDashboard
+        getDashboard,
+        getRunningActivities,
+        getLastCompletedActivities
       }}>
       {children}
     </APIContext.Provider>
