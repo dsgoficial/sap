@@ -3428,5 +3428,170 @@ controller.copiarConfiguracaoLote = async (
 
 }
 
+controller.getPerfilWorkflowDsgtools = async () => {
+  return db.sapConn.any(
+    `SELECT pwd.workflow_dsgtools_id, pwd.subfase_id, pwd.lote_id, pwd.requisito_finalizacao,
+    wd.nome, wd.descricao, wd.workflow_json, wd.owner, wd.update_time
+     FROM macrocontrole.perfil_workflow_dsgtools AS pwd
+     INNER JOIN dgeo.workflow_dsgtools AS wd
+     ON wd.id = pwd.workflow_dsgtools_id
+    `)
+}
+
+controller.criaPerfilWorkflowDsgtools = async perfilWorkflowDsgtools => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'workflow_dsgtools_id',
+      'subfase_id',
+      'lote_id',
+      'requisito_finalizacao'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilWorkflowDsgtools, cs, {
+      table: 'perfil_workflow_dsgtools',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilWorkflowDsgtools = async perfilWorkflowDsgtools => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'workflow_dsgtools_id',
+      'subfase_id',
+      'lote_id',
+      'requisito_finalizacao'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilWorkflowDsgtools,
+        cs,
+        { table: 'perfil_workflow_dsgtools', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilWorkflowDsgtools = async perfilWorkflowDsgtoolsId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_workflow_dsgtools
+      WHERE id in ($<perfilWorkflowDsgtoolsId:csv>)`,
+      { perfilWorkflowDsgtoolsId }
+    )
+    if (exists && exists.length < perfilWorkflowDsgtoolsId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil workflow dsgtools',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_workflow_dsgtools
+      WHERE id in ($<perfilWorkflowDsgtoolsId:csv>)`,
+      { perfilWorkflowDsgtoolsId }
+    )
+  })
+}
+
+controller.getWorkflows = async () => {
+  return db.sapConn.any(
+    `SELECT id, nome, descricao, workflow_json, owner, update_time 
+    FROM dgeo.workflow_dsgtools`
+  )
+}
+
+controller.gravaWorkflows = async (workflows, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'descricao',
+      'workflow_json',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query = db.pgp.helpers.insert(workflows, cs, {
+      table: 'workflow_dsgtools',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaWorkflows = async (workflows, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'descricao',
+      'workflow_json',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        workflows,
+        cs,
+        { table: 'workflow_dsgtools', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaWorkflows = async workflowsId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.workflow_dsgtools
+      WHERE id in ($<workflowsId:csv>)`,
+      { workflowsId }
+    )
+    if (exists && exists.length < workflowsId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um workflow dsgtools',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation = await t.any(
+      `SELECT id FROM macrocontrole.perfil_workflow_dsgtools 
+      WHERE workflow_dsgtools_id in ($<workflowsId:csv>)`,
+      { workflowsId }
+    )
+    if (existsAssociation && existsAssociation.length > 0) {
+      throw new AppError(
+        'O workflow possui perfis associados',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.workflow_dsgtools
+      WHERE id in ($<workflowsId:csv>)`,
+      { workflowsId }
+    )
+  })
+}
+
 
 module.exports = controller

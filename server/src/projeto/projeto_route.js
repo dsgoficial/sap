@@ -1943,4 +1943,114 @@ router.post(
   })
 )
 
+router.get(
+  '/configuracao/perfil_workflow_dsgtools',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilWorkflowDsgtools()
+
+    const msg = 'Perfil workflow dsgtools retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_workflow_dsgtools',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilWorkflowDsgtoolsIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilWorkflowDsgtools(req.body.perfil_workflow_dsgtools_ids)
+
+    const msg = 'Perfil workflow dsgtools deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_workflow_dsgtools',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilWorkflowDsgtools
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilWorkflowDsgtools(req.body.perfil_workflow_dsgtools)
+
+    const msg = 'Perfil workflow dsgtools criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_workflow_dsgtools',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilWorkflowDsgtoolsAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilWorkflowDsgtools(req.body.perfil_workflow_dsgtools)
+
+    const msg = 'Perfil workflow dsgtools atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
+router.get(
+  '/workflow',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getWorkflows()
+
+    const msg = 'Workflows retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/workflow',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.workflows }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaWorkflows(req.body.workflows, req.usuarioId)
+
+    const msg = 'Workflows gravados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/workflow',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.atualizaWorkflows }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaWorkflows(req.body.workflows, req.usuarioId)
+
+    const msg = 'Workflows atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/workflow',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.workflowsIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaWorkflows(req.body.workflows_ids)
+
+    const msg = 'Workflows deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+
 module.exports = router
