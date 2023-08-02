@@ -77,11 +77,11 @@ INSERT INTO metadado.especificacao (code, nome) VALUES
 (4, 'ET-RDG');
 
 CREATE TABLE metadado.organizacao(
-	id INTEGER NOT NULL PRIMARY KEY,
+	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
 );
 
-INSERT INTO metadado.organizacao (id, nome) VALUES
+INSERT INTO metadado.organizacao (code, nome) VALUES
 (1, '1º Centro de Geoinformação'),
 (2, '2º Centro de Geoinformação'),
 (3, '3º Centro de Geoinformação'),
@@ -93,7 +93,7 @@ CREATE TABLE metadado.usuario(
   usuario_sap_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
   nome VARCHAR(255) NOT NULL,
   funcao VARCHAR(255) NOT NULL,
-  organizacao_id INTEGER NOT NULL REFERENCES metadado.organizacao (id)
+  organizacao_id INTEGER NOT NULL REFERENCES metadado.organizacao (code)
 );
 
 CREATE TABLE metadado.responsavel_fase_produto(
@@ -115,8 +115,8 @@ CREATE TABLE metadado.informacoes_produto(
 	limitacao_uso_id SMALLINT NOT NULL REFERENCES metadado.codigo_restricao (code),
 	restricao_uso_id SMALLINT NOT NULL REFERENCES metadado.codigo_restricao (code),
 	grau_sigilo_id SMALLINT NOT NULL REFERENCES metadado.codigo_classificacao (code),
-	organizacao_responsavel_id  INTEGER NOT NULL REFERENCES metadado.organizacao (id),
-	organizacao_distribuicao_id  INTEGER NOT NULL REFERENCES metadado.organizacao (id),
+	organizacao_responsavel_id  INTEGER NOT NULL REFERENCES metadado.organizacao (code),
+	organizacao_distribuicao_id  INTEGER NOT NULL REFERENCES metadado.organizacao (code),
 	datum_vertical_id SMALLINT NOT NULL REFERENCES metadado.datum_vertical (code),
 	especificacao_id SMALLINT NOT NULL REFERENCES metadado.especificacao (code),
 	responsavel_produto_id INTEGER NOT NULL REFERENCES metadado.usuario (id),
