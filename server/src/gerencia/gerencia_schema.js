@@ -416,13 +416,14 @@ models.relatorioAlteracaoIds = Joi.object().keys({
     .min(1)
 })
 
-models.dificuldadeTempoEstimadoAtualizacao = Joi.object().keys({
+models.propriedadesAtualizacao = Joi.object().keys({
   unidades_trabalho: Joi.array()
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        dificuldade: Joi.number().integer().required(),
-        tempo_estimado_minutos: Joi.number().integer().required()
+        dificuldade: Joi.number().integer(),
+        tempo_estimado_minutos: Joi.number().integer(),
+        prioridade: Joi.number().integer()
       })
     )
     .unique('id')
