@@ -980,6 +980,12 @@ CREATE TABLE microcontrole.perfil_monitoramento(
 	UNIQUE(tipo_monitoramento_id,subfase_id,lote_id)
 );
 
+ALTER TABLE macrocontrole.produto
+ADD COLUMN latitude_centro REAL;
+
+ALTER TABLE macrocontrole.produto
+ADD COLUMN longitude_centro REAL;
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

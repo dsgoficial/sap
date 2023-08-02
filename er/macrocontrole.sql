@@ -41,6 +41,8 @@ CREATE TABLE macrocontrole.produto(
 	inom VARCHAR(255),
 	denominador_escala INTEGER NOT NULL,
 	edicao VARCHAR(255),
+	latitude_centro REAL,
+	longitude_centro REAL,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	geom geometry(MULTIPOLYGON, 4326) NOT NULL
