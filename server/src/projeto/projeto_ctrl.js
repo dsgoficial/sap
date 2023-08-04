@@ -3085,9 +3085,9 @@ controller.insereLinhaProducao = async linha_producao => {
         );
       const subfaseId = subfaseMap[prop.subfase];
       await t.none(
-        `INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) 
-        VALUES($1, $2, $3, $4, $5, $6)`,
-        [camadaId, prop.atributo_filtro_subfase, prop.camada_apontamento, prop.atributo_situacao_correcao, prop.atributo_justificativa_apontamento, subfaseId]);
+        `INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, camada_incomum, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) 
+        VALUES($1, $2, $3, $4, $5, $6, $7)`,
+        [camadaId, prop.atributo_filtro_subfase, prop.camada_apontamento, prop.camada_incomum, prop.atributo_situacao_correcao, prop.atributo_justificativa_apontamento, subfaseId]);
     }
 
   })

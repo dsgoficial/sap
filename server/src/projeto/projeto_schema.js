@@ -285,6 +285,7 @@ models.linhaProducao = Joi.object().keys({
       camada: Joi.string().required(),
       subfase: Joi.string().required(),
       camada_apontamento: Joi.boolean().required(),
+      camada_incomum: Joi.boolean().required(),
       atributo_filtro_subfase: Joi.string(),
       atributo_situacao_correcao: Joi.string(),
       atributo_justificativa_apontamento: Joi.string()

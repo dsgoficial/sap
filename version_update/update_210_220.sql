@@ -986,6 +986,9 @@ ADD COLUMN latitude_centro REAL;
 ALTER TABLE macrocontrole.produto
 ADD COLUMN longitude_centro REAL;
 
+ALTER TABLE macrocontrole.propriedades_camada
+ADD COLUMN camada_incomum BOOLEAN NOT NULL DEFAULT FALSE;
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

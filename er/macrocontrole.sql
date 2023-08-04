@@ -231,6 +231,7 @@ CREATE TABLE macrocontrole.camada(
 CREATE TABLE macrocontrole.propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
+	camada_incomum BOOLEAN NOT NULL DEFAULT FALSE,
 	atributo_filtro_subfase VARCHAR(255),
 	camada_apontamento BOOLEAN NOT NULL DEFAULT FALSE,
 	atributo_situacao_correcao VARCHAR(255),
