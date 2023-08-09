@@ -11,6 +11,17 @@ const producaoSchema = require('./producao_schema')
 
 const router = express.Router()
 
+router.get(
+  '/plugin_path',
+  asyncHandler(async (req, res, next) => {
+    const dados = await producaoCtrl.getPluginPath()
+
+    const msg = 'Path plugin retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 router.post(
   '/finaliza',
   verifyLogin,

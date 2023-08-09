@@ -41,6 +41,8 @@ CREATE TABLE macrocontrole.produto(
 	inom VARCHAR(255),
 	denominador_escala INTEGER NOT NULL,
 	edicao VARCHAR(255),
+	latitude_centro REAL,
+	longitude_centro REAL,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	geom geometry(MULTIPOLYGON, 4326) NOT NULL
@@ -229,6 +231,7 @@ CREATE TABLE macrocontrole.camada(
 CREATE TABLE macrocontrole.propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
+	camada_incomum BOOLEAN NOT NULL DEFAULT FALSE,
 	atributo_filtro_subfase VARCHAR(255),
 	camada_apontamento BOOLEAN NOT NULL DEFAULT FALSE,
 	atributo_situacao_correcao VARCHAR(255),

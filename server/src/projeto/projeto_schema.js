@@ -285,6 +285,7 @@ models.linhaProducao = Joi.object().keys({
       camada: Joi.string().required(),
       subfase: Joi.string().required(),
       camada_apontamento: Joi.boolean().required(),
+      camada_incomum: Joi.boolean().required(),
       atributo_filtro_subfase: Joi.string(),
       atributo_situacao_correcao: Joi.string(),
       atributo_justificativa_apontamento: Joi.string()
@@ -1150,4 +1151,96 @@ models.perfilDificuldadeOperadorIds = Joi.object().keys({
     .required()
     .min(1)
 })
+
+models.configuracaoLoteCopiar = Joi.object().keys({
+  lote_id_origem: Joi.number().integer().strict().required(),
+  lote_id_destino: Joi.number().integer().strict().required(),
+  copiar_estilo: Joi.boolean().strict().required(),
+  copiar_menu: Joi.boolean().strict().required(),
+  copiar_regra: Joi.boolean().strict().required(),
+  copiar_modelo: Joi.boolean().strict().required(),
+  copiar_workflow: Joi.boolean().strict().required(),
+  copiar_alias: Joi.boolean().strict().required(),
+  copiar_linhagem: Joi.boolean().strict().required(),
+  copiar_finalizacao: Joi.boolean().strict().required(),
+  copiar_tema: Joi.boolean().strict().required(),
+  copiar_fme: Joi.boolean().strict().required(),
+  copiar_configuracao_qgis: Joi.boolean().strict().required(),
+  copiar_monitoramento: Joi.boolean().strict().required()
+})
+
+models.perfilWorkflowDsgtools = Joi.object().keys({
+  perfil_workflow_dsgtools: Joi.array()
+    .items(
+      Joi.object().keys({
+        workflow_dsgtools_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+        requisito_finalizacao: Joi.boolean().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilWorkflowDsgtoolsAtualizacao = Joi.object().keys({
+  perfil_workflow_dsgtools: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        workflow_dsgtools_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+        requisito_finalizacao: Joi.boolean().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilWorkflowDsgtoolsIds = Joi.object().keys({
+  perfil_workflow_dsgtools_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+
+models.workflows = Joi.object().keys({
+  workflows: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        descricao: Joi.string().required(),
+        workflow_json: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.atualizaWorkflows = Joi.object().keys({
+  workflows: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        descricao: Joi.string().required(),
+        workflow_json: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.workflowsIds = Joi.object().keys({
+  workflows_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+
+
+
 module.exports = models

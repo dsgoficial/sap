@@ -769,13 +769,13 @@ router.delete(
 )
 
 router.put(
-  '/unidade_trabalho/dificuldade_tempo_estimado',
+  '/unidade_trabalho/propriedades',
   verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.dificuldadeTempoEstimadoAtualizacao }),
+  schemaValidation({ body: gerenciaSchema.propriedadesAtualizacao }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.atualizaDificuldadeTempoEstimado(req.body.unidades_trabalho)
+    await gerenciaCtrl.atualizaPropriedadesUT(req.body.unidades_trabalho)
 
-    const msg = 'Dificuldade e tempo estimado atualizados com sucesso'
+    const msg = 'Propriedades da UT atualizadas com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })

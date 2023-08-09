@@ -248,7 +248,7 @@ const createMicrocontroleDatabase = async (
   await db.tx(async t => {
     await t.none(readSqlFile('./er_microcontrole/versao.sql'))
     await t.none(readSqlFile('./er_microcontrole/microcontrole.sql'))
-    await givePermissionMicrocontrole({ dbUser, dbPassword, dbPort, dbServer, dbName })
+    await givePermissionMicrocontrole({ dbUser, connection: t })
   })
 }
 
@@ -456,7 +456,6 @@ const createConfig = async (options) => {
         dbServer,
         dbNameMicrocontrole
       )
-      await givePermissionMicrocontrole({ dbUser, dbPassword, dbPort, dbServer, dbNameMicrocontrole })
 
       console.log('Banco de dados de microcontrole criado com sucesso!'.blue)
     } else {

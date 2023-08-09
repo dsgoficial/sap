@@ -946,16 +946,12 @@ controller.getLayerGeoJSON = async layerName => {
         SELECT 'FeatureCollection' as type, array_to_json(array_agg(f)) as features
         FROM (
             SELECT 'Feature' as type,
-            ST_AsGeoJSON(lg.geom)::json as geometry,
-            (
-                SELECT row_to_json(t) 
-                FROM (
-                    SELECT to_jsonb(lg) - 'geom' - 'name' AS properties
-                ) t
-            ) as properties
-            FROM acompanhamento.$<layerName:raw> as lg
+            ST_AsGeoJSON(d.geom)::json as geometry,
+            to_jsonb(lg) - 'geom' - 'name' AS properties
+            FROM acompanhamento.$<layerName:raw> as lg,
+            LATERAL ST_Dump(lg.geom) as d
         ) as f
-    ) as fc
+    ) as fc;
     `,
     { layerName }
   )

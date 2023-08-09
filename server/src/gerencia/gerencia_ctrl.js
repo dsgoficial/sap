@@ -1239,13 +1239,28 @@ controller.deletaRelatorioAlteracao = async relatorioIds => {
 }
 
 
-controller.atualizaDificuldadeTempoEstimado = async unidadesTrabalho => {
+controller.atualizaPropriedadesUT = async unidadesTrabalho => {
+  
+  function int(col) {
+    return {
+        name: col,
+        skip() {
+            const val = this[col];
+            return val === null || val === undefined;
+        },
+        init() {
+            return parseInt(this[col]);
+        }
+    };
+  }
+
   return db.sapConn.tx(async t => {
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
-      'dificuldade',
-      'tempo_estimado_minutos'
+      int('dificuldade'),
+      int('tempo_estimado_minutos'),
+      int('prioridade')
     ])
 
     const query =
@@ -1275,7 +1290,7 @@ controller.atualizaPluginPath = async (
   return db.sapConn.any(
     `
     UPDATE dgeo.plugin_path SET
-    path = $<versaoQGIS> WHERE code = 1
+    path = $<path> WHERE code = 1
     `,
     { path }
   )
