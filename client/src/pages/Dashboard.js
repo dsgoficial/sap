@@ -103,7 +103,6 @@ export default function Dashboard() {
 
     const loadDataset = async () => {
         const response = await getDashboard()
-        console.log(response)
         setTotalProducts(response[0].dados.map(i => +i.quantidade).reduce((a, c) => {
             return +a + +c
         }))
