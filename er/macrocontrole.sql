@@ -15,7 +15,7 @@ CREATE TABLE macrocontrole.projeto(
 );
 
 CREATE TABLE macrocontrole.linha_producao(
-	id INTEGER NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE,
 	nome_abrev VARCHAR(255) NOT NULL UNIQUE,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
@@ -75,14 +75,14 @@ CREATE INDEX produto_geom
     (geom);
 
 CREATE TABLE macrocontrole.fase(
-    id INTEGER NOT NULL PRIMARY KEY,
+    id SERIAL NOT NULL PRIMARY KEY,
     tipo_fase_id SMALLINT NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
     ordem INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.subfase(
-	id INTEGER NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
     ordem INTEGER NOT NULL,
@@ -222,7 +222,7 @@ CREATE TABLE macrocontrole.perfil_workflow_dsgtools(
 );
 
 CREATE TABLE macrocontrole.camada(
-	id INTEGER NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
 	UNIQUE(schema,nome)

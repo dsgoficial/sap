@@ -989,6 +989,22 @@ ADD COLUMN longitude_centro REAL;
 ALTER TABLE macrocontrole.propriedades_camada
 ADD COLUMN camada_incomum BOOLEAN NOT NULL DEFAULT FALSE;
 
+CREATE SEQUENCE camada_id_seq;
+SELECT setval('camada_id_seq', COALESCE((SELECT MAX(id) FROM macrocontrole.camada), 0));
+ALTER TABLE macrocontrole.camada ALTER COLUMN id SET DEFAULT nextval('camada_id_seq');
+
+CREATE SEQUENCE lp_id_seq;
+SELECT setval('lp_id_seq', COALESCE((SELECT MAX(id) FROM macrocontrole.linha_producao), 0));
+ALTER TABLE macrocontrole.linha_producao ALTER COLUMN id SET DEFAULT nextval('lp_id_seq');
+
+CREATE SEQUENCE subfase_id_seq;
+SELECT setval('subfase_id_seq', COALESCE((SELECT MAX(id) FROM macrocontrole.subfase), 0));
+ALTER TABLE macrocontrole.subfase ALTER COLUMN id SET DEFAULT nextval('subfase_id_seq');
+
+CREATE SEQUENCE fase_id_seq;
+SELECT setval('fase_id_seq', COALESCE((SELECT MAX(id) FROM macrocontrole.fase), 0));
+ALTER TABLE macrocontrole.fase ALTER COLUMN id SET DEFAULT nextval('fase_id_seq');
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

@@ -81,7 +81,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
   const result = []
 
   camadas.forEach((r) => {
-    const aux = { nome: r.nome, schema: r.schema }
+    const aux = { nome: r.nome, schema: r.schema, camada_incomum: r.camada_incomum }
     if (r.atributo_filtro_subfase) {
       aux.atributo_filtro_subfase = r.atributo_filtro_subfase
     }
