@@ -284,6 +284,32 @@ export default function APIProvider({ children }) {
     return response.data
   }
 
+  const getViews = async () => {
+    const response = await callAxios(
+      `/api/gerencia/view_acompanhamento?em_andamento=true`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getLotGEOJSON = async (lot) => {
+    const response = await callAxios(
+      `/api/acompanhamento/mapa/${lot}`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
   return (
     <APIContext.Provider
       value={{
@@ -305,7 +331,9 @@ export default function APIProvider({ children }) {
         getPIT,
         getDashboard,
         getRunningActivities,
-        getLastCompletedActivities
+        getLastCompletedActivities,
+        getViews,
+        getLotGEOJSON
       }}>
       {children}
     </APIContext.Provider>

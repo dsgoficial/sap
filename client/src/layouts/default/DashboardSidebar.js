@@ -156,6 +156,12 @@ export default function MarketplaceSidebar({ isOpenSidebar, onCloseSidebar }) {
                             path: '/micro-control',
                             icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/adm.png`} sx={{ width: '25px' }} />,
                             style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
+                        },
+                        {
+                            label: 'Mapas de Acompanhamento',
+                            path: '/maps',
+                            icon: <Box component={'img'} src={`${process.env.PUBLIC_URL}/map.png`} sx={{ width: '25px' }} />,
+                            style: getAuthorization() == 'ADMIN' ? {} : { display: 'none' }
                         }
                     ].map((item, idx) => {
                         return (
