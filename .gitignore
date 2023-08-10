@@ -104,6 +104,7 @@ sap_config.qgs~
 
 
 config.env
+config_test.env
 
 sslcert
 
