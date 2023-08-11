@@ -2144,7 +2144,11 @@ controller.deletaPlugins = async pluginsId => {
 
 controller.getLote = async () => {
   return db.sapConn.any(
-    'SELECT id, nome, nome_abrev, denominador_escala, linha_producao_id, projeto_id, descricao  FROM macrocontrole.lote'
+    `SELECT l.id, l.nome, l.nome_abrev, l.denominador_escala, l.linha_producao_id, l.projeto_id, l.descricao,
+    lp.tipo_produto_id
+    FROM macrocontrole.lote AS l
+    INNER JOIN macrocontrole.linha_producao AS lp
+    `
   )
 }
 
