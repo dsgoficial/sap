@@ -1,6 +1,6 @@
 WITH atividade_data AS (
   SELECT a.id, a.etapa_id, e.subfase_id, e.ordem, a.tipo_situacao_id, a.unidade_trabalho_id, ppo.usuario_id, ut.dificuldade, ut.tempo_estimado_minutos,
-	b.prioridade as b_prioridade, ut.prioridade AS ut_prioridade, pse.prioridade as pse_prioridade, b.id AS bloco_id
+	b.prioridade as b_prioridade, ut.prioridade AS ut_prioridade, pse.prioridade as pse_prioridade, b.id AS bloco_id, ut.lote_id
   FROM macrocontrole.atividade AS a
   INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
   INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.subfase_id = e.subfase_id AND pse.tipo_etapa_id = e.tipo_etapa_id
@@ -61,8 +61,7 @@ WITH atividade_data AS (
 ), utstats AS (
   SELECT ut.dificuldade, count(*) AS diff_count
   FROM macrocontrole.perfil_dificuldade_operador AS pdo
-  JOIN macrocontrole.bloco AS b ON b.id = pdo.bloco_id
-  JOIN macrocontrole.unidade_trabalho AS ut ON ut.subfase_id = pdo.subfase_id AND b.id = ut.bloco_id
+  JOIN macrocontrole.unidade_trabalho AS ut ON ut.subfase_id = pdo.subfase_id AND pdo.lote_id = ut.lote_id
   JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.usuario_id = pdo.usuario_id
   WHERE pdo.usuario_id = $1 AND a.tipo_situacao_id = 4
   GROUP BY ut.dificuldade
@@ -82,7 +81,7 @@ SELECT a.id, a.etapa_id, a.unidade_trabalho_id, a_ant.tipo_situacao_id AS situac
   WHEN pdo.tipo_perfil_dificuldade_id = 3 THEN coalesce(utstats.diff_count, 0)
   END AS dificuldade_rank
   FROM atividade_filtered AS a
-  LEFT JOIN macrocontrole.perfil_dificuldade_operador AS pdo ON pdo.bloco_id = a.bloco_id AND pdo.subfase_id = a.subfase_id AND pdo.usuario_id = a.usuario_id
+  LEFT JOIN macrocontrole.perfil_dificuldade_operador AS pdo ON pdo.lote_id = a.lote_id AND pdo.subfase_id = a.subfase_id AND pdo.usuario_id = a.usuario_id
   LEFT JOIN utstats ON utstats.dificuldade = a.dificuldade
   LEFT JOIN a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND a_ant.subfase_id = A.subfase_id AND A.ordem > a_ant.ordem
 ) AS sit

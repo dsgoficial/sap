@@ -257,56 +257,6 @@ router.delete(
   })
 )
 
-router.get(
-  '/perfil_dificuldade_operador',
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getPerfilDificuldadeOperador()
-
-    const msg = 'Perfis dificuldade operador retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.put(
-  '/perfil_dificuldade_operador',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.perfilDificuldadeOperadorAtualizacao }),
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.atualizaPerfilDificuldadeOperador(req.body.perfil_dificuldade_operador)
-
-    const msg = 'Perfis dificuldade operador atualizados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.post(
-  '/perfil_dificuldade_operador',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.perfilDificuldadeOperador }),
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.criaPerfilDificuldadeOperador(req.body.perfil_dificuldade_operador)
-
-    const msg = 'Perfis dificuldade operador criados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-router.delete(
-  '/perfil_dificuldade_operador',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.perfilDificuldadeOperadorIds }),
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.deletaPerfilDificuldadeOperador(req.body.perfil_dificuldade_operador_ids)
-
-    const msg = 'Perfis dificuldade operador deletados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
 router.post(
   '/unidade_trabalho/disponivel',
   verifyAdmin,

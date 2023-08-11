@@ -429,9 +429,9 @@ CREATE TABLE macrocontrole.perfil_dificuldade_operador(
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	tipo_perfil_dificuldade_id SMALLINT NOT NULL REFERENCES dominio.tipo_perfil_dificuldade (code),
-	UNIQUE(usuario_id, subfase_id, bloco_id)
+	UNIQUE(usuario_id, subfase_id, lote_id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria(

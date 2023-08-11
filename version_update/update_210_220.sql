@@ -1005,6 +1005,12 @@ CREATE SEQUENCE fase_id_seq;
 SELECT setval('fase_id_seq', COALESCE((SELECT MAX(id) FROM macrocontrole.fase), 0));
 ALTER TABLE macrocontrole.fase ALTER COLUMN id SET DEFAULT nextval('fase_id_seq');
 
+ALTER TABLE macrocontrole.perfil_dificuldade_operador RENAME COLUMN bloco_id TO lote_id;
+ALTER TABLE macrocontrole.perfil_dificuldade_operador DROP CONSTRAINT perfil_dificuldade_operador_tipo_perfil_dificuldade_id_fkey;
+ALTER TABLE macrocontrole.perfil_dificuldade_operador ADD FOREIGN KEY (lote_id) REFERENCES macrocontrole.lote(id);
+ALTER TABLE macrocontrole.perfil_dificuldade_operador DROP CONSTRAINT perfil_dificuldade_operador_usuario_id_subfase_id_projeto_i_key;
+ALTER TABLE macrocontrole.perfil_dificuldade_operador ADD CONSTRAINT unique_pdo UNIQUE(usuario_id, subfase_id, lote_id);
+
 UPDATE public.versao
 SET nome = '2.2.0' WHERE code = 1;
 

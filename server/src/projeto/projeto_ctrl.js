@@ -2147,7 +2147,7 @@ controller.getLote = async () => {
     `SELECT l.id, l.nome, l.nome_abrev, l.denominador_escala, l.linha_producao_id, l.projeto_id, l.descricao,
     lp.tipo_produto_id
     FROM macrocontrole.lote AS l
-    INNER JOIN macrocontrole.linha_producao AS lp
+    INNER JOIN macrocontrole.linha_producao AS lp ON l.linha_producao_id = lp.id
     `
   )
 }
@@ -3173,7 +3173,7 @@ controller.deletePerfilConfiguracaoQgis = async perfisConfiguracaoQgisId => {
 
 controller.getPerfilDificuldadeOperador = async () => {
   return db.sapConn.any(
-    `SELECT pdo.id, pdo.usuario_id, pdo.subfase_id, pdo.bloco_id, pdo.tipo_perfil_dificuldade_id,
+    `SELECT pdo.id, pdo.usuario_id, pdo.subfase_id, pdo.lote_id, pdo.tipo_perfil_dificuldade_id,
      tpd.nome AS tipo_perfil_dificuldade
      FROM macrocontrole.perfil_dificuldade_operador AS pdo
      INNER JOIN dominio.tipo_perfil_dificuldade AS tpd
@@ -3187,7 +3187,7 @@ controller.criaPerfilDificuldadeOperador = async perfisDificuldadeOperador => {
     const cs = new db.pgp.helpers.ColumnSet([
       'usuario_id',
       'subfase_id',
-      'bloco_id',
+      'lote_id',
       'tipo_perfil_dificuldade_id'
     ])
 
@@ -3207,7 +3207,7 @@ controller.atualizaPerfilDificuldadeOperador = async perfisDificuldadeOperador =
       'id',
       'usuario_id',
       'subfase_id',
-      'bloco_id',
+      'lote_id',
       'tipo_perfil_dificuldade_id'
     ])
 

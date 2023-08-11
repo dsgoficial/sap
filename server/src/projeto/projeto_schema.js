@@ -1121,7 +1121,7 @@ models.perfilDificuldadeOperador = Joi.object().keys({
       Joi.object().keys({
         usuario_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        bloco_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
         tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
       })
     )
@@ -1136,7 +1136,7 @@ models.perfilDificuldadeOperadorAtualizacao = Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         usuario_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
-        bloco_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
         tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
       })
     )

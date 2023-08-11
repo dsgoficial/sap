@@ -311,44 +311,6 @@ models.perfilProducaoEtapaAtualizacao = Joi.object().keys({
     .min(1)
 })
 
-models.perfilDificuldadeOperadorIds = Joi.object().keys({
-  perfil_dificuldade_operador_ids: Joi.array()
-    .items(Joi.number().integer().strict())
-    .unique()
-    .required()
-    .min(1)
-})
-
-models.perfilDificuldadeOperador = Joi.object().keys({
-  perfil_dificuldade_operador: Joi.array()
-    .items(
-      Joi.object().keys({
-        usuario_id: Joi.number().integer().strict().required(),
-        subfase_id: Joi.number().integer().strict().required(),
-        bloco_id: Joi.number().integer().strict().required(),
-        tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
-      })
-    )
-    .required()
-    .min(1)
-})
-
-models.perfilDificuldadeOperadorAtualizacao = Joi.object().keys({
-  perfil_dificuldade_operador: Joi.array()
-    .items(
-      Joi.object().keys({
-        id: Joi.number().integer().strict().required(),
-        usuario_id: Joi.number().integer().strict().required(),
-        subfase_id: Joi.number().integer().strict().required(),
-        bloco_id: Joi.number().integer().strict().required(),
-        tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
-      })
-    )
-    .unique('id')
-    .required()
-    .min(1)
-})
-
 models.plugins = Joi.object().keys({
   plugins: Joi.array()
     .items(
