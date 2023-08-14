@@ -145,4 +145,230 @@ models.responsavelFaseProdutoIds = Joi.object().keys({
     .min(1)
 })
 
+models.palavraChaveProduto = Joi.object().keys({
+  palavras_chave_produto: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        tipo_palavra_chave_id: Joi.number().integer().strict().required(),
+        produto_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.palavraChaveProdutoAtualizacao = Joi.object().keys({
+  palavras_chave_produto: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        tipo_palavra_chave_id: Joi.number().integer().strict().required(),
+        produto_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.palavraChaveProdutoIds = Joi.object().keys({
+  palavras_chave_produto_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.creditosQpt = Joi.object().keys({
+  creditos_qpt: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        qpt: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.creditosQptAtualizacao = Joi.object().keys({
+  creditos_qpt: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        qpt: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.creditosQptIds = Joi.object().keys({
+  creditos_qpt_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.informacoesEdicao = Joi.object().keys({
+  informacoes_edicao: Joi.array()
+    .items(
+      Joi.object().keys({
+        produto_id: Joi.number().integer().strict().required(),
+        pec_planimetrico: Joi.string().required(),
+        pec_altimetrico: Joi.string().required(),
+        origem_dados_altimetricos: Joi.string().required(),
+        territorio_internacional: Joi.boolean().required(),
+        acesso_restrito: Joi.boolean().required(),
+        carta_militar: Joi.boolean().required(),
+        data_criacao: Joi.string().required(),
+        creditos_id: Joi.number().integer().strict().required(),
+        epsg_mde: Joi.string().required(),
+        caminho_mde: Joi.string().required(),
+        dados_terceiro: Joi.array().items(Joi.string()).required(),
+        quadro_fases: Joi.object().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.informacoesEdicaoAtualizacao = Joi.object().keys({
+  informacoes_edicao: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        produto_id: Joi.number().integer().strict().required(),
+        pec_planimetrico: Joi.string().required(),
+        pec_altimetrico: Joi.string().required(),
+        origem_dados_altimetricos: Joi.string().required(),
+        territorio_internacional: Joi.boolean().required(),
+        acesso_restrito: Joi.boolean().required(),
+        carta_militar: Joi.boolean().required(),
+        data_criacao: Joi.string().required(),
+        creditos_id: Joi.number().integer().strict().required(),
+        epsg_mde: Joi.string().required(),
+        caminho_mde: Joi.string().required(),
+        dados_terceiro: Joi.array().items(Joi.string()).required(),
+        quadro_fases: Joi.object().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.informacoesEdicaoIds = Joi.object().keys({
+  informacoes_edicao_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.imagensCartaOrtoimagem = Joi.object().keys({
+  imagens_carta_ortoimagem: Joi.array()
+    .items(
+      Joi.object().keys({
+        produto_id: Joi.number().integer().strict().required(),
+        caminho_imagem: Joi.string().required(),
+        caminho_estilo: Joi.string().allow('', null),
+        epsg: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.imagensCartaOrtoimagemAtualizacao = Joi.object().keys({
+  imagens_carta_ortoimagem: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        produto_id: Joi.number().integer().strict().required(),
+        caminho_imagem: Joi.string().required(),
+        caminho_estilo: Joi.string().allow('', null),
+        epsg: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.imagensCartaOrtoimagemIds = Joi.object().keys({
+  imagens_carta_ortoimagem_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.classesComplementaresOrto = Joi.object().keys({
+  classes_complementares_orto: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        classes: Joi.array().items(Joi.string()).required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.classesComplementaresOrtoAtualizacao = Joi.object().keys({
+  classes_complementares_orto: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        classes: Joi.array().items(Joi.string()).required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.classesComplementaresOrtoIds = Joi.object().keys({
+  classes_complementares_orto_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.perfilClassesComplementaresOrto = Joi.object().keys({
+  perfil_classes_complementares_orto: Joi.array()
+    .items(
+      Joi.object().keys({
+        produto_id: Joi.number().integer().strict().required(),
+        classes_complementares_orto_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilClassesComplementaresOrtoAtualizacao = Joi.object().keys({
+  perfil_classes_complementares_orto: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        produto_id: Joi.number().integer().strict().required(),
+        classes_complementares_orto_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilClassesComplementaresOrtoIds = Joi.object().keys({
+  perfil_classes_complementares_orto_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 module.exports = models
