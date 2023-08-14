@@ -3229,7 +3229,7 @@ controller.deletePerfilDificuldadeOperador = async perfisDificuldadeOperadorId =
   return db.sapConn.task(async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.perfil_dificuldade_operador
-      WHERE id in ($<perfisConfiguracaoQgisId:csv>)`,
+      WHERE id in ($<perfisDificuldadeOperadorId:csv>)`,
       { perfisDificuldadeOperadorId }
     )
     if (exists && exists.length < perfisDificuldadeOperadorId.length) {
