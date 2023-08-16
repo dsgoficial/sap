@@ -3434,7 +3434,7 @@ controller.copiarConfiguracaoLote = async (
 
 controller.getPerfilWorkflowDsgtools = async () => {
   return db.sapConn.any(
-    `SELECT pwd.workflow_dsgtools_id, pwd.subfase_id, pwd.lote_id, pwd.requisito_finalizacao,
+    `SELECT pwd.id, pwd.workflow_dsgtools_id, pwd.subfase_id, pwd.lote_id, pwd.requisito_finalizacao,
     wd.nome, wd.descricao, wd.workflow_json, wd.owner, wd.update_time
      FROM macrocontrole.perfil_workflow_dsgtools AS pwd
      INNER JOIN dgeo.workflow_dsgtools AS wd
