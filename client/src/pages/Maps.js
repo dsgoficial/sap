@@ -10,6 +10,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Checkbox from '@mui/material/Checkbox';
+import Typography from "@mui/material/Typography";
 
 export default function Maps() {
 
@@ -63,20 +64,13 @@ export default function Maps() {
                 }
             });
             map.addLayer({
-                'id': `${name}-pattern`,
-                'type': 'fill',
-                'source': `${name}`,
-                'paint': {
-                    'fill-pattern': getPatternRules(geojson)
-                }
-            })
-            map.addLayer({
                 'id': `${name}-border`,
                 'type': 'line',
                 'source': `${name}`,
                 'paint': {
-                    'line-color': '#050505',
-                    'line-width': 0.5
+                    'line-color': getLineRules(geojson),
+                    'line-width': getBorderLineRules(geojson),
+                    'line-offset': getOffsetLineRules(geojson)
                 }
             })
         });
@@ -115,7 +109,7 @@ export default function Maps() {
         }
     }
 
-    const getPatternRules = (geojson) => {
+    const getLineRules = (geojson) => {
         if (geojson) {
             let fields = Object.keys(geojson.features[0].properties).filter(k => k.split('_')[0] == 'f')
             fields.sort((a, b) => +a.split('_')[1] - +b.split('_')[1])
@@ -133,15 +127,81 @@ export default function Maps() {
                 ]
                 cases.length == 1 ? cases.unshift('any') : cases.unshift('all')
                 rules.push(cases)
-                rules.push((keys.lastIndexOf(field) + 1) % 2 != 0 ? 'pattern' : '')
+                rules.push((keys.lastIndexOf(field) + 1) % 2 != 0 ? '#FF0000' : '#050505')
             })
             rules.push([
                 'all',
                 ...[...new Set(fields)].map(field => getIsNotNullRule(`${field}_data_fim`)),
                 true
             ])
-            rules.push('')
-            rules.push('')
+            rules.push('#050505')
+            rules.push('#FF0000')
+            return rules
+        } else {
+            return ''
+        }
+    }
+
+    const getBorderLineRules = (geojson) => {
+        if (geojson) {
+            let fields = Object.keys(geojson.features[0].properties).filter(k => k.split('_')[0] == 'f')
+            fields.sort((a, b) => +a.split('_')[1] - +b.split('_')[1])
+            fields = fields.map(name => name.split('_').slice(0, -2).join('_'))
+            let rules = [
+                'case'
+            ]
+            fields.forEach((field, idx) => {
+                let keys = [...Array(idx).keys()].map(i => fields[i])
+                let cases = [
+                    ...[...new Set(keys)].map(f => (keys.lastIndexOf(f) + 1) > 1 && !(f == field) ? getIsNotNullRule(`${f}_data_fim`) : getIsNullRule(`${f}_data_fim`)),
+
+
+                    (keys.lastIndexOf(field) + 1) % 2 != 0 ? getIsNotNullRule(`${field}_data_inicio`) : getIsNullRule(`${field}_data_inicio`)
+                ]
+                cases.length == 1 ? cases.unshift('any') : cases.unshift('all')
+                rules.push(cases)
+                rules.push((keys.lastIndexOf(field) + 1) % 2 != 0 ? 5 : 0.5)
+            })
+            rules.push([
+                'all',
+                ...[...new Set(fields)].map(field => getIsNotNullRule(`${field}_data_fim`)),
+                true
+            ])
+            rules.push(0.5)
+            rules.push(0.5)
+            return rules
+        } else {
+            return ''
+        }
+    }
+
+    const getOffsetLineRules = (geojson) => {
+        if (geojson) {
+            let fields = Object.keys(geojson.features[0].properties).filter(k => k.split('_')[0] == 'f')
+            fields.sort((a, b) => +a.split('_')[1] - +b.split('_')[1])
+            fields = fields.map(name => name.split('_').slice(0, -2).join('_'))
+            let rules = [
+                'case'
+            ]
+            fields.forEach((field, idx) => {
+                let keys = [...Array(idx).keys()].map(i => fields[i])
+                let cases = [
+                    ...[...new Set(keys)].map(f => (keys.lastIndexOf(f) + 1) > 1 && !(f == field) ? getIsNotNullRule(`${f}_data_fim`) : getIsNullRule(`${f}_data_fim`)),
+
+
+                    (keys.lastIndexOf(field) + 1) % 2 != 0 ? getIsNotNullRule(`${field}_data_inicio`) : getIsNullRule(`${field}_data_inicio`)
+                ]
+                cases.length == 1 ? cases.unshift('any') : cases.unshift('all')
+                rules.push(cases)
+                rules.push((keys.lastIndexOf(field) + 1) % 2 != 0 ? 3.5 : 0.5)
+            })
+            rules.push([
+                'all',
+                ...[...new Set(fields)].map(field => getIsNotNullRule(`${field}_data_fim`)),
+                true
+            ])
+            rules.push(0.5)
+            rules.push(0.5)
             return rules
         } else {
             return ''
@@ -154,7 +214,7 @@ export default function Maps() {
             'extracao': 'rgb(252,141,89)',
             'validacao': 'rgb(255,255,191)',
             'disseminacao': 'rgb(145,207,96)',
-            'concluido': 'rgb(175,141,195)'
+            'concluido': 'rgb(26,152,80)'
         }[field]
     }
 
@@ -305,11 +365,99 @@ export default function Maps() {
                         }}
                     >
                         <div
-                            style={{ height: '80vh' }}
+                            style={{ height: '80vh', position: 'relative' }}
                             id="map">
+                            <Box
+                                sx={{
+                                    zIndex: 100000,
+                                    position: 'absolute',
+                                    height: '220px',
+                                    width: '250px',
+                                    background: 'rgba(255, 255, 255, 0.8)',
+                                    bottom: 0,
+                                    left: 0,
+                                    padding: '5px'
+                                }}
+                            >
+                                {
+                                    [
+                                        {
+                                            label: 'Preparo não iniciada',
+                                            border: false,
+                                            color: getRuleColorByField('preparo')
+                                        },
+                                        {
+                                            label: 'Preparo em execução',
+                                            border: true,
+                                            color: getRuleColorByField('preparo')
+                                        },
+                                        {
+                                            label: 'Extração não iniciada',
+                                            border: false,
+                                            color: getRuleColorByField('extracao')
+                                        },
+                                        {
+                                            label: 'Extração em execução',
+                                            border: true,
+                                            color: getRuleColorByField('extracao')
+                                        },
+                                        {
+                                            label: 'Validação não iniciada',
+                                            border: false,
+                                            color: getRuleColorByField('validacao')
+                                        },
+                                        {
+                                            label: 'Validação em execução',
+                                            border: true,
+                                            color: getRuleColorByField('validacao')
+                                        },
+                                        {
+                                            label: 'Disseminação não iniciada',
+                                            border: false,
+                                            color: getRuleColorByField('disseminacao')
+                                        },
+                                        {
+                                            label: 'Disseminação em execução',
+                                            border: true,
+                                            color: getRuleColorByField('disseminacao')
+                                        },
+                                        {
+                                            label: 'Concluído',
+                                            border: false,
+                                            color: getRuleColorByField('concluido')
+                                        }
+                                    ].map((item, idx) => {
+                                        return (
+                                            <Box
+                                                key={idx}
+                                                sx={{
+                                                    display: 'flex',
+                                                    width: '100%',
+                                                    gap: 1
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        height: '20px',
+                                                        width: '20px',
+                                                        background: item.color,
+                                                        border: `${item.border ? '3px' : '1px'} solid ${item.border? '#FF0000': '#050505'}`
+                                                    }}
+                                                />
+                                                <Typography>
+                                                    {item.label}
+                                                </Typography>
 
+                                            </Box>
+                                        )
+                                    })
+                                }
+
+                            </Box>
                         </div>
+
                     </Box>
+
                     <Box
                         sx={{
                             display: 'flex',
