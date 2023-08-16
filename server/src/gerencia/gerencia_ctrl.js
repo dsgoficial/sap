@@ -1226,5 +1226,239 @@ controller.atualizaPluginPath = async (
   )
 }
 
+controller.getPit = async () => {
+  return db.sapConn.any(
+    `SELECT p.id, p.lote_id, p.meta, p.ano,
+    l.nome AS lote
+    FROM macrocontrole.pit AS p
+    INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id`
+  )
+}
+
+controller.criaPit = async pit => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet(['lote_id', 'meta', 'ano'])
+
+    const query = db.pgp.helpers.insert(pit, cs, {
+      table: 'pit',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPit = async pit => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet(['id', 'lote_id', 'meta', 'ano'])
+
+    const query =
+      db.pgp.helpers.update(
+        pit,
+        cs,
+        { table: 'pit', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.deletePit = async pitIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.pit
+      WHERE id in ($<pitIds:csv>)`,
+      { pitIds }
+    )
+
+    if (exists && exists.length < pitIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um PIT id',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.pit
+      WHERE id in ($<pitIds:csv>)`,
+      { pitIds }
+    )
+  })
+}
+
+controller.getAlteracaoFluxo = async () => {
+  return db.sapConn.any(
+    `SELECT af.id, af.atividade_id, af.descricao, af.data, af.resolvido, ST_ASEWKT(af.geom) AS geom,
+    tpg.nome_abrev || ' ' || u.nome_guerra AS usuario
+    FROM macrocontrole.alteracao_fluxo AS af
+    INNER JOIN dgeo.usuario AS u ON u.id = af.usuario_id
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    `
+  )
+}
+
+controller.atualizaAlteracaoFluxo = async alteracaoFluxo => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', 'atividade_id', 'descricao', 'data', 'resolvido', 'geom'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        alteracaoFluxo,
+        cs,
+        { table: 'alteracao_fluxo', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.getFilaPrioritaria = async () => {
+  return db.sapConn.any(
+    `SELECT fp.id, fp.atividade_id, fp.usuario_id, fp.prioridade,
+    tpg.nome_abrev || ' ' || u.nome_guerra AS usuario
+    FROM macrocontrole.fila_prioritaria AS fp
+    INNER JOIN dgeo.usuario AS u ON u.id = fp.usuario_id
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    `
+  )
+}
+
+controller.criaFilaPrioritaria = async filaPrioritaria => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'atividade_id', 'usuario_id', 'prioridade'
+    ])
+
+    const query = db.pgp.helpers.insert(filaPrioritaria, cs, {
+      table: 'fila_prioritaria',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaFilaPrioritaria = async filaPrioritaria => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', 'atividade_id', 'usuario_id', 'prioridade'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        filaPrioritaria,
+        cs,
+        { table: 'fila_prioritaria', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.deleteFilaPrioritaria = async filaPrioritariaIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.fila_prioritaria
+      WHERE id in ($<filaPrioritariaIds:csv>)`,
+      { filaPrioritariaIds }
+    )
+
+    if (exists && exists.length < filaPrioritariaIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a uma entrada da fila prioritária',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.fila_prioritaria
+      WHERE id in ($<filaPrioritariaIds:csv>)`,
+      { filaPrioritariaIds }
+    )
+  })
+}
+
+controller.getFilaPrioritariaGrupo = async () => {
+  return db.sapConn.any(
+    `SELECT fpg.id, fpg.perfil_producao_id, fpg.prioridade,
+    pp.nome AS perfil_producao
+    FROM macrocontrole.fila_prioritaria_grupo AS fpg
+    INNER JOIN macrocontrole.perfil_producao AS pp ON pp.id = fpg.perfil_producao_id
+    `
+  )
+}
+
+controller.criaFilaPrioritariaGrupo = async filaPrioritariaGrupo => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'atividade_id', 'perfil_producao_id', 'prioridade'
+    ])
+
+    const query = db.pgp.helpers.insert(filaPrioritariaGrupo, cs, {
+      table: 'fila_prioritaria_grupo',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaFilaPrioritariaGrupo = async filaPrioritariaGrupo => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', 'atividade_id', 'perfil_producao_id', 'prioridade'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        filaPrioritariaGrupo,
+        cs,
+        { table: 'fila_prioritaria_grupo', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.deleteFilaPrioritariaGrupo = async filaPrioritariaGrupoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.fila_prioritaria_grupo
+      WHERE id in ($<filaPrioritariaGrupoIds:csv>)`,
+      { filaPrioritariaGrupoIds }
+    )
+
+    if (exists && exists.length < filaPrioritariaGrupoIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a uma entrada da fila prioritária de grupo',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.fila_prioritaria_grupo
+      WHERE id in ($<filaPrioritariaGrupoIds:csv>)`,
+      { filaPrioritariaGrupoIds }
+    )
+  })
+}
 
 module.exports = controller

@@ -393,4 +393,127 @@ models.propriedadesAtualizacao = Joi.object().keys({
     .min(1)
 })
 
+models.pit = Joi.object().keys({
+  pit: Joi.array()
+    .items(
+      Joi.object().keys({
+        lote_id: Joi.number().integer().strict().required(),
+        meta: Joi.number().integer().strict().required(),
+        ano: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.pitAtualizacao = Joi.object().keys({
+  pit: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+        meta: Joi.number().integer().strict().required(),
+        ano: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.pitIds = Joi.object().keys({
+  pit_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.alteracaoFluxoAtualizacao = Joi.object().keys({
+  alteracao_fluxo: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        atividade_id: Joi.number().integer().strict().required(),
+        descricao: Joi.string().required(),
+        data: Joi.date().required(),
+        resolvido: Joi.boolean().required(),
+        geom: Joi.string().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.filaPrioritaria = Joi.object().keys({
+  fila_prioritaria: Joi.array()
+    .items(
+      Joi.object().keys({
+        atividade_id: Joi.number().integer().strict().required(),
+        usuario_id: Joi.number().integer().strict().required(),
+        prioridade: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.filaPrioritariaAtualizacao = Joi.object().keys({
+  fila_prioritaria: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        atividade_id: Joi.number().integer().strict().required(),
+        usuario_id: Joi.number().integer().strict().required(),
+        prioridade: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.filaPrioritariaIds = Joi.object().keys({
+  fila_prioritaria_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.filaPrioritariaGrupo = Joi.object().keys({
+  fila_prioritaria_grupo: Joi.array()
+    .items(
+      Joi.object().keys({
+        atividade_id: Joi.number().integer().strict().required(),
+        perfil_producao_id: Joi.number().integer().strict().required(),
+        prioridade: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.filaPrioritariaGrupoAtualizacao = Joi.object().keys({
+  fila_prioritaria_grupo: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        atividade_id: Joi.number().integer().strict().required(),
+        perfil_producao_id: Joi.number().integer().strict().required(),
+        prioridade: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.filaPrioritariaGrupoIds = Joi.object().keys({
+  fila_prioritaria_grupo_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+
+
 module.exports = models

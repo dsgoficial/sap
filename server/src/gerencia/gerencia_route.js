@@ -759,4 +759,202 @@ router.put(
   })
 )
 
+router.get(
+  '/pit',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getPit()
+
+    const msg = 'PITs retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/pit',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.pitIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deletePit(req.body.pit_ids)
+
+    const msg = 'PITs deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/pit',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.pit
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.criaPit(req.body.pit)
+
+    const msg = 'PITs criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/pit',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.pitAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaPit(req.body.pit)
+
+    const msg = 'PITs atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/alteracao_fluxo',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getAlteracaoFluxo()
+
+    const msg = 'Alterações de fluxo retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/alteracao_fluxo',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.alteracaoFluxoAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaAlteracaoFluxo(req.body.alteracao_fluxo)
+
+    const msg = 'Alterações de fluxo atualizadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/fila_prioritaria',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getFilaPrioritaria()
+
+    const msg = 'Fila prioritária retornada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/fila_prioritaria',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deleteFilaPrioritaria(req.body.fila_prioritaria_ids)
+
+    const msg = 'Entradas da fila prioritária deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/fila_prioritaria',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritaria
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.criaFilaPrioritaria(req.body.fila_prioritaria)
+
+    const msg = 'Entradas da fila prioritária criadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/fila_prioritaria',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaFilaPrioritaria(req.body.fila_prioritaria)
+
+    const msg = 'Entradas da fila prioritária atualizadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/fila_prioritaria_grupo',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getFilaPrioritariaGrupo()
+
+    const msg = 'Fila prioritária de grupo retornada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/fila_prioritaria_grupo',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaGrupoIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deleteFilaPrioritariaGrupo(req.body.fila_prioritaria_grupo_ids)
+
+    const msg = 'Entradas da fila prioritária de grupo deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/fila_prioritaria_grupo',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaGrupo
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.criaFilaPrioritariaGrupo(req.body.fila_prioritaria_grupo)
+
+    const msg = 'Entradas da fila prioritária de grupo criadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/fila_prioritaria_grupo',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaGrupoAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaFilaPrioritariaGrupo(req.body.fila_prioritaria_grupo)
+
+    const msg = 'Entradas da fila prioritária de grupo atualizadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 module.exports = router

@@ -938,6 +938,11 @@ ADD COLUMN ordem INTEGER NOT NULL DEFAULT 1;
 
 ALTER TABLE macrocontrole.subfase ALTER COLUMN ordem DROP DEFAULT;
 
+ALTER TABLE macrocontrole.alteracao_fluxo 
+ADD COLUMN usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id) DEFAULT 1;
+ALTER TABLE macrocontrole.alteracao_fluxo  ALTER COLUMN usuario_id DROP DEFAULT;
+
+
 UPDATE dominio.tipo_configuracao
 SET nome = 'DSGTools - Centroide'
 where code = 1

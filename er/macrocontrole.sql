@@ -469,6 +469,7 @@ CREATE INDEX problema_atividade_geom
 CREATE TABLE macrocontrole.alteracao_fluxo(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
+ 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	descricao TEXT NOT NULL,
 	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE,
