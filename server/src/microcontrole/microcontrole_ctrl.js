@@ -103,7 +103,7 @@ controller.deletePerfilMonitoramento = async perfisMonitoramentoId => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
       `SELECT id FROM microcontrole.perfil_monitoramento
-      WHERE id in ($<perfisConfiguracaoQgisId:csv>)`,
+      WHERE id in ($<perfisMonitoramentoId:csv>)`,
       { perfisMonitoramentoId }
     )
     if (exists && exists.length < perfisMonitoramentoId.length) {
