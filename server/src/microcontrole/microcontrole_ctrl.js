@@ -18,7 +18,7 @@ controller.armazenaFeicao = async (atividadeId, usuarioId, dados) => {
   const cs = new db.pgp.helpers.ColumnSet(
     [
       'tipo_operacao_id',
-      'camada_id',
+      'camada',
       'quantidade',
       'comprimento',
       'vertices',

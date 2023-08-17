@@ -27,10 +27,7 @@ models.feicao = Joi.object().keys({
           .integer()
           .strict()
           .when('operacao', { is: 1, then: Joi.required() }),
-        camada_id: Joi.number()
-          .integer()
-          .strict()
-          .required()
+        camada: Joi.string().required()
       })
     )
     .required()
