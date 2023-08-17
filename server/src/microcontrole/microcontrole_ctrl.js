@@ -20,8 +20,14 @@ controller.armazenaFeicao = async (atividadeId, usuarioId, dados) => {
       'tipo_operacao_id',
       'camada',
       'quantidade',
-      'comprimento',
-      'vertices',
+      {
+        name: 'comprimento',
+        def: 0
+      },
+      {
+        name: 'vertices',
+        def: 0
+      },
       { name: 'data', mod: ':raw', init: () => 'NOW()' },
       { name: 'atividade_id', init: () => atividadeId },
       { name: 'usuario_id', init: () => usuarioId }
@@ -30,7 +36,7 @@ controller.armazenaFeicao = async (atividadeId, usuarioId, dados) => {
 
   const query = db.pgp.helpers.insert(dados, cs, { table: 'monitoramento_feicao', schema: 'microcontrole' })
 
-  db.microConn.none(query)
+  return db.microConn.none(query)
 }
 
 controller.armazenaTela = async (atividadeId, usuarioId, dados) => {

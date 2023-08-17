@@ -640,7 +640,7 @@ router.put(
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.iniciaAtividadeModoLocal(
       req.body.atividade_id,
-      req.body.usuario_id
+      req.usuario_id
     )
 
     const msg = 'Atividade do modo local atualizadas'
