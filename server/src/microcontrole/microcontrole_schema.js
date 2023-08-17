@@ -9,7 +9,6 @@ models.feicao = Joi.object().keys({
     .integer()
     .strict()
     .required(),
-  data: Joi.date().required(),
   dados: Joi.array()
     .items(
       Joi.object().keys({

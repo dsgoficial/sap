@@ -14,7 +14,7 @@ controller.getTipoOperacao = async () => {
     .any('SELECT code, nome FROM microcontrole.tipo_operacao')
 }
 
-controller.armazenaFeicao = async (atividadeId, usuarioId, data, dados) => {
+controller.armazenaFeicao = async (atividadeId, usuarioId, dados) => {
   const cs = new db.pgp.helpers.ColumnSet(
     [
       'tipo_operacao_id',
@@ -22,7 +22,7 @@ controller.armazenaFeicao = async (atividadeId, usuarioId, data, dados) => {
       'quantidade',
       'comprimento',
       'vertices',
-      { name: 'data', init: () => data },
+      { name: 'data', mod: ':raw', init: () => 'NOW()' },
       { name: 'atividade_id', init: () => atividadeId },
       { name: 'usuario_id', init: () => usuarioId }
     ]

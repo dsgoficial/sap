@@ -43,7 +43,6 @@ router.post(
     await microcontroleCtrl.armazenaFeicao(
       req.body.atividade_id,
       req.body.usuario_id,
-      req.body.data,
       req.body.dados
     )
 
