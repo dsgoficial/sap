@@ -49,7 +49,7 @@ controller.armazenaTela = async (atividadeId, usuarioId, dados) => {
 
 controller.getPerfilMonitoramento = async () => {
   return db.sapConn.any(
-    `SELECT pm.tipo_monitoramento_id, pm.subfase_id, pm.lote_id,
+    `SELECT pm.id, pm.tipo_monitoramento_id, pm.subfase_id, pm.lote_id,
     tm.nome AS tipo_monitoramento
     FROM microcontrole.perfil_monitoramento AS pm
     INNER JOIN microcontrole.tipo_monitoramento AS tm
