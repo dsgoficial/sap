@@ -42,7 +42,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await microcontroleCtrl.armazenaFeicao(
       req.body.atividade_id,
-      req.usuario_id,
+      req.usuarioId,
       req.body.dados
     )
 
@@ -59,7 +59,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await microcontroleCtrl.armazenaTela(
       req.body.atividade_id,
-      req.usuario_id,
+      req.usuarioId,
       req.body.dados
     )
 
