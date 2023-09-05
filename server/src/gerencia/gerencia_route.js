@@ -332,40 +332,6 @@ router.post(
   })
 )
 
-router.post(
-  '/fila_prioritaria',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.filaPrioritaria }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaFilaPrioritaria(
-      req.body.atividade_ids,
-      req.body.usuario_prioridade_id,
-      req.body.prioridade
-    )
-
-    const msg = 'Fila prioritaria criada com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.post(
-  '/fila_prioritaria_grupo',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.filaPrioritariaGrupo }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaFilaPrioritariaGrupo(
-      req.body.atividade_ids,
-      req.body.perfil_producao_id,
-      req.body.prioridade
-    )
-
-    const msg = 'Fila prioritaria grupo criada com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
 router.put(
   '/observacao',
   verifyAdmin,
