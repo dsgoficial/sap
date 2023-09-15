@@ -244,7 +244,7 @@ const getInfoLinhagem = async (
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
         WHERE a.id = $1
       ) AS ut_ref ON ut_ref.lote_id = ut.lote_id AND ut.geom && ut_ref.geom AND st_relate(ut.geom, ut_ref.geom, '2********')
-      WHERE ts.code != 5 AND ts.code != 1 AND ts.code != 3
+      WHERE ts.code != 5 AND ts.code != 1
       ORDER BY f.ordem, sf.ordem, a.data_fim
         `,
       [atividadeId]
@@ -268,7 +268,7 @@ const getInfoLinhagem = async (
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
         WHERE a.id = $1
       ) AS ut_ref ON ut_ref.lote_id = ut.lote_id AND ut.geom && ut_ref.geom AND st_relate(ut.geom, ut_ref.geom, '2********')
-      WHERE ts.code != 5 AND ts.code != 1 AND ts.code != 3
+      WHERE ts.code != 5 AND ts.code != 1
       ORDER BY f.ordem, sf.ordem, a.data_fim
         `,
       [atividadeId]
