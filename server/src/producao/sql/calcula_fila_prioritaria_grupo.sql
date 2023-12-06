@@ -19,14 +19,12 @@ FROM (
   AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id AND a_ant.subfase_id = e.subfase_id
   AND e.ordem > a_ant.ordem
   WHERE ut.disponivel IS TRUE AND ppo.usuario_id = $1 AND a.tipo_situacao_id = 1 AND fpg.perfil_producao_id = ppo.perfil_producao_id
-  AND a.id NOT IN
+    AND a.id NOT IN
   (
     SELECT a.id FROM macrocontrole.atividade AS a
-    INNER JOIN macrocontrole.fila_prioritaria_grupo AS fpg ON fpg.atividade_id = a.id
-    INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = fpg.perfil_producao_id
     INNER JOIN macrocontrole.relacionamento_ut AS ut_sr ON ut_sr.ut_id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_sr.ut_re_id
-    WHERE ppo.usuario_id = $1 AND 
+    WHERE 
     ((a_re.tipo_situacao_id IN (1, 2, 3) AND ut_sr.tipo_pre_requisito_id = 1) OR (a_re.tipo_situacao_id IN (2) AND ut_sr.tipo_pre_requisito_id = 2))	
   )
 ) AS sit

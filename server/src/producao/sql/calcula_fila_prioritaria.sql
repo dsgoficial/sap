@@ -21,10 +21,9 @@ FROM (
   AND a.id NOT IN
   (
     SELECT a.id FROM macrocontrole.atividade AS a
-    INNER JOIN macrocontrole.fila_prioritaria AS fp ON fp.atividade_id = a.id
     INNER JOIN macrocontrole.relacionamento_ut AS ut_sr ON ut_sr.ut_id = a.unidade_trabalho_id
     INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_sr.ut_re_id
-    WHERE fp.usuario_id = $1 AND
+    WHERE 
     ((a_re.tipo_situacao_id IN (1, 2, 3) AND ut_sr.tipo_pre_requisito_id = 1) OR (a_re.tipo_situacao_id IN (2) AND ut_sr.tipo_pre_requisito_id = 2))	
   )
 ) AS sit
