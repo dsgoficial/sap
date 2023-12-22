@@ -341,7 +341,7 @@ const getConfigFromUser = options => {
       default: 'microcontrole'
     })
   }
-  if (options.dbCreate) {
+  if (!options.dbCreate) {
     questions.push({
       type: 'confirm',
       name: 'dbCreate',
@@ -349,7 +349,7 @@ const getConfigFromUser = options => {
       default: true
     })
   }
-  if (options.dbCreateMicrocontrole) {
+  if (!options.dbCreateMicrocontrole) {
     questions.push({
       type: 'confirm',
       name: 'dbCreateMicrocontrole',
