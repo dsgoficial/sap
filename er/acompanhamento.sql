@@ -353,7 +353,7 @@ $$
   DECLARE r record;
   BEGIN
       view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.bloco AS 
-      SELECT b.id, b.nome, b.prioridade, l.nome AS lote, b.geom';
+      SELECT b.id, b.nome, b.prioridade, l.nome AS lote, proj.finalizado, b.geom';
 
       FOR r in SELECT pf.id, pf.nome FROM macrocontrole.perfil_producao AS pf
       LOOP
@@ -394,7 +394,8 @@ $$
                                 FROM macrocontrole.bloco AS b
                                 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.bloco_id = b.id 
                                 GROUP BY b.id) AS b
-                                INNER JOIN macrocontrole.lote AS l ON l.id = b.lote_id';
+                                INNER JOIN macrocontrole.lote AS l ON l.id = b.lote_id
+                                INNER JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id';
       view_txt := view_txt || jointxt;
 
       EXECUTE view_txt;
