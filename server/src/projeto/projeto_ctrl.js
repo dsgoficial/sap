@@ -746,7 +746,9 @@ controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRev
     SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
     FROM macrocontrole.unidade_trabalho AS ut
     INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
-    LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
+    LEFT JOIN (
+      SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+      ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
     WHERE e.tipo_etapa_id in (1) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
     `,
       { lote_id }
@@ -759,7 +761,9 @@ controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRev
       SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
       FROM macrocontrole.unidade_trabalho AS ut
       INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
-      LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
+      LEFT JOIN (
+        SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+        ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
       WHERE e.tipo_etapa_id in (2,3) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
       `,
         { lote_id }
@@ -773,7 +777,9 @@ controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRev
       SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
       FROM macrocontrole.unidade_trabalho AS ut
       INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
-      LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
+      LEFT JOIN (
+        SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+        ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
       WHERE e.tipo_etapa_id in (4) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
       `,
         { lote_id }
@@ -787,7 +793,9 @@ controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRev
       SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
       FROM macrocontrole.unidade_trabalho AS ut
       INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
-      LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
+      LEFT JOIN (
+        SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+        ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
       WHERE e.tipo_etapa_id in (5) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
       `,
         { lote_id }
@@ -800,6 +808,25 @@ controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRev
 
 controller.criaAtividades = async (unidadeTrabalhoIds, etapaIds) => {
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+
+    const etapasCorrecao  = await t.any(
+      `
+      WITH prox AS (SELECT e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
+      FROM macrocontrole.etapa AS e)
+      SELECT p.prox_id
+      FROM macrocontrole.etapa AS e
+      INNER JOIN prox AS p ON e.id = p.id
+      INNER JOIN macrocontrole.etapa AS prox_e ON prox_e.id = p.prox_id
+      WHERE e.tipo_etapa_id in (2,5) AND e.id IN ($<etapaIds:csv>) AND prox_e.tipo_etapa_id = 3
+      `,
+      { etapaIds }
+    );
+
+    const uniqueProxIds = [...new Set(etapasCorrecao.map(etapa => etapa.prox_id).filter(id => id !== null))];
+
+    // Combine and deduplicate etapaIds and uniqueProxIds
+    etapaIds = [...new Set([...etapaIds, ...uniqueProxIds])];
+
     const result = await t.result(
       `
     INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)

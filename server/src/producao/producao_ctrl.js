@@ -536,16 +536,18 @@ controller.finaliza = async (
       const result = await t.result(
         `DELETE FROM macrocontrole.atividade 
           WHERE id in (
-            with prox as (select e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
-            from macrocontrole.atividade as a
-            inner join macrocontrole.etapa as erev on erev.id = a.etapa_id
-            inner join macrocontrole.etapa as e on e.subfase_id = erev.subfase_id AND e.lote_id = erev.lote_id
-            where erev.tipo_etapa_id in (2,5) and a.id = $<atividadeId>)
-            select a.id
-            from macrocontrole.atividade as a
-            inner join macrocontrole.atividade as arev on arev.unidade_trabalho_id = a.unidade_trabalho_id
-            inner join prox as p on p.prox_id = a.etapa_id and p.id = arev.etapa_id
-            where arev.id=$<atividadeId>
+            WITH prox AS (
+              SELECT e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
+              FROM macrocontrole.etapa AS e
+              INNER JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id
+              WHERE a.id = $<atividadeId>
+            )
+            SELECT a.id
+            FROM macrocontrole.atividade AS a
+            INNER JOIN macrocontrole.atividade AS arev ON arev.unidade_trabalho_id = a.unidade_trabalho_id
+            INNER JOIN prox AS p ON p.prox_id = a.etapa_id AND p.id = arev.etapa_id
+            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            WHERE arev.id=$<atividadeId> AND e.tipo_etapa_id = 3
           )`,
         { atividadeId }
       )
