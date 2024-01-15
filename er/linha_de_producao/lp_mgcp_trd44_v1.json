@@ -1,7 +1,7 @@
 {
-    "nome": "Conjunto de dados geoespaciais vetoriais para MGCP - TRD 4.4",
+    "nome": "Conjunto de dados geoespaciais vetoriais para MGCP - TRD 4.6",
     "descricao": "Linha de produção padrão para vetores do MGCP",
-    "nome_abrev": "cdgv_mgcp_trd44",
+    "nome_abrev": "cdgv_mgcp_trd46",
     "tipo_produto_id": 8,
     "fases": [
         {
