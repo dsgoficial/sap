@@ -1,39 +1,39 @@
 BEGIN;
 
-INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao, nome_abrev) VALUES
-(1,22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0', 'Linha de produção padrão para vetores de carta ortoimagem', 'cdgv_edgv_3_orto'), --id 1
-(2,3, 'Carta ortoimagem', 'Linha de produção padrão para carta ortoimagem', 'carta_orto'); --id 2
+INSERT INTO macrocontrole.linha_producao (tipo_produto_id,nome,descricao, nome_abrev) VALUES
+(22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0', 'Linha de produção padrão para vetores de carta ortoimagem', 'cdgv_edgv_3_orto'), --id 1
+(3, 'Carta Ortoimagem', 'Linha de produção padrão para carta ortoimagem', 'carta_orto'); --id 2
 
-INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
+INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
 -- Linha de produção 1
-(1,16,1,1),--1 Preparo
-(2,1,1,2), --2 Extração
-(3,3,1,3), --3 Validação
-(4,5,1,4), --4 Disseminação
+(16,1,1),--1 Preparo
+(1,1,2), --2 Extração
+(3,1,3), --3 Validação
+(5,1,4), --4 Disseminação
 -- Linha de produção 2
-(5,16,2,1),--5 Preparo
-(6,4,2,2), --6 Edição
-(7,5,2,3); --7 Disseminação
+(16,2,1),--5 Preparo
+(4,2,2), --6 Edição
+(5,2,3); --7 Disseminação
 
-INSERT INTO macrocontrole.subfase (id,nome,fase_id,ordem) VALUES
+INSERT INTO macrocontrole.subfase (nome,fase_id,ordem) VALUES
 -- Linha de produção 1
-(1,'Preparo imagens', 1, 1), --1
-(2,'Preparo altimetria', 1, 2), --2
-(3,'Coleta de insumos externos', 1, 3), --3
-(4,'Extração da Hidrografia e Altimetria', 2, 1), --4
-(5,'Extração de Ferrovias', 2, 2), --5
-(6,'Extração de Vias de Deslocamento', 2, 3), --6
-(7,'Extração de Topônimos', 2, 4), --7
-(8,'Extração de Limites', 2, 5), --8
-(9,'Extração de Planimetria', 2, 6), --9
-(10,'Verificação final', 2, 7), --10
-(11,'Validação nível produto', 3, 1), --11
-(12,'Validação da ligação', 3, 2), --12
-(13,'Disseminação', 4, 1), --13
+('Preparo Imagens', 1, 1), --1
+('Preparo Altimetria', 1, 2), --2
+('Coleta de Insumos Externos', 1, 3), --3
+('Extração da Hidrografia e Altimetria', 2, 1), --4
+('Extração de Ferrovias', 2, 2), --5
+('Extração de Vias de Deslocamento', 2, 3), --6
+('Extração de Topônimos', 2, 4), --7
+('Extração de Limites', 2, 5), --8
+('Extração de Planimetria', 2, 6), --9
+('Verificação Final', 2, 7), --10
+('Validação Nível Produto', 3, 1), --11
+('Validação da Ligação', 3, 2), --12
+('Disseminação', 4, 1), --13
 -- Linha de produção 2
-(14,'Preparo para edição', 5, 1), --14
-(15,'Edição', 6, 1), --15
-(16,'Disseminação', 7, 1); --16
+('Preparo para Edição', 5, 1), --14
+('Edição', 6, 1), --15
+('Disseminação', 7, 1); --16
 
 INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
 -- Linha de produção 1
@@ -70,41 +70,41 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao, nome_abrev) VALUES
-(3,7, 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação', 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação', 'cdgv_edgv_3'), --id 3
-(4,12, 'Carta topográfica ET-RDG', 'Linha de produção padrão para cartas topográficas no padrão ET-RDG', 'carta_topo'); --id 4
+INSERT INTO macrocontrole.linha_producao (tipo_produto_id,nome,descricao, nome_abrev) VALUES
+(7, 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação', 'Conjunto de dados vetoriais EDGV 3.0 sem reambulação', 'cdgv_edgv_3'), --id 3
+(12, 'Carta Topográfica ET-RDG', 'Linha de produção padrão para cartas topográficas no padrão ET-RDG', 'carta_topo'); --id 4
 
-INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
+INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
 -- Linha de produção 3
-(8,16,3,1),--8 Preparo
-(9,1,3,2), --9 Extração
-(10,3,3,3), --10 Validação
-(11,5,3,4), --11 Disseminação - Conjunto de dados vetoriais
+(16,3,1),--8 Preparo
+(1,3,2), --9 Extração
+(3,3,3), --10 Validação
+(5,3,4), --11 Disseminação - Conjunto de dados vetoriais
 -- Linha de produção 4
-(12,16,4,1),--12 Preparo para edição
-(13,4,4,2), --13 Edição - Carta topográfica ET-RDG
-(14,5,4,3); --14 Disseminação - Carta topográfica ET-RDG
+(16,4,1),--12 Preparo para edição
+(4,4,2), --13 Edição - Carta topográfica ET-RDG
+(5,4,3); --14 Disseminação - Carta topográfica ET-RDG
 
-INSERT INTO macrocontrole.subfase (id,nome,fase_id,ordem) VALUES
-(17,'Preparo imagens', 8, 1), --17
-(18,'Preparo altimetria', 8, 2), --18
-(19,'Coleta de insumos externos', 8, 3), --19
-(20,'Extração da Hidrografia e Altimetria', 9, 1), --20
-(21,'Extração de Ferrovias', 9, 2), --21
-(22,'Extração de Vias de Deslocamento', 9, 3), --22
-(23,'Extração de Topônimos', 9, 4), --23
-(24,'Extração de Limites', 9, 5), --24
-(25,'Extração de interseção de hidrografia e transportes', 9, 6), --25
-(26,'Extração de Área Edificada', 9, 7), --26
-(27,'Extração de Vegetação', 9, 8), --27
-(28,'Extração de Planimetria',9, 9), --28
-(29,'Verificação final', 9, 10), --29
-(30,'Validação nível produto', 10, 1), --30
-(31,'Validação da ligação', 10, 2), --31
-(32,'Disseminação', 11, 1), --32
-(33,'Preparo para edição', 12, 1), --33
-(34,'Edição', 13, 1), --34
-(35,'Disseminação', 14, 1); --35
+INSERT INTO macrocontrole.subfase (nome,fase_id,ordem) VALUES
+('Preparo Imagens', 8, 1), --17
+('Preparo Altimetria', 8, 2), --18
+('Coleta de Insumos Externos', 8, 3), --19
+('Extração da Hidrografia e Altimetria', 9, 1), --20
+('Extração de Ferrovias', 9, 2), --21
+('Extração de Vias de Deslocamento', 9, 3), --22
+('Extração de Topônimos', 9, 4), --23
+('Extração de Limites', 9, 5), --24
+('Extração de Interseção de Hidrografia e Transportes', 9, 6), --25
+('Extração de Área Edificada', 9, 7), --26
+('Extração de Vegetação', 9, 8), --27
+('Extração de Planimetria',9, 9), --28
+('Verificação Final', 9, 10), --29
+('Validação Nível Produto', 10, 1), --30
+('Validação da Ligação', 10, 2), --31
+('Disseminação', 11, 1), --32
+('Preparo para Edição', 12, 1), --33
+('Edição', 13, 1), --34
+('Disseminação', 14, 1); --35
 
 INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
 -- Linha de produção 3
@@ -152,36 +152,36 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (1, 33, 34),
 (1, 34, 35);
 
-INSERT INTO macrocontrole.linha_producao (id,tipo_produto_id,nome,descricao, nome_abrev) VALUES
-(5,1, 'CDGV EDGV 2.1.3 sem reambulação e Carta Topográfica T34-700', 'CDGV EDGV 2.1.3 sem reambulação com validação no Gothic e edição de Carta Topográfica T34-700', 'cdgv_edgv_213'); --id 5
+INSERT INTO macrocontrole.linha_producao (tipo_produto_id,nome,descricao, nome_abrev) VALUES
+(1, 'CDGV EDGV 2.1.3 sem reambulação e Carta Topográfica T34-700', 'CDGV EDGV 2.1.3 sem reambulação com validação no Gothic e edição de Carta Topográfica T34-700', 'cdgv_edgv_213'); --id 5
 
-INSERT INTO macrocontrole.fase (id,tipo_fase_id,linha_producao_id,ordem) VALUES
+INSERT INTO macrocontrole.fase (tipo_fase_id,linha_producao_id,ordem) VALUES
 -- Linha de produção 5
-(15,16,5,1),--15 Preparo
-(16,1,5,2), --16 Extração
-(17,3,5,3), --17 Validação
-(18,4,5,4), --18 Edição - Carta topográfica T34-700
-(19,3,5,5), --19 Validação Área Contínua
-(20,5,5,6); --20 Disseminação - Conjunto de dados vetoriais 2.1.3 / Carta topográfica T34-700 
+(16,5,1),--15 Preparo
+(1,5,2), --16 Extração
+(3,5,3), --17 Validação
+(4,5,4), --18 Edição - Carta topográfica T34-700
+(3,5,5), --19 Validação Área Contínua
+(5,5,6); --20 Disseminação - Conjunto de dados vetoriais 2.1.3 / Carta topográfica T34-700 
 
-INSERT INTO macrocontrole.subfase (id,nome,fase_id,ordem) VALUES
-(36,'Preparo imagens', 15, 1), 
-(37,'Preparo altimetria', 15, 2), 
-(38,'Coleta de insumos externos', 15, 3), 
-(39,'Extração da Hidrografia e Altimetria', 16, 1), 
-(40,'Extração de Ferrovias', 16, 2), 
-(41,'Extração de Vias de Deslocamento', 16, 3), 
-(42,'Extração de Topônimos', 16, 4), 
-(43,'Extração de Limites', 16, 5), 
-(44,'Extração de interseção de hidrografia e transportes', 16, 6), 
-(45,'Extração de Área Edificada', 16, 7), 
-(46,'Extração de Vegetação', 16, 8), 
-(47,'Extração de Planimetria',16, 9), 
-(48,'Verificação final', 16, 10), 
-(49,'Validação Gothic', 17, 1), 
-(50,'Edição', 18, 1), 
-(51,'Validação Área Contínua Gothic', 19, 1), 
-(52,'Disseminação', 20, 1); 
+INSERT INTO macrocontrole.subfase (nome,fase_id,ordem) VALUES
+('Preparo Imagens', 15, 1), 
+('Preparo Altimetria', 15, 2), 
+('Coleta de Insumos externos', 15, 3), 
+('Extração da Hidrografia e Altimetria', 16, 1), 
+('Extração de Ferrovias', 16, 2), 
+('Extração de Vias de Deslocamento', 16, 3), 
+('Extração de Topônimos', 16, 4), 
+('Extração de Limites', 16, 5), 
+('Extração de Interseção de Hidrografia e Transportes', 16, 6), 
+('Extração de Área Edificada', 16, 7), 
+('Extração de Vegetação', 16, 8), 
+('Extração de Planimetria',16, 9), 
+('Verificação Final', 16, 10), 
+('Validação Gothic', 17, 1), 
+('Edição', 18, 1), 
+('Validação Área Contínua Gothic', 19, 1), 
+('Disseminação', 20, 1); 
 
 
 INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_anterior_id,subfase_posterior_id) VALUES
@@ -223,119 +223,119 @@ INSERT INTO macrocontrole.pre_requisito_subfase (tipo_pre_requisito_id,subfase_a
 (2, 48, 48);
 
 ------------------------------------------------------------------------------------------------------------------------------------
-INSERT INTO macrocontrole.camada (id, schema, nome) VALUES
-(1,'edgv', 'centroide_elemento_hidrografico_p'), -- 1
-(2,'edgv', 'centroide_ilha_p'), -- 2
-(3,'edgv', 'centroide_massa_dagua_p'), -- 3
-(4,'edgv', 'delimitador_elemento_hidrografico_l'), -- 4
-(5,'edgv', 'delimitador_massa_dagua_l'), -- 5
-(6,'edgv', 'edicao_area_sem_dados_a'), -- 6
-(7,'edgv', 'aux_revisao_a'), -- 7
-(8,'edgv', 'aux_revisao_l'), -- 8
-(9,'edgv', 'aux_revisao_p'), -- 9
-(10,'edgv', 'aux_validacao_a'), -- 10
-(11,'edgv', 'aux_validacao_l'), -- 11
-(12,'edgv', 'aux_validacao_p'), -- 12
-(13,'edgv', 'cobter_massa_dagua_a'), -- 13
-(14,'edgv', 'constr_extracao_mineral_a'), -- 14
-(15,'edgv', 'constr_extracao_mineral_p'), -- 15
-(16,'edgv', 'edicao_identificador_trecho_rod_p'), -- 16
-(17,'edgv', 'edicao_simb_cota_mestra_l'), -- 17
-(18,'edgv', 'edicao_simb_direcao_corrente_p'), -- 18
-(19,'edgv', 'edicao_simb_torre_energia_p'), -- 19
-(20,'edgv', 'edicao_texto_generico_l'), -- 20
-(21,'edgv', 'edicao_texto_generico_p'), -- 21
-(22,'edgv', 'elemnat_curva_nivel_l'), -- 22
-(23,'edgv', 'elemnat_elemento_hidrografico_a'), -- 23
-(24,'edgv', 'elemnat_elemento_hidrografico_l'), -- 24
-(25,'edgv', 'elemnat_elemento_hidrografico_p'), -- 25
-(26,'edgv', 'elemnat_ilha_a'), -- 26
-(27,'edgv', 'elemnat_ilha_p'), -- 27
-(28,'edgv', 'elemnat_ponto_cotado_p'), -- 28
-(29,'edgv', 'elemnat_terreno_sujeito_inundacao_a'), -- 29
-(30,'edgv', 'elemnat_toponimo_fisiografico_natural_l'), -- 30
-(31,'edgv', 'elemnat_toponimo_fisiografico_natural_p'), -- 31
-(32,'edgv', 'elemnat_trecho_drenagem_l'), -- 32
-(33,'edgv', 'infra_barragem_a'), -- 33
-(34,'edgv', 'infra_barragem_l'), -- 34
-(35,'edgv', 'infra_elemento_energia_a'), -- 35
-(36,'edgv', 'infra_elemento_energia_l'), -- 36
-(37,'edgv', 'infra_elemento_energia_p'), -- 37
-(38,'edgv', 'infra_elemento_infraestrutura_p'), -- 38
-(39,'edgv', 'infra_ferrovia_l'), -- 39
-(40,'edgv', 'infra_obstaculo_vertical_p'), -- 40
-(41,'edgv', 'infra_pista_pouso_a'), -- 41
-(42,'edgv', 'infra_pista_pouso_l'), -- 42
-(43,'edgv', 'infra_pista_pouso_p'), -- 43
-(44,'edgv', 'infra_via_deslocamento_l'), -- 44
-(45,'edgv', 'llp_aglomerado_rural_p'), -- 45
-(46,'edgv', 'llp_area_pub_militar_a'), -- 46
-(47,'edgv', 'edicao_area_pub_militar_l'), -- 47
-(48,'edgv', 'edicao_limite_legal_l'), -- 48
-(49,'edgv', 'llp_localidade_p'), -- 49
-(50,'edgv', 'llp_nome_local_p'), -- 50
-(51,'edgv', 'llp_terra_indigena_a'), -- 51
-(52,'edgv', 'edicao_terra_indigena_l'), -- 52
-(53,'edgv', 'llp_unidade_conservacao_a'), -- 53
-(54,'edgv', 'edicao_unidade_conservacao_l'), -- 54
-(55,'edgv', 'centroide_area_construida_p'), -- 55
-(56,'edgv', 'centroide_area_sem_dados_p'), -- 56
-(57,'edgv', 'centroide_limite_especial_p'), -- 57
-(58,'edgv', 'centroide_vegetacao_p'), -- 58
-(59,'edgv', 'edicao_simb_vegetacao_p'), -- 59 renomeada
-(60,'edgv', 'delimitador_area_construida_l'), -- 60
-(61,'edgv', 'delimitador_limite_especial_l'), -- 61
-(62,'edgv', 'delimitador_vegetacao_l'), -- 62
-(63,'edgv', 'aux_insumo_externo_a'), -- 63
-(64,'edgv', 'aux_insumo_externo_l'), -- 64
-(65,'edgv', 'aux_insumo_externo_p'), -- 65
-(66,'edgv', 'aux_reambulacao_a'), -- 66
-(67,'edgv', 'aux_reambulacao_l'), -- 67
-(68,'edgv', 'aux_reambulacao_p'), -- 68
-(69,'edgv', 'cobter_area_construida_a'), -- 69
-(70,'edgv', 'cobter_vegetacao_a'), -- 70
-(71,'edgv', 'constr_deposito_a'), -- 71
-(72,'edgv', 'constr_deposito_p'), -- 72
-(73,'edgv', 'constr_edificacao_a'), -- 73
-(74,'edgv', 'constr_edificacao_p'), -- 74
-(75 ,'edgv', 'constr_ocupacao_solo_a'), -- 75 
-(76,'edgv', 'constr_ocupacao_solo_l'), -- 76
-(77,'edgv', 'constr_ocupacao_solo_p'), -- 77
-(78,'edgv', 'elemnat_elemento_fisiografico_a'), -- 78
-(79,'edgv', 'elemnat_elemento_fisiografico_l'), -- 79
-(80,'edgv', 'elemnat_elemento_fisiografico_p'), -- 80
-(81,'edgv', 'elemnat_sumidouro_vertedouro_p'), -- 81
-(82,'edgv', 'edicao_simb_area_p'), -- 82 renomeada
-(83,'edgv', 'infra_alteracao_fisiografica_antropica_l'), -- 83
-(84,'edgv', 'infra_elemento_infraestrutura_a'), -- 84
-(85,'edgv', 'infra_elemento_infraestrutura_l'), -- 85
-(86,'edgv', 'infra_elemento_viario_l'), -- 86
-(87,'edgv', 'infra_elemento_viario_p'), -- 87
-(88,'edgv', 'infra_mobilidade_urbana_l'), -- 88
-(89,'edgv', 'infra_trecho_duto_l'), -- 89
-(90,'edgv', 'infra_travessia_hidroviaria_l'), -- 90
-(91,'edgv', 'infra_vala_l'), -- 91
-(92,'edgv', 'llp_delimitacao_fisica_l'), -- 92
-(93 ,'edgv', 'llp_limite_especial_a'), -- 93
-(94,'edgv', 'edicao_limite_especial_l'), -- 94
-(95,'edgv', 'llp_ponto_controle_p'), -- 95
-(96,'edgv', 'edicao_borda_elemento_hidrografico_l'), -- 96 inserida
-(97,'edgv', 'delimitador_area_sem_dados_l'), -- 97 inserida
-(98,'edgv','cobter_area_edificada_a'), -- 98 inserida 213
-(99,'edgv','cobter_corpo_dagua_a'), -- 99 inserida 213
-(100,'edgv','infra_elemento_transportes_a'), -- 100 inserida 213
-(101,'edgv','infra_elemento_transportes_l'), -- 101 inserida 213
-(102,'edgv','infra_elemento_transportes_p'), -- 102 inserida 213
-(103,'edgv','llp_limite_legal_a'), -- 103 inserida 213
-(104,'edgv','aquisicao_limite_vegetacao_l'), -- 104 inserida 213
-(105,'edgv','aquisicao_limite_massa_dagua_l'), -- 105 inserida 213
-(106,'edgv','aquisicao_limite_area_edificada_l'), -- 106 inserida 213
-(107,'edgv','aquisicao_centroide_vegetacao_p'), -- 107 inserida 213
-(108,'edgv','aquisicao_centroide_corpo_dagua_p'), -- 108 inserida 213
-(109,'edgv','aquisicao_centroide_area_edificada_p'), -- 109 inserida 213
-(110,'edgv','rev_revisao_a'), -- 110 inserida 213
-(111,'edgv','rev_revisao_l'), -- 111 inserida 213
-(112,'edgv','rev_revisao_p'); -- 112 inserida 213
+INSERT INTO macrocontrole.camada (schema, nome) VALUES
+('edgv', 'centroide_elemento_hidrografico_p'), -- 1
+('edgv', 'centroide_ilha_p'), -- 2
+('edgv', 'centroide_massa_dagua_p'), -- 3
+('edgv', 'delimitador_elemento_hidrografico_l'), -- 4
+('edgv', 'delimitador_massa_dagua_l'), -- 5
+('edgv', 'edicao_area_sem_dados_a'), -- 6
+('edgv', 'aux_revisao_a'), -- 7
+('edgv', 'aux_revisao_l'), -- 8
+('edgv', 'aux_revisao_p'), -- 9
+('edgv', 'aux_validacao_a'), -- 10
+('edgv', 'aux_validacao_l'), -- 11
+('edgv', 'aux_validacao_p'), -- 12
+('edgv', 'cobter_massa_dagua_a'), -- 13
+('edgv', 'constr_extracao_mineral_a'), -- 14
+('edgv', 'constr_extracao_mineral_p'), -- 15
+('edgv', 'edicao_identificador_trecho_rod_p'), -- 16
+('edgv', 'edicao_simb_cota_mestra_l'), -- 17
+('edgv', 'edicao_simb_direcao_corrente_p'), -- 18
+('edgv', 'edicao_simb_torre_energia_p'), -- 19
+('edgv', 'edicao_texto_generico_l'), -- 20
+('edgv', 'edicao_texto_generico_p'), -- 21
+('edgv', 'elemnat_curva_nivel_l'), -- 22
+('edgv', 'elemnat_elemento_hidrografico_a'), -- 23
+('edgv', 'elemnat_elemento_hidrografico_l'), -- 24
+('edgv', 'elemnat_elemento_hidrografico_p'), -- 25
+('edgv', 'elemnat_ilha_a'), -- 26
+('edgv', 'elemnat_ilha_p'), -- 27
+('edgv', 'elemnat_ponto_cotado_p'), -- 28
+('edgv', 'elemnat_terreno_sujeito_inundacao_a'), -- 29
+('edgv', 'elemnat_toponimo_fisiografico_natural_l'), -- 30
+('edgv', 'elemnat_toponimo_fisiografico_natural_p'), -- 31
+('edgv', 'elemnat_trecho_drenagem_l'), -- 32
+('edgv', 'infra_barragem_a'), -- 33
+('edgv', 'infra_barragem_l'), -- 34
+('edgv', 'infra_elemento_energia_a'), -- 35
+('edgv', 'infra_elemento_energia_l'), -- 36
+('edgv', 'infra_elemento_energia_p'), -- 37
+('edgv', 'infra_elemento_infraestrutura_p'), -- 38
+('edgv', 'infra_ferrovia_l'), -- 39
+('edgv', 'infra_obstaculo_vertical_p'), -- 40
+('edgv', 'infra_pista_pouso_a'), -- 41
+('edgv', 'infra_pista_pouso_l'), -- 42
+('edgv', 'infra_pista_pouso_p'), -- 43
+('edgv', 'infra_via_deslocamento_l'), -- 44
+('edgv', 'llp_aglomerado_rural_p'), -- 45
+('edgv', 'llp_area_pub_militar_a'), -- 46
+('edgv', 'edicao_area_pub_militar_l'), -- 47
+('edgv', 'edicao_limite_legal_l'), -- 48
+('edgv', 'llp_localidade_p'), -- 49
+('edgv', 'llp_nome_local_p'), -- 50
+('edgv', 'llp_terra_indigena_a'), -- 51
+('edgv', 'edicao_terra_indigena_l'), -- 52
+('edgv', 'llp_unidade_conservacao_a'), -- 53
+('edgv', 'edicao_unidade_conservacao_l'), -- 54
+('edgv', 'centroide_area_construida_p'), -- 55
+('edgv', 'centroide_area_sem_dados_p'), -- 56
+('edgv', 'centroide_limite_especial_p'), -- 57
+('edgv', 'centroide_vegetacao_p'), -- 58
+('edgv', 'edicao_simb_vegetacao_p'), -- 59 renomeada
+('edgv', 'delimitador_area_construida_l'), -- 60
+('edgv', 'delimitador_limite_especial_l'), -- 61
+('edgv', 'delimitador_vegetacao_l'), -- 62
+('edgv', 'aux_insumo_externo_a'), -- 63
+('edgv', 'aux_insumo_externo_l'), -- 64
+('edgv', 'aux_insumo_externo_p'), -- 65
+('edgv', 'aux_reambulacao_a'), -- 66
+('edgv', 'aux_reambulacao_l'), -- 67
+('edgv', 'aux_reambulacao_p'), -- 68
+('edgv', 'cobter_area_construida_a'), -- 69
+('edgv', 'cobter_vegetacao_a'), -- 70
+('edgv', 'constr_deposito_a'), -- 71
+('edgv', 'constr_deposito_p'), -- 72
+('edgv', 'constr_edificacao_a'), -- 73
+('edgv', 'constr_edificacao_p'), -- 74
+('edgv', 'constr_ocupacao_solo_a'), -- 75 
+('edgv', 'constr_ocupacao_solo_l'), -- 76
+('edgv', 'constr_ocupacao_solo_p'), -- 77
+('edgv', 'elemnat_elemento_fisiografico_a'), -- 78
+('edgv', 'elemnat_elemento_fisiografico_l'), -- 79
+('edgv', 'elemnat_elemento_fisiografico_p'), -- 80
+('edgv', 'elemnat_sumidouro_vertedouro_p'), -- 81
+('edgv', 'edicao_simb_area_p'), -- 82 renomeada
+('edgv', 'infra_alteracao_fisiografica_antropica_l'), -- 83
+('edgv', 'infra_elemento_infraestrutura_a'), -- 84
+('edgv', 'infra_elemento_infraestrutura_l'), -- 85
+('edgv', 'infra_elemento_viario_l'), -- 86
+('edgv', 'infra_elemento_viario_p'), -- 87
+('edgv', 'infra_mobilidade_urbana_l'), -- 88
+('edgv', 'infra_trecho_duto_l'), -- 89
+('edgv', 'infra_travessia_hidroviaria_l'), -- 90
+('edgv', 'infra_vala_l'), -- 91
+('edgv', 'llp_delimitacao_fisica_l'), -- 92
+('edgv', 'llp_limite_especial_a'), -- 93
+('edgv', 'edicao_limite_especial_l'), -- 94
+('edgv', 'llp_ponto_controle_p'), -- 95
+('edgv', 'edicao_borda_elemento_hidrografico_l'), -- 96 inserida
+('edgv', 'delimitador_area_sem_dados_l'), -- 97 inserida
+('edgv','cobter_area_edificada_a'), -- 98 inserida 213
+('edgv','cobter_corpo_dagua_a'), -- 99 inserida 213
+('edgv','infra_elemento_transportes_a'), -- 100 inserida 213
+('edgv','infra_elemento_transportes_l'), -- 101 inserida 213
+('edgv','infra_elemento_transportes_p'), -- 102 inserida 213
+('edgv','llp_limite_legal_a'), -- 103 inserida 213
+('edgv','aquisicao_limite_vegetacao_l'), -- 104 inserida 213
+('edgv','aquisicao_limite_massa_dagua_l'), -- 105 inserida 213
+('edgv','aquisicao_limite_area_edificada_l'), -- 106 inserida 213
+('edgv','aquisicao_centroide_vegetacao_p'), -- 107 inserida 213
+('edgv','aquisicao_centroide_corpo_dagua_p'), -- 108 inserida 213
+('edgv','aquisicao_centroide_area_edificada_p'), -- 109 inserida 213
+('edgv','rev_revisao_a'), -- 110 inserida 213
+('edgv','rev_revisao_l'), -- 111 inserida 213
+('edgv','rev_revisao_p'); -- 112 inserida 213
 
 INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) VALUES
 (63, NULL, FALSE, NULL, NULL, 3),

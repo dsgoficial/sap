@@ -191,6 +191,8 @@
                     "nome": "Disseminação",
                     "ordem": 1
                 }
+            ],
+            "pre_requisito_subfase": [
             ]
         }
     ],

@@ -3111,9 +3111,15 @@ controller.insereLinhaProducao = async linha_producao => {
     }
 
     for (const prop of linha_producao.propriedades_camadas) {
-      const camadaId = await t.one(`SELECT id FROM macrocontrole.camada WHERE nome = $1 and schema = $2`, 
-          [prop.camada, prop.schema], a => a && a.id
-        );
+      let camadaId;
+      const camadaQuery = await t.oneOrNone(`SELECT id FROM macrocontrole.camada WHERE nome = $1 and schema = $2`, [prop.camada, prop.schema]);
+      if (!camadaQuery) {
+        const insertResult = await t.one(`INSERT INTO macrocontrole.camada (nome, schema) VALUES ($1, $2) RETURNING id`, [prop.camada, prop.schema]);
+        camadaId = insertResult.id;
+      } else {
+        camadaId = camadaQuery.id;
+      }
+      
       const subfaseId = subfaseMap[prop.subfase];
       await t.none(
         `INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, camada_incomum, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) 
