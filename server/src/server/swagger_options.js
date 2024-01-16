@@ -12,4 +12,5 @@ const swaggerOptions = {
   apis: ['./src/**/*.js']
 }
 
+
 module.exports = swaggerOptions

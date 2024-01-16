@@ -29,6 +29,7 @@ const VERSION = '2.2.0'
 const MIN_DATABASE_VERSION = '2.2.0'
 const MIN_MICROCONTROLE_VERSION = '1.0.0'
 
+
 const configSchema = Joi.object().keys({
   PORT: Joi.number()
     .integer()
