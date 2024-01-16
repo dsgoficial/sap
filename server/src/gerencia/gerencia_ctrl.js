@@ -808,17 +808,17 @@ controller.getObservacao = async (atividadeId) => {
 controller.getViewsAcompanhamento = async (emAndamento) => {
   let views = await db.sapConn.any(
   `
-  SELECT schema, nome, tipo, p.finalizado FROM
+  SELECT foo.schema, foo.nome, foo.tipo, p.finalizado FROM
   (SELECT 'acompanhamento' AS schema, mat.matviewname AS nome,
   CASE WHEN mat.matviewname LIKE '%_subfase_%' THEN 'subfase' ELSE 'lote' END AS tipo,
-  SUBSTRING(mat.matviewname FROM 'lote_(\d+)') AS lote_id,
+  SUBSTRING(mat.matviewname FROM 'lote_(\d+)') AS lote_id
   FROM pg_matviews AS mat
   WHERE schemaname = 'acompanhamento' AND matviewname ~ '^lote_'
   ORDER BY mat.matviewname) AS foo
-  INNER JOIN macrocontrole.lote AS l ON l.id = foo.lote_id
+  INNER JOIN macrocontrole.lote AS l ON l.id = foo.lote_id::int
   INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
   UNION
-  SELECT 'acompanhamento' AS schema, 'bloco' AS nome, 'bloco' AS tipo, 1 AS finalizado;
+  SELECT 'acompanhamento' AS schema, 'bloco' AS nome, 'bloco' AS tipo, true AS finalizado;
   `)
 
   if (!views) {
