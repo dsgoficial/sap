@@ -2,7 +2,7 @@
 
 const express = require('express')
 
-const { schemaValidation, asyncHandler, httpCode } = require('../utils')
+const { schemaValidation, asyncHandler, asyncHandlerWithQueue, httpCode } = require('../utils')
 
 const { verifyLogin } = require('../login')
 
@@ -11,11 +11,22 @@ const producaoSchema = require('./producao_schema')
 
 const router = express.Router()
 
+router.get(
+  '/plugin_path',
+  asyncHandler(async (req, res, next) => {
+    const dados = await producaoCtrl.getPluginPath()
+
+    const msg = 'Path plugin retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 router.post(
   '/finaliza',
   verifyLogin,
   schemaValidation({ body: producaoSchema.finaliza }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await producaoCtrl.finaliza(
       req.usuarioId,
       req.body.atividade_id,
@@ -47,7 +58,7 @@ router.get(
 router.post(
   '/inicia',
   verifyLogin,
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     const dados = await producaoCtrl.inicia(req.usuarioId)
 
     const msg = dados
@@ -64,11 +75,12 @@ router.post(
   '/problema_atividade',
   verifyLogin,
   schemaValidation({ body: producaoSchema.problemaAtividade }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await producaoCtrl.problemaAtividade(
       req.body.atividade_id,
       req.body.tipo_problema_id,
       req.body.descricao,
+      req.body.polygon_ewkt,
       req.usuarioId
     )
     const msg = 'Problema de atividade reportado com sucesso'
@@ -76,6 +88,22 @@ router.post(
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
 )
+
+router.post(
+  '/finalizacao_incorreta',
+  verifyLogin,
+  schemaValidation({ body: producaoSchema.finalizacaoIncorreta }),
+  asyncHandler(async (req, res, next) => {
+    await producaoCtrl.finalizacaoIncorreta(
+      req.body.descricao,
+      req.usuarioId
+    )
+    const msg = 'Problema de finalização incorreta reportado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
 
 router.get(
   '/tipo_problema',

@@ -45,7 +45,10 @@ const IconMenuStyled = styled(IconButton, {
 
 export default function DashboardNavbar({ isOpenSidebar, onOpenSidebar }) {
 
-    const { logout, history } = useAPI()
+    const {
+        logout,
+        history
+    } = useAPI()
 
     const clickLogout = () => {
         logout();
@@ -59,7 +62,7 @@ export default function DashboardNavbar({ isOpenSidebar, onOpenSidebar }) {
             }}
         >
             <AppBarStyled
-                position="absolute"
+                position="fixed"
                 isOpenSidebar={isOpenSidebar}
             >
                 <Toolbar

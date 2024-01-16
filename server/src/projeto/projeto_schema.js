@@ -100,6 +100,40 @@ models.menusIds = Joi.object().keys({
     .min(1)
 })
 
+models.temas = Joi.object().keys({
+  temas: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        definicao_tema: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.temasAtualizacao = Joi.object().keys({
+  temas: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        definicao_tema: Joi.string().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+models.temasIds = Joi.object().keys({
+  temas_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+
 models.regras = Joi.object().keys({
   regras: Joi.array()
     .items(
@@ -204,6 +238,75 @@ models.unidadeTrabalhoBloco = Joi.object().keys({
   bloco_id: Joi.number().integer().strict().required()
 })
 
+models.unidadeTrabalhoReshape = Joi.object().keys({
+  unidade_trabalho_id: Joi.number().integer().strict().required(),
+  reshape_geom: Joi.string().required()
+})
+
+models.unidadeTrabalhoCut = Joi.object().keys({
+  unidade_trabalho_id: Joi.number().integer().strict().required(),
+  cut_geoms: Joi.array()
+    .items(Joi.string())
+    .unique()
+    .required()
+    .min(2)
+})
+
+models.unidadeTrabalhoMerge = Joi.object().keys({
+  unidade_trabalho_ids: Joi.array()
+    .items(Joi.number().integer().strict())
+    .unique()
+    .required()
+    .min(2),
+  merge_geom: Joi.string().required()
+})
+
+models.linhaProducao = Joi.object().keys({
+  linha_producao: Joi.object({
+    nome: Joi.string().required(),
+    descricao: Joi.string().required(),
+    nome_abrev: Joi.string().required(),
+    tipo_produto_id: Joi.number().integer().required(),
+    fases: Joi.array().items(Joi.object({
+      tipo_fase_id: Joi.number().integer().required(),
+      ordem: Joi.number().integer().required(),
+      subfases: Joi.array().items(Joi.object({
+        nome: Joi.string().required(),
+        ordem: Joi.number().integer().required()
+      })).required(),
+      pre_requisito_subfase: Joi.array().items(Joi.object({
+        subfase_anterior: Joi.string().required(),
+        subfase_posterior: Joi.string().required(),
+        tipo_pre_requisito_id: Joi.number().integer().required()
+      }))
+    })).required(),
+    propriedades_camadas: Joi.array().items(Joi.object({
+      schema: Joi.string().required(),
+      camada: Joi.string().required(),
+      subfase: Joi.string().required(),
+      camada_apontamento: Joi.boolean().required(),
+      camada_incomum: Joi.boolean().required(),
+      atributo_filtro_subfase: Joi.string(),
+      atributo_situacao_correcao: Joi.string(),
+      atributo_justificativa_apontamento: Joi.string()
+    }).when(Joi.object({
+      camada_apontamento: Joi.boolean().valid(true).required()
+    }), {
+      then: Joi.object({
+        atributo_filtro_subfase: Joi.string().required(),
+        atributo_situacao_correcao: Joi.string().required(),
+        atributo_justificativa_apontamento: Joi.string().required()
+      }),
+      otherwise: Joi.object({
+        atributo_filtro_subfase: Joi.string().forbidden(),
+        atributo_situacao_correcao: Joi.string().forbidden(),
+        atributo_justificativa_apontamento: Joi.string().forbidden()
+      })
+    }))
+  })
+})
+
+
 models.listaAtividades = Joi.object().keys({
   atividades_ids: Joi.array()
     .items(Joi.number().integer().strict())
@@ -218,7 +321,11 @@ models.unidadeTrabalhoEtapa = Joi.object().keys({
     .unique()
     .required()
     .min(1),
-  etapa_id: Joi.number().integer().strict().required()
+  etapa_ids: Joi.array()
+  .items(Joi.number().integer().strict())
+  .unique()
+  .required()
+  .min(1)
 })
 
 models.gerenciadorFME = Joi.object().keys({
@@ -312,6 +419,13 @@ models.perfilMenuIds = Joi.object().keys({
     .min(1)
 })
 
+models.perfilLinhagemIds = Joi.object().keys({
+  perfil_linhagem_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
 
 models.perfilRequisitoIds = Joi.object().keys({
   perfil_requisito_ids: Joi.array()
@@ -331,6 +445,14 @@ models.perfilRegrasIds = Joi.object().keys({
 
 models.perfilEstilosIds = Joi.object().keys({
   perfil_estilos_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.perfilTemasIds = Joi.object().keys({
+  perfil_temas_ids: Joi.array()
     .items(Joi.number().integer().strict().required())
     .unique()
     .required()
@@ -371,12 +493,25 @@ models.perfisModelo = Joi.object().keys({
     .min(1)
 })
 
-models.perfisMenu= Joi.object().keys({
+models.perfisMenu = Joi.object().keys({
   perfis_menu: Joi.array()
     .items(
       Joi.object().keys({
         menu_id: Joi.number().integer().strict().required(),
         menu_revisao: Joi.boolean().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfisLinhagem = Joi.object().keys({
+  perfis_linhagem: Joi.array()
+    .items(
+      Joi.object().keys({
+        tipo_exibicao_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         lote_id: Joi.number().integer().strict().required(),
       })
@@ -431,6 +566,33 @@ models.perfilEstilostualizacao = Joi.object().keys({
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         grupo_estilo_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilTemas = Joi.object().keys({
+  perfis_temas: Joi.array()
+    .items(
+      Joi.object().keys({
+        tema_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilTemasAtualizacao = Joi.object().keys({
+  perfis_temas: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        tema_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         lote_id: Joi.number().integer().strict().required()
       })
@@ -504,6 +666,23 @@ models.perfilMenuAtualizacao = Joi.object().keys({
     .min(1)
 })
 
+models.perfilLinhagemAtualizacao = Joi.object().keys({
+  perfis_linhagem: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        tipo_exibicao_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+
+
 models.perfilFMEAtualizacao = Joi.object().keys({
   perfis_fme: Joi.array()
     .items(
@@ -558,6 +737,11 @@ models.associaInsumos = Joi.object().keys({
 
 models.associaInsumosBloco = Joi.object().keys({
   bloco_id: Joi.number().integer().strict().required(),
+  subfase_ids: Joi.array()
+    .items(Joi.number().integer().strict())
+    .unique()
+    .required()
+    .min(1),
   grupo_insumo_id: Joi.number().integer().strict().required(),
   estrategia_id: Joi.number().integer().strict().required(),
   caminho_padrao: Joi.string().required().allow('')
@@ -588,7 +772,7 @@ models.produtos = Joi.object().keys({
     .unique('uuid')
     .required()
     .min(1),
-    lote_id: Joi.number().integer().strict().required()
+  lote_id: Joi.number().integer().strict().required()
 })
 
 models.insumos = Joi.object().keys({
@@ -603,8 +787,8 @@ models.insumos = Joi.object().keys({
     )
     .required()
     .min(1),
-    tipo_insumo: Joi.number().integer().strict().required(),
-    grupo_insumo: Joi.number().integer().strict().required()
+  tipo_insumo: Joi.number().integer().strict().required(),
+  grupo_insumo: Joi.number().integer().strict().required()
 })
 
 models.unidadesTrabalho = Joi.object().keys({
@@ -619,21 +803,25 @@ models.unidadesTrabalho = Joi.object().keys({
         bloco_id: Joi.number().integer().strict().required(),
         disponivel: Joi.boolean().required(),
         prioridade: Joi.number().integer().strict().required(),
-        dificuldade: Joi.number().integer().strict().required()
+        dificuldade: Joi.number().integer().strict().required(),
+        tempo_estimado_minutos: Joi.number().integer().strict().required()
       })
     )
     .required()
     .min(1),
   subfase_ids: Joi.array()
-  .items(Joi.number().integer().strict().required())
-  .unique()
-  .required()
-  .min(1),
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1),
   lote_id: Joi.number().integer().strict().required()
 })
 
-models.lote = Joi.object().keys({
-  lote_id: Joi.number().integer().strict().required()
+models.todasAtividades = Joi.object().keys({
+  lote_id: Joi.number().integer().strict().required(),
+  atividades_revisao: Joi.boolean().strict().required(),
+  atividades_revisao_correcao: Joi.boolean().strict().required(),
+  atividades_revisao_final: Joi.boolean().strict().required()
 })
 
 models.padrao_etapa = Joi.object().keys({
@@ -889,5 +1077,170 @@ models.aliasIds = Joi.object().keys({
     .required()
     .min(1)
 })
+
+models.perfilConfiguracaoQgis = Joi.object().keys({
+  perfis_configuracao_qgis: Joi.array()
+    .items(
+      Joi.object().keys({
+        tipo_configuracao_id: Joi.number().integer().strict().required(),
+        parametros: Joi.string().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilConfiguracaoQgisAtualizacao = Joi.object().keys({
+  perfis_configuracao_qgis: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        tipo_configuracao_id: Joi.number().integer().strict().required(),
+        parametros: Joi.string().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilConfiguracaoQgisIds = Joi.object().keys({
+  perfis_configuracao_qgis_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.perfilDificuldadeOperador = Joi.object().keys({
+  perfis_dificuldade_operador: Joi.array()
+    .items(
+      Joi.object().keys({
+        usuario_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+        tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilDificuldadeOperadorAtualizacao = Joi.object().keys({
+  perfis_dificuldade_operador: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        usuario_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+        tipo_perfil_dificuldade_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilDificuldadeOperadorIds = Joi.object().keys({
+  perfis_dificuldade_operador_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.configuracaoLoteCopiar = Joi.object().keys({
+  lote_id_origem: Joi.number().integer().strict().required(),
+  lote_id_destino: Joi.number().integer().strict().required(),
+  copiar_estilo: Joi.boolean().strict().required(),
+  copiar_menu: Joi.boolean().strict().required(),
+  copiar_regra: Joi.boolean().strict().required(),
+  copiar_modelo: Joi.boolean().strict().required(),
+  copiar_workflow: Joi.boolean().strict().required(),
+  copiar_alias: Joi.boolean().strict().required(),
+  copiar_linhagem: Joi.boolean().strict().required(),
+  copiar_finalizacao: Joi.boolean().strict().required(),
+  copiar_tema: Joi.boolean().strict().required(),
+  copiar_fme: Joi.boolean().strict().required(),
+  copiar_configuracao_qgis: Joi.boolean().strict().required(),
+  copiar_monitoramento: Joi.boolean().strict().required()
+})
+
+models.perfilWorkflowDsgtools = Joi.object().keys({
+  perfil_workflow_dsgtools: Joi.array()
+    .items(
+      Joi.object().keys({
+        workflow_dsgtools_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+        requisito_finalizacao: Joi.boolean().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilWorkflowDsgtoolsAtualizacao = Joi.object().keys({
+  perfil_workflow_dsgtools: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        workflow_dsgtools_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+        requisito_finalizacao: Joi.boolean().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilWorkflowDsgtoolsIds = Joi.object().keys({
+  perfil_workflow_dsgtools_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+
+models.workflows = Joi.object().keys({
+  workflows: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        descricao: Joi.string().required(),
+        workflow_json: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.atualizaWorkflows = Joi.object().keys({
+  workflows: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        descricao: Joi.string().required(),
+        workflow_json: Joi.string().required()
+      })
+    )
+    .required()
+})
+
+models.workflowsIds = Joi.object().keys({
+  workflows_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+
+
 
 module.exports = models

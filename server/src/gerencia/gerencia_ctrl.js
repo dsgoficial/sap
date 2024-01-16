@@ -1,6 +1,6 @@
 'use strict'
 
-const { db, temporaryLogin, managePermissions } = require('../database')
+const { db, temporaryLogin, managePermissions, disableTriggers } = require('../database')
 
 const {
   DB_USER,
@@ -26,6 +26,21 @@ const getUsuarioNomeById = async usuarioId => {
     { usuarioId }
   )
   return usuario.posto_nome
+}
+
+const getUsuarioIdbyUUID = async usuarioUUID => {
+  let usuario
+  try {
+    usuario = await db.sapConn.one(
+      `SELECT id FROM dgeo.usuario as u
+      WHERE u.uuid = $<usuarioUUID>`,
+      { usuarioUUID }
+    )
+  } catch (error) {
+    throw new AppError('Usuário não encontrado. Verifique o UUID', httpCode.BadRequest)
+  }
+
+  return usuario.id
 }
 
 controller.getProject = async () => {
@@ -174,7 +189,11 @@ controller.deletaPerfilProducao = async perfilProducaoId => {
 }
 
 controller.getPerfilBlocoOperador = async () => {
-  return db.sapConn.any('SELECT id, usuario_id, bloco_id FROM macrocontrole.perfil_bloco_operador')
+  return db.sapConn.any(`
+    SELECT pbo.id, pbo.usuario_id, pbo.bloco_id, b.prioridade, b.nome AS bloco
+    FROM macrocontrole.perfil_bloco_operador AS pbo
+    INNER JOIN macrocontrole.bloco AS b ON b.id = pbo.bloco_id
+  `)
 }
 
 controller.criaPerfilBlocoOperador = async perfilBlocoOperador => {
@@ -386,76 +405,6 @@ controller.deletaPerfilProducaoEtapa = async perfilProducaoEtapaId => {
   })
 }
 
-controller.getPerfilDificuldadeOperador = async () => {
-  return db.sapConn.any('SELECT id, usuario_id, subfase_id, bloco_id, tipo_perfil_dificuldade_id FROM macrocontrole.perfil_dificuldade_operador')
-}
-
-controller.criaPerfilDificuldadeOperador = async perfilDificuldadeOperador => {
-  return db.sapConn.tx(async t => {
-
-    const cs = new db.pgp.helpers.ColumnSet([
-      'usuario_id',
-      'subfase_id',
-      'bloco_id',
-      'tipo_perfil_dificuldade_id'
-    ])
-
-    const query = db.pgp.helpers.insert(perfilDificuldadeOperador, cs, {
-      table: 'perfil_dificuldade_operador',
-      schema: 'macrocontrole'
-    })
-
-    await t.none(query)
-  })
-}
-
-controller.atualizaPerfilDificuldadeOperador = async perfilDificuldadeOperador => {
-  return db.sapConn.tx(async t => {
-
-    const cs = new db.pgp.helpers.ColumnSet([
-      'id',
-      'usuario_id',
-      'subfase_id',
-      'bloco_id',
-      'tipo_perfil_dificuldade_id'
-    ])
-
-    const query =
-      db.pgp.helpers.update(
-        perfilDificuldadeOperador,
-        cs,
-        { table: 'perfil_dificuldade_operador', schema: 'macrocontrole' },
-        {
-          tableAlias: 'X',
-          valueAlias: 'Y'
-        }
-      ) + 'WHERE Y.id = X.id'
-    await t.none(query)
-  })
-}
-
-controller.deletaPerfilDificuldadeOperador = async perfilDificuldadeOperadorId => {
-  return db.sapConn.task(async t => {
-    const exists = await t.any(
-      `SELECT id FROM macrocontrole.perfil_dificuldade_operador
-      WHERE id in ($<perfilDificuldadeOperadorId:csv>)`,
-      { perfilDificuldadeOperadorId }
-    )
-    if (exists && exists.length < perfilDificuldadeOperadorId.length) {
-      throw new AppError(
-        'O id informado não corresponde a um perfil dificuldade operador',
-        httpCode.BadRequest
-      )
-    }
-
-    return t.any(
-      `DELETE FROM macrocontrole.perfil_dificuldade_operador
-      WHERE id in ($<perfilDificuldadeOperadorId:csv>)`,
-      { perfilDificuldadeOperadorId }
-    )
-  })
-}
-
 const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
   const dataFim = new Date()
 
@@ -467,7 +416,7 @@ const pausaAtividadeMethod = async (unidadeTrabalhoIds, connection) => {
     SELECT a.id FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
     WHERE ut.id in ($<unidadeTrabalhoIds:csv>) AND a.tipo_situacao_id = 2
-    ) RETURNING id, usuario_id
+    ) RETURNING id, usuario_id;
   `,
     { dataFim, unidadeTrabalhoIds }
   )
@@ -508,21 +457,24 @@ controller.unidadeTrabalhoDisponivel = async (
   unidadeTrabalhoIds,
   disponivel
 ) => {
-  await db.sapConn.tx(async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     await t.none(
-      `UPDATE macrocontrole.unidade_trabalho
+      `
+      UPDATE macrocontrole.unidade_trabalho
       SET disponivel = $<disponivel>
-      WHERE id in ($<unidadeTrabalhoIds:csv>)`,
+      WHERE id in ($<unidadeTrabalhoIds:csv>);`,
       { unidadeTrabalhoIds, disponivel }
     )
     if (!disponivel) {
       await pausaAtividadeMethod(unidadeTrabalhoIds, t)
     }
+
   })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.pausaAtividade = async (unidadeTrabalhoIds) => {
-  await db.sapConn.tx(async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const changed = await pausaAtividadeMethod(unidadeTrabalhoIds, t)
     if (!changed) {
       throw new AppError(
@@ -530,12 +482,14 @@ controller.pausaAtividade = async (unidadeTrabalhoIds) => {
         httpCode.NotFound
       )
     }
+
   })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const usersResetPassword = await t.any(
       `
       SELECT DISTINCT ON (ut.id) a.id, a.usuario_id FROM macrocontrole.atividade AS a
@@ -593,11 +547,13 @@ controller.reiniciaAtividade = async (unidadeTrabalhoIds) => {
       await temporaryLogin.resetPassword(u.id, u.usuario_id)
     }
   })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async (t) => {
+
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
         FROM macrocontrole.atividade AS a
@@ -659,13 +615,15 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
         { ids }
       )
     }
+
   })
+  await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, atividadeIds)
 }
 
 controller.avancaAtividade = async (atividadeIds, concluida) => {
   const comparisonOperator = concluida ? '<=' : '<'
 
-  await db.sapConn.tx(async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const ativEmExec = await t.any(
       `SELECT a_ant.id
       FROM macrocontrole.atividade AS a
@@ -731,7 +689,9 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
         `,
       { atividadeIds, comparisonOperator, dataFim }
     )
+
   })
+  await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, atividadeIds)
 }
 
 controller.criaFilaPrioritaria = async (
@@ -814,7 +774,7 @@ controller.criaObservacao = async (
   observacaoAtividade,
   observacaoUnidadeTrabalho
 ) => {
-  await db.sapConn.tx(async (t) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     await t.any(
       `
       UPDATE macrocontrole.atividade SET
@@ -846,15 +806,19 @@ controller.getObservacao = async (atividadeId) => {
 }
 
 controller.getViewsAcompanhamento = async (emAndamento) => {
-  let views = await db.sapConn.any(`
-  SELECT schema, nome, tipo FROM
+  let views = await db.sapConn.any(
+  `
+  SELECT schema, nome, tipo, p.finalizado FROM
   (SELECT 'acompanhamento' AS schema, mat.matviewname AS nome,
-  CASE WHEN mat.matviewname LIKE '%_subfase_%' THEN 'subfase' ELSE 'lote' END AS tipo
+  CASE WHEN mat.matviewname LIKE '%_subfase_%' THEN 'subfase' ELSE 'lote' END AS tipo,
+  SUBSTRING(mat.matviewname FROM 'lote_(\d+)') AS lote_id,
   FROM pg_matviews AS mat
   WHERE schemaname = 'acompanhamento' AND matviewname ~ '^lote_'
   ORDER BY mat.matviewname) AS foo
+  INNER JOIN macrocontrole.lote AS l ON l.id = foo.lote_id
+  INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
   UNION
-  SELECT 'acompanhamento' AS schema, 'bloco' AS nome, 'bloco' AS tipo;
+  SELECT 'acompanhamento' AS schema, 'bloco' AS nome, 'bloco' AS tipo, 1 AS finalizado;
   `)
 
   if (!views) {
@@ -862,7 +826,7 @@ controller.getViewsAcompanhamento = async (emAndamento) => {
   }
 
   if (emAndamento) {
-    views = views.filter((v) => !v.finalizado)
+    views = views.filter((v) => v.finalizado)
   }
 
   const dados = {}
@@ -918,7 +882,6 @@ controller.atualizaVersaoQGIS = async (
     { versaoQGIS }
   )
 }
-
 
 controller.getPlugins = async () => {
   return db.sapConn.any(
@@ -987,7 +950,6 @@ controller.deletaPlugins = async pluginsId => {
     )
   })
 }
-
 
 controller.getAtalhos = async () => {
   return db.sapConn.any(
@@ -1064,6 +1026,443 @@ controller.deletaAtalhos = async atalhoIds => {
   })
 }
 
+controller.getProblemaAtividade = async () => {
+  return db.sapConn.any(
+    `SELECT pa.id, tpg.nome_abrev || ' ' || u.nome_guerra AS usuario, pa.atividade_id, pa.descricao, pa.data, pa.resolvido, tp.nome AS tipo_problema,
+    ST_ASEWKT(pa.geom) AS geom
+    FROM macrocontrole.problema_atividade AS pa
+    INNER JOIN dominio.tipo_problema AS tp ON tp.code = pa.tipo_problema_id
+    INNER JOIN dgeo.usuario AS u ON u.id = pa.usuario_id
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id`
+  )
+}
 
+controller.atualizaProblemaAtividade = async (problemaAtividade) => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'resolvido',
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        problemaAtividade,
+        cs,
+        { table: 'problema_atividade', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.iniciaAtividadeModoLocal = async (atividadeId, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const dataInicio = new Date()
+    try {
+      await t.none(
+        `
+      UPDATE macrocontrole.atividade SET
+      data_inicio = $<dataInicio>, tipo_situacao_id = 2, usuario_id = $<usuarioId>
+      WHERE id = $<atividadeId>
+      `,
+        { dataInicio, atividadeId, usuarioId}
+      )
+    } catch (error) {
+      throw new AppError(
+        'Atividade inválida',
+        httpCode.BadRequest
+      )
+    }
+  })
+}
+
+controller.finalizaAtividadeModoLocal = async (atividadeId, usuarioUUID, dataInicio, dataFim) => {
+  return db.sapConn.tx(async t => {
+    const usuarioId = await getUsuarioIdbyUUID(usuarioUUID)
+    try {
+      await t.none(
+        `
+      UPDATE macrocontrole.atividade SET
+      data_fim = $<dataFim>, data_inicio = $<dataInicio>, tipo_situacao_id = 4, usuario_id = $<usuarioId>
+      WHERE id = $<atividadeId>
+      `,
+        { dataFim, dataInicio, atividadeId, usuarioId}
+      )
+    } catch (error) {
+      console.log(error)
+      throw new AppError(
+        'Atividade inválida',
+        httpCode.BadRequest
+      )
+    }
+  })
+}
+
+controller.getRelatorioAlteracao = async () => {
+  return db.sapConn.any(
+    'SELECT id, data, descricao FROM macrocontrole.relatorio_alteracao'
+  )
+}
+
+controller.gravaRelatorioAlteracao = async relatorios => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'data',
+      'descricao'
+    ])
+
+    const query = db.pgp.helpers.insert(relatorios, cs, {
+      table: 'relatorio_alteracao',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaRelatorioAlteracao = async (relatorios, usuario_id) => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      {
+        name: 'data',
+        cast: 'timestamptz' // use SQL type casting '::timestamp with timezone'
+      },
+      'descricao'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        relatorios,
+        cs,
+        { table: 'relatorio_alteracao', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaRelatorioAlteracao = async relatorioIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.relatorio_alteracao
+      WHERE id in ($<relatorioIds:csv>)`,
+      { relatorioIds }
+    )
+    if (exists && exists.length < relatorioIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um relatório de alteração',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.relatorio_alteracao
+      WHERE id in ($<relatorioIds:csv>)`,
+      { relatorioIds }
+    )
+  })
+}
+
+
+controller.atualizaPropriedadesUT = async unidadesTrabalho => {
+  
+  function int(col) {
+    return {
+        name: col,
+        skip() {
+            const val = this[col];
+            return val === null || val === undefined;
+        },
+        init() {
+            return parseInt(this[col]);
+        }
+    };
+  }
+
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      int('dificuldade'),
+      int('tempo_estimado_minutos'),
+      int('prioridade')
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        unidadesTrabalho,
+        cs,
+        { table: 'unidade_trabalho', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.getPluginPath = async () => {
+  return db.sapConn.one(
+    `SELECT path
+      FROM dgeo.plugin_path WHERE code = 1`
+  )
+}
+
+controller.atualizaPluginPath = async (
+  path
+) => {
+  return db.sapConn.any(
+    `
+    UPDATE dgeo.plugin_path SET
+    path = $<path> WHERE code = 1
+    `,
+    { path }
+  )
+}
+
+controller.getPit = async () => {
+  return db.sapConn.any(
+    `SELECT p.id, p.lote_id, p.meta, p.ano,
+    l.nome AS lote
+    FROM macrocontrole.pit AS p
+    INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id`
+  )
+}
+
+controller.criaPit = async pit => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet(['lote_id', 'meta', 'ano'])
+
+    const query = db.pgp.helpers.insert(pit, cs, {
+      table: 'pit',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPit = async pit => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet(['id', 'lote_id', 'meta', 'ano'])
+
+    const query =
+      db.pgp.helpers.update(
+        pit,
+        cs,
+        { table: 'pit', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.deletePit = async pitIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.pit
+      WHERE id in ($<pitIds:csv>)`,
+      { pitIds }
+    )
+
+    if (exists && exists.length < pitIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um PIT id',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.pit
+      WHERE id in ($<pitIds:csv>)`,
+      { pitIds }
+    )
+  })
+}
+
+controller.getAlteracaoFluxo = async () => {
+  return db.sapConn.any(
+    `SELECT af.id, af.atividade_id, af.descricao, af.data, af.resolvido, ST_ASEWKT(af.geom) AS geom,
+    tpg.nome_abrev || ' ' || u.nome_guerra AS usuario
+    FROM macrocontrole.alteracao_fluxo AS af
+    INNER JOIN dgeo.usuario AS u ON u.id = af.usuario_id
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    `
+  )
+}
+
+controller.atualizaAlteracaoFluxo = async alteracaoFluxo => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', 'atividade_id', 'descricao', 'data', 'resolvido', 'geom'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        alteracaoFluxo,
+        cs,
+        { table: 'alteracao_fluxo', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.getFilaPrioritaria = async () => {
+  return db.sapConn.any(
+    `SELECT fp.id, fp.atividade_id, fp.usuario_id, fp.prioridade,
+    tpg.nome_abrev || ' ' || u.nome_guerra AS usuario
+    FROM macrocontrole.fila_prioritaria AS fp
+    INNER JOIN dgeo.usuario AS u ON u.id = fp.usuario_id
+    INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    `
+  )
+}
+
+controller.criaFilaPrioritaria = async filaPrioritaria => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'atividade_id', 'usuario_id', 'prioridade'
+    ])
+
+    const query = db.pgp.helpers.insert(filaPrioritaria, cs, {
+      table: 'fila_prioritaria',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaFilaPrioritaria = async filaPrioritaria => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', 'atividade_id', 'usuario_id', 'prioridade'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        filaPrioritaria,
+        cs,
+        { table: 'fila_prioritaria', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.deleteFilaPrioritaria = async filaPrioritariaIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.fila_prioritaria
+      WHERE id in ($<filaPrioritariaIds:csv>)`,
+      { filaPrioritariaIds }
+    )
+
+    if (exists && exists.length < filaPrioritariaIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a uma entrada da fila prioritária',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.fila_prioritaria
+      WHERE id in ($<filaPrioritariaIds:csv>)`,
+      { filaPrioritariaIds }
+    )
+  })
+}
+
+controller.getFilaPrioritariaGrupo = async () => {
+  return db.sapConn.any(
+    `SELECT fpg.id, fpg.perfil_producao_id, fpg.prioridade,
+    pp.nome AS perfil_producao
+    FROM macrocontrole.fila_prioritaria_grupo AS fpg
+    INNER JOIN macrocontrole.perfil_producao AS pp ON pp.id = fpg.perfil_producao_id
+    `
+  )
+}
+
+controller.criaFilaPrioritariaGrupo = async filaPrioritariaGrupo => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'atividade_id', 'perfil_producao_id', 'prioridade'
+    ])
+
+    const query = db.pgp.helpers.insert(filaPrioritariaGrupo, cs, {
+      table: 'fila_prioritaria_grupo',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaFilaPrioritariaGrupo = async filaPrioritariaGrupo => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', 'atividade_id', 'perfil_producao_id', 'prioridade'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        filaPrioritariaGrupo,
+        cs,
+        { table: 'fila_prioritaria_grupo', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.deleteFilaPrioritariaGrupo = async filaPrioritariaGrupoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.fila_prioritaria_grupo
+      WHERE id in ($<filaPrioritariaGrupoIds:csv>)`,
+      { filaPrioritariaGrupoIds }
+    )
+
+    if (exists && exists.length < filaPrioritariaGrupoIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a uma entrada da fila prioritária de grupo',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.fila_prioritaria_grupo
+      WHERE id in ($<filaPrioritariaGrupoIds:csv>)`,
+      { filaPrioritariaGrupoIds }
+    )
+  })
+}
 
 module.exports = controller

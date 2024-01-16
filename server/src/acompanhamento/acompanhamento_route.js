@@ -11,6 +11,8 @@ const acompanhamentoCtrl = require('./acompanhamento_ctrl')
 
 const router = express.Router()
 
+const archiver = require('archiver')
+
 router.get(
   '/informacoes/:lote/:subfase',
   schemaValidation({
@@ -151,6 +153,160 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
+
+router.get(
+  '/grade_acompanhamento',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.acompanhamentoGrade()
+
+    const msg = 'Grades de acompanhamento retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/atividade_subfase',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.atividadeSubfase()
+
+    const msg = 'Dados de atividade por subfase retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/atividade_usuario',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.atividadeUsuario()
+
+    const msg = 'Dados de atividade por usuario retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/situacao_subfase',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.situacaoSubfase()
+
+    const msg = 'Dados de situação das subfases retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/pit/subfase/:anoParam',
+  schemaValidation({
+    params: acompanhamentoSchema.anoParam
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getInfoSubfasePIT(
+      req.params.anoParam
+    )
+
+    const msg = 'Informações do PIT retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/pit/:anoParam',
+  schemaValidation({
+    params: acompanhamentoSchema.anoParam
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getInfoPIT(
+      req.params.anoParam
+    )
+
+    const msg = 'Informações do PIT retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/dados_site_acompanhamento',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getDadosSiteAcompanhamento()
+
+    const archive = archiver('zip');
+    archive.on('error', (err) => { throw err; });
+
+    res.setHeader('Content-Disposition', 'attachment; filename=dados_acompanhamento.zip');
+    res.setHeader('Content-Type', 'application/zip');
+
+    archive.pipe(res);
+
+    dados.forEach(d => {
+      archive.append(JSON.stringify(d.dados, null, 2), { name: d.nome });
+    })
+
+    archive.finalize();
+
+  })
+)
+
+router.get(
+  '/dashboard/quantidade/:anoParam',
+  schemaValidation({
+    params: acompanhamentoSchema.anoParam
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getQuantidadeAno(
+      req.params.anoParam
+    )
+
+    const msg = 'Informações do Dashboard de quantidade retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/dashboard/finalizadas/:anoParam',
+  schemaValidation({
+    params: acompanhamentoSchema.anoParam
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getFinalizadasAno(
+      req.params.anoParam
+    )
+
+    const msg = 'Informações do Dashboard de finalizadas retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/dashboard/execucao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getExecucao()
+
+    const msg = 'Informações do Dashboard de execução retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/mapa/:nome',
+  schemaValidation({ params: acompanhamentoSchema.nomeParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.getLayerGeoJSON(req.params.nome)
+
+    const msg = 'Geojson da camada retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 
 /*
 router.get(

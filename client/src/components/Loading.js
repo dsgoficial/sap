@@ -1,17 +1,21 @@
 import React from 'react'
-import {
-    CircularProgress,
-    Backdrop
-} from '@mui/material';
+import ReactLoading from "react-loading";
+import { styled } from '@mui/material/styles';
 
-const Loading = ({ open }) => {
+const RootDiv = styled('div')(({ theme }) => ({
+    width: "100%",
+    height: "100",
+    display: "flex",
+    marginTop: '20%',
+    justifyContent: "center",
+    alignItems: "center"
+}));
+
+const Loading = ({ style }) => {
     return (
-        <Backdrop
-            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-            open={open}
-        >
-            <CircularProgress color="inherit" />
-        </Backdrop>
+        <RootDiv style={style}>
+            <ReactLoading type="bars" color="#F83737" height="8%" width="8%" />
+        </RootDiv>
     )
 }
 

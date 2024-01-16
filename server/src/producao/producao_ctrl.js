@@ -1,6 +1,6 @@
 'use strict'
 
-const { db, temporaryLogin } = require('../database')
+const { db, temporaryLogin, disableTriggers } = require('../database')
 
 const { AppError, httpCode } = require('../utils')
 
@@ -9,7 +9,7 @@ const prepared = require('./prepared_statements')
 const controller = {}
 
 controller.calculaFila = async (usuarioId) => {
-  const prioridade = await db.sapConn.task(async (t) => {
+  const prioridade = await db.sapConn.task(async t => {
     const filaPrioritaria = await t.oneOrNone(prepared.calculaFilaPrioritaria, [
       usuarioId
     ])
@@ -62,7 +62,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
 
   if (etapaCode === 1 || etapaCode === 4) {
     camadas = await connection.any(
-      `SELECT c.schema, c.nome, pc.atributo_filtro_subfase
+      `SELECT c.schema, c.nome, pc.atributo_filtro_subfase, pc.camada_incomum
         FROM macrocontrole.propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1 and pc.camada_apontamento IS FALSE`,
@@ -70,7 +70,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
     )
   } else {
     camadas = await connection.any(
-      `SELECT c.schema, c.nome, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao
+      `SELECT c.schema, c.nome, pc.atributo_filtro_subfase, pc.camada_apontamento, pc.atributo_justificativa_apontamento, pc.atributo_situacao_correcao, pc.camada_incomum
         FROM macrocontrole.propriedades_camada AS pc
         INNER JOIN macrocontrole.camada AS c ON c.id = pc.camada_id
         WHERE pc.subfase_id = $1`,
@@ -81,7 +81,7 @@ const getInfoCamadas = async (connection, etapaCode, subfaseId) => {
   const result = []
 
   camadas.forEach((r) => {
-    const aux = { nome: r.nome, schema: r.schema }
+    const aux = { nome: r.nome, schema: r.schema, camada_incomum: r.camada_incomum }
     if (r.atributo_filtro_subfase) {
       aux.atributo_filtro_subfase = r.atributo_filtro_subfase
     }
@@ -147,23 +147,35 @@ const getInfoFME = async (connection, subfaseId, loteId) => {
   )
 }
 
+const getInfoTemas = async (connection, subfaseId, loteId) => {
+  return connection.any(
+    `SELECT qt.nome, qt.definicao_tema
+    FROM macrocontrole.perfil_tema AS pt
+    INNER JOIN dgeo.qgis_themes AS qt ON qt.id = pt.tema_id
+    WHERE pt.subfase_id = $<subfaseId> AND pt.lote_id = $<loteId>`,
+    { subfaseId, loteId }
+  )
+}
+
 const getInfoConfigQGIS = async (connection, subfaseId, loteId) => {
   return connection.any(
     'SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId> AND lote_id = $<loteId>',
     { subfaseId, loteId }
   )
 }
-/**
+
 const getInfoMonitoramento = async (connection, subfaseId, loteId) => {
-  return connection.any(
+  let monitoramento = await connection.any(
     `SELECT pm.tipo_monitoramento_id, tm.nome as tipo_monitoramento
-      FROM macrocontrole.perfil_monitoramento AS pm
-      INNER JOIN dominio.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
+      FROM microcontrole.perfil_monitoramento AS pm
+      INNER JOIN microcontrole.tipo_monitoramento AS tm ON tm.code = pm.tipo_monitoramento_id
       WHERE subfase_id = $1 AND lote_id = $2`,
     [subfaseId, loteId]
   )
+
+  return monitoramento.length > 0 ? monitoramento[0].tipo_monitoramento_id : null
 }
- */
+
 const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
   return connection.any(
     `SELECT i.id, i.nome, i.caminho, i.epsg, i.tipo_insumo_id, iut.caminho_padrao
@@ -213,37 +225,51 @@ const getInfoLinhagem = async (
       perfilLinhagem.tipo_exibicao_id === 3)
   ) {
     linhagem = await connection.any(
-      `SELECT a_ant.data_inicio, a_ant.data_fim, u.nome_guerra, tpg.nome_abrev AS posto_grad,
-        replace(etapa.nome || ' - ' || etapa.numero, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
+      `SELECT a.data_inicio, a.data_fim, u.nome_guerra, tpg.nome_abrev AS posto_grad,
+      tf.nome AS fase, sf.nome AS subfase, ut.lote_id,
+      replace(te.nome || ' - ' || e.ordem, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
+      FROM macrocontrole.atividade AS a
+      INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a.tipo_situacao_id
+      INNER JOIN dgeo.usuario AS u ON u.id = a.usuario_id
+      INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.etapa AS e ON a.etapa_id = e.id
+      INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+      INNER JOIN macrocontrole.subfase AS sf ON sf.id = e.subfase_id
+      INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
+      INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+      INNER JOIN (
+        SELECT ut.geom, ut.lote_id
         FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
-        INNER JOIN (
-          SELECT e.nome, se.id, se.ordem,
-          rank() OVER (PARTITION BY e.nome ORDER BY se.ordem) as numero 
-          FROM dominio.tipo_etapa AS e
-          INNER JOIN macrocontrole.etapa AS se ON e.code = se.tipo_etapa_id) AS etapa ON etapa.id = a_ant.etapa_id
-        INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a_ant.tipo_situacao_id
-        INNER JOIN dgeo.usuario AS u ON u.id = a_ant.usuario_id
-        INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
         WHERE a.id = $1
-        ORDER BY etapa.ordem, a_ant.data_fim
+      ) AS ut_ref ON ut_ref.lote_id = ut.lote_id AND ut.geom && ut_ref.geom AND st_relate(ut.geom, ut_ref.geom, '2********')
+      WHERE ts.code != 5 AND ts.code != 1
+      ORDER BY f.ordem, sf.ordem, a.data_fim
         `,
       [atividadeId]
     )
   } else {
     linhagem = await connection.any(
-      `SELECT a_ant.data_inicio, a_ant.data_fim,
-        replace(etapa.nome || ' - ' || etapa.numero, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
+      `SELECT a.data_inicio, a.data_fim,
+      tf.nome AS fase, sf.nome AS subfase, ut.lote_id,
+      replace(te.nome || ' - ' || e.ordem, 'Execução - 1', 'Execução') as etapa, ts.nome as situacao
+      FROM macrocontrole.atividade AS a
+      INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a.tipo_situacao_id
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      INNER JOIN macrocontrole.etapa AS e ON a.etapa_id = e.id
+      INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
+      INNER JOIN macrocontrole.subfase AS sf ON sf.id = e.subfase_id
+      INNER JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
+      INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+      INNER JOIN (
+        SELECT ut.geom, ut.lote_id
         FROM macrocontrole.atividade AS a
-        INNER JOIN macrocontrole.atividade AS a_ant ON a_ant.unidade_trabalho_id = a.unidade_trabalho_id
-        INNER JOIN (
-          SELECT e.nome, se.id, se.ordem,
-          rank() OVER (PARTITION BY e.nome ORDER BY se.ordem) as numero 
-          FROM dominio.tipo_etapa AS e
-          INNER JOIN macrocontrole.etapa AS se ON e.code = se.tipo_etapa_id) AS etapa ON etapa.id = a_ant.etapa_id
-        INNER JOIN dominio.tipo_situacao AS ts ON ts.code = a_ant.tipo_situacao_id
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
         WHERE a.id = $1
-        ORDER BY etapa.ordem, a_ant.data_fim
+      ) AS ut_ref ON ut_ref.lote_id = ut.lote_id AND ut.geom && ut_ref.geom AND st_relate(ut.geom, ut_ref.geom, '2********')
+      WHERE ts.code != 5 AND ts.code != 1
+      ORDER BY f.ordem, sf.ordem, a.data_fim
         `,
       [atividadeId]
     )
@@ -276,7 +302,7 @@ const getAtalhos = async (connection) => {
 }
 
 const dadosProducao = async (atividadeId) => {
-  const results = await db.sapConn.task(async (t) => {
+  const results = await db.sapConn.task(async t => {
     const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId])
 
     const info = {}
@@ -290,8 +316,10 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.projeto = dadosut.projeto
     info.atividade.lote = dadosut.lote
     info.atividade.bloco = dadosut.bloco
+    info.atividade.tipo_produto = dadosut.tipo_produto
     info.atividade.denominador_escala = dadosut.denominador_escala
     info.atividade.dificuldade = dadosut.dificuldade
+    info.atividade.tempo_estimado_minutos = dadosut.tempo_estimado_minutos
     info.atividade.observacao_atividade = dadosut.observacao_atividade
     info.atividade.observacao_unidade_trabalho =
       dadosut.observacao_unidade_trabalho
@@ -338,18 +366,19 @@ const dadosProducao = async (atividadeId) => {
 
     info.atividade.fme = await getInfoFME(t, dadosut.subfase_id, dadosut.lote_id)
 
+    info.atividade.temas = await getInfoTemas(t, dadosut.subfase_id, dadosut.lote_id)
+
     info.atividade.configuracao_qgis = await getInfoConfigQGIS(
       t,
       dadosut.subfase_id,
       dadosut.lote_id
     )
 
-    /*
     info.atividade.monitoramento = await getInfoMonitoramento(
       t,
       dadosut.subfase_id,
       dadosut.lote_id
-    )*/
+    )
 
     info.atividade.insumos = await getInfoInsumos(
       t,
@@ -419,14 +448,6 @@ controller.verifica = async (usuarioId) => {
     return null
   }
 
-  // Medida de segurança para tornar outras atividades que estão em execução como pausadas
-  await db.sapConn.none(
-    `UPDATE macrocontrole.atividade SET
-       tipo_situacao_id = 3 
-       WHERE tipo_situacao_id = 2 AND usuario_id = $<usuarioId> AND id != $<emAndamentoId>`,
-    { usuarioId, emAndamentoId: emAndamento.id }
-  )
-
   return controller.getDadosAtividade(emAndamento.id, usuarioId, false)
 }
 
@@ -439,21 +460,23 @@ controller.finaliza = async (
   observacaoProximaAtividade
 ) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async (t) => {
+  let ativ
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     // Usuário é passado como uma medida de segurança para garantir que quem está finalizando é o usuário da atividade
-    const result = await t.result(
+    const result = await t.any(
       `UPDATE macrocontrole.atividade SET
         data_fim = $<dataFim>, tipo_situacao_id = 4
-        WHERE id = $<atividadeId> AND usuario_id = $<usuarioId> AND tipo_situacao_id in (2)`,
+        WHERE id = $<atividadeId> AND usuario_id = $<usuarioId> AND tipo_situacao_id in (2) RETURNING id`,
       { dataFim, atividadeId, usuarioId }
     )
 
-    if (!result.rowCount || result.rowCount !== 1) {
+    if (!(result && result.length > 0)) {
       throw new AppError(
         'Erro ao finalizar atividade. Atividade não encontrada ou não corresponde a este operador',
         httpCode.BadRequest
       )
     }
+    ativ = result.map(d => d.id)
 
     if (observacaoProximaAtividade) {
       const obsResult = await t.result(
@@ -480,23 +503,51 @@ controller.finaliza = async (
     }
 
     if (infoEdicao) {
-      // TODO
+      const prodNameResult = await t.result(
+        `UPDATE macrocontrole.produto SET
+          nome = $<nome_produto>
+          WHERE id = $<produto_id>`,
+        { produto_id: info_edicao.produto_id, nome_produto: info_edicao.nome_produto }
+      )
+
+      if (!prodNameResult.rowCount || prodNameResult.rowCount !== 1) {
+        throw new AppError(
+          'Erro ao finalizar atividade. Não foi encontrado o produto para atualizar a informação de edição.',
+          httpCode.BadRequest
+        )
+      }
+
+      const cs = new db.pgp.helpers.ColumnSet([
+        'nome',
+        'tipo_palavra_chave_id',
+        { name: 'produto_id', init: () => info_edicao.produto_id }
+      ])
+
+      const query = pgp.helpers.insert(infoEdicao.palavras_chave, cs, {
+        table: 'palavra_chave_produto',
+        schema: 'metadado'
+      }) + ' ON CONFLICT (nome, produto_id) DO UPDATE SET tipo_palavra_chave_id = EXCLUDED.tipo_palavra_chave_id';
+
+      await t.none(query)
+
     }
 
     if (semCorrecao) {
       const result = await t.result(
         `DELETE FROM macrocontrole.atividade 
           WHERE id in (
-            with prox as (select e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
-            from macrocontrole.atividade as a
-            inner join macrocontrole.etapa as erev on erev.id = a.etapa_id
-            inner join macrocontrole.etapa as e on e.subfase_id = erev.subfase_id AND e.lote_id = erev.lote_id
-            where erev.tipo_etapa_id in (2,5) and a.id = $<atividadeId>)
-            select a.id
-            from macrocontrole.atividade as a
-            inner join macrocontrole.atividade as arev on arev.unidade_trabalho_id = a.unidade_trabalho_id
-            inner join prox as p on p.prox_id = a.etapa_id and p.id = arev.etapa_id
-            where arev.id=$<atividadeId>
+            WITH prox AS (
+              SELECT e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
+              FROM macrocontrole.etapa AS e
+              INNER JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id
+              WHERE a.id = $<atividadeId>
+            )
+            SELECT a.id
+            FROM macrocontrole.atividade AS a
+            INNER JOIN macrocontrole.atividade AS arev ON arev.unidade_trabalho_id = a.unidade_trabalho_id
+            INNER JOIN prox AS p ON p.prox_id = a.etapa_id AND p.id = arev.etapa_id
+            INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+            WHERE arev.id=$<atividadeId> AND e.tipo_etapa_id = 3
           )`,
         { atividadeId }
       )
@@ -530,6 +581,8 @@ controller.finaliza = async (
 
     await temporaryLogin.resetPassword(atividadeId, usuarioId)
   })
+  //nonblocking call
+  disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ)
 }
 
 controller.inicia = async (usuarioId) => {
@@ -538,7 +591,8 @@ controller.inicia = async (usuarioId) => {
   if (!prioridade) {
     return null
   }
-  await db.sapConn.tx(async (t) => {
+  let ativ
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const verify = await t.oneOrNone(
       `SELECT id FROM macrocontrole.atividade
       WHERE usuario_id = $<usuarioId> AND tipo_situacao_id = 2`,
@@ -564,17 +618,21 @@ controller.inicia = async (usuarioId) => {
           SELECT id from macrocontrole.atividade WHERE id = $<prioridade>)`,
       { prioridade }
     )
-    const result = await t.result(
+    const result = await t.any(
       `UPDATE macrocontrole.atividade SET
           data_inicio = $<dataInicio>, tipo_situacao_id = 2, usuario_id = $<usuarioId>
-          WHERE id = $<prioridade> and tipo_situacao_id IN (1,3)`,
+          WHERE id = $<prioridade> and tipo_situacao_id IN (1,3) RETURNING id`,
       { dataInicio, prioridade, usuarioId }
     )
 
-    if (!result.rowCount) {
+    if (!(result && result.length > 0)) {
       throw new AppError('Não pode iniciar a tarefa selecionada para a fila')
     }
+
+    ativ = result.map(d => d.id)
   })
+  //nonblocking call
+  disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ)
 
   return controller.getDadosAtividade(prioridade, usuarioId, true)
 }
@@ -583,24 +641,28 @@ controller.problemaAtividade = async (
   atividadeId,
   tipoProblemaId,
   descricao,
+  polygonEwkt,
   usuarioId
 ) => {
   const dataFim = new Date()
-  await db.sapConn.tx(async (t) => {
-    const result = await t.result(
+  let ativ
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    const result = await t.any(
       `
       UPDATE macrocontrole.atividade SET
       data_fim = $<dataFim>, tipo_situacao_id = 5
-      WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId>
+      WHERE id = $<atividadeId> AND tipo_situacao_id = 2 AND usuario_id = $<usuarioId> RETURNING id
       `,
       { dataFim, atividadeId, usuarioId }
     )
-    if (!result.rowCount) {
+    if (!(result && result.length > 0)) {
       throw new AppError(
         'Não foi possível de reportar problema, atividade não encontrada ou não corresponde a uma atividade em execução do usuário',
         httpCode.BadRequest
       )
     }
+    ativ = result.map(d => d.id)
+
     const atividade = await t.one(
       `SELECT a.etapa_id, a.unidade_trabalho_id, ST_AsText(ut.geom) AS geom
       FROM macrocontrole.atividade AS a
@@ -622,17 +684,19 @@ controller.problemaAtividade = async (
     )
     await t.any(
       `
-      INSERT INTO macrocontrole.problema_atividade(atividade_id, tipo_problema_id, descricao, data, resolvido, geom)
-      VALUES($<id>,$<tipoProblemaId>,$<descricao>, NOW(), FALSE, ST_GEOMFROMEWKT($<geom>))
+      INSERT INTO macrocontrole.problema_atividade(atividade_id, usuario_id, tipo_problema_id, descricao, data, resolvido, geom)
+      VALUES($<id>,$<usuarioId>,$<tipoProblemaId>,$<descricao>, NOW(), FALSE, ST_GEOMFROMEWKT($<geom>))
       `,
       {
         id: newId.id,
+        usuarioId: usuarioId,
         unidadeTrabalhoId: atividade.unidade_trabalho_id,
         tipoProblemaId,
         descricao,
-        geom: `SRID=4326;${atividade.geom}`
+        geom: polygonEwkt
       }
     )
+
     await t.any(
       `
         UPDATE macrocontrole.unidade_trabalho SET
@@ -644,6 +708,9 @@ controller.problemaAtividade = async (
 
     await temporaryLogin.resetPassword(atividadeId, usuarioId)
   })
+
+  //nonblocking call
+  disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ)
 }
 
 controller.getTipoProblema = async () => {
@@ -656,5 +723,45 @@ controller.getTipoProblema = async () => {
   })
   return dados
 }
+
+controller.getPluginPath = async () => {
+  return db.sapConn.one(
+    `SELECT path
+      FROM dgeo.plugin_path WHERE code = 1`
+  )
+
+}
+
+controller.finalizacaoIncorreta = async (descricao, usuarioId) => {
+  return db.sapConn.task(async t => {
+    const atividade = await t.one(
+      `SELECT a.id, a.unidade_trabalho_id, ST_AsEWKT(ut.geom) AS polygonEwkt
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+      WHERE a.usuario_id = $<usuarioId> AND a.tipo_situacao = 4
+      ORDER BY a.data_fim DESC
+      LIMIT 1`,
+      { usuarioId }
+    )
+
+    await t.any(
+      `
+      INSERT INTO macrocontrole.problema_atividade(atividade_id, usuario_id, tipo_problema_id, descricao, data, resolvido, geom)
+      VALUES($<id>,$<usuarioId>,$<tipoProblemaId>,$<descricao>, NOW(), FALSE, ST_GEOMFROMEWKT($<geom>))
+      `,
+      {
+        id: atividade.id,
+        usuarioId: usuarioId,
+        unidadeTrabalhoId: atividade.unidade_trabalho_id,
+        tipoProblemaId: 7,
+        descricao,
+        geom: atividade.polygonEwkt
+      }
+    )
+
+  })
+}
+
+
 
 module.exports = controller

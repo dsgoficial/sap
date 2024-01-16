@@ -9,11 +9,10 @@ models.feicao = Joi.object().keys({
     .integer()
     .strict()
     .required(),
-  data: Joi.date().required(),
   dados: Joi.array()
     .items(
       Joi.object().keys({
-        operacao: Joi.number()
+        tipo_operacao_id: Joi.number()
           .integer()
           .strict()
           .required(),
@@ -28,10 +27,7 @@ models.feicao = Joi.object().keys({
           .integer()
           .strict()
           .when('operacao', { is: 1, then: Joi.required() }),
-        camada_id: Joi.number()
-          .integer()
-          .strict()
-          .required()
+        camada: Joi.string().required()
       })
     )
     .required()
@@ -68,18 +64,37 @@ models.tela = Joi.object().keys({
     .min(1)
 })
 
-models.comportamento = Joi.object().keys({
-  atividade_id: Joi.number()
-    .integer()
-    .strict()
-    .required(),
-  dados: Joi.array()
+models.perfilMonitoramento = Joi.object().keys({
+  perfis_monitoramento: Joi.array()
     .items(
       Joi.object().keys({
-        propriedade: Joi.string().required(),
-        valor: Joi.string().required()
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+        tipo_monitoramento_id: Joi.number().integer().strict().required()
       })
     )
+    .required()
+    .min(1)
+})
+
+models.perfilMonitoramentoAtualizacao = Joi.object().keys({
+  perfis_monitoramento: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required(),
+        tipo_monitoramento_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilMonitoramentoOperadorIds = Joi.object().keys({
+  perfis_monitoramento_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
     .required()
     .min(1)
 })

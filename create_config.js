@@ -14,6 +14,9 @@ const pgp = require('pg-promise')({
   promiseLib: promise
 })
 
+const { Command } = require('commander')
+const program = new Command()
+
 const readSqlFile = file => {
   const fullPath = path.join(__dirname, file)
   return new pgp.QueryFile(fullPath, { minify: true })
@@ -108,6 +111,7 @@ const createDotEnv = (
   dbServer,
   dbPort,
   dbName,
+  dbNameMicrocontrole,
   dbUser,
   dbPassword,
   authServer
@@ -119,6 +123,7 @@ PORT=${port}
 DB_SERVER=${dbServer}
 DB_PORT=${dbPort}
 DB_NAME=${dbName}
+DB_NAME_MICROCONTROLE=${dbNameMicrocontrole}
 DB_USER=${dbUser}
 DB_PASSWORD=${dbPassword}
 JWT_SECRET=${secret}
@@ -146,6 +151,25 @@ const givePermission = async ({
   await connection.none(readSqlFile('./er/permissao.sql'), [dbUser])
 }
 
+const givePermissionMicrocontrole = async ({
+  dbUser,
+  dbPassword,
+  dbPort,
+  dbServer,
+  dbNameMicrocontrole,
+  connection
+}) => {
+  if (!connection) {
+    const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbNameMicrocontrole}`
+
+    connection = pgp(connectionString)
+  }
+
+  console.log('Executando permissões de microcontrole...')
+
+  await connection.none(readSqlFile('./er_microcontrole/permissao.sql'), [dbUser])
+}
+
 const insertAdminUser = async (authUserData, connection) => {
   const { login, nome, nome_guerra: nomeGuerra, tipo_posto_grad_id: tpgId, tipo_turno_id: ttId, uuid } = authUserData
 
@@ -167,6 +191,13 @@ const createDatabase = async (
   console.log('Criando Banco...')
   const postgresConnectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/postgres`
   const postgresConn = pgp(postgresConnectionString)
+
+  const databases = await postgresConn.any('SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower($1)', dbName)
+  if (databases.length > 0) {
+    console.log('Banco de dados do SAP já existe. Saindo...'.red)
+    process.exit(0)
+  }
+
   await postgresConn.none('CREATE DATABASE $1:name', [dbName])
 
   const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`
@@ -180,11 +211,44 @@ const createDatabase = async (
     await t.none(readSqlFile('./er/dgeo.sql'))
     await t.none(readSqlFile('./er/macrocontrole.sql'))
     await t.none(readSqlFile('./er/linha_producao_padrao.sql'))
-    //await t.none(readSqlFile('./er/metadado.sql'))
-    //await t.none(readSqlFile('./er/recurso_humano.sql'))
+    await t.none(readSqlFile('./er/metadado.sql'))
     await t.none(readSqlFile('./er/acompanhamento.sql'))
+    await t.none(readSqlFile('./er/microcontrole.sql'))
     await givePermission({ dbUser, connection: t })
     await insertAdminUser(authUserData, t)
+  })
+}
+
+const createMicrocontroleDatabase = async (
+  dbUser,
+  dbPassword,
+  dbPort,
+  dbServer,
+  dbName
+) => {
+  const postgresConnectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/postgres`
+  const postgresConn = pgp(postgresConnectionString)
+
+  // Check if the database already exists
+  const databases = await postgresConn.any('SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower($1)', dbName)
+  
+  if (databases.length > 0) {
+    console.log('Banco de dados de microcontrole já existe. Saindo...'.red)
+    process.exit(0)
+  }
+
+  console.log('Criando banco de dados de microcontrole...')
+  await postgresConn.none('CREATE DATABASE $1:name', [dbName])
+
+  const connectionString = `postgres://${dbUser}:${dbPassword}@${dbServer}:${dbPort}/${dbName}`
+
+  console.log('Executando SQLs...')
+
+  const db = pgp(connectionString)
+  await db.tx(async t => {
+    await t.none(readSqlFile('./er_microcontrole/versao.sql'))
+    await t.none(readSqlFile('./er_microcontrole/microcontrole.sql'))
+    await givePermissionMicrocontrole({ dbUser, connection: t })
   })
 }
 
@@ -220,95 +284,139 @@ const handleError = error => {
   process.exit(0)
 }
 
-const createConfig = async () => {
+const getConfigFromUser = options => {
+  const questions = []
+
+  if (!options.dbServer) {
+    questions.push({
+      type: 'input',
+      name: 'dbServer',
+      message: 'Qual o endereço de IP do servidor do banco de dados PostgreSQL?',
+    })
+  }
+  if (!options.dbPort) {
+    questions.push({
+      type: 'input',
+      name: 'dbPort',
+      message: 'Qual a porta do servidor do banco de dados PostgreSQL?',
+      default: 5432
+    })
+  }
+  if (!options.dbUser) {
+    questions.push({
+      type: 'input',
+      name: 'dbUser',
+      message: 'Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?',
+    })
+  }
+  if (!options.dbPassword) {
+    questions.push({
+      type: 'password',
+      name: 'dbPassword',
+      mask: '*',
+      message: 'Qual a senha do usuário do PostgreSQL para interação com o SAP?', 
+    })
+  }
+  if (!options.dbName) {
+    questions.push({
+      type: 'input',
+      name: 'dbName',
+      message: 'Qual o nome do banco de dados do SAP?',
+      default: 'sap'
+    })
+  }
+  if (!options.port) {
+    questions.push({
+      type: 'input',
+      name: 'port',
+      message: 'Qual a porta do servidor do SAP?',
+      default: 3013
+    })
+  }
+  if (!options.dbNameMicrocontrole) {
+    questions.push({
+      type: 'input',
+      name: 'dbNameMicrocontrole',
+      message: 'Qual o nome do banco de dados de microcontrole?',
+      default: 'microcontrole'
+    })
+  }
+  if (!options.dbCreate) {
+    questions.push({
+      type: 'confirm',
+      name: 'dbCreate',
+      message: 'Deseja criar o banco de dados do SAP?',
+      default: true
+    })
+  }
+  if (!options.dbCreateMicrocontrole) {
+    questions.push({
+      type: 'confirm',
+      name: 'dbCreateMicrocontrole',
+      message: 'Deseja criar o banco de dados de microcontrole?',
+      default: true
+    })
+  }
+  if (!options.authServerRaw) {
+    questions.push({
+      type: 'input',
+      name: 'authServerRaw',
+      message:
+        'Qual a URL do serviço de autenticação (iniciar com http:// ou https://)?',
+    })
+  }
+  if (!options.authUser) {
+    questions.push({
+      type: 'input',
+      name: 'authUser',
+      message: 'Qual o nome do usuário já existente Serviço de Autenticação que será administrador do SAP?',
+    })
+  }
+  if (!options.authPassword) {
+    questions.push({
+      type: 'password',
+      name: 'authPassword',
+      mask: '*',
+      message: 'Qual a senha do usuário já existente Serviço de Autenticação que será administrador do SAP?',
+    })
+  }
+  
+  return { questions }
+}
+
+
+const createConfig = async (options) => {
   try {
     console.log('Sistema de Apoio a Produção'.blue)
     console.log('Criação do arquivo de configuração'.blue)
-
-    const exists = verifyDotEnv()
-    if (exists) {
-      throw new Error(
-        'Arquivo config.env já existe, apague antes de iniciar a configuração.'
-      )
+    
+    if (!options.overwriteEnv) {
+      const exists = verifyDotEnv()
+      if (exists) {
+        throw new Error(
+          'Arquivo config.env já existe, apague antes de iniciar a configuração.'
+        )
+      }
     }
 
-    const questions = [
-      {
-        type: 'input',
-        name: 'dbServer',
-        message:
-          'Qual o endereço de IP do servidor do banco de dados PostgreSQL?'
-      },
-      {
-        type: 'input',
-        name: 'dbPort',
-        message: 'Qual a porta do servidor do banco de dados PostgreSQL?',
-        default: 5432
-      },
-      {
-        type: 'input',
-        name: 'dbUser',
-        message:
-          'Qual o nome do usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)?'
-      },
-      {
-        type: 'password',
-        name: 'dbPassword',
-        mask: '*',
-        message:
-          'Qual a senha do usuário do PostgreSQL para interação com o SAP?'
-      },
-      {
-        type: 'input',
-        name: 'dbName',
-        message: 'Qual o nome do banco de dados do SAP?',
-        default: 'sap'
-      },
-      {
-        type: 'input',
-        name: 'port',
-        message: 'Qual a porta do serviço do SAP?',
-        default: 3013
-      },
-      {
-        type: 'confirm',
-        name: 'dbCreate',
-        message: 'Deseja criar o banco de dados do SAP?',
-        default: true
-      },
-      {
-        type: 'input',
-        name: 'authServerRaw',
-        message:
-          'Qual a URL do serviço de autenticação (iniciar com http:// ou https://)?'
-      },
-      {
-        type: 'input',
-        name: 'authUser',
-        message:
-          'Qual o nome do usuário já existente Serviço de Autenticação que será administrador do SAP?'
-      },
-      {
-        type: 'password',
-        name: 'authPassword',
-        mask: '*',
-        message:
-          'Qual a senha do usuário já existente Serviço de Autenticação que será administrador do SAP?'
-      }
-    ]
-
+    let { questions } = getConfigFromUser(options)
     const {
-      port,
-      dbServer,
-      dbPort,
-      dbName,
-      dbUser,
-      dbPassword,
-      dbCreate,
-      authServerRaw,
-      authUser,
-      authPassword
-    } = await inquirer.prompt(questions)
+      port, 
+      dbServer, 
+      dbPort, 
+      dbName, 
+      dbNameMicrocontrole,
+      dbUser, 
+      dbPassword, 
+      dbCreate, 
+      dbCreateMicrocontrole,  
+      authServerRaw, 
+      authUser, 
+      authPassword 
+    } = await inquirer.prompt(questions).then(async userAnswers => {
+      const answers = { ...options, ...userAnswers }
+      return answers
+    })
 
     const authServer = authServerRaw.endsWith('/') ? authServerRaw.slice(0, -1) : authServerRaw
 
@@ -340,11 +448,28 @@ const createConfig = async () => {
       console.log(`Permissão ao usuário ${dbUser} adicionada com sucesso`.blue)
     }
 
+    if (dbCreateMicrocontrole) {
+      await createMicrocontroleDatabase(
+        dbUser,
+        dbPassword,
+        dbPort,
+        dbServer,
+        dbNameMicrocontrole
+      )
+
+      console.log('Banco de dados de microcontrole criado com sucesso!'.blue)
+    } else {
+      await givePermissionMicrocontrole({ dbUser, dbPassword, dbPort, dbServer, dbNameMicrocontrole })
+
+      console.log(`Permissão ao usuário ${dbUser} no banco de dados de microcontrole adicionada com sucesso`.blue)
+    }
+
     createDotEnv(
       port,
       dbServer,
       dbPort,
       dbName,
+      dbNameMicrocontrole,
       dbUser,
       dbPassword,
       authServer
@@ -358,4 +483,24 @@ const createConfig = async () => {
   }
 }
 
-createConfig()
+program
+  .option('-dbServer, --db-server <type>', 'Endereço de IP do servidor do banco de dados PostgreSQL')
+  .option('-dbPort, --db-port <type>', 'Porta do servidor do banco de dados PostgreSQL')
+  .option('-dbUser, --db-user <type>', 'Usuário do PostgreSQL para interação com o SAP (já existente no banco de dados e ser superusuario)')
+  .option('-dbPassword, --db-password <type>', 'Senha do usuário do PostgreSQL para interação com o SAP')
+  .option('-dbName, --db-name <type>', 'Nome do banco de dados do SAP')
+  .option('-dbNameMicrocontrole, --db-name-microcontrole <type>', 'Nome do banco de dados de microcontrole')
+  .option('-port, --port <type>', 'Porta do servidor do SAP')
+  .option('-dbCreate, --db-create', 'Criar banco de dados do SAP')
+  .option('--no-db-create', 'Não criar banco de dados do SAP')
+  .option('-dbCreateMicrocontrole, --db-create-microcontrole', 'Criar banco de dados de microcontrole')
+  .option('--no-db-create-microcontrole', 'Não criar banco de dados de microcontrole')
+  .option('-authServerRaw, --auth-server-raw <type>', 'URL do serviço de autenticação (iniciar com http:// ou https://)')
+  .option('-authUser, --auth-user <type>', 'Nome do usuário já existente Serviço de Autenticação que será administrador do SAP')
+  .option('-authPassword, --auth-password <type>', 'Senha do usuário já existente Serviço de Autenticação que será administrador do SAP')
+  .option('-overwriteEnv, --overwrite-env', 'Sobrescrever arquivo de configuração')
+  
+
+program.parse(process.argv)
+const options = program.opts()
+createConfig(options)

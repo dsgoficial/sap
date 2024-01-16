@@ -110,8 +110,6 @@ router.get(
   })
 )
 
-
-
 router.get(
   '/tipo_insumo',
   asyncHandler(async (req, res, next) => {
@@ -443,7 +441,6 @@ router.delete(
   })
 )
 
-
 router.get(
   '/banco_dados',
   verifyAdmin,
@@ -569,7 +566,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.criaAtividades(
       req.body.unidade_trabalho_ids,
-      req.body.etapa_id
+      req.body.etapa_ids
     )
 
     const msg = 'Atividades criadas com sucesso'
@@ -581,10 +578,13 @@ router.post(
 router.post(
   '/atividades/todas',
   verifyAdmin,
-  schemaValidation({ body: projetoSchema.lote }),
+  schemaValidation({ body: projetoSchema.todasAtividades }),
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.criaTodasAtividades(
-      req.body.lote_id
+      req.body.lote_id,
+      req.body.atividades_revisao,
+      req.body.atividades_revisao_correcao,
+      req.body.atividades_revisao_final
     )
 
     const msg = 'Todas Atividades criadas com sucesso'
@@ -952,6 +952,62 @@ router.put(
   })
 )
 
+router.get(
+  '/configuracao/perfil_linhagem',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilLinhagem()
+
+    const msg = 'Perfil Linhagem QGIS retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_linhagem',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilLinhagemIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilLinhagem(req.body.perfil_linhagem_ids)
+
+    const msg = 'Perfil Linhagem QGIS deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_linhagem',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfisLinhagem
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilLinhagem(req.body.perfis_linhagem)
+
+    const msg = 'Perfis Linhagem QGIS criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_linhagem',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilLinhagemAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilLinhagem(req.body.perfis_linhagem)
+
+    const msg = 'Perfis Linhagem atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
 
 router.get(
   '/configuracao/perfil_modelo',
@@ -1124,7 +1180,6 @@ router.put(
   })
 )
 
-
 router.get(
   '/configuracao/perfil_requisito_finalizacao',
   verifyAdmin,
@@ -1182,7 +1237,6 @@ router.put(
   })
 )
 
-
 router.delete(
   '/unidade_trabalho/insumos',
   verifyAdmin,
@@ -1212,8 +1266,6 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
-
-
 
 router.put(
   '/grupo_insumo',
@@ -1312,6 +1364,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await projetoCtrl.associaInsumosBloco(
       req.body.bloco_id,
+      req.body.subfase_ids,
       req.body.grupo_insumo_id,
       req.body.estrategia_id,
       req.body.caminho_padrao
@@ -1449,7 +1502,6 @@ router.delete(
   })
 )
 
-
 router.get(
   '/configuracao/perfil_alias',
   verifyAdmin,
@@ -1563,5 +1615,442 @@ router.put(
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 )
+
+
+router.get(
+  '/temas',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getTemas()
+
+    const msg = 'Temas retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/temas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.temas }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaTemas(req.body.temas, req.usuarioId)
+
+    const msg = 'Temas gravados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/temas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.temasAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaTemas(req.body.temas, req.usuarioId)
+
+    const msg = 'Temas atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/temas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.temasIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaTemas(req.body.temas_ids)
+
+    const msg = 'Temas deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.get(
+  '/configuracao/perfil_temas',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilTemas()
+
+    const msg = 'Perfil de Temas retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_temas',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilTemasIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilTemas(req.body.perfil_temas_ids)
+
+    const msg = 'Perfil de Temas deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_temas',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilTemas
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilTemas(req.body.perfis_temas)
+
+    const msg = 'Perfis de Temas criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_temas',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilTemasAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilTemas(req.body.perfis_temas)
+
+    const msg = 'Perfis de Temas atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.put(
+  '/unidade_trabalho/reshape',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.unidadeTrabalhoReshape }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.reshapeUnidadeTrabalho(
+      req.body.unidade_trabalho_id,
+      req.body.reshape_geom
+    )
+
+    const msg = 'Unidade de trabalho atualizada com sucesso'
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.put(
+  '/unidade_trabalho/cut',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.unidadeTrabalhoCut }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.cutUnidadeTrabalho(
+      req.body.unidade_trabalho_id,
+      req.body.cut_geoms
+    )
+
+    const msg = 'Unidade de trabalho atualizada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.put(
+  '/unidade_trabalho/merge',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.unidadeTrabalhoMerge }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.mergeUnidadeTrabalho(
+      req.body.unidade_trabalho_ids,
+      req.body.merge_geom
+    )
+
+    const msg = 'Unidade de trabalho atualizada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/linha_producao',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.linhaProducao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.insereLinhaProducao(
+      req.body.linha_producao
+    )
+
+    const msg = 'Linha de produção inserida com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/configuracao/perfil_configuracao_qgis',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilConfiguracaoQgis()
+
+    const msg = 'Perfil configuração QGIS retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_configuracao_qgis',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilConfiguracaoQgisIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilConfiguracaoQgis(req.body.perfis_configuracao_qgis_ids)
+
+    const msg = 'Perfil configuração QGIS deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_configuracao_qgis',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilConfiguracaoQgis
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilConfiguracaoQgis(req.body.perfis_configuracao_qgis)
+
+    const msg = 'Perfis configuração QGIS criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_configuracao_qgis',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilConfiguracaoQgisAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilConfiguracaoQgis(req.body.perfis_configuracao_qgis)
+
+    const msg = 'Perfis configuração QGIS atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/tipo_perfil_dificuldade',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getTipoPerfilDificuldade()
+
+    const msg = 'Tipo perfil dificuldade retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/configuracao/perfil_dificuldade_operador',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilDificuldadeOperador()
+
+    const msg = 'Perfil dificuldade operador retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_dificuldade_operador',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilDificuldadeOperadorIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilDificuldadeOperador(req.body.perfis_dificuldade_operador_ids)
+
+    const msg = 'Perfil dificuldade operador deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_dificuldade_operador',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilDificuldadeOperador
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilDificuldadeOperador(req.body.perfis_dificuldade_operador)
+
+    const msg = 'Perfis dificuldade operador criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_dificuldade_operador',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilDificuldadeOperadorAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilDificuldadeOperador(req.body.perfis_dificuldade_operador)
+
+    const msg = 'Perfis dificuldade operador atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/lote/copiar',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.configuracaoLoteCopiar
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.copiarConfiguracaoLote(
+      req.body.lote_id_origem,
+      req.body.lote_id_destino,
+      req.body.copiar_estilo,
+      req.body.copiar_menu,
+      req.body.copiar_regra,
+      req.body.copiar_modelo,
+      req.body.copiar_workflow,
+      req.body.copiar_alias,
+      req.body.copiar_linhagem,
+      req.body.copiar_finalizacao,
+      req.body.copiar_tema,
+      req.body.copiar_fme,
+      req.body.copiar_configuracao_qgis,
+      req.body.copiar_monitoramento
+    )
+
+    const msg = 'Unidades de trabalho copiadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/configuracao/perfil_workflow_dsgtools',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilWorkflowDsgtools()
+
+    const msg = 'Perfil workflow dsgtools retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/configuracao/perfil_workflow_dsgtools',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilWorkflowDsgtoolsIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilWorkflowDsgtools(req.body.perfil_workflow_dsgtools_ids)
+
+    const msg = 'Perfil workflow dsgtools deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/configuracao/perfil_workflow_dsgtools',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilWorkflowDsgtools
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilWorkflowDsgtools(req.body.perfil_workflow_dsgtools)
+
+    const msg = 'Perfil workflow dsgtools criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/configuracao/perfil_workflow_dsgtools',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilWorkflowDsgtoolsAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilWorkflowDsgtools(req.body.perfil_workflow_dsgtools)
+
+    const msg = 'Perfil workflow dsgtools atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+
+router.get(
+  '/workflow',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getWorkflows()
+
+    const msg = 'Workflows retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/workflow',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.workflows }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaWorkflows(req.body.workflows, req.usuarioId)
+
+    const msg = 'Workflows gravados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/workflow',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.atualizaWorkflows }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaWorkflows(req.body.workflows, req.usuarioId)
+
+    const msg = 'Workflows atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/workflow',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.workflowsIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaWorkflows(req.body.workflows_ids)
+
+    const msg = 'Workflows deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
 
 module.exports = router

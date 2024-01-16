@@ -12,19 +12,26 @@ const { AppError, httpCode } = require('../utils')
 const controller = {}
 
 controller.limpaAtividades = async usuarioId => {
-  const result = db.sapConn.result(
-    `UPDATE macrocontrole.atividade
-    SET usuario_id = NULL, data_inicio = NULL, data_fim = NULL, tipo_situacao_id = 1
-    WHERE usuario_id = $<usuarioId>`,
-    { usuarioId }
-  )
-
-  if (!result.rowCount || result.rowCount == 0) {
-    throw new AppError(
-      'Usuário não encontrado ou o usuário não possue atividades relacionadas',
-      httpCode.BadRequest
+  let ativids;
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    const updatedIds = await t.any(
+      `UPDATE macrocontrole.atividade
+      SET usuario_id = NULL, data_inicio = NULL, data_fim = NULL, tipo_situacao_id = 1
+      WHERE usuario_id = $<usuarioId> RETURNING id`,
+      { usuarioId }
     )
-  }
+
+    if (!updatedIds.length || updatedIds.length == 0) {
+      throw new AppError(
+        'Usuário não encontrado ou o usuário não possue atividades relacionadas',
+        httpCode.BadRequest
+      )
+    }
+
+    ativids = updatedIds.map(row => row.id)
+  
+  })
+  await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativids)
 }
 
 controller.limpaLog = async() => {
@@ -42,5 +49,150 @@ controller.limpaLog = async() => {
   fs.writeFileSync(logDir, logData);
 
 }
+
+controller.getPropriedadesCamada = async () => {
+  return db.sapConn.any(
+    `SELECT pc.camada_id, pc.camada_incomum, pc.atributo_filtro_subfase, 
+    pc.camada_apontamento, pc.atributo_situacao_correcao, 
+    pc.atributo_justificativa_apontamento', pc.subfase_id
+    FROM macrocontrole.propriedades_camada AS pc
+    INNER JOIN macrocontrole.subfase AS s ON s.id = pc.subfase_id`
+  )
+}
+
+controller.criaPropriedadesCamada = async propriedadesCamada => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'camada_id', 'camada_incomum', 'atributo_filtro_subfase', 
+      'camada_apontamento', 'atributo_situacao_correcao', 
+      'atributo_justificativa_apontamento', 'subfase_id'
+    ])
+
+    const query = db.pgp.helpers.insert(propriedadesCamada, cs, {
+      table: 'propriedades_camada',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPropriedadesCamada = async propriedadesCamada => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', 'camada_id', 'camada_incomum', 'atributo_filtro_subfase',
+      'camada_apontamento', 'atributo_situacao_correcao',
+      'atributo_justificativa_apontamento', 'subfase_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        propriedadesCamada,
+        cs,
+        { table: 'propriedades_camada', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.deletePropriedadesCamada = async propriedadesCamadaIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.propriedades_camada
+      WHERE id in ($<propriedadesCamadaIds:csv>)`,
+      { propriedadesCamadaIds }
+    )
+
+    if (exists && exists.length < propriedadesCamadaIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a uma propriedade de camada id',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.propriedades_camada
+      WHERE id in ($<propriedadesCamadaIds:csv>)`,
+      { propriedadesCamadaIds }
+    )
+  })
+}
+
+controller.getInsumo = async () => {
+  return db.sapConn.any(
+    `SELECT i.id, i.nome, i.caminho, i.epsg, i.tipo_insumo_id, i.grupo_insumo_id, i.geom,
+    ti.nome AS tipo_insumo, gi.nome AS grupo_insumo
+    FROM macrocontrole.insumo AS i
+    INNER JOIN dominio.tipo_insumo AS ti ON ti.code = i.tipo_insumo_id
+    INNER JOIN macrocontrole.grupo_insumo AS gi ON gi.id = i.grupo_insumo_id`
+  )
+}
+
+controller.criaInsumo = async insumo => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome', 'caminho', 'epsg', 'tipo_insumo_id', 
+      'grupo_insumo_id', 'geom'
+    ])
+
+    const query = db.pgp.helpers.insert(insumo, cs, {
+      table: 'insumo',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaInsumo = async insumo => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', 'nome', 'caminho', 'epsg', 'tipo_insumo_id',
+      'grupo_insumo_id', 'geom'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        insumo,
+        cs,
+        { table: 'insumo', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.deleteInsumo = async insumoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.insumo
+      WHERE id in ($<insumoIds:csv>)`,
+      { insumoIds }
+    )
+
+    if (exists && exists.length < insumoIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um insumo id',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.insumo
+      WHERE id in ($<insumoIds:csv>)`,
+      { insumoIds }
+    )
+  })
+}
+
 
 module.exports = controller

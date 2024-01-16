@@ -15,7 +15,7 @@ CREATE TABLE macrocontrole.projeto(
 );
 
 CREATE TABLE macrocontrole.linha_producao(
-	id INTEGER NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL UNIQUE,
 	nome_abrev VARCHAR(255) NOT NULL UNIQUE,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
@@ -33,20 +33,6 @@ CREATE TABLE macrocontrole.lote(
 	descricao TEXT
 );
 
-CREATE OR REPLACE FUNCTION macrocontrole.chk_scale(integer, integer)
-  RETURNS BOOLEAN AS
-$$
-	SELECT EXISTS (
-		SELECT 1
-		FROM macrocontrole.lote
-		WHERE denominador_escala = $1
-		AND id = $2
-	);
-$$
-  LANGUAGE SQL;
-ALTER FUNCTION macrocontrole.chk_scale(integer, integer)
-  OWNER TO postgres;
-
 CREATE TABLE macrocontrole.produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	uuid text NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
@@ -55,27 +41,51 @@ CREATE TABLE macrocontrole.produto(
 	inom VARCHAR(255),
 	denominador_escala INTEGER NOT NULL,
 	edicao VARCHAR(255),
+	latitude_centro REAL,
+	longitude_centro REAL,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
-	geom geometry(MULTIPOLYGON, 4326) NOT NULL,
-	CONSTRAINT chk_product_scale CHECK (macrocontrole.chk_scale(denominador_escala, lote_id))
+	geom geometry(MULTIPOLYGON, 4326) NOT NULL
 );
+
+CREATE OR REPLACE FUNCTION macrocontrole.chk_scale() RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM macrocontrole.lote
+        WHERE denominador_escala = NEW.denominador_escala
+        AND id = NEW.lote_id
+    ) THEN
+        RAISE EXCEPTION 'Scale inconsistency detected';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_scale()
+  OWNER TO postgres;
+
+CREATE TRIGGER chk_product_scale
+BEFORE INSERT OR UPDATE ON macrocontrole.produto
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.chk_scale();
+
 
 CREATE INDEX produto_geom
     ON macrocontrole.produto USING gist
     (geom);
 
 CREATE TABLE macrocontrole.fase(
-    id INTEGER NOT NULL PRIMARY KEY,
+    id SERIAL NOT NULL PRIMARY KEY,
     tipo_fase_id SMALLINT NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
     ordem INTEGER NOT NULL
 );
 
 CREATE TABLE macrocontrole.subfase(
-	id INTEGER NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
+    ordem INTEGER NOT NULL,
 	UNIQUE (nome, fase_id)
 );
 
@@ -99,57 +109,27 @@ CREATE TABLE macrocontrole.etapa(
 	UNIQUE (subfase_id, lote_id, ordem)
 );
 
-CREATE OR REPLACE FUNCTION macrocontrole.chk_lote(integer, integer)
-  RETURNS BOOLEAN AS
-$$
-	SELECT EXISTS (
-		SELECT 1
-		FROM macrocontrole.subfase AS s
-		INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
-		INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
-		WHERE s.id = $1 AND l.id = $2 
-	);
-$$
-  LANGUAGE SQL;
-ALTER FUNCTION macrocontrole.chk_lote(integer, integer)
+CREATE OR REPLACE FUNCTION macrocontrole.chk_lote() RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM macrocontrole.subfase AS s
+        INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+        INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
+        WHERE s.id = NEW.subfase_id AND l.id = NEW.lote_id 
+    ) THEN
+        RAISE EXCEPTION 'Lote inconsistency detected';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_lote()
   OWNER TO postgres;
 
-ALTER TABLE macrocontrole.etapa
-ADD CONSTRAINT chk_lote_consistency CHECK (macrocontrole.chk_lote(subfase_id, lote_id));
-
--- Constraint
-CREATE OR REPLACE FUNCTION macrocontrole.etapa_verifica_rev_corr()
-  RETURNS trigger AS
-$BODY$
-    DECLARE nr_erro integer;
-    BEGIN
-
-	WITH prev as (SELECT tipo_etapa_id, lag(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id, lote_id ORDER BY ordem) as prev_tipo_etapa_id
-	FROM macrocontrole.etapa),
-	prox as (SELECT tipo_etapa_id, lead(tipo_etapa_id, 1) OVER(PARTITION BY subfase_id, lote_id ORDER BY ordem) as prox_tipo_etapa_id
-	FROM macrocontrole.etapa)
-	SELECT count(*) into nr_erro FROM (
-		SELECT 1 FROM prev WHERE tipo_etapa_id = 3 and prev_tipo_etapa_id != 2 and prev_tipo_etapa_id != 5
-	    UNION
-		SELECT 1 FROM prox WHERE (tipo_etapa_id = 2 or tipo_etapa_id = 5 ) and (prox_tipo_etapa_id != 3 OR prox_tipo_etapa_id IS NULL)
-	) as foo;
-
-	IF nr_erro > 0 THEN
-		RAISE EXCEPTION 'Etapa de Correção deve ser imediatamente após a uma etapa de Revisão.';
-	END IF;
-
-    RETURN NULL;
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION macrocontrole.etapa_verifica_rev_corr()
-  OWNER TO postgres;
-
---CREATE TRIGGER etapa_verifica_rev_corr
---AFTER UPDATE OR INSERT OR DELETE ON macrocontrole.etapa
---FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.etapa_verifica_rev_corr();
+CREATE TRIGGER chk_lote_consistency
+BEFORE INSERT OR UPDATE ON macrocontrole.etapa
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.chk_lote();
 
 CREATE TABLE macrocontrole.perfil_requisito_finalizacao(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -204,6 +184,14 @@ CREATE TABLE macrocontrole.perfil_menu(
 	UNIQUE(menu_id,subfase_id,lote_id)
 );
 
+CREATE TABLE macrocontrole.perfil_tema(
+	id SERIAL NOT NULL PRIMARY KEY,
+	tema_id INTEGER NOT NULL REFERENCES dgeo.qgis_themes (id),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(tema_id,subfase_id,lote_id)
+);
+
 CREATE TABLE macrocontrole.perfil_model_qgis(
 	id SERIAL NOT NULL PRIMARY KEY,
 	qgis_model_id INTEGER NOT NULL REFERENCES dgeo.qgis_models (id),
@@ -233,16 +221,8 @@ CREATE TABLE macrocontrole.perfil_workflow_dsgtools(
 	UNIQUE(workflow_dsgtools_id,subfase_id,lote_id)
 );
 
---CREATE TABLE macrocontrole.perfil_monitoramento(
---	id SERIAL NOT NULL PRIMARY KEY,
---	tipo_monitoramento_id SMALLINT NOT NULL REFERENCES dominio.tipo_monitoramento (code),
---	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
---	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
---	UNIQUE(tipo_monitoramento_id,subfase_id,lote_id)
---);
-
 CREATE TABLE macrocontrole.camada(
-	id INTEGER NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	schema VARCHAR(255) NOT NULL,
 	nome VARCHAR(255) NOT NULL,
 	UNIQUE(schema,nome)
@@ -251,6 +231,7 @@ CREATE TABLE macrocontrole.camada(
 CREATE TABLE macrocontrole.propriedades_camada(
 	id SERIAL NOT NULL PRIMARY KEY,
 	camada_id INTEGER NOT NULL REFERENCES macrocontrole.camada (id),
+	camada_incomum BOOLEAN NOT NULL DEFAULT FALSE,
 	atributo_filtro_subfase VARCHAR(255),
 	camada_apontamento BOOLEAN NOT NULL DEFAULT FALSE,
 	atributo_situacao_correcao VARCHAR(255),
@@ -304,10 +285,12 @@ CREATE TABLE macrocontrole.unidade_trabalho(
 	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
 	disponivel BOOLEAN NOT NULL DEFAULT FALSE,
 	dificuldade INTEGER NOT NULL DEFAULT 0,
+	tempo_estimado_minutos INTEGER NOT NULL DEFAULT 0,
 	prioridade INTEGER NOT NULL,
 	observacao text,
     geom geometry(POLYGON, 4326) NOT NULL,
-	CONSTRAINT dificuldade CHECK (dificuldade >= 0)
+	CONSTRAINT dificuldade CHECK (dificuldade >= 0),
+	CONSTRAINT tempo_estimado CHECK (tempo_estimado_minutos >= 0)
 );
 
 CREATE INDEX unidade_trabalho_subfase_id
@@ -318,23 +301,27 @@ CREATE INDEX unidade_trabalho_geom
     ON macrocontrole.unidade_trabalho USING gist
     (geom);
 
-CREATE OR REPLACE FUNCTION macrocontrole.chk_lote_ut(integer, integer)
-  RETURNS BOOLEAN AS
-$$
-	SELECT EXISTS (
-		SELECT 1
-		FROM macrocontrole.subfase AS s
-		INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
-		INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
-		WHERE s.id = $1 AND l.id = $2 
-	);
-$$
-  LANGUAGE SQL;
-ALTER FUNCTION macrocontrole.chk_lote_ut(integer, integer)
+CREATE OR REPLACE FUNCTION macrocontrole.chk_lote_ut() RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM macrocontrole.subfase AS s
+        INNER JOIN macrocontrole.fase AS f ON s.fase_id = f.id
+        INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = f.linha_producao_id
+        WHERE s.id = NEW.subfase_id AND l.id = NEW.lote_id 
+    ) THEN
+        RAISE EXCEPTION 'Lote inconsistency detected';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_lote_ut()
   OWNER TO postgres;
 
-ALTER TABLE macrocontrole.unidade_trabalho
-ADD CONSTRAINT chk_lote_consistency_ut CHECK (macrocontrole.chk_lote_ut(subfase_id, lote_id));
+CREATE TRIGGER chk_lote_consistency_ut
+BEFORE INSERT OR UPDATE ON macrocontrole.unidade_trabalho
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.chk_lote_ut();
 
 
 CREATE TABLE macrocontrole.grupo_insumo(
@@ -384,33 +371,30 @@ CREATE UNIQUE INDEX atividade_unique_index
 ON macrocontrole.atividade (etapa_id, unidade_trabalho_id) 
 WHERE tipo_situacao_id in (1,2,3,4);
 
--- Constraint
-CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase()
-  RETURNS trigger AS
-$BODY$
-    DECLARE nr_erro integer;
-    BEGIN
-		SELECT count(*) into nr_erro AS ut_sufase_id from macrocontrole.atividade AS a
-		INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-		INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-		WHERE e.subfase_id != ut.subfase_id OR e.lote_id != ut.lote_id;
+CREATE INDEX atividade_tipo_situacao_id ON macrocontrole.atividade ( tipo_situacao_id );
+CREATE INDEX atividade_usuario_id ON macrocontrole.atividade ( usuario_id );
 
-		IF nr_erro > 0 THEN
-			RAISE EXCEPTION 'Etapa e Unidade de Trabalho não devem possuir subfases ou lotes distintos.';
-		END IF;
-    RETURN NEW;
+CREATE OR REPLACE FUNCTION macrocontrole.atividade_verifica_subfase() RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM macrocontrole.etapa AS e
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON NEW.etapa_id = e.id AND NEW.unidade_trabalho_id = ut.id
+        WHERE e.subfase_id != ut.subfase_id OR e.lote_id != ut.lote_id
+    ) THEN
+        RETURN NEW;
+    ELSE
+        RAISE EXCEPTION 'Subfase or Lote inconsistency detected';
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 
-
-    END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
 ALTER FUNCTION macrocontrole.atividade_verifica_subfase()
   OWNER TO postgres;
 
-CREATE TRIGGER atividade_verifica_subfase
-BEFORE UPDATE OR INSERT ON macrocontrole.atividade
-FOR EACH STATEMENT EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
+CREATE TRIGGER chk_subfase_lote_consistency
+BEFORE INSERT OR UPDATE ON macrocontrole.atividade
+FOR EACH ROW EXECUTE PROCEDURE macrocontrole.atividade_verifica_subfase();
 
 CREATE TABLE macrocontrole.perfil_producao(
 	id SERIAL NOT NULL PRIMARY KEY,
@@ -438,14 +422,16 @@ CREATE TABLE macrocontrole.perfil_bloco_operador(
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
 	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id)
 );
+CREATE INDEX perfil_bloco_operador_usuario_id ON macrocontrole.perfil_bloco_operador ( usuario_id );
+
 
 CREATE TABLE macrocontrole.perfil_dificuldade_operador(
 	id SERIAL NOT NULL PRIMARY KEY,
   	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id), 
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	bloco_id INTEGER NOT NULL REFERENCES macrocontrole.bloco (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	tipo_perfil_dificuldade_id SMALLINT NOT NULL REFERENCES dominio.tipo_perfil_dificuldade (code),
-	UNIQUE(usuario_id, subfase_id, bloco_id)
+	UNIQUE(usuario_id, subfase_id, lote_id)
 );
 
 CREATE TABLE macrocontrole.fila_prioritaria(
@@ -467,6 +453,7 @@ CREATE TABLE macrocontrole.fila_prioritaria_grupo(
 CREATE TABLE macrocontrole.problema_atividade(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
+ 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	tipo_problema_id SMALLINT NOT NULL REFERENCES dominio.tipo_problema (code),
 	descricao TEXT NOT NULL,
 	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -482,6 +469,7 @@ CREATE INDEX problema_atividade_geom
 CREATE TABLE macrocontrole.alteracao_fluxo(
 	id SERIAL NOT NULL PRIMARY KEY,
  	atividade_id INTEGER NOT NULL REFERENCES macrocontrole.atividade (id),
+ 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
 	descricao TEXT NOT NULL,
 	data timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	resolvido BOOLEAN NOT NULL DEFAULT FALSE,
@@ -491,5 +479,184 @@ CREATE TABLE macrocontrole.alteracao_fluxo(
 CREATE INDEX alteracao_fluxo_geom
     ON macrocontrole.alteracao_fluxo USING gist
     (geom);
+
+CREATE TABLE macrocontrole.relacionamento_ut (
+  ut_id INTEGER NOT NULL,
+  ut_re_id INTEGER NOT NULL,
+  tipo_pre_requisito_id INTEGER NOT NULL,
+  PRIMARY KEY (ut_id, ut_re_id)
+);
+
+CREATE OR REPLACE FUNCTION macrocontrole.handle_relacionamento_ut_insert_update(ut_ids INTEGER[])
+RETURNS VOID AS $$
+BEGIN
+  DELETE FROM macrocontrole.relacionamento_ut
+  WHERE ut_id = ANY(ut_ids) OR ut_re_id = ANY(ut_ids);
+
+  DELETE FROM macrocontrole.relacionamento_produto
+  WHERE ut_id = ANY(ut_ids);
+
+  INSERT INTO macrocontrole.relacionamento_ut (ut_id, ut_re_id, tipo_pre_requisito_id)
+  SELECT ut.id AS ut_id, ut_re.id AS ut_re_id, prs.tipo_pre_requisito_id
+  FROM macrocontrole.unidade_trabalho AS ut
+  INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
+  INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
+  WHERE (ut.id = ANY(ut_ids) OR ut_re.id = ANY(ut_ids)) AND ut.id != ut_re.id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
+
+  INSERT INTO macrocontrole.relacionamento_produto (p_id, ut_id)
+  SELECT p.id AS p_id, ut.id AS ut_id
+  FROM macrocontrole.produto AS p
+  INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = p.lote_id AND p.geom && ut.geom AND st_relate(p.geom, ut.geom, '2********')
+  WHERE ut.id = ANY(ut_ids);
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.handle_relacionamento_ut_insert_update(INTEGER[])
+  OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION macrocontrole.handle_relacionamento_ut_delete(ut_ids INTEGER[])
+RETURNS VOID AS $$
+BEGIN
+  DELETE FROM macrocontrole.relacionamento_ut
+  WHERE ut_id = ANY(ut_ids) OR ut_re_id = ANY(ut_ids);
+
+  DELETE FROM macrocontrole.relacionamento_produto
+  WHERE ut_id = ANY(ut_ids);
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.handle_relacionamento_ut_delete(INTEGER[])
+  OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION macrocontrole.update_relacionamento_ut()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+    PERFORM macrocontrole.handle_relacionamento_ut_insert_update(ARRAY[NEW.id]);
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    PERFORM macrocontrole.handle_relacionamento_ut_delete(ARRAY[OLD.id]);
+    RETURN OLD;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.update_relacionamento_ut()
+  OWNER TO postgres;
+
+CREATE TRIGGER a_relacionamento_unidade_trabalho
+AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.unidade_trabalho
+FOR EACH ROW
+EXECUTE PROCEDURE macrocontrole.update_relacionamento_ut();
+
+CREATE OR REPLACE FUNCTION macrocontrole.update_relacionamento_ut_prs()
+RETURNS TRIGGER AS $$
+BEGIN
+
+  IF TG_OP = 'UPDATE' OR TG_OP = 'DELETE' THEN
+    DELETE FROM macrocontrole.relacionamento_ut AS ru
+	WHERE EXISTS (
+		SELECT 1
+		FROM macrocontrole.unidade_trabalho AS ut
+		INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
+		INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
+		WHERE prs.subfase_anterior_id = OLD.subfase_anterior_id AND prs.subfase_posterior_id = OLD.subfase_posterior_id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********')
+		AND ru.ut_id = ut.id AND ru.ut_re_id = ut_re.id
+	);
+  END IF;
+
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+    INSERT INTO macrocontrole.relacionamento_ut (ut_id, ut_re_id, tipo_pre_requisito_id)
+    SELECT ut.id AS ut_id, ut_re.id AS ut_re_id, prs.tipo_pre_requisito_id
+    FROM macrocontrole.unidade_trabalho AS ut
+    INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id AND ut.lote_id = ut_re.lote_id
+    WHERE prs.subfase_anterior_id = NEW.subfase_anterior_id AND prs.subfase_posterior_id = NEW.subfase_posterior_id AND ut.geom && ut_re.geom AND st_relate(ut.geom, ut_re.geom, '2********');
+
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.update_relacionamento_ut_prs()
+  OWNER TO postgres;
+
+CREATE TRIGGER a_relacionamento_pre_requisito_subfase
+AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.pre_requisito_subfase
+FOR EACH ROW
+EXECUTE PROCEDURE macrocontrole.update_relacionamento_ut_prs();
+
+CREATE TABLE macrocontrole.relacionamento_produto (
+  p_id INTEGER NOT NULL,
+  ut_id INTEGER NOT NULL,
+  PRIMARY KEY (p_id, ut_id)
+);
+
+
+CREATE OR REPLACE FUNCTION macrocontrole.handle_relacionamento_produto_insert_update(p_ids INTEGER[])
+RETURNS VOID AS $$
+BEGIN
+  DELETE FROM macrocontrole.relacionamento_produto
+  WHERE p_id = ANY(p_ids);
+
+  INSERT INTO macrocontrole.relacionamento_produto (p_id, ut_id)
+  SELECT p.id AS p_id, ut.id AS ut_id
+  FROM macrocontrole.produto AS p
+  INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = p.lote_id AND p.geom && ut.geom AND st_relate(p.geom, ut.geom, '2********')
+  WHERE p.id = ANY(p_ids);
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.handle_relacionamento_produto_insert_update(INTEGER[])
+  OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION macrocontrole.handle_relacionamento_produto_delete(p_ids INTEGER[])
+RETURNS VOID AS $$
+BEGIN
+  DELETE FROM macrocontrole.relacionamento_produto
+  WHERE p_id = ANY(p_ids);
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.handle_relacionamento_produto_delete(INTEGER[])
+  OWNER TO postgres;
+
+CREATE OR REPLACE FUNCTION macrocontrole.update_relacionamento_produto()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+    PERFORM handle_relacionamento_produto_insert_update(ARRAY[NEW.id]);
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    PERFORM handle_relacionamento_produto_delete(ARRAY[OLD.id]);
+    RETURN OLD;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.update_relacionamento_produto()
+  OWNER TO postgres;
+
+CREATE TRIGGER a_relacionamento_produto
+AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.produto
+FOR EACH ROW
+EXECUTE PROCEDURE macrocontrole.update_relacionamento_produto();
+
+CREATE TABLE macrocontrole.pit(
+	id SERIAL NOT NULL PRIMARY KEY,
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	meta INTEGER NOT NULL,
+	ano INTEGER NOT NULL
+);
+
+CREATE TABLE macrocontrole.relatorio_alteracao(
+	id SERIAL NOT NULL PRIMARY KEY,
+	data timestamp with time zone NOT NULL,
+	descricao TEXT NOT NULL
+);
 
 COMMIT;

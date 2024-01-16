@@ -1,6 +1,6 @@
 'use strict'
 
-const { databaseVersion } = require('../database')
+const { databaseVersion, microcontroleDatabaseVersion } = require('../database')
 
 const app = require('./app')
 
@@ -36,6 +36,7 @@ const httpsConfig = () => {
       information: {
         version: VERSION,
         database_version: databaseVersion.nome,
+        microcontrole_database_version: microcontroleDatabaseVersion.nome,
         port: PORT
       }
     })
@@ -49,6 +50,7 @@ const httpConfig = () => {
       information: {
         version: VERSION,
         database_version: databaseVersion.nome,
+        microcontrole_database_version: microcontroleDatabaseVersion.nome,
         port: PORT
       }
     })

@@ -2,7 +2,7 @@
 
 const express = require('express')
 
-const { schemaValidation, asyncHandler, httpCode } = require('../utils')
+const { schemaValidation, asyncHandler, httpCode, asyncHandlerWithQueue } = require('../utils')
 
 const { verifyAdmin } = require('../login')
 
@@ -27,7 +27,7 @@ router.get(
   '/atividade/:id',
   verifyAdmin,
   schemaValidation({ params: gerenciaSchema.idParams }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAtividade(
       req.params.id,
       req.usuarioId // gerenteId
@@ -46,7 +46,7 @@ router.get(
     params: gerenciaSchema.idParams,
     query: gerenciaSchema.proximaQuery
   }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAtividadeUsuario(
       req.params.id,
       req.query.proxima === 'true',
@@ -257,61 +257,11 @@ router.delete(
   })
 )
 
-router.get(
-  '/perfil_dificuldade_operador',
-  verifyAdmin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getPerfilDificuldadeOperador()
-
-    const msg = 'Perfis dificuldade operador retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.put(
-  '/perfil_dificuldade_operador',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.perfilDificuldadeOperadorAtualizacao }),
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.atualizaPerfilDificuldadeOperador(req.body.perfil_dificuldade_operador)
-
-    const msg = 'Perfis dificuldade operador atualizados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-router.post(
-  '/perfil_dificuldade_operador',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.perfilDificuldadeOperador }),
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.criaPerfilDificuldadeOperador(req.body.perfil_dificuldade_operador)
-
-    const msg = 'Perfis dificuldade operador criados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-router.delete(
-  '/perfil_dificuldade_operador',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.perfilDificuldadeOperadorIds }),
-  asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.deletaPerfilDificuldadeOperador(req.body.perfil_dificuldade_operador_ids)
-
-    const msg = 'Perfis dificuldade operador deletados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
 router.post(
   '/unidade_trabalho/disponivel',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.unidadeTrabalhoDisponivel }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.unidadeTrabalhoDisponivel(
       req.body.unidade_trabalho_ids,
       req.body.disponivel
@@ -328,7 +278,7 @@ router.post(
   '/atividade/pausar',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadePausar }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.pausaAtividade(req.body.unidade_trabalho_ids)
 
     const msg = 'Atividade pausada com sucesso'
@@ -341,7 +291,7 @@ router.post(
   '/atividade/reiniciar',
   verifyAdmin,
   schemaValidation({ body: gerenciaSchema.atividadeReiniciar }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.reiniciaAtividade(req.body.unidade_trabalho_ids)
 
     const msg = 'Atividade reiniciada com sucesso'
@@ -377,40 +327,6 @@ router.post(
     )
 
     const msg = 'Atividade avançou para próxima etapa com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.post(
-  '/fila_prioritaria',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.filaPrioritaria }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaFilaPrioritaria(
-      req.body.atividade_ids,
-      req.body.usuario_prioridade_id,
-      req.body.prioridade
-    )
-
-    const msg = 'Fila prioritaria criada com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.post(
-  '/fila_prioritaria_grupo',
-  verifyAdmin,
-  schemaValidation({ body: gerenciaSchema.filaPrioritariaGrupo }),
-  asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaFilaPrioritariaGrupo(
-      req.body.atividade_ids,
-      req.body.perfil_producao_id,
-      req.body.prioridade
-    )
-
-    const msg = 'Fila prioritaria grupo criada com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
@@ -466,7 +382,7 @@ router.get(
 router.put(
   '/atividades/permissoes',
   verifyAdmin,
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.redefinirPermissoes()
 
     const msg = 'Permissões das atividades em execução redefinidas'
@@ -493,7 +409,7 @@ router.post(
   schemaValidation({
     body: gerenciaSchema.bancoDados
   }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.revogarPermissoesDB(
       req.body.servidor,
       req.body.porta,
@@ -512,7 +428,7 @@ router.post(
   schemaValidation({
     body: gerenciaSchema.bancoDadosUsuario
   }),
-  asyncHandler(async (req, res, next) => {
+  asyncHandlerWithQueue(async (req, res, next) => {
     await gerenciaCtrl.revogarPermissoesDBUser(
       req.body.servidor,
       req.body.porta,
@@ -658,5 +574,353 @@ router.delete(
   })
 )
 
+router.get(
+  '/problema_atividade',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getProblemaAtividade()
+
+    const msg = 'Problema atividade retornada'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/problema_atividade',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.problemaAtividadeAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaProblemaAtividade(req.body.problema_atividade)
+
+    const msg = 'Problema atividade atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/iniciar_modo_local',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.iniciaAtivModoLocal }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.iniciaAtividadeModoLocal(
+      req.body.atividade_id,
+      req.usuarioId
+    )
+
+    const msg = 'Atividade do modo local atualizadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/finalizar_modo_local',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.finalizaAtivModoLocal }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.finalizaAtividadeModoLocal(
+      req.body.atividade_id,
+      req.body.usuario_uuid,
+      req.body.data_inicio,
+      req.body.data_fim
+    )
+
+    const msg = 'Atividade do modo local atualizadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/relatorio_alteracao',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getRelatorioAlteracao()
+
+    const msg = 'Relatório de alteração retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/relatorio_alteracao',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.relatorioAlteracao }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.gravaRelatorioAlteracao(req.body.relatorio_alteracao, req.usuarioId)
+
+    const msg = 'Relatório de alteração gravados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/relatorio_alteracao',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.relatorioAlteracaoAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaRelatorioAlteracao(req.body.relatorio_alteracao, req.usuarioId)
+
+    const msg = 'Relatório de alteração atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.delete(
+  '/relatorio_alteracao',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.relatorioAlteracaoIds }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deletaRelatorioAlteracao(req.body.relatorio_alteracao_ids)
+
+    const msg = 'Relatório de alteração deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/unidade_trabalho/propriedades',
+  verifyAdmin,
+  schemaValidation({ body: gerenciaSchema.propriedadesAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaPropriedadesUT(req.body.unidades_trabalho)
+
+    const msg = 'Propriedades da UT atualizadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.get(
+  '/plugin_path',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getPluginPath(
+    )
+
+    const msg = 'Plugin Path retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/plugin_path',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.pluginPath
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaPluginPath(req.body.plugin_path)
+
+    const msg = 'Plugin Path atualizado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/pit',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getPit()
+
+    const msg = 'PITs retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/pit',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.pitIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deletePit(req.body.pit_ids)
+
+    const msg = 'PITs deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/pit',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.pit
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.criaPit(req.body.pit)
+
+    const msg = 'PITs criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/pit',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.pitAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaPit(req.body.pit)
+
+    const msg = 'PITs atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/alteracao_fluxo',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getAlteracaoFluxo()
+
+    const msg = 'Alterações de fluxo retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/alteracao_fluxo',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.alteracaoFluxoAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaAlteracaoFluxo(req.body.alteracao_fluxo)
+
+    const msg = 'Alterações de fluxo atualizadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/fila_prioritaria',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getFilaPrioritaria()
+
+    const msg = 'Fila prioritária retornada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/fila_prioritaria',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deleteFilaPrioritaria(req.body.fila_prioritaria_ids)
+
+    const msg = 'Entradas da fila prioritária deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/fila_prioritaria',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritaria
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.criaFilaPrioritaria(req.body.fila_prioritaria)
+
+    const msg = 'Entradas da fila prioritária criadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/fila_prioritaria',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaFilaPrioritaria(req.body.fila_prioritaria)
+
+    const msg = 'Entradas da fila prioritária atualizadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/fila_prioritaria_grupo',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getFilaPrioritariaGrupo()
+
+    const msg = 'Fila prioritária de grupo retornada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.delete(
+  '/fila_prioritaria_grupo',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaGrupoIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.deleteFilaPrioritariaGrupo(req.body.fila_prioritaria_grupo_ids)
+
+    const msg = 'Entradas da fila prioritária de grupo deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.post(
+  '/fila_prioritaria_grupo',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaGrupo
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.criaFilaPrioritariaGrupo(req.body.fila_prioritaria_grupo)
+
+    const msg = 'Entradas da fila prioritária de grupo criadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/fila_prioritaria_grupo',
+  verifyAdmin,
+  schemaValidation({
+    body: gerenciaSchema.filaPrioritariaGrupoAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await gerenciaCtrl.atualizaFilaPrioritariaGrupo(req.body.fila_prioritaria_grupo)
+
+    const msg = 'Entradas da fila prioritária de grupo atualizadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
 
 module.exports = router

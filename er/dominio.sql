@@ -68,8 +68,8 @@ INSERT INTO dominio.tipo_produto (code, nome) VALUES
 (19, 'Carta ortoimagem de OM'),
 (20, 'Conjunto de dados geoespaciais vetoriais - MUVD'),
 (21, 'Modelo Digital de Superfície - TREx'),
-(22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0');
-
+(22, 'Conjunto de dados geoespaciais vetoriais para Ortoimagem - ET-EDGV 3.0'),
+(23, 'Conjunto de dados geoespaciais vetoriais para Trafegabilidade');
 
 -- Fase é somente para agrupar as Subfases
 -- Deve ser correspondente as fases do RTM e a fases previstas no metadado do BDGEx
@@ -183,7 +183,7 @@ CREATE TABLE dominio.tipo_configuracao(
 );
 
 INSERT INTO dominio.tipo_configuracao (code, nome) VALUES
-(1, 'Grid'),
+(1, 'DSGTools - Centroide'),
 (2, 'DSGTools - Mão livre'),
 (3, 'DSGTools - Seletor Genérico'),
 (4, 'DSGTools - Ângulo Reto');
@@ -233,6 +233,7 @@ INSERT INTO dominio.tipo_problema (code, nome) VALUES
 (4, 'Problema em unidade de trabalho vizinha'),
 (5, 'Grande quantidade de objetos na unidade de trabalho, necessita ser dividida'),
 (6, 'Problema nas rotinas'),
+(7, 'Finalizei a atividade incorretamente'),
 (99, 'Outros');
 
 CREATE TABLE dominio.tipo_estrategia_associacao(	

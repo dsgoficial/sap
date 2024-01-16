@@ -1,0 +1,6013 @@
+{
+    "nome": "Conjunto de dados geoespaciais vetoriais para MGCP - TRD 4.6",
+    "descricao": "Linha de produção padrão para vetores do MGCP",
+    "nome_abrev": "cdgv_mgcp_trd46",
+    "tipo_produto_id": 8,
+    "fases": [
+        {
+            "tipo_fase_id": 16,
+            "ordem": 1,
+            "subfases": [
+                {
+                    "nome": "Coleta de Insumo Externo",
+                    "ordem": 1
+                },
+                {
+                    "nome": "Preparo das imagens",
+                    "ordem": 2
+                },
+                {
+                    "nome": "Identificação de área sem dados",
+                    "ordem": 3
+                }
+            ],
+            "pre_requisito_subfase": [
+                {
+                    "subfase_anterior": "Preparo das imagens",
+                    "subfase_posterior": "Identificação de área sem dados",
+                    "tipo_pre_requisito_id": 1
+                }
+            ]
+        },
+        {
+            "tipo_fase_id": 1,
+            "ordem": 2,
+            "subfases": [
+                {
+                    "nome": "Extração de Hidrografia",
+                    "ordem": 1
+                },
+                {
+                    "nome": "Extração de Via de Deslocamento",
+                    "ordem": 2
+                },
+                {
+                    "nome": "Extração de Topônimos",
+                    "ordem": 3
+                },
+                {
+                    "nome": "Extração de Interseção entre Hidrografia e Transporte",
+                    "ordem": 4
+                },
+                {
+                    "nome": "Extração de Área Edificada",
+                    "ordem": 5
+                },
+                {
+                    "nome": "Extração de Planimetria",
+                    "ordem": 6
+                },
+                {
+                    "nome": "Extração de Cobertura do Solo",
+                    "ordem": 7
+                },
+                {
+                    "nome": "Verificação Final",
+                    "ordem": 8
+                }
+            ],
+            "pre_requisito_subfase": [
+                {
+                    "subfase_anterior": "Extração de Via de Deslocamento",
+                    "subfase_posterior": "Extração de Área Edificada",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Hidrografia",
+                    "subfase_posterior": "Extração de Área Edificada",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Via de Deslocamento",
+                    "subfase_posterior": "Extração de Interseção entre Hidrografia e Transporte",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Hidrografia",
+                    "subfase_posterior": "Extração de Interseção entre Hidrografia e Transporte",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Área Edificada",
+                    "subfase_posterior": "Extração de Cobertura do Solo",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Área Edificada",
+                    "subfase_posterior": "Extração de Planimetria",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Topônimos",
+                    "subfase_posterior": "Verificação Final",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Interseção entre Hidrografia e Transporte",
+                    "subfase_posterior": "Verificação Final",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Cobertura do Solo",
+                    "subfase_posterior": "Verificação Final",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Planimetria",
+                    "subfase_posterior": "Verificação Final",
+                    "tipo_pre_requisito_id": 1
+                },
+                {
+                    "subfase_anterior": "Extração de Hidrografia",
+                    "subfase_posterior": "Extração de Hidrografia",
+                    "tipo_pre_requisito_id": 2
+                },
+                {
+                    "subfase_anterior": "Extração de Topônimos",
+                    "subfase_posterior": "Extração de Topônimos",
+                    "tipo_pre_requisito_id": 2
+                },
+                {
+                    "subfase_anterior": "Extração de Via de Deslocamento",
+                    "subfase_posterior": "Extração de Via de Deslocamento",
+                    "tipo_pre_requisito_id": 2
+                },
+                {
+                    "subfase_anterior": "Extração de Interseção entre Hidrografia e Transporte",
+                    "subfase_posterior": "Extração de Interseção entre Hidrografia e Transporte",
+                    "tipo_pre_requisito_id": 2
+                },
+                {
+                    "subfase_anterior": "Extração de Área Edificada",
+                    "subfase_posterior": "Extração de Área Edificada",
+                    "tipo_pre_requisito_id": 2
+                },
+                {
+                    "subfase_anterior": "Extração de Planimetria",
+                    "subfase_posterior": "Extração de Planimetria",
+                    "tipo_pre_requisito_id": 2
+                },
+                {
+                    "subfase_anterior": "Extração de Cobertura do Solo",
+                    "subfase_posterior": "Extração de Cobertura do Solo",
+                    "tipo_pre_requisito_id": 2
+                },
+                {
+                    "subfase_anterior": "Verificação Final",
+                    "subfase_posterior": "Verificação Final",
+                    "tipo_pre_requisito_id": 2
+                }
+                
+            ]
+        },
+        {
+            "tipo_fase_id": 3,
+            "ordem": 3,
+            "subfases": [
+                {
+                    "schema":"mgcp",
+                    "nome": "Validação QGIS",
+                    "ordem": 1
+                },
+                {
+                    "nome": "Validação GAIT",
+                    "ordem": 2
+                }
+            ],
+            "pre_requisito_subfase": [
+                {
+                    "subfase_anterior": "Validação QGIS",
+                    "subfase_posterior": "Validação GAIT",
+                    "tipo_pre_requisito_id": 1
+                }
+            ]
+        },
+        {
+            "tipo_fase_id": 5,
+            "ordem": 4,
+            "subfases": [
+                {
+                    "schema":"mgcp",
+                    "nome": "Disseminação",
+                    "ordem": 1
+                }
+            ],
+            "pre_requisito_subfase": [
+            ]
+        }
+    ],
+    "propriedades_camadas": [
+        {
+            "schema":"mgcp",
+            "camada": "aa050_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aa050_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh170_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh170_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh170_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh170_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh170_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh170_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aa010_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aa010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_aa010_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_aa010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aa012_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aa012_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_aa012_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_aa012_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aa052_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aa052_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj051_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj051_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at042_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at042_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ab000_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ab000_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ab010_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ab010_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac000_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac000_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac000_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac000_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ea020_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ea020_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac030_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac030_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac030_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad010_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad010_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad010_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad030_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad030_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad030_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad050_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad050_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad050_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad050_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq090_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq090_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah050_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah050_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah050_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah050_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq065_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq065_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ai030_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ai030_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj010_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj010_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj030_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj030_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj030_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj110_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj110_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj110_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj110_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap050_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap050_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap050_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap050_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap050_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap050_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap010_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap010_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap010_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap010_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap010_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap010_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al241_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al241_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak030_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak030_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak040_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak040_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak040_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "zd040_p",
+            "subfase": "Extração de Topônimos",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "zd040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak060_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak060_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at060_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at060_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak090_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak090_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak100_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak100_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak120_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak120_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak160_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak160_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak160_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak160_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak170_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak170_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak170_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak170_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak180_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak180_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak190_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak190_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak190_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak190_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al010_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al010_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al012_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al012_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al012_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al012_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al015_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al015_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al015_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al015_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al019_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al019_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al019_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al019_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al210_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al210_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al210_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al210_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al020_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al020_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al020_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_al020_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_al020_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_al020_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_al020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al030_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al030_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al030_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al060_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al060_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al060_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al060_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb230_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb230_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb230_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb230_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb230_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb230_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb050_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb050_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb050_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb050_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al105_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al105_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al105_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al105_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al140_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al140_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al170_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al170_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al200_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al200_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al208_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al208_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am010_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am010_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an075_p",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an075_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an075_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an075_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an075_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an075_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap030_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap030_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap030_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap030_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap030_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ap030_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aa040_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aa040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac020_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ac020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am020_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am020_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am020_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh145_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh145_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh145_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh145_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh145_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh145_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh180_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am030_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am030_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am030_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an010_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an010_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an010_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an010_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an010_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an010_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an050_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an050_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an050_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an050_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an050_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an050_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am040_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am040_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am040_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am060_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am060_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am060_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am060_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am070_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am070_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am070_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "am070_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an060_a",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an060_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an060_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an060_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an060_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an060_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad020_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ad020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_p",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_a",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "an076_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at030_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at030_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at041_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at041_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq040_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq040_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq040_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq040_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq113_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq113_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq116_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq116_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq116_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq116_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq125_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq125_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq125_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq125_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "af010_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "af010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "af040_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "af040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "af070_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "af070_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj050_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aj050_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_a",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq130_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq135_a",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq135_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq135_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq135_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq135_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq135_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db029_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db029_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db150_p",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db150_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db150_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db150_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db150_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db150_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq140_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq140_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at050_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at050_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al099_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al099_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba030_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba030_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba030_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba030_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba030_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba040_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba040_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba040_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba040_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba040_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ba040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba050_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba050_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba050_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba050_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi041_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi041_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi041_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi041_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi050_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi050_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh110_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh110_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq110_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq110_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ga034_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ga034_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb485_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb485_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb040_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb220_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb220_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb005_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb005_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah025_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah025_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al025_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al025_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_a",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb041_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi040_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah070_p",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah070_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah070_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah070_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah070_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ah070_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_a",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb043_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb090_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb090_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al130_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al130_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_a",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb140_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak150_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak150_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak150_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak150_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_a",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb190_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak130_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ak130_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq075_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq075_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq075_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq075_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq075_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq075_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb240_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb240_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd100_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd100_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd100_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd100_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_a",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd120_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh010_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh010_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh010_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh010_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh010_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh010_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh015_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh015_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh020_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh020_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh020_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh020_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh020_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh020_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh020_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh020_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh020_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh020_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh020_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh030_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh030_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh030_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh030_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh030_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh030_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh030_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh030_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh030_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh030_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh030_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh050_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh050_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh051_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh051_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bj060_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bj060_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh080_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh080_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh080_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh080_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh080_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh080_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bj040_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bj040_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db110_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db110_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh090_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh090_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh120_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh120_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh120_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh120_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh120_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh120_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh120_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh130_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh130_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh130_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh130_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh130_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh130_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db100_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db100_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh135_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh135_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh140_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh140_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh140_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh140_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh140_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh140_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh140_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh140_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh140_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh140_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh140_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh140_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh155_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh155_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh150_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh150_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh160_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bh160_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_a",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh165_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "af020_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "af020_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh060_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh060_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "fa090_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "fa090_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb155_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bb155_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_a",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi020_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_a",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi030_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bj020_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bj020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bj030_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bj030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bj031_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bj031_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bj031_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bj031_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bj100_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bj100_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bj110_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_bj110_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh070_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh070_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh070_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bh070_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_da010_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_da010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db061_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db061_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db061_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db061_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_p",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq070_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db090_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db090_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db090_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db090_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db115_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db115_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db115_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db115_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db160_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db160_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db160_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db160_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db160_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db160_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_db170_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_db170_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq063_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq063_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq063_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq063_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq063_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aq063_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db070_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db070_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db070_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db070_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db070_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db070_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db180_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db180_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db180_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db180_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db071_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db071_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db200_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db200_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db200_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db200_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ea010_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ea010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ea040_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ea040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd110_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd110_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd130_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd130_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd180_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bd180_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ea050_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ea050_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ea055_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ea055_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_eb010_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_eb010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_eb020_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_eb020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ec010_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ec010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ec020_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ec020_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ec030_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ec030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ec030_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ec030_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ec030_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ec030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ec040_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ec040_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at010_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at045_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "at045_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ec060_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ec060_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ed010_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ed010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba010_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba010_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba010_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba010_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba010_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "ba010_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ed020_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ed020_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ed030_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "centroide_ed030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi010_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "bi010_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "fa015_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "fa015_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "fa100_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "fa100_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb005_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb005_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb015_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb015_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db010_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "db010_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al070_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al070_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al260_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "al260_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb035_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb035_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb045_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb045_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb055_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb055_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb030_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb030_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb065_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb065_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb065_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb065_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": true
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb075_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb075_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb230_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb230_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb230_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "gb230_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "su001_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "su001_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "su001_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "su001_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_massa_dagua_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_massa_dagua_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_massa_dagua_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_massa_dagua_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_massa_dagua_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_massa_dagua_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_cobertura_do_solo_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_cobertura_do_solo_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_area_construida_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_area_construida_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_area_construida_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_area_construida_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_elemento_hidrografico_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_elemento_hidrografico_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_elemento_hidrografico_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_elemento_hidrografico_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_elemento_hidrografico_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "delimitador_elemento_hidrografico_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": false,
+            "camada_incomum": false
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_p",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_p",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_p",
+            "subfase": "Extração de Topônimos",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_p",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_p",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_p",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_p",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_p",
+            "subfase": "Verificação Final",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_l",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_l",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_l",
+            "subfase": "Extração de Topônimos",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_l",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_l",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_l",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_l",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_l",
+            "subfase": "Verificação Final",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_a",
+            "subfase": "Extração de Hidrografia",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_a",
+            "subfase": "Extração de Via de Deslocamento",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_a",
+            "subfase": "Extração de Topônimos",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_a",
+            "subfase": "Extração de Interseção entre Hidrografia e Transporte",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_a",
+            "subfase": "Extração de Área Edificada",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_a",
+            "subfase": "Extração de Planimetria",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_a",
+            "subfase": "Extração de Cobertura do Solo",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        },
+        {
+            "schema":"mgcp",
+            "camada": "aux_revisao_a",
+            "subfase": "Verificação Final",
+            "camada_apontamento": true,
+            "camada_incomum": false,
+            "atributo_filtro_subfase": "subfase_id",
+            "atributo_situacao_correcao": "correcao",
+            "atributo_justificativa_apontamento": "justificativa"
+        }
+    ]
+}

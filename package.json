@@ -8,7 +8,7 @@
     "url": "git://github.com/1cgeo/sap"
   },
   "scripts": {
-    "install-all": "npm install && cd server && npm install && cd ../client && npm install",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install && cd ../client/src/vendors/visavail && npm install",
     "config": "node create_config.js",
     "build": "node create_build.js",
     "create-docs": "node server/create_documentation.js",
@@ -35,6 +35,7 @@
     "bcryptjs": "^2.4.3",
     "bluebird": "^3.7.2",
     "colors": "^1.4.0",
+    "commander": "^11.0.0",
     "concurrently": "^7.2.2",
     "fs-extra": "^10.1.0",
     "inquirer": "8.2.2",

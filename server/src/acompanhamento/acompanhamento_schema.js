@@ -15,6 +15,17 @@ models.loteParams = Joi.object().keys({
   lote: Joi.number().integer()
     .required()
 })
+
+models.anoParam = Joi.object().keys({
+  anoParam: Joi.string()
+    .regex(/^20[0-3][0-9]$/)
+    .required()
+})
+
+models.nomeParams = Joi.object().keys({
+  nome: Joi.string().required()
+})
+
 /*
 
 
@@ -24,11 +35,6 @@ models.mesParam = Joi.object().keys({
     .required()
 })
 
-models.anoParam = Joi.object().keys({
-  ano: Joi.string()
-    .regex(/^202[0-9]$/)
-    .required()
-})
 
 models.finalizadoQuery = Joi.object().keys({
   finalizado: Joi.string().valid('true', 'false')

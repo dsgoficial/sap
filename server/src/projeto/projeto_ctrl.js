@@ -1,6 +1,6 @@
 'use strict'
 
-const { db } = require('../database')
+const { db, disableTriggers } = require('../database')
 
 const { AppError, httpCode } = require('../utils')
 
@@ -23,7 +23,6 @@ controller.getTipoRotina = async () => {
   return db.sapConn
     .any('SELECT code, nome FROM dominio.tipo_rotina')
 }
-
 
 controller.getTipoCQ = async () => {
   return db.sapConn
@@ -83,7 +82,6 @@ controller.getGrupoEstilos = async () => {
   return db.sapConn
     .any('SELECT id, nome FROM dgeo.group_styles')
 }
-
 
 controller.gravaGrupoEstilos = async (grupoEstilos, usuarioId) => {
   return db.sapConn.tx(async t => {
@@ -178,6 +176,18 @@ controller.getEstilos = async () => {
 controller.gravaEstilos = async (estilos, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const query_test = db.pgp.as.format(`SELECT 1 FROM dgeo.layer_styles AS v WHERE (v.f_table_schema, v.f_table_name, v.grupo_estilo_id) IN ($1:raw)`,
+      db.pgp.as.format(estilos.map(r => `('${r.f_table_schema}', '${r.f_table_name}', ${r.grupo_estilo_id})`).join()));
+
+    const exists = await t.any(query_test);
+
+    if (exists && exists.length > 0) {
+      throw new AppError(
+        'O estilo já foi cadastrado',
+        httpCode.BadRequest
+      )
+    }
 
     const cs = new db.pgp.helpers.ColumnSet([
       'f_table_schema',
@@ -533,60 +543,95 @@ controller.getBlocos = async () => {
 }
 
 controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {
-  return db.sapConn.none(
-    `UPDATE macrocontrole.unidade_trabalho
-    SET bloco_id = $<bloco>
-    WHERE id in ($<unidadeTrabalhoIds:csv>)`,
-    { unidadeTrabalhoIds, bloco }
-  )
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    await t.none(
+      `UPDATE macrocontrole.unidade_trabalho
+      SET bloco_id = $<bloco>
+      WHERE id in ($<unidadeTrabalhoIds:csv>)`,
+      { unidadeTrabalhoIds, bloco }
+    )
+
+  })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.deletaAtividades = async atividadeIds => {
-
-  const result = await db.sapConn.result(
-    `
-    SELECT e.etapa_anterior, e.etapa_posterior FROM
-    (SELECT e.lote_id, e.id AS etapa_anterior, e.tipo_etapa_id AS tipo_etapa_anterior, lead(e.id,2) OVER (PARTITION BY e.lote_id, e.subfase_id ORDER BY e.ordem) AS etapa_posterior
-    FROM macrocontrole.etapa AS e) AS e
-    INNER JOIN macrocontrole.etapa AS e_post ON e_post.id = e.etapa_posterior
-    WHERE e.tipo_etapa_anterior = 2 AND e_post.tipo_etapa_id = 3 AND
-    (
-      (e.etapa_anterior in ($<atividadeIds:csv>) AND e.etapa_posterior not in ($<atividadeIds:csv>))
-      OR
-      (e.etapa_anterior not in ($<atividadeIds:csv>) AND e.etapa_posterior in ($<atividadeIds:csv>))
+  let loteId
+  let subfaseIds = []
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    const result = await t.result(
+      `
+      SELECT e.etapa_anterior, e.etapa_posterior FROM
+      (SELECT e.lote_id, e.id AS etapa_anterior, e.tipo_etapa_id AS tipo_etapa_anterior, lead(e.id,2) OVER (PARTITION BY e.lote_id, e.subfase_id ORDER BY e.ordem) AS etapa_posterior
+      FROM macrocontrole.etapa AS e) AS e
+      INNER JOIN macrocontrole.etapa AS e_post ON e_post.id = e.etapa_posterior
+      WHERE e.tipo_etapa_anterior = 2 AND e_post.tipo_etapa_id = 3 AND
+      (
+        (e.etapa_anterior in ($<atividadeIds:csv>) AND e.etapa_posterior not in ($<atividadeIds:csv>))
+        OR
+        (e.etapa_anterior not in ($<atividadeIds:csv>) AND e.etapa_posterior in ($<atividadeIds:csv>))
+      )
+      `,
+      { atividadeIds }
     )
+    if (result.rowCount && result.rowCount > 0) {
+      throw new AppError(
+        'Atividade de correção e não deve ser deletada',
+        httpCode.BadRequest
+      )
+    }
+
+
+    const lote_subfases = await t.any(
+      `SELECT DISTINCT ut.lote_id, ut.subfase_id
+      FROM macrocontrole.atividade AS a
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON a.unidade_trabalho_id = ut.id
+      WHERE a.id in ($<atividadeIds:csv>)`,
+      { atividadeIds }
+    )
+
+    loteId = lote_subfases[0].lote_id
+    lote_subfases.forEach(e => {
+      if (e.lote_id !== loteId) {
+        throw new AppError(
+          'Atividades de lotes distintos',
+          httpCode.BadRequest
+        )
+      }
+      subfaseIds.push(e.subfase_id)
+    })
+
+    await t.none(
+      `
+    DELETE FROM macrocontrole.atividade
+    WHERE id in ($<atividadeIds:csv>) AND tipo_situacao_id IN (1)
     `,
-    { atividadeIds }
-  )
-  if (result.rowCount && result.rowCount > 0) {
-    throw new AppError(
-      'Atividade de correção e não deve ser deletada',
-      httpCode.BadRequest
+      { atividadeIds }
     )
-  }
 
-
-  return db.sapConn.none(
-    `
-  DELETE FROM macrocontrole.atividade
-  WHERE id in ($<atividadeIds:csv>) AND tipo_situacao_id IN (1)
-  `,
-    { atividadeIds }
-  )
+  })
+  await disableTriggers.refreshMaterializedViewFromSubfases(db.sapConn, loteId, subfaseIds)
 }
 
 controller.deletaAtividadesUnidadeTrabalho = async unidadeTrabalhoIds => {
-  return db.sapConn.none(
-    `
-  DELETE FROM macrocontrole.atividade
-  WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id IN (1,5)
-  `,
-    { unidadeTrabalhoIds }
-  )
+
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    await t.none(
+      `
+    DELETE FROM macrocontrole.atividade
+    WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id IN (1,5)
+    `,
+      { unidadeTrabalhoIds }
+    )
+
+  })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
+
+
 }
 
 controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
-  return db.sapConn.task(async t => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const exists = await t.any(
       `SELECT e.id FROM macrocontrole.etapa AS e
        INNER JOIN macrocontrole.subfase AS s ON s.id = e.subfase_id
@@ -680,76 +725,130 @@ controller.criaEtapasPadrao = async (padrao_cq, fase_id, lote_id) => {
         )
     }
 
-    let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
-    let pos = `SET LOCAL session_replication_role = 'origin';COMMIT;`
 
     await t.none(
-      pre+sqlA+sqlB+pos,
+      sqlA + sqlB,
       { fase_id, lote_id }
     )
 
-    let sqlview = await t.oneOrNone(
+  })
+
+  await disableTriggers.reCreateSubfaseMaterializedViewFromFases(db.sapConn, lote_id, fase_id)
+  await disableTriggers.refreshMaterializedViewFromLoteNoSubfase(db.sapConn, lote_id)
+}
+
+controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRevCor, atividadeRefFin) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+
+    await t.any(
       `
-      SELECT string_agg(query, ' ') AS fix FROM (
-        SELECT 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || $<lote_id> || '_subfase_'|| s.id || 
-      ';DELETE FROM public.layer_styles WHERE f_table_schema = ''acompanhamento'' AND f_table_name = (''lote_' || $<lote_id> || '_subfase_' || s.id || ''') AND stylename = ''acompanhamento_subfase'';' ||
-      'SELECT acompanhamento.cria_view_acompanhamento_subfase(' || s.id || ', ' || $<lote_id> || ');' AS query
-      FROM macrocontrole.subfase AS s
-      WHERE s.fase_id = $<fase_id>) AS foo;
+    INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+    SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+    FROM macrocontrole.unidade_trabalho AS ut
+    INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+    LEFT JOIN (
+      SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+      ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
+    WHERE e.tipo_etapa_id in (1) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
     `,
-      { lote_id, fase_id }
+      { lote_id }
     )
-    await t.any(sqlview.fix);
+
+    if(atividadesRevisao){
+      await t.any(
+        `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+      SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+      FROM macrocontrole.unidade_trabalho AS ut
+      INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+      LEFT JOIN (
+        SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+        ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
+      WHERE e.tipo_etapa_id in (2,3) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
+      `,
+        { lote_id }
+      )
+    }
+
+    if(atividadeRevCor){
+      await t.any(
+        `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+      SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+      FROM macrocontrole.unidade_trabalho AS ut
+      INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+      LEFT JOIN (
+        SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+        ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
+      WHERE e.tipo_etapa_id in (4) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
+      `,
+        { lote_id }
+      )
+    }
+
+    if(atividadeRefFin){
+      await t.any(
+        `
+      INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+      SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+      FROM macrocontrole.unidade_trabalho AS ut
+      INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+      LEFT JOIN (
+        SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+        ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
+      WHERE e.tipo_etapa_id in (5) AND ut.lote_id = $<lote_id> AND a.id IS NULL;
+      `,
+        { lote_id }
+      )
+    }
 
   })
+  await disableTriggers.refreshMaterializedViewFromLote(db.sapConn, lote_id)
 }
 
-controller.criaTodasAtividades = async (lote_id) => {
-  await db.sapConn.any(
-    `
-  BEGIN; SET LOCAL session_replication_role = 'replica';
-  INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
-  SELECT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
-  FROM macrocontrole.unidade_trabalho AS ut
-  INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
-  LEFT JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id AND a.unidade_trabalho_id = ut.id
-  WHERE ut.lote_id = $<lote_id> AND a.id IS NULL;
-  SET LOCAL session_replication_role = 'origin';COMMIT;
-  `,
-    { lote_id }
-  )
+controller.criaAtividades = async (unidadeTrabalhoIds, etapaIds) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
 
-  let sql = await db.sapConn.oneOrNone(
-    `SELECT string_agg(query, ' ') AS grant_fk FROM (
-              SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || schemaname || '.' || matviewname || ';' AS query
-              from pg_matviews
-          ) AS foo;`
-  )
+    const etapasCorrecao  = await t.any(
+      `
+      WITH prox AS (SELECT e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
+      FROM macrocontrole.etapa AS e)
+      SELECT p.prox_id
+      FROM macrocontrole.etapa AS e
+      INNER JOIN prox AS p ON e.id = p.id
+      INNER JOIN macrocontrole.etapa AS prox_e ON prox_e.id = p.prox_id
+      WHERE e.tipo_etapa_id in (2,5) AND e.id IN ($<etapaIds:csv>) AND prox_e.tipo_etapa_id = 3
+      `,
+      { etapaIds }
+    );
 
-  await db.sapConn.none(sql.grant_fk);
+    const uniqueProxIds = [...new Set(etapasCorrecao.map(etapa => etapa.prox_id).filter(id => id !== null))];
 
-}
+    // Combine and deduplicate etapaIds and uniqueProxIds
+    etapaIds = [...new Set([...etapaIds, ...uniqueProxIds])];
 
-controller.criaAtividades = async (unidadeTrabalhoIds, etapaId) => {
-  const result = await db.sapConn.result(
-    `
-  INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
-  SELECT DISTINCT $<etapaId> AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
-  FROM macrocontrole.unidade_trabalho AS ut
-  INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
-  LEFT JOIN (
-    SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
-    ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
-  WHERE ut.id IN ($<unidadeTrabalhoIds:csv>) AND e.id = $<etapaId> AND a.id IS NULL
-  `,
-    { unidadeTrabalhoIds, etapaId }
-  )
-  if (!result.rowCount || result.rowCount === 0) {
-    throw new AppError(
-      'As atividades não podem ser criadas pois já existem.',
-      httpCode.BadRequest
+    const result = await t.result(
+      `
+    INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
+    SELECT DISTINCT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
+    FROM macrocontrole.unidade_trabalho AS ut
+    INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
+    LEFT JOIN (
+      SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
+      ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
+    WHERE ut.id IN ($<unidadeTrabalhoIds:csv>) AND e.id IN ($<etapaIds:csv>) AND a.id IS NULL
+    `,
+      { unidadeTrabalhoIds, etapaIds }
     )
-  }
+    if (!result.rowCount || result.rowCount === 0) {
+      throw new AppError(
+        'As atividades não podem ser criadas pois já existem.',
+        httpCode.BadRequest
+      )
+    }
+
+  })
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
 controller.getProjetos = async () => {
@@ -1488,7 +1587,7 @@ controller.criaPerfilEstilos = async perfilEstilos => {
 
   perfisbd.forEach(perfilbd => {
     perfilEstilos.forEach(perfil => {
-      if(perfil.grupo_estilo_id === perfilbd.grupo_estilo_id && perfil.subfase_id === perfilbd.subfase_id && perfil.lote_id === perfilbd.lote_id){
+      if (perfil.grupo_estilo_id === perfilbd.grupo_estilo_id && perfil.subfase_id === perfilbd.subfase_id && perfil.lote_id === perfilbd.lote_id) {
         throw new AppError(
           'Já existem perfis estilos com a mesma subfase_id and grupo_estilo_id',
           httpCode.BadRequest
@@ -1509,7 +1608,6 @@ controller.getGrupoInsumo = async () => {
   return db.sapConn.any(`SELECT id, nome
     FROM macrocontrole.grupo_insumo`)
 }
-
 
 controller.deletaGrupoInsumo = async grupoInsumoIds => {
   return db.sapConn.task(async t => {
@@ -1608,13 +1706,15 @@ controller.deletaInsumosAssociados = async (
   )
 }
 
-controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
-  return db.sapConn.tx(async t => {
+controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
+  let loteId
+  let subfaseIds = []
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const atividadeAssociada = await t.oneOrNone(
       `SELECT a.id FROM macrocontrole.atividade AS a
-      WHERE a.unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
+      WHERE a.unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>)
       LIMIT 1`,
-      { unidadeTrabalhoId }
+      { unidadeTrabalhoIds }
     )
     if (atividadeAssociada) {
       throw new AppError(
@@ -1623,20 +1723,39 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoId => {
       )
     }
 
-    t.any(
-      `DELETE FROM macrocontrole.insumo_unidade_trabalho
-      WHERE unidade_trabalho_id in ($<unidadeTrabalhoId:csv>)
-    `,
-      { unidadeTrabalhoId }
+    const lote_subfases = await t.any(
+      `SELECT DISTINCT lote_id, subfase_id FROM macrocontrole.unidade_trabalho
+      WHERE id in ($<unidadeTrabalhoIds:csv>)`,
+      { unidadeTrabalhoIds }
     )
 
-    return t.any(
-      `DELETE FROM macrocontrole.unidade_trabalho
-      WHERE id in ($<unidadeTrabalhoId:csv>)
+    loteId = lote_subfases[0].lote_id
+    lote_subfases.forEach(e => {
+      if (e.lote_id !== loteId) {
+        throw new AppError(
+          'Unidades de trabalho de lotes distintos',
+          httpCode.BadRequest
+        )
+      }
+      subfaseIds.push(e.subfase_id)
+    })
+
+    await t.any(
+      `DELETE FROM macrocontrole.insumo_unidade_trabalho
+      WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>)
     `,
-      { unidadeTrabalhoId }
+      { unidadeTrabalhoIds }
+    )
+
+    await t.any(
+      `DELETE FROM macrocontrole.unidade_trabalho
+      WHERE id in ($<unidadeTrabalhoIds:csv>)
+    `,
+      { unidadeTrabalhoIds }
     )
   })
+  await disableTriggers.handleRelacionamentoUtDelete(db.sapConn, unidadeTrabalhoIds)
+  await disableTriggers.refreshMaterializedViewFromSubfases(db.sapConn, loteId, subfaseIds)
 }
 
 controller.copiarUnidadeTrabalho = async (
@@ -1644,26 +1763,34 @@ controller.copiarUnidadeTrabalho = async (
   unidadeTrabalhoIds,
   associarInsumos
 ) => {
-  return db.sapConn.tx(async t => {
-    const utOldNew = {}
-    for (const unidadeTrabalhoId of unidadeTrabalhoIds) {
-      for (const subfaseId of subfaseIds) {
-        const unidadeTrabalho = await t.oneOrNone(
-          `
-            INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade)
-            SELECT nome, geom, epsg, dado_producao_id, $<subfaseId> AS subfase_id, dificuldade, lote_id, bloco_id, disponivel, prioridade
-            FROM macrocontrole.unidade_trabalho
-            WHERE id = $<unidadeTrabalhoId>
-            RETURNING id
-          `,
-          { subfaseId, unidadeTrabalhoId }
-        )
-        if(!(unidadeTrabalhoId in utOldNew)) {
-          utOldNew[unidadeTrabalhoId] = []
-        }
-        utOldNew[unidadeTrabalhoId].push(unidadeTrabalho.id)
+  let newUnidadeTrabalhoIds
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    let utIdSubfaseIdPairs = unidadeTrabalhoIds.flatMap(utId => subfaseIds.map(subfaseId => ({ utId, subfaseId })));
+    let utIdSubfaseIdPairsPg = utIdSubfaseIdPairs.map(pair => `(${pair.utId}, ${pair.subfaseId})`);
+
+    // Insert all rows in a single operation
+    let utOldNew = await t.any(
+      `
+        INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, tempo_estimado_minutos, lote_id, bloco_id, disponivel, prioridade)
+        SELECT nome, geom, epsg, dado_producao_id, ut_subfases.subfase_id AS subfase_id, dificuldade, tempo_estimado_minutos, lote_id, bloco_id, disponivel, prioridade
+        FROM macrocontrole.unidade_trabalho
+        JOIN unnest(ARRAY[${utIdSubfaseIdPairsPg.join(',')}]) AS ut_subfases(ut_id, subfase_id)
+        ON macrocontrole.unidade_trabalho.id = ut_subfases.ut_id
+        RETURNING id, ut_subfases.ut_id AS old_id
+      `
+    );
+    // Group the returned rows by old_id
+    let utOldNewGrouped = utOldNew.reduce((acc, row) => {
+      if (!(row.old_id in acc)) {
+        acc[row.old_id] = [];
       }
-    }
+      acc[row.old_id].push(row.id);
+      return acc;
+    }, {});
+
+    // Replace utOldNew with the grouped version
+    utOldNew = utOldNewGrouped;
+    newUnidadeTrabalhoIds = [].concat(...Object.values(utOldNew));
 
     if (associarInsumos) {
       const insumos = await t.any(
@@ -1695,6 +1822,8 @@ controller.copiarUnidadeTrabalho = async (
       await t.none(query)
     }
   })
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, newUnidadeTrabalhoIds)
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, newUnidadeTrabalhoIds)
 }
 
 controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
@@ -1729,90 +1858,88 @@ controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
 }
 
 controller.criaProdutos = async (produtos, loteId) => {
+  let produtoIds
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    let tipoProdutoId = await t.one(
+      `SELECT lp.tipo_produto_id FROM macrocontrole.lote AS l
+      INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = l.linha_producao_id
+      WHERE l.id = $<loteId>`,
+      { loteId }
+    );
 
-  let tipoProdutoId = await db.sapConn.one(
-    `SELECT lp.tipo_produto_id FROM macrocontrole.lote AS l
-    INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = l.linha_producao_id
-    WHERE l.id = $<loteId>`,
-    { loteId }
-  );
+    const cs = new db.pgp.helpers.ColumnSet([
+      'uuid',
+      'nome',
+      'mi',
+      'inom',
+      'denominador_escala',
+      'edicao',
+      { name: 'tipo_produto_id', init: () => tipoProdutoId.tipo_produto_id },
+      { name: 'lote_id', init: () => loteId },
+      { name: 'geom', mod: ':raw' }
+    ])
 
-  const cs = new db.pgp.helpers.ColumnSet([
-    'uuid',
-    'nome',
-    'mi',
-    'inom',
-    'denominador_escala',
-    'edicao',
-    { name: 'tipo_produto_id', init: () => tipoProdutoId.tipo_produto_id },
-    { name: 'lote_id', init: () => loteId },
-    { name: 'geom', mod: ':raw' }
-  ])
+    produtos.forEach(p => {
+      if (p.geom.toLowerCase().includes(";polygon")) {
+        throw new AppError(
+          'Geometria deve ser MULTIPOLYGON',
+          httpCode.BadRequest
+        )
+      }
+      p.geom = `st_geomfromewkt('${p.geom}')`
+    })
 
-  produtos.forEach(p => {
-    if (p.geom.toLowerCase().includes(";polygon")) {
-      throw new AppError(
-        'Geometria deve ser MULTIPOLYGON',
-        httpCode.BadRequest
-      )
-    }
-    p.geom = `st_geomfromewkt('${p.geom}')`
+    const query = db.pgp.helpers.insert(produtos, cs, {
+      table: 'produto',
+      schema: 'macrocontrole'
+    }) + ' RETURNING id'
+
+    produtoIds = await t.map(query, undefined, a => +a.id)
   })
-
-  const query = db.pgp.helpers.insert(produtos, cs, {
-    table: 'produto',
-    schema: 'macrocontrole'
-  })
-
-  return db.sapConn.none(query)
+  await disableTriggers.handleRelacionamentoProdutoInsertUpdate(db.sapConn, produtoIds)
+  await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(db.sapConn, loteId)
 }
 
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {
-  const cs = new db.pgp.helpers.ColumnSet([
-    'nome',
-    'epsg',
-    'dado_producao_id',
-    'bloco_id',
-    'subfase_id',
-    { name: 'lote_id', init: () => loteId },
-    'disponivel',
-    'dificuldade',
-    'prioridade',
-    'observacao',
-    { name: 'geom', mod: ':raw' }
-  ])
+  let unidadeTrabalhoIds
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'epsg',
+      'dado_producao_id',
+      'bloco_id',
+      'subfase_id',
+      { name: 'lote_id', init: () => loteId },
+      'disponivel',
+      'dificuldade',
+      'tempo_estimado_minutos',
+      'prioridade',
+      'observacao',
+      { name: 'geom', mod: ':raw' }
+    ])
 
-  unidadesTrabalho.forEach(p => {
-    p.geom = `st_geomfromewkt('${p.geom}')`
-  })
-
-  const unidadesTrabalhoTotal = []
-
-  subfaseIds.forEach(s => {
     unidadesTrabalho.forEach(p => {
-      const newObj = { ...p, subfase_id: s };
-      unidadesTrabalhoTotal.push(newObj);
+      p.geom = `st_geomfromewkt('${p.geom}')`
     })
+
+    const unidadesTrabalhoTotal = []
+
+    subfaseIds.forEach(s => {
+      unidadesTrabalho.forEach(p => {
+        const newObj = { ...p, subfase_id: s };
+        unidadesTrabalhoTotal.push(newObj);
+      })
+    })
+
+    const query = db.pgp.helpers.insert(unidadesTrabalhoTotal, cs, {
+      table: 'unidade_trabalho',
+      schema: 'macrocontrole'
+    }) + ' RETURNING id'
+
+    unidadeTrabalhoIds = await t.map(query, undefined, a => +a.id)
   })
-
-  const query = db.pgp.helpers.insert(unidadesTrabalhoTotal, cs, {
-    table: 'unidade_trabalho',
-    schema: 'macrocontrole'
-  })
-  let pre = `BEGIN; SET LOCAL session_replication_role = 'replica';`
-  let pos = `;SET LOCAL session_replication_role = 'origin';COMMIT;`
-
-  await db.sapConn.none(pre+query+pos)
-
-  let sql = await db.sapConn.oneOrNone(
-    `SELECT string_agg(query, ' ') AS grant_fk FROM (
-              SELECT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || schemaname || '.' || matviewname || ';' AS query
-              from pg_matviews
-          ) AS foo;`
-  )
-
-  await db.sapConn.none(sql.grant_fk);
-
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, unidadeTrabalhoIds)
+  await disableTriggers.refreshMaterializedViewFromSubfases(db.sapConn, loteId, subfaseIds)
 }
 
 controller.associaInsumos = async (
@@ -1894,6 +2021,7 @@ controller.associaInsumos = async (
 
 controller.associaInsumosBloco = async (
   blocoId,
+  subfaseIds,
   grupoInsumoId,
   estrategiaId,
   caminhoPadrao
@@ -1912,9 +2040,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(ut.geom), i.geom)
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     case 2:
       return db.sapConn.none(
@@ -1924,9 +2052,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(st_centroid(i.geom), ut.geom)
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     case 3:
       return db.sapConn.none(
@@ -1936,9 +2064,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_intersects(i.geom, ut.geom)
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     case 4:
       return db.sapConn.none(
@@ -1948,9 +2076,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         INNER JOIN macrocontrole.insumo AS i ON st_relate(ut.geom, i.geom, '2********')
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     case 5:
       return db.sapConn.none(
@@ -1960,9 +2088,9 @@ controller.associaInsumosBloco = async (
         FROM macrocontrole.unidade_trabalho AS ut
         CROSS JOIN macrocontrole.insumo AS i
         LEFT JOIN macrocontrole.insumo_unidade_trabalho AS iut ON iut.unidade_trabalho_id = ut.id AND iut.insumo_id = i.id
-        WHERE ut.bloco_id = $<blocoId> AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
+        WHERE ut.bloco_id = $<blocoId> AND ut.subfase_id in ($<subfaseIds:csv>) AND i.grupo_insumo_id = $<grupoInsumoId> AND iut.id IS NULL
       `,
-        { blocoId, grupoInsumoId, caminhoPadrao }
+        { blocoId, subfaseIds, grupoInsumoId, caminhoPadrao }
       )
     default:
       throw new AppError('Estratégia inválida', httpCode.BadRequest)
@@ -2043,7 +2171,11 @@ controller.deletaPlugins = async pluginsId => {
 
 controller.getLote = async () => {
   return db.sapConn.any(
-    'SELECT id, nome, nome_abrev, denominador_escala, linha_producao_id, projeto_id, descricao  FROM macrocontrole.lote'
+    `SELECT l.id, l.nome, l.nome_abrev, l.denominador_escala, l.linha_producao_id, l.projeto_id, l.descricao,
+    lp.tipo_produto_id
+    FROM macrocontrole.lote AS l
+    INNER JOIN macrocontrole.linha_producao AS lp ON l.linha_producao_id = lp.id
+    `
   )
 }
 
@@ -2437,7 +2569,7 @@ controller.getAlias = async () => {
   )
 }
 
-controller.criaAlias = async (alias,usuarioId) => {
+controller.criaAlias = async (alias, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
@@ -2457,7 +2589,7 @@ controller.criaAlias = async (alias,usuarioId) => {
   })
 }
 
-controller.atualizaAlias = async (alias,usuarioId) => {
+controller.atualizaAlias = async (alias, usuarioId) => {
   return db.sapConn.tx(async t => {
     const usuarioPostoNome = getUsuarioNomeById(usuarioId)
 
@@ -2501,6 +2633,999 @@ controller.deleteAlias = async aliasId => {
       `DELETE FROM dgeo.layer_alias
       WHERE id in ($<aliasId:csv>)`,
       { aliasId }
+    )
+  })
+}
+
+controller.getPerfilLinhagem = async () => {
+  return db.sapConn.any(
+    `SELECT pl.id, te.nome AS tipo_exibicao, pl.tipo_exibicao_id, pl.subfase_id, pl.lote_id
+    FROM macrocontrole.perfil_linhagem AS pl
+    INNER JOIN dominio.tipo_exibicao AS te ON te.code = pl.tipo_exibicao_id`
+  )
+}
+
+controller.criaPerfilLinhagem = async perfilLinhagem => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'tipo_exibicao_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilLinhagem, cs, {
+      table: 'perfil_linhagem',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilLinhagem = async perfilLinhagem => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'tipo_exibicao_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilLinhagem,
+        cs,
+        { table: 'perfil_linhagem', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilLinhagem = async perfilLinhagemId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_linhagem
+      WHERE id in ($<perfilLinhagemId:csv>)`,
+      { perfilLinhagemId }
+    )
+    if (exists && exists.length < perfilLinhagemId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil linhagem',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_linhagem
+      WHERE id in ($<perfilLinhagemId:csv>)`,
+      { perfilLinhagemId }
+    )
+  })
+}
+
+controller.getPerfilTemas = async () => {
+  return db.sapConn.any(
+    `SELECT pt.id, pt.tema_id, pt.subfase_id, pt.lote_id,
+    qt.nome AS tema, qt.definicao_tema
+    FROM macrocontrole.perfil_tema AS pt
+    INNER JOIN dgeo.qgis_themes AS qt ON qt.id = pt.tema_id`
+  )
+}
+
+controller.criaPerfilTemas = async perfilTema => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'tema_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilTema, cs, {
+      table: 'perfil_tema',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilTemas = async perfilTema => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'tema_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilTema,
+        cs,
+        { table: 'perfil_tema', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilTemas = async perfilTemaId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_tema
+      WHERE id in ($<perfilTemaId:csv>)`,
+      { perfilTemaId }
+    )
+    if (exists && exists.length < perfilTemaId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil tema',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_tema
+      WHERE id in ($<perfilTemaId:csv>)`,
+      { perfilTemaId }
+    )
+  })
+}
+
+controller.getTemas = async () => {
+  return db.sapConn.any(
+    'SELECT id, nome, definicao_tema, owner, update_time FROM dgeo.qgis_themes'
+  )
+}
+
+controller.gravaTemas = async (temas, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'definicao_tema',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query = db.pgp.helpers.insert(temas, cs, {
+      table: 'qgis_themes',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaTemas = async (temas, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'definicao_tema',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        temas,
+        cs,
+        { table: 'qgis_themes', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaTemas = async temasId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.qgis_themes
+      WHERE id in ($<temasId:csv>)`,
+      { temasId }
+    )
+    if (exists && exists.length < temasId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um tema',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.qgis_themes
+      WHERE id in ($<temasId:csv>)`,
+      { temasId }
+    )
+  })
+}
+
+controller.reshapeUnidadeTrabalho = async (unidadeTrabalhoId, reshapeGeom) => {
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    let execution = await t.any(
+      `SELECT 1 FROM macrocontrole.atividade AS a
+      WHERE a.unidade_trabalho_id = $<unidadeTrabalhoId> AND a.tipo_situacao_id IN (2,3)`,
+      { unidadeTrabalhoId }
+    )
+    if (execution && execution.length > 0) {
+      throw new AppError(
+        'A Unidade de Trabalho possui atividades em execução ou pausada',
+        httpCode.BadRequest
+      )
+    }
+
+    await t.none(
+      `UPDATE macrocontrole.unidade_trabalho
+      SET geom = ST_GEOMFROMEWKT($<reshapeGeom>)
+      WHERE id = $<unidadeTrabalhoId>`,
+      { unidadeTrabalhoId, reshapeGeom }
+    )
+
+  }) -
+    await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, [unidadeTrabalhoId])
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, [unidadeTrabalhoId])
+}
+
+controller.cutUnidadeTrabalho = async (unidadeTrabalhoId, cutGeoms) => {
+  let utIdsFixed;
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    let execution = await t.any(
+        `SELECT 1 FROM macrocontrole.atividade AS a
+        WHERE a.unidade_trabalho_id = $<unidadeTrabalhoId> AND a.tipo_situacao_id IN (2,3)`,
+      { unidadeTrabalhoId }
+    )
+    if (execution && execution.length > 0) {
+      throw new AppError(
+        'A Unidade de Trabalho possui atividades em execução ou pausada',
+        httpCode.BadRequest
+      )
+    }
+
+    let firstGeom = cutGeoms.shift()
+
+    await t.none(
+      `UPDATE macrocontrole.unidade_trabalho
+      SET geom = ST_GEOMFROMEWKT($<firstGeom>)
+      WHERE id = $<unidadeTrabalhoId>`,
+      { unidadeTrabalhoId, firstGeom }
+    )
+
+    let novasUtId = await t.any(
+      `INSERT INTO macrocontrole.unidade_trabalho(nome,epsg,dado_producao_id,subfase_id,lote_id,bloco_id,disponivel,dificuldade,tempo_estimado_minutos,prioridade,observacao,geom)
+       SELECT ut.nome,ut.epsg,ut.dado_producao_id,ut.subfase_id,ut.lote_id,ut.bloco_id,ut.disponivel,ut.dificuldade,ut.tempo_estimado_minutos,ut.prioridade,ut.observacao,
+       ST_GEOMFROMEWKT(ref.geom) as geom
+       FROM macrocontrole.unidade_trabalho AS ut
+       CROSS JOIN (SELECT v as geom FROM UNNEST($<cutGeoms>::text[]) AS t(v)) AS ref
+       WHERE ut.id = $<unidadeTrabalhoId> RETURNING id;
+      `,
+      { unidadeTrabalhoId, cutGeoms }
+    )
+    utIdsFixed = [...novasUtId.map(obj => obj.id)]
+
+    await t.none(
+      `INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id,insumo_id,caminho_padrao)
+       SELECT ref.unidade_trabalho_id, iut.insumo_id, iut.caminho_padrao
+       FROM macrocontrole.insumo_unidade_trabalho AS iut
+       CROSS JOIN (SELECT v as unidade_trabalho_id FROM UNNEST($<utIdsFixed>::integer[]) AS t(v)) AS ref
+       WHERE iut.unidade_trabalho_id = $<unidadeTrabalhoId>;
+      `,
+      { unidadeTrabalhoId, utIdsFixed }
+    )
+
+    await t.none(
+      `INSERT INTO macrocontrole.atividade(etapa_id,unidade_trabalho_id,usuario_id,tipo_situacao_id,data_inicio,data_fim,observacao)
+       SELECT a.etapa_id,ref.unidade_trabalho_id,a.usuario_id,a.tipo_situacao_id,a.data_inicio,a.data_fim,a.observacao
+       FROM macrocontrole.atividade AS a
+       CROSS JOIN (SELECT v as unidade_trabalho_id FROM UNNEST($<utIdsFixed>::integer[]) AS t(v)) AS ref
+       WHERE a.unidade_trabalho_id = $<unidadeTrabalhoId>;
+      `,
+      { unidadeTrabalhoId, utIdsFixed }
+    )
+
+    utIdsFixed.push(unidadeTrabalhoId)
+
+  })
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, utIdsFixed)
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, utIdsFixed)
+}
+
+controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
+  let firstId
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+    let execution = await t.any(
+      `SELECT 1 FROM macrocontrole.atividade AS a
+      WHERE a.unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND a.tipo_situacao_id IN (2,3)`,
+      { unidadeTrabalhoIds }
+    )
+    if (execution && execution.length > 0) {
+      throw new AppError(
+        'A Unidade de Trabalho possui atividades em execução ou pausada',
+        httpCode.BadRequest
+      )
+    }
+
+    let consistency = await t.any(
+      `SELECT DISTINCT ON (subfase_id, lote_id, bloco_id) 1 FROM macrocontrole.unidade_trabalho
+      WHERE id IN ($<unidadeTrabalhoIds:csv>)`,
+      { unidadeTrabalhoIds }
+    )
+    if (consistency && consistency.length > 1) {
+      throw new AppError(
+        'A Unidade de Trabalho são de subfases, lotes ou blocos divergentes',
+        httpCode.BadRequest
+      )
+    }
+
+    firstId = unidadeTrabalhoIds.shift()
+
+    await t.none(
+      `UPDATE macrocontrole.unidade_trabalho
+      SET geom = ST_GEOMFROMEWKT($<mergeGeom>)
+      WHERE id = $<firstId>`,
+      { firstId, mergeGeom }
+    )
+
+    let updatedIds = await t.any(
+      `UPDATE macrocontrole.atividade AS a
+      SET tipo_situacao_id = 5
+      FROM (
+        SELECT etapa_id, MIN(tipo_situacao_id)
+        FROM macrocontrole.atividade
+        WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>, $<firstId>) AND tipo_situacao_id != 5
+        GROUP BY etapa_id
+        HAVING MIN(tipo_situacao_id) = 1
+      ) AS sub
+      WHERE a.unidade_trabalho_id = $<firstId> AND a.etapa_id = sub.etapa_id
+      AND a.tipo_situacao_id = 4 RETURNING id`,
+      { firstId, unidadeTrabalhoIds }
+    )
+    let fixedIds = updatedIds.map(c => c.id);
+    if(fixedIds.length > 0){
+      await t.none(
+        `INSERT INTO macrocontrole.atividade(etapa_id,unidade_trabalho_id,tipo_situacao_id,observacao)
+        SELECT a.etapa_id, $<firstId> AS unidade_trabalho_id, 1, a.observacao
+        FROM macrocontrole.atividade AS a
+        WHERE a.id in ($<fixedIds:csv>)`,
+        { firstId, fixedIds }
+      )
+    }
+
+    await t.any(
+      `UPDATE macrocontrole.atividade AS a
+      SET observacao = concat_ws(' | ', observacao, sub.observacao_agg)
+      FROM (
+        SELECT etapa_id, string_agg(observacao, ' | ') AS observacao_agg
+        FROM macrocontrole.atividade
+        WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id = 1
+        GROUP BY etapa_id
+      ) AS sub
+      WHERE a.unidade_trabalho_id = $<firstId> AND a.etapa_id = sub.etapa_id
+      AND a.tipo_situacao_id = 1`,
+      { firstId, unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `INSERT INTO macrocontrole.insumo_unidade_trabalho(unidade_trabalho_id,insumo_id,caminho_padrao)
+      SELECT DISTINCT ON (iut.insumo_id, iut.caminho_padrao) $<firstId> AS unidade_trabalho_id, iut.insumo_id, iut.caminho_padrao
+      FROM macrocontrole.insumo_unidade_trabalho AS iut
+      WHERE iut.unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND 
+      (iut.insumo_id, iut.caminho_padrao) NOT IN (
+        SELECT insumo_id, caminho_padrao FROM macrocontrole.insumo_unidade_trabalho
+        WHERE unidade_trabalho_id = $<firstId>
+      )`,
+      { firstId, unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `UPDATE macrocontrole.insumo_unidade_trabalho
+      SET unidade_trabalho_id = $<firstId>
+      WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND 
+      (insumo_id, caminho_padrao) NOT IN (
+        SELECT insumo_id, caminho_padrao FROM macrocontrole.insumo_unidade_trabalho
+        WHERE unidade_trabalho_id = $<firstId>
+      )`,
+      { firstId, unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `DELETE FROM macrocontrole.insumo_unidade_trabalho
+       WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>);
+      `,
+      { unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `UPDATE macrocontrole.atividade
+       SET tipo_situacao_id = 5, unidade_trabalho_id = $<firstId>
+       WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id in (4,5);
+      `,
+      { firstId, unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `DELETE FROM macrocontrole.atividade
+       WHERE unidade_trabalho_id IN ($<unidadeTrabalhoIds:csv>) AND tipo_situacao_id = 1;
+      `,
+      { unidadeTrabalhoIds }
+    )
+
+    await t.none(
+      `DELETE FROM macrocontrole.unidade_trabalho
+       WHERE id IN ($<unidadeTrabalhoIds:csv>);
+      `,
+      { unidadeTrabalhoIds }
+    )
+
+  })
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, [firstId])
+  await disableTriggers.handleRelacionamentoUtDelete(db.sapConn, unidadeTrabalhoIds)
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, [firstId])
+}
+
+controller.insereLinhaProducao = async linha_producao => {
+  return db.sapConn.tx(async t => {
+    const linha = await t.one(
+      `INSERT INTO macrocontrole.linha_producao(nome, descricao, nome_abrev, tipo_produto_id) VALUES($1, $2, $3, $4) RETURNING id`, 
+      [linha_producao.nome, linha_producao.descricao, linha_producao.nome_abrev, linha_producao.tipo_produto_id]
+      );
+
+    let subfaseMap = {};
+    for (const fase of linha_producao.fases) {
+      const faseInserted = await t.one(
+        `INSERT INTO macrocontrole.fase(tipo_fase_id, linha_producao_id, ordem) VALUES($1, $2, $3) RETURNING id`,
+        [fase.tipo_fase_id, linha.id, fase.ordem]
+        );
+
+      for (const subfase of fase.subfases) {
+        const subfaseInserted = await t.one(
+          `INSERT INTO macrocontrole.subfase(nome, fase_id, ordem) VALUES($1, $2, $3) RETURNING id`, 
+          [subfase.nome, faseInserted.id, subfase.ordem]
+          );
+        subfaseMap[subfase.nome] = subfaseInserted.id;
+      }
+
+      for (const preReq of fase.pre_requisito_subfase) {
+        const anteriorId = subfaseMap[preReq.subfase_anterior];
+        const posteriorId = subfaseMap[preReq.subfase_posterior];
+        await t.none(
+          `INSERT INTO macrocontrole.pre_requisito_subfase(tipo_pre_requisito_id, subfase_anterior_id, subfase_posterior_id) VALUES($1, $2, $3)`,
+          [preReq.tipo_pre_requisito_id, anteriorId, posteriorId]
+          );
+      }
+    }
+
+    for (const prop of linha_producao.propriedades_camadas) {
+      let camadaId;
+      const camadaQuery = await t.oneOrNone(`SELECT id FROM macrocontrole.camada WHERE nome = $1 and schema = $2`, [prop.camada, prop.schema]);
+      if (!camadaQuery) {
+        const insertResult = await t.one(`INSERT INTO macrocontrole.camada (nome, schema) VALUES ($1, $2) RETURNING id`, [prop.camada, prop.schema]);
+        camadaId = insertResult.id;
+      } else {
+        camadaId = camadaQuery.id;
+      }
+      
+      const subfaseId = subfaseMap[prop.subfase];
+      await t.none(
+        `INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, camada_incomum, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) 
+        VALUES($1, $2, $3, $4, $5, $6, $7)`,
+        [camadaId, prop.atributo_filtro_subfase, prop.camada_apontamento, prop.camada_incomum, prop.atributo_situacao_correcao, prop.atributo_justificativa_apontamento, subfaseId]);
+    }
+
+  })
+}
+
+controller.getPerfilConfiguracaoQgis = async () => {
+  return db.sapConn.any(
+    `SELECT pcg.tipo_configuracao_id, tc.nome AS tipo_configuracao, pcg.parametros, pcg.subfase_id, pcg.lote_id
+    FROM macrocontrole.perfil_configuracao_qgis AS pcg
+    INNER JOIN dominio.tipo_configuracao AS tc ON tc.code = pa.tipo_configuracao_id`
+  )
+}
+
+controller.criaPerfilConfiguracaoQgis = async perfisConfiguracaoQgis => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'tipo_configuracao_id',
+      'parametros',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfisConfiguracaoQgis, cs, {
+      table: 'perfil_configuracao_qgis',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilConfiguracaoQgis = async perfisConfiguracaoQgisId => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'tipo_configuracao_id',
+      'parametros',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfisConfiguracaoQgisId,
+        cs,
+        { table: 'perfil_configuracao_qgis', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilConfiguracaoQgis = async perfisConfiguracaoQgisId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_configuracao_qgis
+      WHERE id in ($<perfisConfiguracaoQgisId:csv>)`,
+      { perfisConfiguracaoQgisId }
+    )
+    if (exists && exists.length < perfisConfiguracaoQgisId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil configuracao id',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_configuracao_qgis
+      WHERE id in ($<perfisConfiguracaoQgisId:csv>)`,
+      { perfisConfiguracaoQgisId }
+    )
+  })
+}
+
+controller.getPerfilDificuldadeOperador = async () => {
+  return db.sapConn.any(
+    `SELECT pdo.id, pdo.usuario_id, pdo.subfase_id, pdo.lote_id, pdo.tipo_perfil_dificuldade_id,
+     tpd.nome AS tipo_perfil_dificuldade
+     FROM macrocontrole.perfil_dificuldade_operador AS pdo
+     INNER JOIN dominio.tipo_perfil_dificuldade AS tpd
+     ON tpd.code = pdo.tipo_perfil_dificuldade_id
+    `)
+}
+
+controller.criaPerfilDificuldadeOperador = async perfisDificuldadeOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'usuario_id',
+      'subfase_id',
+      'lote_id',
+      'tipo_perfil_dificuldade_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfisDificuldadeOperador, cs, {
+      table: 'perfil_dificuldade_operador',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilDificuldadeOperador = async perfisDificuldadeOperador => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'usuario_id',
+      'subfase_id',
+      'lote_id',
+      'tipo_perfil_dificuldade_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfisDificuldadeOperador,
+        cs,
+        { table: 'perfil_dificuldade_operador', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilDificuldadeOperador = async perfisDificuldadeOperadorId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_dificuldade_operador
+      WHERE id in ($<perfisDificuldadeOperadorId:csv>)`,
+      { perfisDificuldadeOperadorId }
+    )
+    if (exists && exists.length < perfisDificuldadeOperadorId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil configuracao id',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_dificuldade_operador
+      WHERE id in ($<perfisDificuldadeOperadorId:csv>)`,
+      { perfisDificuldadeOperadorId }
+    )
+  })
+}
+
+controller.getTipoPerfilDificuldade = async () => {
+  return db.sapConn.any(
+    `SELECT tpd.code, tpd.nome AS tipo_perfil_dificuldade
+     FROM dominio.tipo_perfil_dificuldade AS tpd
+    `)
+}
+
+controller.copiarConfiguracaoLote = async (
+  lote_id_origem,
+  lote_id_destino,
+  copiar_estilo,
+  copiar_menu,
+  copiar_regra,
+  copiar_modelo,
+  copiar_workflow,
+  copiar_alias,
+  copiar_linhagem,
+  copiar_finalizacao,
+  copiar_tema,
+  copiar_fme,
+  copiar_configuracao_qgis,
+  copiar_monitoramento
+) => {
+  let valid = await db.sapConn.any(
+    `
+    SELECT 1
+    FROM macrocontrole.lote AS l1
+    INNER JOIN macrocontrole.lote AS l2 ON l1.linha_producao_id = l2.linha_producao_id
+    WHERE l1.id = $<lote_id_origem> AND l2.id = $<lote_id_destino> AND l1.id != l2.id
+    `,
+    { lote_id_origem, lote_id_destino }
+  )
+  if (valid.length === 0) {
+    throw new AppError(
+      'Lotes inválidos',
+      httpCode.BadRequest
+    )
+  }
+
+  if(copiar_estilo){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_estilo(grupo_estilo_id,subfase_id,lote_id)
+      SELECT pe.grupo_estilo_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_estilo AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_menu){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_menu(menu_id,menu_revisao,subfase_id,lote_id)
+      SELECT pe.menu_id, pe.menu_revisao, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_menu AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_regra){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_regras(layer_rules_id,subfase_id,lote_id)
+      SELECT pe.layer_rules_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_regras AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_modelo){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_model_qgis(qgis_model_id,parametros,requisito_finalizacao,tipo_rotina_id,ordem,subfase_id,lote_id)
+      SELECT pe.qgis_model_id, pe.parametros, pe.requisito_finalizacao, pe.tipo_rotina_id, pe.ordem, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_model_qgis AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_workflow){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_workflow_dsgtools(workflow_dsgtools_id,requisito_finalizacao,subfase_id,lote_id)
+      SELECT pe.workflow_dsgtools_id, pe.requisito_finalizacao, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_workflow_dsgtools AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_alias){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_alias(alias_id,subfase_id,lote_id)
+      SELECT pe.alias_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_alias AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_linhagem){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_linhagem(tipo_exibicao_id,subfase_id,lote_id)
+      SELECT pe.tipo_exibicao_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_linhagem AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_finalizacao){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_requisito_finalizacao(descricao,ordem,subfase_id,lote_id)
+      SELECT pe.descricao, pe.ordem, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_requisito_finalizacao AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_tema){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_tema(tema_id,subfase_id,lote_id)
+      SELECT pe.tema_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_tema AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_fme){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_fme(gerenciador_fme_id,rotina,requisito_finalizacao,tipo_rotina_id,ordem,subfase_id,lote_id)
+      SELECT pe.gerenciador_fme_id, pe.rotina, pe.requisito_finalizacao, pe.tipo_rotina_id, pe.ordem, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_fme AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_configuracao_qgis){
+    await db.sapConn.any(
+      `
+      INSERT INTO macrocontrole.perfil_configuracao_qgis(tipo_configuracao_id,parametros,subfase_id,lote_id)
+      SELECT pe.tipo_configuracao_id, pe.parametros, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM macrocontrole.perfil_configuracao_qgis AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+  if(copiar_monitoramento){
+    await db.sapConn.any(
+      `
+      INSERT INTO microcontrole.perfil_monitoramento(tipo_monitoramento_id,subfase_id,lote_id)
+      SELECT pe.tipo_monitoramento_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+      FROM microcontrole.perfil_monitoramento AS pe
+      WHERE pe.lote_id = $<lote_id_origem>
+      `,
+      { lote_id_origem, lote_id_destino }
+    )
+  }
+
+}
+
+controller.getPerfilWorkflowDsgtools = async () => {
+  return db.sapConn.any(
+    `SELECT pwd.id, pwd.workflow_dsgtools_id, pwd.subfase_id, pwd.lote_id, pwd.requisito_finalizacao,
+    wd.nome, wd.descricao, wd.workflow_json, wd.owner, wd.update_time
+     FROM macrocontrole.perfil_workflow_dsgtools AS pwd
+     INNER JOIN dgeo.workflow_dsgtools AS wd
+     ON wd.id = pwd.workflow_dsgtools_id
+    `)
+}
+
+controller.criaPerfilWorkflowDsgtools = async perfilWorkflowDsgtools => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'workflow_dsgtools_id',
+      'subfase_id',
+      'lote_id',
+      'requisito_finalizacao'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilWorkflowDsgtools, cs, {
+      table: 'perfil_workflow_dsgtools',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilWorkflowDsgtools = async perfilWorkflowDsgtools => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'workflow_dsgtools_id',
+      'subfase_id',
+      'lote_id',
+      'requisito_finalizacao'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilWorkflowDsgtools,
+        cs,
+        { table: 'perfil_workflow_dsgtools', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilWorkflowDsgtools = async perfilWorkflowDsgtoolsId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_workflow_dsgtools
+      WHERE id in ($<perfilWorkflowDsgtoolsId:csv>)`,
+      { perfilWorkflowDsgtoolsId }
+    )
+    if (exists && exists.length < perfilWorkflowDsgtoolsId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil workflow dsgtools',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_workflow_dsgtools
+      WHERE id in ($<perfilWorkflowDsgtoolsId:csv>)`,
+      { perfilWorkflowDsgtoolsId }
+    )
+  })
+}
+
+controller.getWorkflows = async () => {
+  return db.sapConn.any(
+    `SELECT id, nome, descricao, workflow_json, owner, update_time 
+    FROM dgeo.workflow_dsgtools`
+  )
+}
+
+controller.gravaWorkflows = async (workflows, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'descricao',
+      'workflow_json',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query = db.pgp.helpers.insert(workflows, cs, {
+      table: 'workflow_dsgtools',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaWorkflows = async (workflows, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'descricao',
+      'workflow_json',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        workflows,
+        cs,
+        { table: 'workflow_dsgtools', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaWorkflows = async workflowsId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.workflow_dsgtools
+      WHERE id in ($<workflowsId:csv>)`,
+      { workflowsId }
+    )
+    if (exists && exists.length < workflowsId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um workflow dsgtools',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation = await t.any(
+      `SELECT id FROM macrocontrole.perfil_workflow_dsgtools 
+      WHERE workflow_dsgtools_id in ($<workflowsId:csv>)`,
+      { workflowsId }
+    )
+    if (existsAssociation && existsAssociation.length > 0) {
+      throw new AppError(
+        'O workflow possui perfis associados',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.workflow_dsgtools
+      WHERE id in ($<workflowsId:csv>)`,
+      { workflowsId }
     )
   })
 }

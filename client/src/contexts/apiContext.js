@@ -148,6 +148,168 @@ export default function APIProvider({ children }) {
     return response.data
   }
 
+  const getStatisticsGrid = async () => {
+    const response = await callAxios(
+      '/api/acompanhamento/grade_acompanhamento/',
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getActivitySubphase = async () => {
+    const response = await callAxios(
+      '/api/acompanhamento/atividade_subfase',
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getUserActivities = async () => {
+    const response = await callAxios(
+      '/api/acompanhamento/atividade_usuario',
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getLots = async () => {
+    const response = await callAxios(
+      `/api/acompanhamento/pit/subfase/${new Date().getFullYear()}`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getSubphasesSituation = async () => {
+    const response = await callAxios(
+      `/api/acompanhamento/situacao_subfase`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getPIT = async () => {
+    const response = await callAxios(
+      `/api/acompanhamento/pit/${new Date().getFullYear()}`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getDashboard = async () => {
+    const allReponse = await Promise.all([
+      callAxios(
+        `/api/acompanhamento/dashboard/quantidade/${new Date().getFullYear()}`,
+        "GET",
+        {}
+      ),
+      callAxios(
+        `/api/acompanhamento/dashboard/finalizadas/${new Date().getFullYear()}`,
+        "GET",
+        {}
+      ),
+      callAxios(
+        `/api/acompanhamento/dashboard/execucao`,
+        "GET",
+        {}
+      ),
+      callAxios(
+        `/api/acompanhamento/pit/${new Date().getFullYear()}`,
+        "GET",
+        {}
+      ),
+    ])
+
+    let hasError = allReponse.find(res => res.error)
+    if (hasError) {
+      handleError(hasError.error)
+      return
+    }
+    return allReponse.map(res => res.data)
+  }
+
+  const getRunningActivities = async () => {
+    const response = await callAxios(
+      `/api/acompanhamento/atividades_em_execucao`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getLastCompletedActivities = async () => {
+    const response = await callAxios(
+      `/api/acompanhamento/ultimas_atividades_finalizadas`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getViews = async () => {
+    const response = await callAxios(
+      `/api/gerencia/view_acompanhamento?em_andamento=true`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
+  const getLotGEOJSON = async (lot) => {
+    const response = await callAxios(
+      `/api/acompanhamento/mapa/${lot}`,
+      "GET",
+      {}
+    );
+    if (response.error) {
+      handleError(response.error)
+      return
+    }
+    return response.data
+  }
+
   return (
     <APIContext.Provider
       value={{
@@ -160,7 +322,18 @@ export default function APIProvider({ children }) {
         startActivity,
         finishActivity,
         reportError,
-        getErrorTypes
+        getErrorTypes,
+        getStatisticsGrid,
+        getActivitySubphase,
+        getUserActivities,
+        getLots,
+        getSubphasesSituation,
+        getPIT,
+        getDashboard,
+        getRunningActivities,
+        getLastCompletedActivities,
+        getViews,
+        getLotGEOJSON
       }}>
       {children}
     </APIContext.Provider>

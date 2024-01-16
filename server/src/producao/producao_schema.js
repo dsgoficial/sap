@@ -18,11 +18,11 @@ models.finaliza = Joi.object().keys({
       palavras_chave: Joi.array()
         .items(
           Joi.object().keys({
-            palavra_chave: Joi.string().required(),
-            tipo_palavra_chave: Joi.number().integer().strict().required()
+            nome: Joi.string().required(),
+            tipo_palavra_chave_id: Joi.number().integer().strict().required()
           })
         )
-        .unique('palavra_chave')
+        .unique('nome')
         .required()
         .min(1)
     })
@@ -35,7 +35,12 @@ models.finaliza = Joi.object().keys({
 models.problemaAtividade = Joi.object().keys({
   atividade_id: Joi.number().integer().strict().required(),
   tipo_problema_id: Joi.number().integer().strict().required(),
-  descricao: Joi.string().required()
+  descricao: Joi.string().required(),
+  polygon_ewkt: Joi.string().required()
+})
+
+models.finalizacaoIncorreta = Joi.object().keys({
+  descricao: Joi.string().required(),
 })
 
 models.atividadeId = Joi.object().keys({
