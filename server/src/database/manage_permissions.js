@@ -203,7 +203,7 @@ managePermissions.grantPermissionsUser = async (
   // grant select sequenciador
   const sequenceSQL = await connection.oneOrNone(
     `SELECT string_agg(query, ' ') AS grant_sequence FROM (
-          SELECT 'GRANT USAGE, SELECT ON SEQUENCE ' || replace(replace(column_default, '''::regclass)',''), 'nextval(''','') || ' TO ' || $<login> || ';' AS query
+          SELECT DISTINCT 'GRANT USAGE, SELECT ON SEQUENCE ' || replace(replace(column_default, '''::regclass)',''), 'nextval(''','') || ' TO ' || $<login> || ';' AS query
           FROM information_schema.columns AS c
           WHERE c.table_schema || '.' || c.table_name IN ($<camadas:csv>)
           AND column_default ~ 'nextval'
@@ -216,7 +216,7 @@ managePermissions.grantPermissionsUser = async (
   // grant trigger function
   const triggerSQL = await connection.oneOrNone(
     `SELECT string_agg(query, ' ') AS grant_trigger FROM (
-              SELECT 'GRANT EXECUTE ON FUNCTION ' || routine_schema || '.' || routine_name || '(' || 
+              SELECT DISTINCT 'GRANT EXECUTE ON FUNCTION ' || routine_schema || '.' || routine_name || '(' || 
               pg_get_function_identity_arguments(
                   (regexp_matches(specific_name, E'.*\\_([0-9]+)'))[1]::oid) || ') to ' || $<login> || ';' AS query
               FROM pg_trigger AS t
@@ -229,7 +229,7 @@ managePermissions.grantPermissionsUser = async (
   )
   const triggerSchema = await connection.oneOrNone(
     `SELECT string_agg(query, ' ') AS grant_trigger FROM (
-              SELECT 'GRANT USAGE ON SCHEMA ' || routine_schema || ' TO ' || $<login> || ';' AS query
+              SELECT DISTINCT 'GRANT USAGE ON SCHEMA ' || routine_schema || ' TO ' || $<login> || ';' AS query
               FROM pg_trigger AS t
               INNER JOIN pg_proc AS p ON p.oid = t.tgfoid
               INNER JOIN information_schema.routines AS r ON r.routine_name = p.proname
@@ -247,7 +247,7 @@ managePermissions.grantPermissionsUser = async (
   // grant select nos dominios relacionados
   const fkSQL = await connection.oneOrNone(
     `SELECT string_agg(query, ' ') AS grant_fk FROM (
-              SELECT 'GRANT SELECT ON ' || ccu.table_schema || '.' || ccu.table_name || ' TO ' || $<login> || ';' AS query
+              SELECT DISTINCT 'GRANT SELECT ON ' || ccu.table_schema || '.' || ccu.table_name || ' TO ' || $<login> || ';' AS query
               FROM information_schema.table_constraints AS tc
               INNER JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name
               WHERE tc.table_schema || '.' || tc.table_name IN ($<camadas:csv>)
@@ -258,7 +258,7 @@ managePermissions.grantPermissionsUser = async (
 
   const fkSchema = await connection.oneOrNone(
     `SELECT string_agg(query, ' ') AS grant_fk FROM (
-              SELECT 'GRANT USAGE ON SCHEMA ' || ccu.table_schema || ' TO ' || $<login> || ';' AS query
+              SELECT DISTINCT 'GRANT USAGE ON SCHEMA ' || ccu.table_schema || ' TO ' || $<login> || ';' AS query
               FROM information_schema.table_constraints AS tc
               INNER JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name
               WHERE tc.table_schema || '.' || tc.table_name IN ($<camadas:csv>)
