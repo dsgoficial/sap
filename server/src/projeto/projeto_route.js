@@ -1937,7 +1937,7 @@ router.post(
       req.body.copiar_monitoramento
     )
 
-    const msg = 'Unidades de trabalho copiadas com sucesso'
+    const msg = 'Configurações de Lote copiadas com sucesso.'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
