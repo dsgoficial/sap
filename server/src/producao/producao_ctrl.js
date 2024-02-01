@@ -738,7 +738,7 @@ controller.finalizacaoIncorreta = async (descricao, usuarioId) => {
       `SELECT a.id, a.unidade_trabalho_id, ST_AsEWKT(ut.geom) AS polygonEwkt
       FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-      WHERE a.usuario_id = $<usuarioId> AND a.tipo_situacao = 4
+      WHERE a.usuario_id = $<usuarioId> AND a.tipo_situacao_id = 4
       ORDER BY a.data_fim DESC
       LIMIT 1`,
       { usuarioId }
