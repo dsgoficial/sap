@@ -1329,10 +1329,16 @@ controller.atualizaAlteracaoFluxo = async alteracaoFluxo => {
 controller.getFilaPrioritaria = async () => {
   return db.sapConn.any(
     `SELECT fp.id, fp.atividade_id, fp.usuario_id, fp.prioridade,
-    tpg.nome_abrev || ' ' || u.nome_guerra AS usuario
+    tpg.nome_abrev || ' ' || u.nome_guerra AS usuario,
+    su.nome AS subfase, lo.nome AS lote, bl.nome AS bloco
     FROM macrocontrole.fila_prioritaria AS fp
     INNER JOIN dgeo.usuario AS u ON u.id = fp.usuario_id
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
+    INNER JOIN macrocontrole.atividade AS at ON at.id = fp.atividade_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = at.unidade_trabalho_id
+    INNER JOIN macrocontrole.subfase AS su ON su.id = ut.subfase_id
+    INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+    INNER JOIN macrocontrole.lote AS bl ON bl.id = ut.bloco_id
     `
   )
 }
@@ -1398,10 +1404,16 @@ controller.deleteFilaPrioritaria = async filaPrioritariaIds => {
 
 controller.getFilaPrioritariaGrupo = async () => {
   return db.sapConn.any(
-    `SELECT fpg.id, fpg.perfil_producao_id, fpg.prioridade,
-    pp.nome AS perfil_producao
+    `SELECT fpg.id, fpg.atividade_id, fpg.perfil_producao_id, fpg.prioridade,
+    pp.nome AS perfil_producao,
+    su.nome AS subfase, lo.nome AS lote, bl.nome AS bloco
     FROM macrocontrole.fila_prioritaria_grupo AS fpg
     INNER JOIN macrocontrole.perfil_producao AS pp ON pp.id = fpg.perfil_producao_id
+    INNER JOIN macrocontrole.atividade AS at ON at.id = fpg.atividade_id
+    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = at.unidade_trabalho_id
+    INNER JOIN macrocontrole.subfase AS su ON su.id = ut.subfase_id
+    INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
+    INNER JOIN macrocontrole.lote AS bl ON bl.id = ut.bloco_id
     `
   )
 }
