@@ -18,6 +18,6 @@ As vantagens são:
 
 Para sua utilização é necessária a utilização do [Serviço de Autenticação](https://github.com/1cgeo/auth_server)
 
-Para acesso ao cliente QGIS do usuário verifique [Ferramentas de Produção](https://github.com/1cgeo/Ferramentas_Producao)
+Para acesso ao cliente QGIS do usuário verifique [SAP Operador](https://github.com/dsgoficial/SAP_Operador)
 
-Para acesso ao cliente QGIS do gerente verifique [Ferramentas de Gerencia](https://github.com/1cgeo/Ferramentas_Gerencia)
+Para acesso ao cliente QGIS do gerente verifique [SAP Gerente](https://github.com/dsgoficial/SAP_Gerente)
