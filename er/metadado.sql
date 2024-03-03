@@ -64,7 +64,6 @@ INSERT INTO metadado.datum_vertical (code, nome) VALUES
 (2, 'Datum de Santana - AP'),
 (3, 'Marégrafo de Torres - RS');
 
-
 CREATE TABLE metadado.especificacao(
 	code SMALLINT NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL
@@ -102,7 +101,6 @@ CREATE TABLE metadado.responsavel_fase_produto(
   fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
   produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
-
 
 CREATE TABLE metadado.informacoes_produto(
 	id SERIAL NOT NULL PRIMARY KEY,

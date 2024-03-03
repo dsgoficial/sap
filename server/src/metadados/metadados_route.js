@@ -248,10 +248,41 @@ router.delete(
 )
 
 router.get(
-  '/palavra_chave_produto',
-  verifyAdmin,
+  '/produto',
+  schemaValidation({
+    query: metadadosSchema.produtoQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await metadadosCtrl.getPalavraChaveProduto()
+    const dados = await metadadosCtrl.getProduto(req.query.produtos)
+
+    const msg = 'Informação do Produto retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/produto',
+  verifyAdmin,
+  schemaValidation({
+    body: metadadosSchema.produtoAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await metadadosCtrl.atualizaProduto(req.body.produto)
+
+    const msg = 'Informação do Produto atualizado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.get(
+  '/palavra_chave_produto',
+  schemaValidation({
+    query: metadadosSchema.produtoQuery
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getPalavraChaveProduto(req.query.produtos)
 
     const msg = 'Palavra-chave do produto retornado com sucesso'
 

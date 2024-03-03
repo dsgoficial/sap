@@ -309,12 +309,76 @@ controller.deletaResponsavelFaseProduto = async responsavelFaseProdutoIds => {
   })
 }
 
-controller.getPalavraChaveProduto = async () => {
-  return db.sapConn.any(
-    `SELECT pcp.nome, pcp.tipo_palavra_chave_id, tpk.nome AS tipo_palavra_chave, pcp.produto_id
-    FROM metadado.palavra_chave_produto AS pcp
-    INNER JOIN metadado.tipo_palavra_chave AS tpk ON tpk.code = pcp.tipo_palavra_chave_id`
-  )
+controller.getPalavraChaveProduto = async (produtos) => {
+  if (produtos) {
+    let produtos_csv = produtos.split(',')
+    return db.sapConn.any(
+      `SELECT pcp.nome, pcp.tipo_palavra_chave_id, tpk.nome AS tipo_palavra_chave, pcp.produto_id,
+      p.mi, p.inom, p.denominador_escala, p.tipo_produto_id, p.edicao, p.latitude_centro, p.longitude_centro,
+      tp.nome AS tipo_produto
+      FROM metadado.palavra_chave_produto AS pcp
+      INNER JOIN metadado.tipo_palavra_chave AS tpk ON tpk.code = pcp.tipo_palavra_chave_id
+      INNER JOIN macrocontrole.produto AS p ON p.id = pcp.produto_id
+      INNER JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id
+      WHERE pcp.produto_id IN ($<produtos_csv:csv>)`,
+      { produtos_csv }
+    )
+  } else {
+    return db.sapConn.any(
+      `SELECT pcp.nome, pcp.tipo_palavra_chave_id, tpk.nome AS tipo_palavra_chave, pcp.produto_id,
+      p.mi, p.inom, p.denominador_escala, p.tipo_produto_id, p.edicao, p.latitude_centro, p.longitude_centro,
+      tp.nome AS tipo_produto
+      FROM metadado.palavra_chave_produto AS pcp
+      INNER JOIN metadado.tipo_palavra_chave AS tpk ON tpk.code = pcp.tipo_palavra_chave_id
+      INNER JOIN macrocontrole.produto AS p ON p.id = pcp.produto_id
+      INNER JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id`
+    )
+  }
+}
+
+controller.getProduto = async (produtos) => {
+  if (produtos) {
+    let produtos_csv = produtos.split(',')
+    return db.sapConn.any(
+      `SELECT p.id, p.uuid, p.nome, p.mi, p.inom, p.denominador_escala, p.tipo_produto_id, p.edicao, p.latitude_centro, p.longitude_centro,
+      tp.nome AS tipo_produto
+      FROM macrocontrole.produto AS p
+      INNER JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id
+      WHERE p.produto_id IN ($<produtos_csv:csv>)`,
+      { produtos_csv }
+    )
+  } else {
+    return db.sapConn.any(
+      `SELECT p.id, p.uuid, p.nome, p.mi, p.inom, p.denominador_escala, p.tipo_produto_id, p.edicao, p.latitude_centro, p.longitude_centro,
+      tp.nome AS tipo_produto
+      FROM macrocontrole.produto AS p
+      INNER JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id
+      `
+    )
+  }
+}
+
+controller.atualizaProduto = async produto => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'uuid',
+      'nome'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        produto,
+        cs,
+        { table: 'produto', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
 }
 
 controller.criaPalavraChaveProduto = async palavrasChaveProduto => {

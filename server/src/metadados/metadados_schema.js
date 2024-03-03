@@ -4,6 +4,27 @@ const Joi = require('joi')
 
 const models = {}
 
+models.produtoQuery = Joi.object().keys({
+  produtos: Joi.string()
+    .pattern(/^\d+(,\d+)*$/)
+    .required()
+});
+
+models.produtoAtualizacao = Joi.object().keys({
+  produto: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        uuid: Joi.string()
+        .guid({ version: 'uuidv4' })
+        .required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
 models.uuidParams = Joi.object().keys({
   uuid: Joi.string()
     .guid({ version: 'uuidv4' })
