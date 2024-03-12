@@ -100,9 +100,16 @@ export default function Dashboard() {
     const [pieDataPoints, setPieDataPoints] = React.useState([]);
     const [pitDataset, setPitDataset] = React.useState([]);
     const [lotDataset, setLotDataset] = React.useState([]);
+    const [noData, setNoData] = React.useState(false);
 
     const loadDataset = async () => {
         const response = await getDashboard()
+        if (
+            response[0].dados.length == 0
+        ) {
+            setNoData(true)
+            return
+        }
         setTotalProducts(response[0].dados.map(i => +i.quantidade).reduce((a, c) => {
             return +a + +c
         }))
@@ -266,6 +273,28 @@ export default function Dashboard() {
     if (getAuthorization() != 'ADMIN') {
         navigate('/login')
         return null
+    }
+
+    if (noData) {
+        return (
+            <Page title="Sistema de Apoio à Produção">
+                <Container
+                    maxWidth={'100%'}
+                >
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <Typography
+                            sx={{
+                                flexGrow: 1,
+                                fontSize: '30px',
+                                color: 'black'
+                            }}
+                        >
+                            {'PIT não cadastrado'}
+                        </Typography>
+                    </Box>
+                </Container>
+            </Page>
+        )
     }
 
 
