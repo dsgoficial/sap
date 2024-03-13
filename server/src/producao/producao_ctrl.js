@@ -537,7 +537,7 @@ controller.finaliza = async (
         `DELETE FROM macrocontrole.atividade 
           WHERE id in (
             WITH prox_e AS (
-              SELECT e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
+              SELECT e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id, e.lote_id ORDER BY e.ordem) as prox_id
               FROM macrocontrole.etapa AS e
             ),
             prox AS (
@@ -550,7 +550,7 @@ controller.finaliza = async (
             INNER JOIN macrocontrole.atividade AS arev ON arev.unidade_trabalho_id = a.unidade_trabalho_id
             INNER JOIN prox AS p ON p.prox_id = a.etapa_id AND p.id = arev.etapa_id
             INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
-            WHERE arev.id=$<atividadeId> AND e.tipo_etapa_id = 3
+            WHERE arev.id=$<atividadeId> AND e.tipo_etapa_id = 3 AND a.tipo_situacao_id = 1
           )`,
         { atividadeId }
       )
