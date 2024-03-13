@@ -536,11 +536,14 @@ controller.finaliza = async (
       const result = await t.result(
         `DELETE FROM macrocontrole.atividade 
           WHERE id in (
-            WITH prox AS (
+            WITH prox_e AS (
               SELECT e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
               FROM macrocontrole.etapa AS e
-              INNER JOIN macrocontrole.atividade AS a ON a.etapa_id = e.id
-              WHERE a.id = $<atividadeId>
+            ),
+            prox AS (
+              SELECT prox_e.id, prox_e.prox_id FROM prox_e
+              INNER JOIN macrocontrole.atividade AS a ON a.etapa_id = prox_e.id
+                WHERE a.id = $<atividadeId>
             )
             SELECT a.id
             FROM macrocontrole.atividade AS a
