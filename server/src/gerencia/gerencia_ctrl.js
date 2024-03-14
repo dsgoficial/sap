@@ -1338,7 +1338,7 @@ controller.getFilaPrioritaria = async () => {
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = at.unidade_trabalho_id
     INNER JOIN macrocontrole.subfase AS su ON su.id = ut.subfase_id
     INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
-    INNER JOIN macrocontrole.lote AS bl ON bl.id = ut.bloco_id
+    INNER JOIN macrocontrole.bloco AS bl ON bl.id = ut.bloco_id
     `
   )
 }
@@ -1413,7 +1413,7 @@ controller.getFilaPrioritariaGrupo = async () => {
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = at.unidade_trabalho_id
     INNER JOIN macrocontrole.subfase AS su ON su.id = ut.subfase_id
     INNER JOIN macrocontrole.lote AS lo ON lo.id = ut.lote_id
-    INNER JOIN macrocontrole.lote AS bl ON bl.id = ut.bloco_id
+    INNER JOIN macrocontrole.bloco AS bl ON bl.id = ut.bloco_id
     `
   )
 }
