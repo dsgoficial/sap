@@ -25,7 +25,7 @@ const getDbInfo = async atividadeId => {
 
 const getUserName = async usuarioId => {
   const usuario = await db.sapConn.one(
-    `SELECT translate(replace(lower(nome_guerra),' ', '_'),  
+    `SELECT translate(replace(lower(login),' ', '_'),  
     'àáâãäéèëêíìïîóòõöôúùüûçÇ/-|/\\,.;:<>?!\`{}[]()~\`@#$%^&*+=''',  
     'aaaaaeeeeiiiiooooouuuucc________________________________') As nome from dgeo.usuario
     WHERE id = $<usuarioId>`,
