@@ -59,6 +59,38 @@ app.use((req, res, next) => {
 // All routes used by the App
 app.use('/api', appRoutes)
 
+/**
+ * @swagger
+ * /logs:
+ *   get:
+ *     summary: Retorna os logs dos últimos dias
+ *     description: Retorna os logs do sistema dos últimos três dias. Os logs são filtrados e ordenados do mais recente para o mais antigo.
+ *     produces:
+ *       - text/plain
+ *     tags:
+ *       - logs
+ *     responses:
+ *       200:
+ *         description: Logs retornados com sucesso
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *               description: Conteúdo dos logs filtrados
+ *       500:
+ *         description: Erro ao ler o arquivo de logs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica se houve sucesso na operação
+ *                 message:
+ *                   type: string
+ *                   description: Descrição do erro ocorrido
+ */
 app.use('/logs', (req, res) => {
   const logDir = path.join(__dirname, '..', '..', 'logs/combined.log')
   const daysToShow = 3
@@ -79,15 +111,89 @@ app.use('/logs', (req, res) => {
   })
 })
 
-// Serve SwaggerDoc
+/**
+ * @swagger
+ * /api/api_docs:
+ *   get:
+ *     summary: Exibe a documentação Swagger da API
+ *     description: Serve a interface Swagger UI com a documentação da API gerada automaticamente.
+ *     tags:
+ *       - documentação
+ *     responses:
+ *       200:
+ *         description: Interface Swagger UI carregada com sucesso
+ */
 app.use('/api/api_docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
-// Serve JSDocs
+/**
+ * @swagger
+ * /api/js_docs:
+ *   get:
+ *     summary: Exibe a documentação JSDoc
+ *     description: Serve a documentação JSDoc gerada para o código JavaScript.
+ *     tags:
+ *       - documentação
+ *     responses:
+ *       200:
+ *         description: Documentação JSDoc carregada com sucesso
+ */
 app.use('/api/js_docs', express.static(path.join(__dirname, '..', 'js_docs')))
 
-// Serve Client
+/**
+ * @swagger
+ * /{any}:
+ *   get:
+ *     summary: Serve o cliente da aplicação
+ *     description: Serve a aplicação cliente, retornando o arquivo `index.html` para qualquer rota que não seja explicitamente definida.
+ *     tags:
+ *       - cliente
+ *     parameters:
+ *       - in: path
+ *         name: any
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Qualquer caminho não tratado por outras rotas
+ *     responses:
+ *       200:
+ *         description: Cliente da aplicação carregado com sucesso
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *               description: Conteúdo HTML da aplicação cliente
+ */
 app.use(express.static(path.join(__dirname, "..", "build")));
 
+/**
+ * @swagger
+ * /{any}:
+ *   all:
+ *     summary: Fallback para rotas não encontradas
+ *     description: Retorna um erro 404 para qualquer rota não encontrada no sistema.
+ *     tags:
+ *       - erros
+ *     parameters:
+ *       - in: path
+ *         name: any
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Qualquer caminho não tratado por outras rotas
+ *     responses:
+ *       404:
+ *         description: URL não encontrada para o método especificado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                   description: Descrição do erro ocorrido
+ */
 app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "build", "index.html"));
 });

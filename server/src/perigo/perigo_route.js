@@ -11,6 +11,54 @@ const perigoSchema = require('./perigo_schema')
 
 const router = express.Router()
 
+/**
+ * @swagger
+ * /atividades/usuario/{id}:
+ *   delete:
+ *     summary: Limpa atividades relacionadas a um usuário
+ *     description: Remove as atividades relacionadas ao usuário especificado pelo ID, deixando as atividades sem usuário atribuído.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           description: ID do usuário cujas atividades serão limpas
+ *     responses:
+ *       200:
+ *         description: Atividades relacionadas ao usuário limpas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 dados:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ *                     description: IDs das atividades limpas
+ *       400:
+ *         description: Usuário não encontrado ou sem atividades relacionadas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.delete(
   '/atividades/usuario/:id',
   verifyAdmin,
@@ -26,6 +74,31 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /log:
+ *   delete:
+ *     summary: Limpa logs antigos
+ *     description: Remove logs mais antigos que 3 dias.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Log anterior a 3 dias deletado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.delete(
   '/log',
   verifyAdmin,
@@ -38,6 +111,50 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /propriedades_camada:
+ *   get:
+ *     summary: Retorna propriedades da camada
+ *     description: Retorna as propriedades de todas as camadas cadastradas no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Propriedades da camada retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   camada_id:
+ *                     type: integer
+ *                     description: ID da camada
+ *                   camada_incomum:
+ *                     type: boolean
+ *                     description: Indica se a camada é incomum
+ *                   atributo_filtro_subfase:
+ *                     type: string
+ *                     description: Atributo de filtro da subfase
+ *                   camada_apontamento:
+ *                     type: boolean
+ *                     description: Indica se a camada é de apontamento
+ *                   atributo_situacao_correcao:
+ *                     type: string
+ *                     description: Atributo de situação de correção
+ *                   atributo_justificativa_apontamento:
+ *                     type: string
+ *                     description: Atributo de justificativa de apontamento
+ *                   subfase_id:
+ *                     type: integer
+ *                     description: ID da subfase associada
+ */
 router.get(
   '/propriedades_camada',
   verifyAdmin,
@@ -50,6 +167,48 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /propriedades_camada:
+ *   delete:
+ *     summary: Deleta propriedades da camada
+ *     description: Deleta as propriedades das camadas especificadas por seus IDs.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PropriedadesCamadaIds'
+ *     responses:
+ *       200:
+ *         description: Propriedades da camada deletadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: ID inválido fornecido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.delete(
   '/propriedades_camada',
   verifyAdmin,
@@ -65,6 +224,37 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /propriedades_camada:
+ *   post:
+ *     summary: Cria propriedades da camada
+ *     description: Cria novas propriedades para as camadas no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PropriedadesCamada'
+ *     responses:
+ *       201:
+ *         description: Propriedades da camada criadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.post(
   '/propriedades_camada',
   verifyAdmin,
@@ -80,6 +270,37 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /propriedades_camada:
+ *   put:
+ *     summary: Atualiza propriedades da camada
+ *     description: Atualiza as propriedades das camadas no sistema com base nos IDs fornecidos.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PropriedadesCamadaAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Propriedades da camada atualizadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.put(
   '/propriedades_camada',
   verifyAdmin,
@@ -95,6 +316,50 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /insumo:
+ *   get:
+ *     summary: Retorna insumos
+ *     description: Retorna os insumos cadastrados no sistema, com detalhes de cada um.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Insumos retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do insumo
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do insumo
+ *                   caminho:
+ *                     type: string
+ *                     description: Caminho do insumo
+ *                   epsg:
+ *                     type: string
+ *                     description: EPSG do insumo
+ *                   tipo_insumo_id:
+ *                     type: integer
+ *                     description: ID do tipo do insumo
+ *                   grupo_insumo_id:
+ *                     type: integer
+ *                     description: ID do grupo do insumo
+ *                   geom:
+ *                     type: string
+ *                     description: Representação da geometria do insumo
+ */
 router.get(
   '/insumo',
   verifyAdmin,
@@ -107,6 +372,48 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /insumo:
+ *   delete:
+ *     summary: Deleta insumos
+ *     description: Deleta insumos especificados por seus IDs.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/InsumoIds'
+ *     responses:
+ *       200:
+ *         description: Insumos deletados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: ID inválido fornecido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.delete(
   '/insumo',
   verifyAdmin,
@@ -122,6 +429,37 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /insumo:
+ *   post:
+ *     summary: Cria insumos
+ *     description: Cria novos insumos no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Insumo'
+ *     responses:
+ *       201:
+ *         description: Insumos criados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.post(
   '/insumo',
   verifyAdmin,
@@ -137,6 +475,37 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /insumo:
+ *   put:
+ *     summary: Atualiza insumos
+ *     description: Atualiza os insumos no sistema com base nos IDs fornecidos.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/InsumoAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Insumos atualizados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.put(
   '/insumo',
   verifyAdmin,

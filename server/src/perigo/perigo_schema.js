@@ -9,6 +9,130 @@ models.idParams = Joi.object().keys({
     .required()
 })
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     PropriedadesCamada:
+ *       type: object
+ *       properties:
+ *         propriedades_camada:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               camada_id:
+ *                 type: integer
+ *               camada_incomum:
+ *                 type: boolean
+ *               atributo_filtro_subfase:
+ *                 type: string
+ *               camada_apontamento:
+ *                 type: boolean
+ *               atributo_situacao_correcao:
+ *                 type: string
+ *               atributo_justificativa_apontamento:
+ *                 type: string
+ *               subfase_id:
+ *                 type: integer
+ *       required:
+ *         - propriedades_camada
+ *
+ *     PropriedadesCamadaAtualizacao:
+ *       type: object
+ *       properties:
+ *         propriedades_camada:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               camada_id:
+ *                 type: integer
+ *               camada_incomum:
+ *                 type: boolean
+ *               atributo_filtro_subfase:
+ *                 type: string
+ *               camada_apontamento:
+ *                 type: boolean
+ *               atributo_situacao_correcao:
+ *                 type: string
+ *               atributo_justificativa_apontamento:
+ *                 type: string
+ *               subfase_id:
+ *                 type: integer
+ *       required:
+ *         - propriedades_camada
+ *
+ *     PropriedadesCamadaIds:
+ *       type: object
+ *       properties:
+ *         propriedades_camada_ids:
+ *           type: array
+ *           items:
+ *             type: integer
+ *       required:
+ *         - propriedades_camada_ids
+ *
+ *     Insumo:
+ *       type: object
+ *       properties:
+ *         insumo:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               caminho:
+ *                 type: string
+ *               epsg:
+ *                 type: string
+ *               tipo_insumo_id:
+ *                 type: integer
+ *               grupo_insumo_id:
+ *                 type: integer
+ *               geom:
+ *                 type: string
+ *       required:
+ *         - insumo
+ *
+ *     InsumoAtualizacao:
+ *       type: object
+ *       properties:
+ *         insumo:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               nome:
+ *                 type: string
+ *               caminho:
+ *                 type: string
+ *               epsg:
+ *                 type: string
+ *               tipo_insumo_id:
+ *                 type: integer
+ *               grupo_insumo_id:
+ *                 type: integer
+ *               geom:
+ *                 type: string
+ *       required:
+ *         - insumo
+ *
+ *     InsumoIds:
+ *       type: object
+ *       properties:
+ *         insumo_ids:
+ *           type: array
+ *           items:
+ *             type: integer
+ *       required:
+ *         - insumo_ids
+ */
 models.propriedadesCamada = Joi.object().keys({
   propriedades_camada: Joi.array()
     .items(
