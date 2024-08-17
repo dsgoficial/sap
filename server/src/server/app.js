@@ -127,20 +127,6 @@ app.use('/api/api_docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 /**
  * @swagger
- * /api/js_docs:
- *   get:
- *     summary: Exibe a documentação JSDoc
- *     description: Serve a documentação JSDoc gerada para o código JavaScript.
- *     tags:
- *       - documentação
- *     responses:
- *       200:
- *         description: Documentação JSDoc carregada com sucesso
- */
-app.use('/api/js_docs', express.static(path.join(__dirname, '..', 'js_docs')))
-
-/**
- * @swagger
  * /{any}:
  *   get:
  *     summary: Serve o cliente da aplicação
