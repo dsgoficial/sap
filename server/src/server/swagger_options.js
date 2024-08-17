@@ -1,5 +1,9 @@
 'use strict'
 
+const path = require('path');
+
+console.log(path.join(__dirname, '../**/*.js'))
+
 const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',
@@ -9,7 +13,7 @@ const swaggerOptions = {
       description: 'API HTTP para utilização do Sistema de Apoio a Produção'
     }
   },
-  apis: ['./src/**/*.js']
+  apis: [path.join(__dirname, '../**/*.js')],
 }
 
 
