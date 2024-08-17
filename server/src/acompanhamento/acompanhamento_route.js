@@ -15,7 +15,7 @@ const archiver = require('archiver')
 
 /**
  * @swagger
- * /informacoes/{lote}/{subfase}:
+ * /api/acompanhamento/informacoes/{lote}/{subfase}:
  *   get:
  *     summary: Obtém informações detalhadas da subfase de um lote específico
  *     description: Retorna informações sobre as atividades realizadas em uma subfase específica de um lote.
@@ -73,7 +73,7 @@ router.get(
 
 /**
  * @swagger
- * /informacoes/{lote}:
+ * /api/acompanhamento/informacoes/{lote}:
  *   get:
  *     summary: Obtém informações detalhadas de um lote específico
  *     description: Retorna informações sobre as atividades realizadas em um lote.
@@ -124,7 +124,7 @@ router.get(
 
 /**
  * @swagger
- * /usuarios_sem_atividade:
+ * /api/acompanhamento/usuarios_sem_atividade:
  *   get:
  *     summary: Obtém a lista de usuários sem atividade
  *     description: Retorna uma lista de usuários que não possuem atividades registradas.
@@ -172,7 +172,7 @@ router.get(
 
 /**
  * @swagger
- * /ultimos_login:
+ * /api/acompanhamento/ultimos_login:
  *   get:
  *     summary: Obtém os últimos logins
  *     description: Retorna uma lista dos últimos logins registrados no sistema.
@@ -224,7 +224,7 @@ router.get(
 
 /**
  * @swagger
- * /usuarios_logados_hoje:
+ * /api/acompanhamento/usuarios_logados_hoje:
  *   get:
  *     summary: Obtém a lista de usuários logados hoje
  *     description: Retorna uma lista de usuários que realizaram login no sistema hoje.
@@ -272,7 +272,7 @@ router.get(
 
 /**
  * @swagger
- * /usuarios_nao_logados_hoje:
+ * /api/acompanhamento/usuarios_nao_logados_hoje:
  *   get:
  *     summary: Obtém a lista de usuários que não logaram hoje
  *     description: Retorna uma lista de usuários que não realizaram login no sistema hoje.
@@ -320,7 +320,7 @@ router.get(
 
 /**
  * @swagger
- * /quantitativo_fila_distribuicao:
+ * /api/acompanhamento/quantitativo_fila_distribuicao:
  *   get:
  *     summary: Obtém o quantitativo da fila de distribuição
  *     description: Retorna o quantitativo de atividades na fila de distribuição.
@@ -377,7 +377,7 @@ router.get(
 
 /**
  * @swagger
- * /quantitativo_atividades:
+ * /api/acompanhamento/quantitativo_atividades:
  *   get:
  *     summary: Obtém o quantitativo de atividades
  *     description: Retorna o quantitativo de atividades por etapa e subfase.
@@ -434,7 +434,7 @@ router.get(
 
 /**
  * @swagger
- * /atividades_em_execucao:
+ * /api/acompanhamento/atividades_em_execucao:
  *   get:
  *     summary: Obtém as atividades em execução
  *     description: Retorna uma lista de atividades que estão em execução no momento.
@@ -500,7 +500,7 @@ router.get(
 
 /**
  * @swagger
- * /ultimas_atividades_finalizadas:
+ * /api/acompanhamento/ultimas_atividades_finalizadas:
  *   get:
  *     summary: Obtém as últimas atividades finalizadas
  *     description: Retorna uma lista das últimas atividades finalizadas no sistema.
@@ -567,7 +567,7 @@ router.get(
 
 /**
  * @swagger
- * /usuarios_sem_perfil:
+ * /api/acompanhamento/usuarios_sem_perfil:
  *   get:
  *     summary: Obtém a lista de usuários sem perfil
  *     description: Retorna uma lista de usuários que não possuem perfil associado.
@@ -618,7 +618,7 @@ router.get(
 
 /**
  * @swagger
- * /grade_acompanhamento:
+ * /api/acompanhamento/grade_acompanhamento:
  *   get:
  *     summary: Obtém as grades de acompanhamento
  *     description: Retorna as grades de acompanhamento para todas as atividades em execução.
@@ -680,7 +680,7 @@ router.get(
 
 /**
  * @swagger
- * /atividade_subfase:
+ * /api/acompanhamento/atividade_subfase:
  *   get:
  *     summary: Obtém dados de atividades por subfase
  *     description: Retorna dados detalhados das atividades realizadas em cada subfase ao longo do tempo.
@@ -735,7 +735,7 @@ router.get(
 
 /**
  * @swagger
- * /atividade_usuario:
+ * /api/acompanhamento/atividade_usuario:
  *   get:
  *     summary: Obtém dados de atividades por usuário
  *     description: Retorna dados detalhados das atividades realizadas por cada usuário ao longo do tempo.
@@ -787,7 +787,7 @@ router.get(
 
 /**
  * @swagger
- * /situacao_subfase:
+ * /api/acompanhamento/situacao_subfase:
  *   get:
  *     summary: Obtém dados de situação das subfases
  *     description: Retorna dados detalhados da situação de cada subfase, incluindo atividades finalizadas e não finalizadas.
@@ -840,7 +840,7 @@ router.get(
 
 /**
  * @swagger
- * /pit/subfase/{anoParam}:
+ * /api/acompanhamento/pit/subfase/{anoParam}:
  *   get:
  *     summary: Obtém informações do PIT por subfase em um ano específico
  *     description: Retorna informações detalhadas do Plano de Integração Técnica (PIT) para as subfases em um ano específico.
@@ -905,7 +905,7 @@ router.get(
 
 /**
  * @swagger
- * /pit/{anoParam}:
+ * /api/acompanhamento/pit/{anoParam}:
  *   get:
  *     summary: Obtém informações gerais do PIT em um ano específico
  *     description: Retorna informações detalhadas do Plano de Integração Técnica (PIT) para um ano específico.
@@ -970,7 +970,7 @@ router.get(
 
 /**
  * @swagger
- * /dados_site_acompanhamento:
+ * /api/acompanhamento/dados_site_acompanhamento:
  *   get:
  *     summary: Baixa dados do site de acompanhamento
  *     description: Retorna um arquivo zip contendo dados detalhados sobre o site de acompanhamento.
@@ -1011,7 +1011,7 @@ router.get(
 
 /**
  * @swagger
- * /dashboard/quantidade/{anoParam}:
+ * /api/acompanhamento/dashboard/quantidade/{anoParam}:
  *   get:
  *     summary: Obtém informações do dashboard de quantidade para um ano específico
  *     description: Retorna informações detalhadas sobre a quantidade de atividades no dashboard para um ano específico.
@@ -1065,7 +1065,7 @@ router.get(
 
 /**
  * @swagger
- * /dashboard/finalizadas/{anoParam}:
+ * /api/acompanhamento/dashboard/finalizadas/{anoParam}:
  *   get:
  *     summary: Obtém informações do dashboard de atividades finalizadas para um ano específico
  *     description: Retorna informações detalhadas sobre as atividades finalizadas no dashboard para um ano específico.
@@ -1119,7 +1119,7 @@ router.get(
 
 /**
  * @swagger
- * /dashboard/execucao:
+ * /api/acompanhamento/dashboard/execucao:
  *   get:
  *     summary: Obtém informações do dashboard de execução
  *     description: Retorna informações detalhadas sobre as atividades em execução no dashboard.
@@ -1161,7 +1161,7 @@ router.get(
 
 /**
  * @swagger
- * /mapa/{nome}:
+ * /api/acompanhamento/mapa/{nome}:
  *   get:
  *     summary: Obtém o GeoJSON de uma camada específica
  *     description: Retorna o GeoJSON da camada especificada pelo nome.

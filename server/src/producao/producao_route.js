@@ -13,7 +13,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /plugin_path:
+ * /api/distribuicao/plugin_path:
  *   get:
  *     summary: Retorna o caminho do plugin
  *     description: Retorna o caminho do plugin configurado no sistema.
@@ -53,7 +53,7 @@ router.get(
 
 /**
  * @swagger
- * /finaliza:
+ * /api/distribuicao/finaliza:
  *   post:
  *     summary: Finaliza uma atividade
  *     description: Finaliza uma atividade específica, com ou sem correção, e altera o fluxo se necessário.
@@ -114,7 +114,7 @@ router.post(
 
 /**
  * @swagger
- * /verifica:
+ * /api/distribuicao/verifica:
  *   get:
  *     summary: Verifica atividade em execução
  *     description: Verifica se há alguma atividade em execução para o usuário logado.
@@ -155,7 +155,7 @@ router.get(
 
 /**
  * @swagger
- * /inicia:
+ * /api/distribuicao/inicia:
  *   post:
  *     summary: Inicia uma nova atividade
  *     description: Inicia uma nova atividade disponível para o usuário logado.
@@ -210,7 +210,7 @@ router.post(
 
 /**
  * @swagger
- * /problema_atividade:
+ * /api/distribuicao/problema_atividade:
  *   post:
  *     summary: Reporta um problema em uma atividade
  *     description: Reporta um problema encontrado em uma atividade em execução e bloqueia a atividade.
@@ -258,7 +258,7 @@ router.post(
 
 /**
  * @swagger
- * /finalizacao_incorreta:
+ * /api/distribuicao/finalizacao_incorreta:
  *   post:
  *     summary: Reporta finalização incorreta
  *     description: Reporta uma finalização incorreta de uma atividade, permitindo correção.
@@ -303,7 +303,7 @@ router.post(
 
 /**
  * @swagger
- * /tipo_problema:
+ * /api/distribuicao/tipo_problema:
  *   get:
  *     summary: Retorna tipos de problema
  *     description: Retorna a lista de tipos de problema disponíveis para reportar em atividades.

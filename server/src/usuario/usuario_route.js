@@ -14,7 +14,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /usuarios/servico_autenticacao:
+ * /api/usuarios/servico_autenticacao:
  *   get:
  *     summary: Retorna usuários do servidor de autenticação
  *     description: Retorna uma lista de usuários que estão presentes no servidor de autenticação, mas não no sistema atual.
@@ -60,7 +60,7 @@ router.get(
 
 /**
  * @swagger
- * /usuarios/sincronizar:
+ * /api/usuarios/sincronizar:
  *   put:
  *     summary: Sincroniza a lista de usuários
  *     description: Sincroniza os usuários do sistema com os usuários do servidor de autenticação.
@@ -96,7 +96,7 @@ router.put(
 
 /**
  * @swagger
- * /usuarios/{uuid}:
+ * /api/usuarios/{uuid}:
  *   put:
  *     summary: Atualiza um usuário específico
  *     description: Atualiza o status de administrador e ativo de um usuário pelo UUID.
@@ -165,7 +165,7 @@ router.put(
 
 /**
  * @swagger
- * /usuarios:
+ * /api/usuarios:
  *   get:
  *     summary: Retorna a lista de usuários
  *     description: Retorna uma lista de todos os usuários cadastrados no sistema.
@@ -226,7 +226,7 @@ router.get(
 
 /**
  * @swagger
- * /usuarios:
+ * /api/usuarios:
  *   post:
  *     summary: Cria uma lista de usuários
  *     description: Cria novos usuários no sistema a partir de uma lista de UUIDs.
@@ -282,7 +282,7 @@ router.post(
 
 /**
  * @swagger
- * /usuarios:
+ * /api/usuarios:
  *   put:
  *     summary: Atualiza uma lista de usuários
  *     description: Atualiza as informações de uma lista de usuários, como status de administrador e ativo.

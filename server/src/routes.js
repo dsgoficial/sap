@@ -21,7 +21,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /:
+ * /api:
  *   get:
  *     summary: Verifica o status operacional do sistema
  *     description: Retorna a versão atual do banco de dados e a versão do microcontrole utilizados pelo sistema.

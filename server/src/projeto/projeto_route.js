@@ -11,6 +11,33 @@ const projetoSchema = require('./projeto_schema')
 
 const router = express.Router()
 
+/**
+ * @swagger
+ * /api/projeto/tipo_produto:
+ *   get:
+ *     summary: Retorna os tipos de produto
+ *     description: Retorna uma lista de tipos de produto disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de produto retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de produto
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de produto
+ */
 router.get(
   '/tipo_produto',
   asyncHandler(async (req, res, next) => {
@@ -22,6 +49,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_rotina:
+ *   get:
+ *     summary: Retorna os tipos de rotina
+ *     description: Retorna uma lista de tipos de rotina disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de rotina retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de rotina
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de rotina
+ */
 router.get(
   '/tipo_rotina',
   asyncHandler(async (req, res, next) => {
@@ -33,6 +87,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_criacao_unidade_trabalho:
+ *   get:
+ *     summary: Retorna os tipos de criação de unidade de trabalho
+ *     description: Retorna uma lista de tipos de criação de unidade de trabalho disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de criação de unidade de trabalho retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de criação de unidade de trabalho
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de criação de unidade de trabalho
+ */
 router.get(
   '/tipo_criacao_unidade_trabalho',
   asyncHandler(async (req, res, next) => {
@@ -44,6 +125,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_controle_qualidade:
+ *   get:
+ *     summary: Retorna os tipos de controle de qualidade
+ *     description: Retorna uma lista de tipos de controle de qualidade disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de controle de qualidade retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de controle de qualidade
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de controle de qualidade
+ */
 router.get(
   '/tipo_controle_qualidade',
   asyncHandler(async (req, res, next) => {
@@ -55,6 +163,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_fase:
+ *   get:
+ *     summary: Retorna os tipos de fase
+ *     description: Retorna uma lista de tipos de fase disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de fase retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de fase
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de fase
+ */
 router.get(
   '/tipo_fase',
   asyncHandler(async (req, res, next) => {
@@ -66,6 +201,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_pre_requisito:
+ *   get:
+ *     summary: Retorna os tipos de pré-requisito
+ *     description: Retorna uma lista de tipos de pré-requisito disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de pré-requisito retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de pré-requisito
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de pré-requisito
+ */
 router.get(
   '/tipo_pre_requisito',
   asyncHandler(async (req, res, next) => {
@@ -77,6 +239,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_etapa:
+ *   get:
+ *     summary: Retorna os tipos de etapa
+ *     description: Retorna uma lista de tipos de etapa disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de etapa retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de etapa
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de etapa
+ */
 router.get(
   '/tipo_etapa',
   asyncHandler(async (req, res, next) => {
@@ -88,6 +277,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_exibicao:
+ *   get:
+ *     summary: Retorna os tipos de exibição
+ *     description: Retorna uma lista de tipos de exibição disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de exibição retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de exibição
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de exibição
+ */
 router.get(
   '/tipo_exibicao',
   asyncHandler(async (req, res, next) => {
@@ -99,6 +315,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_restricao:
+ *   get:
+ *     summary: Retorna os tipos de restrição
+ *     description: Retorna uma lista de tipos de restrição disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de restrição retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de restrição
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de restrição
+ */
 router.get(
   '/tipo_restricao',
   asyncHandler(async (req, res, next) => {
@@ -110,6 +353,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_insumo:
+ *   get:
+ *     summary: Retorna os tipos de insumo
+ *     description: Retorna uma lista de tipos de insumo disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de insumo retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de insumo
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de insumo
+ */
 router.get(
   '/tipo_insumo',
   asyncHandler(async (req, res, next) => {
@@ -121,6 +391,33 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_dado_producao:
+ *   get:
+ *     summary: Retorna os tipos de dado de produção
+ *     description: Retorna uma lista de tipos de dado de produção disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos
+ *     responses:
+ *       200:
+ *         description: Tipos de dado de produção retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                     description: Código do tipo de dado de produção
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tipo de dado de produção
+ */
 router.get(
   '/tipo_dado_producao',
   asyncHandler(async (req, res, next) => {
@@ -132,6 +429,35 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/grupo_estilos:
+ *   get:
+ *     summary: Retorna os grupos de estilos
+ *     description: Retorna uma lista de grupos de estilos disponíveis no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Grupos de Estilos
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Grupos de estilos retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do grupo de estilos
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do grupo de estilos
+ */
 router.get(
   '/grupo_estilos',
   verifyAdmin,
@@ -144,6 +470,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/grupo_estilos:
+ *   post:
+ *     summary: Grava um novo grupo de estilos
+ *     description: Grava um novo grupo de estilos no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Grupos de Estilos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/grupoEstilos'
+ *     responses:
+ *       201:
+ *         description: Grupo de estilos gravado com sucesso
+ */
 router.post(
   '/grupo_estilos',
   verifyAdmin,
@@ -157,6 +506,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/grupo_estilos:
+ *   put:
+ *     summary: Atualiza um grupo de estilos
+ *     description: Atualiza um grupo de estilos existente no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Grupos de Estilos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/grupoEstilosAtualizacao'
+ *     responses:
+ *       201:
+ *         description: Grupo de estilos atualizado com sucesso
+ */
 router.put(
   '/grupo_estilos',
   verifyAdmin,
@@ -170,6 +542,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/grupo_estilos:
+ *   delete:
+ *     summary: Deleta um grupo de estilos
+ *     description: Deleta um grupo de estilos existente no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Grupos de Estilos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/grupoEstilosIds'
+ *     responses:
+ *       201:
+ *         description: Grupo de estilos deletado com sucesso
+ */
 router.delete(
   '/grupo_estilos',
   verifyAdmin,
@@ -183,6 +578,38 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/regras:
+ *   get:
+ *     summary: Retorna as regras
+ *     description: Retorna uma lista de regras cadastradas no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Regras
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Regras retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID da regra
+ *                   nome:
+ *                     type: string
+ *                     description: Nome da regra
+ *                   regra:
+ *                     type: string
+ *                     description: Regra detalhada
+ */
 router.get(
   '/regras',
   verifyAdmin,
@@ -195,6 +622,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/regras:
+ *   post:
+ *     summary: Cria novas regras
+ *     description: Grava novas regras no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Regras
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/regras'
+ *     responses:
+ *       201:
+ *         description: Regras gravadas com sucesso
+ */
 router.post(
   '/regras',
   verifyAdmin,
@@ -211,6 +661,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/regras:
+ *   put:
+ *     summary: Atualiza regras existentes
+ *     description: Atualiza regras já cadastradas no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Regras
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/regrasAtualizacao'
+ *     responses:
+ *       201:
+ *         description: Regras atualizadas com sucesso
+ */
 router.put(
   '/regras',
   verifyAdmin,
@@ -224,6 +697,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/regras:
+ *   delete:
+ *     summary: Deleta regras
+ *     description: Deleta regras cadastradas no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Regras
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/regrasIds'
+ *     responses:
+ *       201:
+ *         description: Regras deletadas com sucesso
+ */
 router.delete(
   '/regras',
   verifyAdmin,
@@ -237,6 +733,38 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/menus:
+ *   get:
+ *     summary: Retorna os menus
+ *     description: Retorna uma lista de menus cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Menus
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Menus retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do menu
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do menu
+ *                   definicao_menu:
+ *                     type: string
+ *                     description: Definição do menu
+ */
 router.get(
   '/menus',
   verifyAdmin,
@@ -249,6 +777,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/menus:
+ *   post:
+ *     summary: Cria novos menus
+ *     description: Grava novos menus no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Menus
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/menus'
+ *     responses:
+ *       201:
+ *         description: Menus gravados com sucesso
+ */
 router.post(
   '/menus',
   verifyAdmin,
@@ -262,6 +813,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/menus:
+ *   put:
+ *     summary: Atualiza menus existentes
+ *     description: Atualiza menus já cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Menus
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/menusAtualizacao'
+ *     responses:
+ *       201:
+ *         description: Menus atualizados com sucesso
+ */
 router.put(
   '/menus',
   verifyAdmin,
@@ -275,6 +849,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/menus:
+ *   delete:
+ *     summary: Deleta menus
+ *     description: Deleta menus cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Menus
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/menusIds'
+ *     responses:
+ *       201:
+ *         description: Menus deletados com sucesso
+ */
 router.delete(
   '/menus',
   verifyAdmin,
@@ -288,6 +885,62 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/estilos:
+ *   get:
+ *     summary: Retorna os estilos
+ *     description: Retorna uma lista de estilos cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Estilos
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Estilos retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do estilo
+ *                   grupo_estilo_id:
+ *                     type: integer
+ *                     description: ID do grupo de estilo
+ *                   f_table_schema:
+ *                     type: string
+ *                     description: Schema da tabela
+ *                   f_table_name:
+ *                     type: string
+ *                     description: Nome da tabela
+ *                   f_geometry_column:
+ *                     type: string
+ *                     description: Coluna de geometria
+ *                   stylename:
+ *                     type: string
+ *                     description: Nome do estilo
+ *                   styleqml:
+ *                     type: string
+ *                     description: Estilo QML
+ *                   stylesld:
+ *                     type: string
+ *                     description: Estilo SLD
+ *                   ui:
+ *                     type: string
+ *                     description: Interface do usuário
+ *                   owner:
+ *                     type: string
+ *                     description: Proprietário do estilo
+ *                   update_time:
+ *                     type: string
+ *                     description: Data de atualização
+ */
 router.get(
   '/estilos',
   verifyAdmin,
@@ -300,6 +953,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/estilos:
+ *   post:
+ *     summary: Cria novos estilos
+ *     description: Grava novos estilos no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Estilos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/estilos'
+ *     responses:
+ *       201:
+ *         description: Estilos gravados com sucesso
+ */
 router.post(
   '/estilos',
   verifyAdmin,
@@ -313,6 +989,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/estilos:
+ *   put:
+ *     summary: Atualiza estilos existentes
+ *     description: Atualiza estilos já cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Estilos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/estilosAtualizacao'
+ *     responses:
+ *       201:
+ *         description: Estilos atualizados com sucesso
+ */
 router.put(
   '/estilos',
   verifyAdmin,
@@ -326,6 +1025,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/estilos:
+ *   delete:
+ *     summary: Deleta estilos
+ *     description: Deleta estilos cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Estilos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/estilosIds'
+ *     responses:
+ *       201:
+ *         description: Estilos deletados com sucesso
+ */
 router.delete(
   '/estilos',
   verifyAdmin,
@@ -339,6 +1061,47 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/modelos:
+ *   get:
+ *     summary: Retorna os modelos
+ *     description: Retorna uma lista de modelos cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Modelos
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Modelos retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do modelo
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do modelo
+ *                   descricao:
+ *                     type: string
+ *                     description: Descrição do modelo
+ *                   model_xml:
+ *                     type: string
+ *                     description: Modelo XML
+ *                   owner:
+ *                     type: string
+ *                     description: Proprietário do modelo
+ *                   update_time:
+ *                     type: string
+ *                     description: Data de atualização
+ */
 router.get(
   '/modelos',
   verifyAdmin,
@@ -351,6 +1114,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/modelos:
+ *   post:
+ *     summary: Cria novos modelos
+ *     description: Grava novos modelos no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Modelos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/qgisModels'
+ *     responses:
+ *       201:
+ *         description: Modelos gravados com sucesso
+ */
 router.post(
   '/modelos',
   verifyAdmin,
@@ -364,6 +1150,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/modelos:
+ *   put:
+ *     summary: Atualiza modelos existentes
+ *     description: Atualiza modelos já cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Modelos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/atualizaQgisModels'
+ *     responses:
+ *       201:
+ *         description: Modelos atualizados com sucesso
+ */
 router.put(
   '/modelos',
   verifyAdmin,
@@ -376,6 +1185,30 @@ router.put(
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
 )
+
+/**
+ * @swagger
+ * /api/projeto/modelos:
+ *   delete:
+ *     summary: Deleta modelos
+ *     description: Deleta modelos cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Modelos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/qgisModelsIds'
+ *     responses:
+ *       201:
+ *         description: Modelos deletados com sucesso
+ */
 
 router.delete(
   '/modelos',
@@ -390,6 +1223,41 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/dado_producao:
+ *   get:
+ *     summary: Retorna os dados de produção
+ *     description: Retorna uma lista de todos os dados de produção cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Dados de Produção
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dados de produção retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do dado de produção
+ *                   tipo_dado_producao_id:
+ *                     type: integer
+ *                     description: ID do tipo de dado de produção
+ *                   tipo_dado_producao:
+ *                     type: string
+ *                     description: Nome do tipo de dado de produção
+ *                   configuracao_producao:
+ *                     type: string
+ *                     description: Configuração da produção
+ */
 router.get(
   '/dado_producao',
   verifyAdmin,
@@ -402,6 +1270,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/dado_producao:
+ *   post:
+ *     summary: Cria novos dados de produção
+ *     description: Grava novos dados de produção no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Dados de Produção
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/dadoProducao'
+ *     responses:
+ *       201:
+ *         description: Dados de produção criados com sucesso
+ */
 router.post(
   '/dado_producao',
   verifyAdmin,
@@ -415,6 +1306,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/dado_producao:
+ *   put:
+ *     summary: Atualiza dados de produção
+ *     description: Atualiza dados de produção já cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Dados de Produção
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/dadoProducaoUpdate'
+ *     responses:
+ *       200:
+ *         description: Dados de produção atualizados com sucesso
+ */
 router.put(
   '/dado_producao',
   verifyAdmin,
@@ -428,6 +1342,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/dado_producao:
+ *   delete:
+ *     summary: Deleta dados de produção
+ *     description: Deleta dados de produção cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Dados de Produção
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/dadoProducaoIds'
+ *     responses:
+ *       200:
+ *         description: Dados de produção deletados com sucesso
+ */
 router.delete(
   '/dado_producao',
   verifyAdmin,
@@ -441,6 +1378,47 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/banco_dados:
+ *   get:
+ *     summary: Retorna os bancos de dados
+ *     description: Retorna uma lista de todos os bancos de dados cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Banco de Dados
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Bancos de dados retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do banco de dados
+ *                   tipo_dado_producao_id:
+ *                     type: integer
+ *                     description: ID do tipo de dado de produção
+ *                   configuracao_producao:
+ *                     type: string
+ *                     description: Configuração da produção
+ *                   servidor:
+ *                     type: string
+ *                     description: Servidor do banco de dados
+ *                   porta:
+ *                     type: string
+ *                     description: Porta do banco de dados
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do banco de dados
+ */
 router.get(
   '/banco_dados',
   verifyAdmin,

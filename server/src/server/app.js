@@ -125,61 +125,8 @@ app.use('/logs', (req, res) => {
  */
 app.use('/api/api_docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
-/**
- * @swagger
- * /{any}:
- *   get:
- *     summary: Serve o cliente da aplicação
- *     description: Serve a aplicação cliente, retornando o arquivo `index.html` para qualquer rota que não seja explicitamente definida.
- *     tags:
- *       - cliente
- *     parameters:
- *       - in: path
- *         name: any
- *         required: false
- *         schema:
- *           type: string
- *         description: Qualquer caminho não tratado por outras rotas
- *     responses:
- *       200:
- *         description: Cliente da aplicação carregado com sucesso
- *         content:
- *           text/html:
- *             schema:
- *               type: string
- *               description: Conteúdo HTML da aplicação cliente
- */
 app.use(express.static(path.join(__dirname, "..", "build")));
 
-/**
- * @swagger
- * /{any}:
- *   all:
- *     summary: Fallback para rotas não encontradas
- *     description: Retorna um erro 404 para qualquer rota não encontrada no sistema.
- *     tags:
- *       - erros
- *     parameters:
- *       - in: path
- *         name: any
- *         required: false
- *         schema:
- *           type: string
- *         description: Qualquer caminho não tratado por outras rotas
- *     responses:
- *       404:
- *         description: URL não encontrada para o método especificado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                   description: Descrição do erro ocorrido
- */
 app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "build", "index.html"));
 });

@@ -13,7 +13,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /atividades/usuario/{id}:
+ * /api/perigo/atividades/usuario/{id}:
  *   delete:
  *     summary: Limpa atividades relacionadas a um usuário
  *     description: Remove as atividades relacionadas ao usuário especificado pelo ID, deixando as atividades sem usuário atribuído.
@@ -76,7 +76,7 @@ router.delete(
 
 /**
  * @swagger
- * /log:
+ * /api/perigo/log:
  *   delete:
  *     summary: Limpa logs antigos
  *     description: Remove logs mais antigos que 3 dias.
@@ -113,7 +113,7 @@ router.delete(
 
 /**
  * @swagger
- * /propriedades_camada:
+ * /api/perigo/propriedades_camada:
  *   get:
  *     summary: Retorna propriedades da camada
  *     description: Retorna as propriedades de todas as camadas cadastradas no sistema.
@@ -169,7 +169,7 @@ router.get(
 
 /**
  * @swagger
- * /propriedades_camada:
+ * /api/perigo/propriedades_camada:
  *   delete:
  *     summary: Deleta propriedades da camada
  *     description: Deleta as propriedades das camadas especificadas por seus IDs.
@@ -226,7 +226,7 @@ router.delete(
 
 /**
  * @swagger
- * /propriedades_camada:
+ * /api/perigo/propriedades_camada:
  *   post:
  *     summary: Cria propriedades da camada
  *     description: Cria novas propriedades para as camadas no sistema.
@@ -272,7 +272,7 @@ router.post(
 
 /**
  * @swagger
- * /propriedades_camada:
+ * /api/perigo/propriedades_camada:
  *   put:
  *     summary: Atualiza propriedades da camada
  *     description: Atualiza as propriedades das camadas no sistema com base nos IDs fornecidos.
@@ -318,7 +318,7 @@ router.put(
 
 /**
  * @swagger
- * /insumo:
+ * /api/perigo/insumo:
  *   get:
  *     summary: Retorna insumos
  *     description: Retorna os insumos cadastrados no sistema, com detalhes de cada um.
@@ -374,7 +374,7 @@ router.get(
 
 /**
  * @swagger
- * /insumo:
+ * /api/perigo/insumo:
  *   delete:
  *     summary: Deleta insumos
  *     description: Deleta insumos especificados por seus IDs.
@@ -431,7 +431,7 @@ router.delete(
 
 /**
  * @swagger
- * /insumo:
+ * /api/perigo/insumo:
  *   post:
  *     summary: Cria insumos
  *     description: Cria novos insumos no sistema.
@@ -477,7 +477,7 @@ router.post(
 
 /**
  * @swagger
- * /insumo:
+ * /api/perigo/insumo:
  *   put:
  *     summary: Atualiza insumos
  *     description: Atualiza os insumos no sistema com base nos IDs fornecidos.

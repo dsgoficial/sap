@@ -11,7 +11,7 @@ const router = express.Router()
 
 /**
  * @swagger
- * /login:
+ * /api/login:
  *   post:
  *     summary: Autenticação de um usuário
  *     description: Retorna um token de autenticação caso o usuário seja válido e as versões dos plugins e do QGIS estejam corretas.
