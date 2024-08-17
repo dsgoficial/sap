@@ -840,7 +840,7 @@ controller.getInfoPIT = async ano => {
       SELECT DISTINCT pr.nome AS projeto, l.nome AS lote, pit.meta
       FROM macrocontrole.lote AS l
       JOIN macrocontrole.projeto AS pr ON pr.id = l.projeto_id
-      LEFT JOIN macrocontrole.pit AS pit ON pit.lote_id = l.id AND pit.ano = EXTRACT(YEAR FROM current_date)::int
+      LEFT JOIN macrocontrole.pit AS pit ON pit.lote_id = l.id AND pit.ano = $<ano>
   ),
   data AS (
       SELECT pit.meta, pr.nome AS projeto, l.nome AS lote, EXTRACT(MONTH FROM sit.data_fim) AS month, COUNT(sit.id) AS finalizadas
@@ -869,6 +869,7 @@ controller.getInfoPIT = async ano => {
   FROM projects_lotes_meta AS plm
   CROSS JOIN months AS m
   LEFT JOIN data AS d ON d.projeto = plm.projeto AND d.lote = plm.lote AND d.month = m.month
+  WHERE plm.meta is not null
   ORDER BY plm.projeto, plm.lote, m.month
   `,
     { ano }
