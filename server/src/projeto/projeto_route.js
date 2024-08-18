@@ -1431,6 +1431,39 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/login:
+ *   get:
+ *     summary: Retorna os dados de login
+ *     description: Retorna os dados de login de usuários cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Login
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dados de login retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do login
+ *                   usuario:
+ *                     type: string
+ *                     description: Nome do usuário
+ *                   ultimo_login:
+ *                     type: string
+ *                     format: date-time
+ *                     description: Data e hora do último login
+ */
 router.get(
   '/login',
   verifyAdmin,
@@ -1443,6 +1476,41 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/bloco:
+ *   get:
+ *     summary: Retorna os blocos
+ *     description: Retorna uma lista de blocos cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Blocos
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Blocos retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do bloco
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do bloco
+ *                   prioridade:
+ *                     type: integer
+ *                     description: Prioridade do bloco
+ *                   lote_id:
+ *                     type: integer
+ *                     description: ID do lote associado
+ */
 router.get(
   '/bloco',
   verifyAdmin,
@@ -1455,6 +1523,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/bloco:
+ *   post:
+ *     summary: Cria novos blocos
+ *     description: Grava novos blocos no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Blocos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/blocos'
+ *     responses:
+ *       201:
+ *         description: Blocos criados com sucesso
+ */
 router.post(
   '/bloco',
   verifyAdmin,
@@ -1468,6 +1559,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/bloco:
+ *   put:
+ *     summary: Atualiza blocos existentes
+ *     description: Atualiza blocos já cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Blocos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/blocoUpdate'
+ *     responses:
+ *       200:
+ *         description: Blocos atualizados com sucesso
+ */
 router.put(
   '/bloco',
   verifyAdmin,
@@ -1481,6 +1595,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/bloco:
+ *   delete:
+ *     summary: Deleta blocos
+ *     description: Deleta blocos cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Blocos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/blocoIds'
+ *     responses:
+ *       200:
+ *         description: Blocos deletados com sucesso
+ */
 router.delete(
   '/bloco',
   verifyAdmin,
@@ -1494,7 +1631,29 @@ router.delete(
   })
 )
 
-
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho/bloco:
+ *   put:
+ *     summary: Atualiza o bloco das unidades de trabalho
+ *     description: Atualiza o bloco associado a um conjunto de unidades de trabalho.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidades de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/unidadeTrabalhoBloco'
+ *     responses:
+ *       200:
+ *         description: Bloco das unidades de trabalho atualizado com sucesso
+ */
 router.put(
   '/unidade_trabalho/bloco',
   verifyAdmin,
@@ -1511,6 +1670,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/atividades:
+ *   delete:
+ *     summary: Deleta atividades não iniciadas
+ *     description: Deleta atividades que ainda não foram iniciadas.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Atividades
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/listaAtividades'
+ *     responses:
+ *       200:
+ *         description: Atividades não iniciadas deletadas com sucesso
+ */
 router.delete(
   '/atividades',
   verifyAdmin,
@@ -1524,6 +1706,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho/atividades:
+ *   delete:
+ *     summary: Deleta atividades não iniciadas relacionadas a unidade de trabalho
+ *     description: Deleta todas as atividades não iniciadas associadas a uma unidade de trabalho específica.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidades de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/unidadeTrabalhoId'
+ *     responses:
+ *       200:
+ *         description: Atividades não iniciadas relacionadas a unidade de trabalho deletadas com sucesso
+ */
 router.delete(
   '/unidade_trabalho/atividades',
   verifyAdmin,
@@ -1537,6 +1742,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/atividades:
+ *   post:
+ *     summary: Cria novas atividades
+ *     description: Cria novas atividades associadas a unidades de trabalho e etapas específicas.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Atividades
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/unidadeTrabalhoEtapa'
+ *     responses:
+ *       200:
+ *         description: Atividades criadas com sucesso
+ */
 router.post(
   '/atividades',
   verifyAdmin,
@@ -1553,6 +1781,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/atividades/todas:
+ *   post:
+ *     summary: Cria todas as atividades para um lote
+ *     description: Cria todas as atividades necessárias para um lote, incluindo atividades de revisão, correção, e revisão final.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Atividades
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/todasAtividades'
+ *     responses:
+ *       200:
+ *         description: Todas as atividades criadas com sucesso
+ */
 router.post(
   '/atividades/todas',
   verifyAdmin,
@@ -1571,6 +1822,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/etapas/padrao:
+ *   post:
+ *     summary: Cria etapas padrão para um lote
+ *     description: Cria etapas padrão associadas a um lote, incluindo fases e padrões de controle de qualidade.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Etapas
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/padrao_etapa'
+ *     responses:
+ *       200:
+ *         description: Etapas padrão criadas com sucesso
+ */
 router.post(
   '/etapas/padrao',
   verifyAdmin,
@@ -1588,6 +1862,41 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/projetos:
+ *   get:
+ *     summary: Retorna os projetos
+ *     description: Retorna uma lista de projetos cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Projetos
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Projetos retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do projeto
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do projeto
+ *                   descricao:
+ *                     type: string
+ *                     description: Descrição do projeto
+ *                   finalizado:
+ *                     type: boolean
+ *                     description: Indica se o projeto está finalizado
+ */
 router.get(
   '/projetos',
   verifyAdmin,
@@ -1600,6 +1909,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/projetos:
+ *   post:
+ *     summary: Cria novos projetos
+ *     description: Grava novos projetos no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Projetos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/projeto'
+ *     responses:
+ *       201:
+ *         description: Projetos criados com sucesso
+ */
 router.post(
   '/projetos',
   verifyAdmin,
@@ -1613,6 +1945,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/projetos:
+ *   put:
+ *     summary: Atualiza projetos existentes
+ *     description: Atualiza projetos já cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Projetos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/projetoUpdate'
+ *     responses:
+ *       200:
+ *         description: Projetos atualizados com sucesso
+ */
 router.put(
   '/projetos',
   verifyAdmin,
@@ -1626,6 +1981,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/projetos:
+ *   delete:
+ *     summary: Deleta projetos
+ *     description: Deleta projetos cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Projetos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/projetoIds'
+ *     responses:
+ *       200:
+ *         description: Projetos deletados com sucesso
+ */
 router.delete(
   '/projetos',
   verifyAdmin,
@@ -1639,6 +2017,35 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/linha_producao:
+ *   get:
+ *     summary: Retorna as linhas de produção
+ *     description: Retorna uma lista de todas as linhas de produção cadastradas no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Linhas de Produção
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Linhas de produção retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID da linha de produção
+ *                   nome:
+ *                     type: string
+ *                     description: Nome da linha de produção
+ */
 router.get(
   '/linha_producao',
   verifyAdmin,
@@ -1651,6 +2058,35 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/fases:
+ *   get:
+ *     summary: Retorna as fases
+ *     description: Retorna uma lista de todas as fases cadastradas no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Fases
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Fases retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID da fase
+ *                   nome:
+ *                     type: string
+ *                     description: Nome da fase
+ */
 router.get(
   '/fases',
   verifyAdmin,
@@ -1663,6 +2099,35 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/subfases:
+ *   get:
+ *     summary: Retorna as subfases
+ *     description: Retorna uma lista de todas as subfases cadastradas no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Subfases
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Subfases retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID da subfase
+ *                   nome:
+ *                     type: string
+ *                     description: Nome da subfase
+ */
 router.get(
   '/subfases',
   verifyAdmin,
@@ -1675,6 +2140,35 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/todas_subfases:
+ *   get:
+ *     summary: Retorna todas as subfases
+ *     description: Retorna uma lista de todas as subfases cadastradas no sistema, independentemente de outros filtros.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Subfases
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Todas as subfases retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID da subfase
+ *                   nome:
+ *                     type: string
+ *                     description: Nome da subfase
+ */
 router.get(
   '/todas_subfases',
   verifyAdmin,
@@ -1687,6 +2181,35 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/etapas:
+ *   get:
+ *     summary: Retorna as etapas
+ *     description: Retorna uma lista de todas as etapas cadastradas no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Etapas
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Etapas retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID da etapa
+ *                   nome:
+ *                     type: string
+ *                     description: Nome da etapa
+ */
 router.get(
   '/etapas',
   verifyAdmin,
@@ -1699,6 +2222,38 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/gerenciador_fme:
+ *   get:
+ *     summary: Retorna as informações dos serviços do Gerenciador do FME
+ *     description: Retorna uma lista de todos os serviços cadastrados no Gerenciador do FME.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Informações dos serviços do Gerenciador do FME retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do serviço
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do serviço
+ *                   url:
+ *                     type: string
+ *                     description: URL do serviço
+ */
 router.get(
   '/configuracao/gerenciador_fme',
   verifyAdmin,
@@ -1712,6 +2267,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/gerenciador_fme:
+ *   post:
+ *     summary: Cria um novo serviço no Gerenciador do FME
+ *     description: Insere as informações de um novo serviço no Gerenciador do FME.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/gerenciadorFME'
+ *     responses:
+ *       201:
+ *         description: Informações dos serviços do Gerenciador do FME inseridas com sucesso
+ */
 router.post(
   '/configuracao/gerenciador_fme',
   verifyAdmin,
@@ -1726,6 +2304,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/gerenciador_fme:
+ *   put:
+ *     summary: Atualiza as informações dos serviços do Gerenciador do FME
+ *     description: Atualiza as informações de serviços já cadastrados no Gerenciador do FME.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/gerenciadorFMEUpdate'
+ *     responses:
+ *       201:
+ *         description: Informações dos serviços do Gerenciador do FME atualizadas com sucesso
+ */
 router.put(
   '/configuracao/gerenciador_fme',
   verifyAdmin,
@@ -1742,6 +2343,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/gerenciador_fme:
+ *   delete:
+ *     summary: Deleta um serviço do Gerenciador do FME
+ *     description: Deleta as informações de um serviço cadastrado no Gerenciador do FME.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/gerenciadorFMEIds'
+ *     responses:
+ *       201:
+ *         description: Informações dos serviços do Gerenciador do FME deletadas com sucesso
+ */
 router.delete(
   '/configuracao/gerenciador_fme',
   verifyAdmin,
@@ -1758,6 +2382,38 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/camadas:
+ *   get:
+ *     summary: Retorna as camadas de configuração
+ *     description: Retorna uma lista de todas as camadas cadastradas na configuração do sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Camadas retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID da camada
+ *                   nome:
+ *                     type: string
+ *                     description: Nome da camada
+ *                   tipo:
+ *                     type: string
+ *                     description: Tipo da camada
+ */
 router.get(
   '/configuracao/camadas',
   verifyAdmin,
@@ -1770,6 +2426,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/camadas:
+ *   delete:
+ *     summary: Deleta uma camada de configuração
+ *     description: Deleta uma camada específica cadastrada na configuração do sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/camadasIds'
+ *     responses:
+ *       200:
+ *         description: Camada deletada com sucesso
+ */
 router.delete(
   '/configuracao/camadas',
   verifyAdmin,
@@ -1785,6 +2464,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/camadas:
+ *   post:
+ *     summary: Cria uma nova camada de configuração
+ *     description: Insere as informações de uma nova camada na configuração do sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/camadas'
+ *     responses:
+ *       201:
+ *         description: Camada criada com sucesso
+ */
 router.post(
   '/configuracao/camadas',
   verifyAdmin,
@@ -1800,6 +2502,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/camadas:
+ *   put:
+ *     summary: Atualiza uma camada de configuração
+ *     description: Atualiza as informações de uma camada já cadastrada na configuração do sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/camadasAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Camada atualizada com sucesso
+ */
 router.put(
   '/configuracao/camadas',
   verifyAdmin,
@@ -1815,6 +2540,38 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_fme:
+ *   get:
+ *     summary: Retorna os perfis FME
+ *     description: Retorna uma lista de todos os perfis FME cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil FME retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil FME
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do perfil FME
+ *                   url:
+ *                     type: string
+ *                     description: URL do serviço FME
+ */
 router.get(
   '/configuracao/perfil_fme',
   verifyAdmin,
@@ -1827,6 +2584,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_fme:
+ *   delete:
+ *     summary: Deleta um perfil FME
+ *     description: Deleta um perfil FME específico cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilFMEIds'
+ *     responses:
+ *       200:
+ *         description: Perfil FME deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_fme',
   verifyAdmin,
@@ -1842,6 +2622,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_fme:
+ *   post:
+ *     summary: Cria um novo perfil FME
+ *     description: Insere as informações de um novo perfil FME no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfisFME'
+ *     responses:
+ *       201:
+ *         description: Perfis FME criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_fme',
   verifyAdmin,
@@ -1857,6 +2660,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_fme:
+ *   put:
+ *     summary: Atualiza um perfil FME
+ *     description: Atualiza as informações de um perfil FME já cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilFMEAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfil FME atualizado com sucesso
+ */
 router.put(
   '/configuracao/perfil_fme',
   verifyAdmin,
@@ -1872,7 +2698,35 @@ router.put(
   })
 )
 
-
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_menu:
+ *   get:
+ *     summary: Retorna os perfis de Menu QGIS
+ *     description: Retorna uma lista de todos os perfis de Menu QGIS cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil Menu QGIS retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil de Menu QGIS
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do perfil de Menu QGIS
+ */
 router.get(
   '/configuracao/perfil_menu',
   verifyAdmin,
@@ -1885,6 +2739,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_menu:
+ *   delete:
+ *     summary: Deleta um perfil de Menu QGIS
+ *     description: Deleta um perfil de Menu QGIS específico cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilMenuIds'
+ *     responses:
+ *       200:
+ *         description: Perfil Menu QGIS deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_menu',
   verifyAdmin,
@@ -1900,6 +2777,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_menu:
+ *   post:
+ *     summary: Cria um novo perfil de Menu QGIS
+ *     description: Insere as informações de um novo perfil de Menu QGIS no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfisMenu'
+ *     responses:
+ *       201:
+ *         description: Perfis Menu QGIS criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_menu',
   verifyAdmin,
@@ -1915,6 +2815,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_menu:
+ *   put:
+ *     summary: Atualiza um perfil de Menu QGIS
+ *     description: Atualiza as informações de um perfil de Menu QGIS já cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilMenuAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfil Menu QGIS atualizado com sucesso
+ */
 router.put(
   '/configuracao/perfil_menu',
   verifyAdmin,
@@ -1930,6 +2853,35 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_linhagem:
+ *   get:
+ *     summary: Retorna os perfis de Linhagem QGIS
+ *     description: Retorna uma lista de todos os perfis de Linhagem QGIS cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil Linhagem QGIS retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil de Linhagem QGIS
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do perfil de Linhagem QGIS
+ */
 router.get(
   '/configuracao/perfil_linhagem',
   verifyAdmin,
@@ -1942,6 +2894,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_linhagem:
+ *   delete:
+ *     summary: Deleta um perfil de Linhagem QGIS
+ *     description: Deleta um perfil de Linhagem QGIS específico cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilLinhagemIds'
+ *     responses:
+ *       200:
+ *         description: Perfil Linhagem QGIS deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_linhagem',
   verifyAdmin,
@@ -1957,6 +2932,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_linhagem:
+ *   post:
+ *     summary: Cria um novo perfil de Linhagem QGIS
+ *     description: Insere as informações de um novo perfil de Linhagem QGIS no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfisLinhagem'
+ *     responses:
+ *       201:
+ *         description: Perfis Linhagem QGIS criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_linhagem',
   verifyAdmin,
@@ -1972,6 +2970,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_linhagem:
+ *   put:
+ *     summary: Atualiza um perfil de Linhagem QGIS
+ *     description: Atualiza as informações de um perfil de Linhagem QGIS já cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilLinhagemAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfil Linhagem QGIS atualizado com sucesso
+ */
 router.put(
   '/configuracao/perfil_linhagem',
   verifyAdmin,
@@ -1987,6 +3008,35 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_modelo:
+ *   get:
+ *     summary: Retorna os perfis de Modelo QGIS
+ *     description: Retorna uma lista de todos os perfis de Modelo QGIS cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil Modelo QGIS retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil de Modelo QGIS
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do perfil de Modelo QGIS
+ */
 router.get(
   '/configuracao/perfil_modelo',
   verifyAdmin,
@@ -1999,6 +3049,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_modelo:
+ *   delete:
+ *     summary: Deleta um perfil de Modelo QGIS
+ *     description: Deleta um perfil de Modelo QGIS específico cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilModeloIds'
+ *     responses:
+ *       200:
+ *         description: Perfil Modelo QGIS deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_modelo',
   verifyAdmin,
@@ -2014,6 +3087,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_modelo:
+ *   post:
+ *     summary: Cria um novo perfil de Modelo QGIS
+ *     description: Insere as informações de um novo perfil de Modelo QGIS no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfisModelo'
+ *     responses:
+ *       201:
+ *         description: Perfis Modelo QGIS criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_modelo',
   verifyAdmin,
@@ -2029,6 +3125,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_modelo:
+ *   put:
+ *     summary: Atualiza um perfil de Modelo QGIS
+ *     description: Atualiza as informações de um perfil de Modelo QGIS já cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilModeloAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfil Modelo QGIS atualizado com sucesso
+ */
 router.put(
   '/configuracao/perfil_modelo',
   verifyAdmin,
@@ -2044,6 +3163,35 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_regras:
+ *   get:
+ *     summary: Retorna os perfis de Regras
+ *     description: Retorna uma lista de todos os perfis de Regras cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil de Regras retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil de Regras
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do perfil de Regras
+ */
 router.get(
   '/configuracao/perfil_regras',
   verifyAdmin,
@@ -2056,6 +3204,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_regras:
+ *   delete:
+ *     summary: Deleta um perfil de Regras
+ *     description: Deleta um perfil de Regras específico cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilRegrasIds'
+ *     responses:
+ *       200:
+ *         description: Perfil de Regras deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_regras',
   verifyAdmin,
@@ -2071,6 +3242,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_regras:
+ *   post:
+ *     summary: Cria um novo perfil de Regras
+ *     description: Insere as informações de um novo perfil de Regras no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilRegras'
+ *     responses:
+ *       201:
+ *         description: Perfis de Regras criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_regras',
   verifyAdmin,
@@ -2086,6 +3280,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_regras:
+ *   put:
+ *     summary: Atualiza um perfil de Regras
+ *     description: Atualiza as informações de um perfil de Regras já cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilRegrastualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfis de Regras atualizados com sucesso
+ */
 router.put(
   '/configuracao/perfil_regras',
   verifyAdmin,
@@ -2101,6 +3318,35 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_estilos:
+ *   get:
+ *     summary: Retorna os perfis de Estilos
+ *     description: Retorna uma lista de todos os perfis de Estilos cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil de Estilos retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil de Estilos
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do perfil de Estilos
+ */
 router.get(
   '/configuracao/perfil_estilos',
   verifyAdmin,
@@ -2113,6 +3359,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_estilos:
+ *   delete:
+ *     summary: Deleta um perfil de Estilos
+ *     description: Deleta um perfil de Estilos específico cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilEstilosIds'
+ *     responses:
+ *       200:
+ *         description: Perfil de Estilos deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_estilos',
   verifyAdmin,
@@ -2128,6 +3397,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_estilos:
+ *   post:
+ *     summary: Cria um novo perfil de Estilos
+ *     description: Insere as informações de um novo perfil de Estilos no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilEstilos'
+ *     responses:
+ *       201:
+ *         description: Perfis de Estilos criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_estilos',
   verifyAdmin,
@@ -2143,6 +3435,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_estilos:
+ *   put:
+ *     summary: Atualiza um perfil de Estilos
+ *     description: Atualiza as informações de um perfil de Estilos já cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilEstilostualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfis de Estilos atualizados com sucesso
+ */
 router.put(
   '/configuracao/perfil_estilos',
   verifyAdmin,
@@ -2158,6 +3473,35 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_requisito_finalizacao:
+ *   get:
+ *     summary: Retorna os perfis de Requisito de Finalização
+ *     description: Retorna uma lista de todos os perfis de Requisito de Finalização cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil de Requisito de Finalização retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil de Requisito de Finalização
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do perfil de Requisito de Finalização
+ */
 router.get(
   '/configuracao/perfil_requisito_finalizacao',
   verifyAdmin,
@@ -2170,6 +3514,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_requisito_finalizacao:
+ *   delete:
+ *     summary: Deleta um perfil de Requisito de Finalização
+ *     description: Deleta um perfil de Requisito de Finalização específico cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilRequisitoIds'
+ *     responses:
+ *       200:
+ *         description: Perfil requisito finalização deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_requisito_finalizacao',
   verifyAdmin,
@@ -2185,6 +3552,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_requisito_finalizacao:
+ *   post:
+ *     summary: Cria um novo perfil de Requisito de Finalização
+ *     description: Insere as informações de um novo perfil de Requisito de Finalização no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfisRequisito'
+ *     responses:
+ *       201:
+ *         description: Perfis requisito finalização criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_requisito_finalizacao',
   verifyAdmin,
@@ -2200,6 +3590,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_requisito_finalizacao:
+ *   put:
+ *     summary: Atualiza um perfil de Requisito de Finalização
+ *     description: Atualiza as informações de um perfil de Requisito de Finalização já cadastrado no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilRequisitoAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfis requisito finalização atualizados com sucesso
+ */
 router.put(
   '/configuracao/perfil_requisito_finalizacao',
   verifyAdmin,
@@ -2215,6 +3628,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho/insumos:
+ *   delete:
+ *     summary: Deleta insumos associados a unidades de trabalho
+ *     description: Remove insumos associados a unidades de trabalho com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/deletaInsumos'
+ *     responses:
+ *       200:
+ *         description: Insumos associados deletados com sucesso
+ */
 router.delete(
   '/unidade_trabalho/insumos',
   verifyAdmin,
@@ -2233,6 +3669,35 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/grupo_insumo:
+ *   get:
+ *     summary: Retorna os grupos de insumos
+ *     description: Retorna uma lista de todos os grupos de insumos cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Grupos de Insumos
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Grupos de insumos retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do grupo de insumos
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do grupo de insumos
+ */
 router.get(
   '/grupo_insumo',
   verifyAdmin,
@@ -2245,6 +3710,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/grupo_insumo:
+ *   put:
+ *     summary: Atualiza grupos de insumos
+ *     description: Atualiza as informações dos grupos de insumos cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Grupos de Insumos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/grupoInsumoAtualizacao'
+ *     responses:
+ *       201:
+ *         description: Grupos de insumos atualizados com sucesso
+ */
 router.put(
   '/grupo_insumo',
   verifyAdmin,
@@ -2260,6 +3748,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/grupo_insumo:
+ *   post:
+ *     summary: Cria novos grupos de insumos
+ *     description: Insere novos grupos de insumos no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Grupos de Insumos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/grupoInsumo'
+ *     responses:
+ *       201:
+ *         description: Grupos de insumos criados com sucesso
+ */
 router.post(
   '/grupo_insumo',
   verifyAdmin,
@@ -2275,6 +3786,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/grupo_insumo:
+ *   delete:
+ *     summary: Deleta grupos de insumos
+ *     description: Remove grupos de insumos do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Grupos de Insumos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/grupoInsumoId'
+ *     responses:
+ *       200:
+ *         description: Grupos de insumos deletados com sucesso
+ */
 router.delete(
   '/grupo_insumo',
   verifyAdmin,
@@ -2288,6 +3822,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho:
+ *   delete:
+ *     summary: Deleta unidades de trabalho
+ *     description: Remove unidades de trabalho do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/unidadeTrabalhoId'
+ *     responses:
+ *       200:
+ *         description: Unidades de trabalho deletadas com sucesso
+ */
 router.delete(
   '/unidade_trabalho',
   verifyAdmin,
@@ -2301,6 +3858,35 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_estrategia_associacao:
+ *   get:
+ *     summary: Retorna tipos de estratégias de associação
+ *     description: Retorna uma lista de todos os tipos de estratégias de associação cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos de Estratégia de Associação
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Estratégias retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID da estratégia de associação
+ *                   nome:
+ *                     type: string
+ *                     description: Nome da estratégia de associação
+ */
 router.get(
   '/tipo_estrategia_associacao',
   verifyAdmin,
@@ -2313,6 +3899,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho/insumos:
+ *   post:
+ *     summary: Associa insumos a unidades de trabalho
+ *     description: Associa insumos a unidades de trabalho com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/associaInsumos'
+ *     responses:
+ *       201:
+ *         description: Insumos associados com sucesso
+ */
 router.post(
   '/unidade_trabalho/insumos',
   verifyAdmin,
@@ -2333,6 +3942,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/bloco/insumos:
+ *   post:
+ *     summary: Associa insumos a blocos de unidades de trabalho
+ *     description: Associa insumos a blocos de unidades de trabalho com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Blocos de Unidades de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/associaInsumosBloco'
+ *     responses:
+ *       201:
+ *         description: Insumos do bloco associados com sucesso
+ */
 router.post(
   '/bloco/insumos',
   verifyAdmin,
@@ -2354,6 +3986,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho/copiar:
+ *   post:
+ *     summary: Copia unidades de trabalho
+ *     description: Copia unidades de trabalho existentes com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/unidadeTrabalhoCopiar'
+ *     responses:
+ *       200:
+ *         description: Unidades de trabalho copiadas com sucesso
+ */
 router.post(
   '/unidade_trabalho/copiar',
   verifyAdmin,
@@ -2373,6 +4028,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho:
+ *   post:
+ *     summary: Cria novas unidades de trabalho
+ *     description: Insere novas unidades de trabalho no sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/unidadesTrabalho'
+ *     responses:
+ *       200:
+ *         description: Unidades de trabalho criadas com sucesso
+ */
 router.post(
   '/unidade_trabalho',
   verifyAdmin,
@@ -2392,6 +4070,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/insumo:
+ *   post:
+ *     summary: Cria novos insumos
+ *     description: Insere novos insumos no sistema com base nos parâmetros fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Insumos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/insumos'
+ *     responses:
+ *       201:
+ *         description: Insumos criados com sucesso
+ */
 router.post(
   '/insumo',
   verifyAdmin,
@@ -2411,6 +4112,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/produto:
+ *   post:
+ *     summary: Cria novos produtos
+ *     description: Insere novos produtos no sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Produtos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/produtos'
+ *     responses:
+ *       201:
+ *         description: Produtos criados com sucesso
+ */
 router.post(
   '/produto',
   verifyAdmin,
@@ -2429,6 +4153,35 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/lote:
+ *   get:
+ *     summary: Retorna os lotes
+ *     description: Retorna uma lista de todos os lotes cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Lotes
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lotes retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do lote
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do lote
+ */
 router.get(
   '/lote',
   verifyAdmin,
@@ -2441,6 +4194,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/lote:
+ *   post:
+ *     summary: Cria novos lotes
+ *     description: Insere novos lotes no sistema com base nos parâmetros fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Lotes
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/lotes'
+ *     responses:
+ *       201:
+ *         description: Lotes criados com sucesso
+ */
 router.post(
   '/lote',
   verifyAdmin,
@@ -2454,6 +4230,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/lote:
+ *   put:
+ *     summary: Atualiza lotes
+ *     description: Atualiza as informações dos lotes cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Lotes
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/loteUpdate'
+ *     responses:
+ *       200:
+ *         description: Lotes atualizados com sucesso
+ */
 router.put(
   '/lote',
   verifyAdmin,
@@ -2467,6 +4266,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/lote:
+ *   delete:
+ *     summary: Deleta lotes
+ *     description: Remove lotes do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Lotes
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/loteIds'
+ *     responses:
+ *       200:
+ *         description: Lotes deletados com sucesso
+ */
 router.delete(
   '/lote',
   verifyAdmin,
@@ -2480,6 +4302,35 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_alias:
+ *   get:
+ *     summary: Retorna os perfis de Alias
+ *     description: Retorna uma lista de todos os perfis de Alias cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil Alias retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil de Alias
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do perfil de Alias
+ */
 router.get(
   '/configuracao/perfil_alias',
   verifyAdmin,
@@ -2492,6 +4343,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_alias:
+ *   delete:
+ *     summary: Deleta perfis de Alias
+ *     description: Remove perfis de Alias do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilAliasIds'
+ *     responses:
+ *       200:
+ *         description: Perfil Alias deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_alias',
   verifyAdmin,
@@ -2507,6 +4381,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_alias:
+ *   post:
+ *     summary: Cria um novo perfil de Alias
+ *     description: Insere as informações de um novo perfil de Alias no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilAlias'
+ *     responses:
+ *       201:
+ *         description: Perfis Alias criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_alias',
   verifyAdmin,
@@ -2522,6 +4419,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_alias:
+ *   put:
+ *     summary: Atualiza perfis de Alias
+ *     description: Atualiza as informações de perfis de Alias já cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilAliastualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfis Alias atualizados com sucesso
+ */
 router.put(
   '/configuracao/perfil_alias',
   verifyAdmin,
@@ -2537,6 +4457,35 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/alias:
+ *   get:
+ *     summary: Retorna os aliases
+ *     description: Retorna uma lista de todos os aliases cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Alias
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Alias retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do alias
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do alias
+ */
 router.get(
   '/alias',
   verifyAdmin,
@@ -2549,6 +4498,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/alias:
+ *   delete:
+ *     summary: Deleta aliases
+ *     description: Remove aliases do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Alias
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/aliasIds'
+ *     responses:
+ *       200:
+ *         description: Alias deletado com sucesso
+ */
 router.delete(
   '/alias',
   verifyAdmin,
@@ -2564,6 +4536,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/alias:
+ *   post:
+ *     summary: Cria novos aliases
+ *     description: Insere novos aliases no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Alias
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/alias'
+ *     responses:
+ *       201:
+ *         description: Alias criados com sucesso
+ */
 router.post(
   '/alias',
   verifyAdmin,
@@ -2579,6 +4574,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/alias:
+ *   put:
+ *     summary: Atualiza aliases
+ *     description: Atualiza as informações dos aliases cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Alias
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/aliastualizacao'
+ *     responses:
+ *       200:
+ *         description: Alias atualizados com sucesso
+ */
 router.put(
   '/alias',
   verifyAdmin,
@@ -2594,7 +4612,35 @@ router.put(
   })
 )
 
-
+/**
+ * @swagger
+ * /api/projeto/temas:
+ *   get:
+ *     summary: Retorna os temas
+ *     description: Retorna uma lista de todos os temas cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Temas
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Temas retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do tema
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do tema
+ */
 router.get(
   '/temas',
   verifyAdmin,
@@ -2607,6 +4653,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/temas:
+ *   post:
+ *     summary: Cria novos temas
+ *     description: Insere novos temas no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Temas
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/temas'
+ *     responses:
+ *       201:
+ *         description: Temas gravados com sucesso
+ */
 router.post(
   '/temas',
   verifyAdmin,
@@ -2620,6 +4689,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/temas:
+ *   put:
+ *     summary: Atualiza temas
+ *     description: Atualiza as informações dos temas cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Temas
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/temasAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Temas atualizados com sucesso
+ */
 router.put(
   '/temas',
   verifyAdmin,
@@ -2633,6 +4725,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/temas:
+ *   delete:
+ *     summary: Deleta temas
+ *     description: Remove temas do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Temas
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/temasIds'
+ *     responses:
+ *       200:
+ *         description: Temas deletados com sucesso
+ */
 router.delete(
   '/temas',
   verifyAdmin,
@@ -2646,6 +4761,35 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_temas:
+ *   get:
+ *     summary: Retorna os perfis de temas
+ *     description: Retorna uma lista de todos os perfis de temas cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil de Temas retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil de temas
+ *                   nome:
+ *                     type: string
+ *                     description: Nome do perfil de temas
+ */
 router.get(
   '/configuracao/perfil_temas',
   verifyAdmin,
@@ -2658,6 +4802,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_temas:
+ *   delete:
+ *     summary: Deleta perfis de temas
+ *     description: Remove perfis de temas do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilTemasIds'
+ *     responses:
+ *       200:
+ *         description: Perfil de Temas deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_temas',
   verifyAdmin,
@@ -2673,6 +4840,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_temas:
+ *   post:
+ *     summary: Cria novos perfis de temas
+ *     description: Insere as informações de novos perfis de temas no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilTemas'
+ *     responses:
+ *       201:
+ *         description: Perfis de Temas criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_temas',
   verifyAdmin,
@@ -2688,6 +4878,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_temas:
+ *   put:
+ *     summary: Atualiza perfis de temas
+ *     description: Atualiza as informações dos perfis de temas cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilTemasAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfis de Temas atualizados com sucesso
+ */
 router.put(
   '/configuracao/perfil_temas',
   verifyAdmin,
@@ -2703,6 +4916,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho/reshape:
+ *   put:
+ *     summary: Realiza o reshape de uma unidade de trabalho
+ *     description: Realiza a operação de reshape em uma unidade de trabalho existente com base no ID e na geometria fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/unidadeTrabalhoReshape'
+ *     responses:
+ *       200:
+ *         description: Unidade de trabalho atualizada com sucesso
+ */
 router.put(
   '/unidade_trabalho/reshape',
   verifyAdmin,
@@ -2718,6 +4954,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho/cut:
+ *   put:
+ *     summary: Realiza o corte de uma unidade de trabalho
+ *     description: Realiza a operação de corte em uma unidade de trabalho existente com base no ID e nas geometrias fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/unidadeTrabalhoCut'
+ *     responses:
+ *       200:
+ *         description: Unidade de trabalho atualizada com sucesso
+ */
 router.put(
   '/unidade_trabalho/cut',
   verifyAdmin,
@@ -2734,6 +4993,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho/merge:
+ *   put:
+ *     summary: Realiza o merge de unidades de trabalho
+ *     description: Realiza a operação de merge em unidades de trabalho existentes com base nos IDs e na geometria fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/unidadeTrabalhoMerge'
+ *     responses:
+ *       200:
+ *         description: Unidade de trabalho atualizada com sucesso
+ */
 router.put(
   '/unidade_trabalho/merge',
   verifyAdmin,
@@ -2750,6 +5032,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/linha_producao:
+ *   post:
+ *     summary: Insere uma nova linha de produção
+ *     description: Insere uma nova linha de produção no sistema com base nos parâmetros fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Linha de Produção
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/linhaProducao'
+ *     responses:
+ *       201:
+ *         description: Linha de produção inserida com sucesso
+ */
 router.post(
   '/linha_producao',
   verifyAdmin,
@@ -2765,6 +5070,22 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_configuracao_qgis:
+ *   get:
+ *     summary: Retorna o perfil de configuração do QGIS
+ *     description: Retorna uma lista de perfis de configuração do QGIS cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil configuração QGIS retornado com sucesso
+ */
 router.get(
   '/configuracao/perfil_configuracao_qgis',
   verifyAdmin,
@@ -2777,6 +5098,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_configuracao_qgis:
+ *   delete:
+ *     summary: Deleta perfis de configuração do QGIS
+ *     description: Remove perfis de configuração do QGIS do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilConfiguracaoQgisIds'
+ *     responses:
+ *       200:
+ *         description: Perfil configuração QGIS deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_configuracao_qgis',
   verifyAdmin,
@@ -2792,6 +5136,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_configuracao_qgis:
+ *   post:
+ *     summary: Cria um novo perfil de configuração do QGIS
+ *     description: Insere um novo perfil de configuração do QGIS no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilConfiguracaoQgis'
+ *     responses:
+ *       201:
+ *         description: Perfil configuração QGIS criado com sucesso
+ */
 router.post(
   '/configuracao/perfil_configuracao_qgis',
   verifyAdmin,
@@ -2807,6 +5174,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_configuracao_qgis:
+ *   put:
+ *     summary: Atualiza perfis de configuração do QGIS
+ *     description: Atualiza as informações dos perfis de configuração do QGIS cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilConfiguracaoQgisAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfis configuração QGIS atualizados com sucesso
+ */
 router.put(
   '/configuracao/perfil_configuracao_qgis',
   verifyAdmin,
@@ -2822,6 +5212,22 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/tipo_perfil_dificuldade:
+ *   get:
+ *     summary: Retorna tipos de perfil de dificuldade
+ *     description: Retorna uma lista de tipos de perfil de dificuldade cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Tipos de Perfil
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Tipo perfil dificuldade retornado com sucesso
+ */
 router.get(
   '/tipo_perfil_dificuldade',
   verifyAdmin,
@@ -2834,6 +5240,22 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_dificuldade_operador:
+ *   get:
+ *     summary: Retorna perfis de dificuldade do operador
+ *     description: Retorna uma lista de perfis de dificuldade do operador cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil dificuldade operador retornado com sucesso
+ */
 router.get(
   '/configuracao/perfil_dificuldade_operador',
   verifyAdmin,
@@ -2846,6 +5268,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_dificuldade_operador:
+ *   delete:
+ *     summary: Deleta perfis de dificuldade do operador
+ *     description: Remove perfis de dificuldade do operador do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilDificuldadeOperadorIds'
+ *     responses:
+ *       200:
+ *         description: Perfil dificuldade operador deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_dificuldade_operador',
   verifyAdmin,
@@ -2861,6 +5306,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_dificuldade_operador:
+ *   post:
+ *     summary: Cria novos perfis de dificuldade do operador
+ *     description: Insere novos perfis de dificuldade do operador no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilDificuldadeOperador'
+ *     responses:
+ *       201:
+ *         description: Perfis dificuldade operador criados com sucesso
+ */
 router.post(
   '/configuracao/perfil_dificuldade_operador',
   verifyAdmin,
@@ -2876,6 +5344,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_dificuldade_operador:
+ *   put:
+ *     summary: Atualiza perfis de dificuldade do operador
+ *     description: Atualiza as informações dos perfis de dificuldade do operador cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilDificuldadeOperadorAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfis dificuldade operador atualizados com sucesso
+ */
 router.put(
   '/configuracao/perfil_dificuldade_operador',
   verifyAdmin,
@@ -2891,6 +5382,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/lote/copiar:
+ *   post:
+ *     summary: Copia configurações de lote
+ *     description: Copia as configurações de um lote para outro lote com base nos parâmetros fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/configuracaoLoteCopiar'
+ *     responses:
+ *       200:
+ *         description: Configurações de Lote copiadas com sucesso.
+ */
 router.post(
   '/configuracao/lote/copiar',
   verifyAdmin,
@@ -2921,6 +5435,22 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_workflow_dsgtools:
+ *   get:
+ *     summary: Retorna o perfil de workflow DSGTools
+ *     description: Retorna uma lista de perfis de workflow DSGTools cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil workflow dsgtools retornado com sucesso
+ */
 router.get(
   '/configuracao/perfil_workflow_dsgtools',
   verifyAdmin,
@@ -2933,6 +5463,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_workflow_dsgtools:
+ *   delete:
+ *     summary: Deleta perfis de workflow DSGTools
+ *     description: Remove perfis de workflow DSGTools do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilWorkflowDsgtoolsIds'
+ *     responses:
+ *       200:
+ *         description: Perfil workflow dsgtools deletado com sucesso
+ */
 router.delete(
   '/configuracao/perfil_workflow_dsgtools',
   verifyAdmin,
@@ -2948,6 +5501,29 @@ router.delete(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_workflow_dsgtools:
+ *   post:
+ *     summary: Cria um novo perfil de workflow DSGTools
+ *     description: Insere um novo perfil de workflow DSGTools no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilWorkflowDsgtools'
+ *     responses:
+ *       201:
+ *         description: Perfil workflow dsgtools criado com sucesso
+ */
 router.post(
   '/configuracao/perfil_workflow_dsgtools',
   verifyAdmin,
@@ -2963,6 +5539,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_workflow_dsgtools:
+ *   put:
+ *     summary: Atualiza perfis de workflow DSGTools
+ *     description: Atualiza as informações dos perfis de workflow DSGTools cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilWorkflowDsgtoolsAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfis workflow dsgtools atualizados com sucesso
+ */
 router.put(
   '/configuracao/perfil_workflow_dsgtools',
   verifyAdmin,
@@ -2978,7 +5577,22 @@ router.put(
   })
 )
 
-
+/**
+ * @swagger
+ * /api/projeto/workflow:
+ *   get:
+ *     summary: Retorna os workflows
+ *     description: Retorna uma lista de todos os workflows cadastrados no sistema.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Workflows
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Workflows retornados com sucesso
+ */
 router.get(
   '/workflow',
   verifyAdmin,
@@ -2991,6 +5605,29 @@ router.get(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/workflow:
+ *   post:
+ *     summary: Cria novos workflows
+ *     description: Insere novos workflows no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Workflows
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/workflows'
+ *     responses:
+ *       201:
+ *         description: Workflows gravados com sucesso
+ */
 router.post(
   '/workflow',
   verifyAdmin,
@@ -3004,6 +5641,29 @@ router.post(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/workflow:
+ *   put:
+ *     summary: Atualiza workflows
+ *     description: Atualiza as informações dos workflows cadastrados no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Workflows
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/atualizaWorkflows'
+ *     responses:
+ *       200:
+ *         description: Workflows atualizados com sucesso
+ */
 router.put(
   '/workflow',
   verifyAdmin,
@@ -3017,6 +5677,29 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/projeto/workflow:
+ *   delete:
+ *     summary: Deleta workflows
+ *     description: Remove workflows do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Workflows
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/workflowsIds'
+ *     responses:
+ *       200:
+ *         description: Workflows deletados com sucesso
+ */
 router.delete(
   '/workflow',
   verifyAdmin,
