@@ -818,7 +818,7 @@ controller.getViewsAcompanhamento = async (emAndamento) => {
   INNER JOIN macrocontrole.lote AS l ON l.id = foo.lote_id::int
   INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
   UNION
-  SELECT 'acompanhamento' AS schema, 'bloco' AS nome, 'bloco' AS tipo, false AS finalizado;
+  SELECT 'acompanhamento' AS schema, 'bloco' AS nome, 'bloco' AS tipo, false AS finalizado, null AS lote;
   `)
 
   if (!views) {
