@@ -293,7 +293,7 @@ $$
           INNER JOIN macrocontrole.produto AS p ON p.lote_id = ut.lote_id
           INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
           INNER JOIN
-          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
+          (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade) AS a
           ON a.unidade_trabalho_id = ut.id
           WHERE s.fase_id = ' || r.id || ' AND ut.lote_id = ' || lote_ident || '
           GROUP BY ut.id) AS ut' || iterator || ' ON ut' || iterator || '.id = rp.ut_id';
