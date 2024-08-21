@@ -32,7 +32,7 @@ export default function Maps() {
         const res = await getViews()
         const names = res.dados.views
             .filter(item => item.tipo == 'lote')
-            .map(item => item.nome)
+            .map(item => item.lote)
 
         const resLayers = await Promise.all(
             names
