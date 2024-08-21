@@ -805,21 +805,47 @@ controller.getObservacao = async (atividadeId) => {
   )
 }
 
-controller.getViewsAcompanhamento = async (emAndamento) => {
-  let views = await db.sapConn.any(
-  `
-  SELECT foo.schema, foo.nome, foo.tipo, p.finalizado, l.nome AS lote FROM
-  (SELECT 'acompanhamento' AS schema, mat.matviewname AS nome,
-  CASE WHEN mat.matviewname LIKE '%_subfase_%' THEN 'subfase' ELSE 'lote' END AS tipo,
-  SUBSTRING(mat.matviewname FROM 'lote_(\\d+)') AS lote_id
-  FROM pg_matviews AS mat
-  WHERE schemaname = 'acompanhamento' AND matviewname ~ '^lote_'
-  ORDER BY mat.matviewname) AS foo
-  INNER JOIN macrocontrole.lote AS l ON l.id = foo.lote_id::int
-  INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
-  UNION
-  SELECT 'acompanhamento' AS schema, 'bloco' AS nome, 'bloco' AS tipo, false AS finalizado, null AS lote;
-  `)
+controller.getViewsAcompanhamento = async (emAndamento, bloco) => {
+
+    let query = `
+    SELECT foo.schema, foo.nome, foo.tipo, p.finalizado, l.nome AS lote 
+    FROM (
+      SELECT 
+        'acompanhamento' AS schema, 
+        mat.matviewname AS nome,
+        CASE 
+          WHEN mat.matviewname LIKE '%_subfase_%' THEN 'subfase' 
+          ELSE 'lote' 
+        END AS tipo,
+        SUBSTRING(mat.matviewname FROM 'lote_(\\d+)') AS lote_id
+      FROM pg_matviews AS mat
+      WHERE schemaname = 'acompanhamento' 
+        AND matviewname ~ '^lote_'
+      ORDER BY mat.matviewname
+    ) AS foo
+    INNER JOIN macrocontrole.lote AS l ON l.id = foo.lote_id::int
+    INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
+  `;
+
+  // If `bloco` is provided, join with `macrocontrole.unidade_trabalho` and filter by `bloco_id`
+  if (bloco !== null) {
+    query += `
+      INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.lote_id = l.id
+      WHERE ut.bloco_id = $<bloco>
+    `;
+  }
+
+  query += `
+    UNION
+    SELECT 
+      'acompanhamento' AS schema, 
+      'bloco' AS nome, 
+      'bloco' AS tipo, 
+      false AS finalizado, 
+      null AS lote;
+  `;
+
+  const views = await db.sapConn.any(query, { bloco });
 
   if (!views) {
     return null

@@ -957,9 +957,10 @@ router.get(
     query: gerenciaSchema.emAndamentoQuery
   }),
   asyncHandler(async (req, res, next) => {
-    const dados = await gerenciaCtrl.getViewsAcompanhamento(
-      req.query.em_andamento === 'true'
-    )
+    const emAndamento = req.query.em_andamento === 'true';
+    const bloco = req.query.bloco ? parseInt(req.query.bloco, 10) : null; // Convert bloco to an integer if provided
+
+    const dados = await gerenciaCtrl.getViewsAcompanhamento(emAndamento, bloco);
 
     const msg = 'Views de acompanhamento retornadas com sucesso'
 
