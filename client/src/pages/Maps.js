@@ -35,8 +35,9 @@ export default function Maps() {
             .map(item => item.lote)
 
         const resLayers = await Promise.all(
-            names
-                .map(name => getLotGEOJSON(name))
+            res.dados.views
+                .filter(item => item.tipo == 'lote')
+                .map(item => getLotGEOJSON(item.nome))
         )
         const layers = resLayers.map(item => item.dados[0].geojson)
 
@@ -302,9 +303,8 @@ export default function Maps() {
             container: 'map',
             style:
                 'https://api.maptiler.com/maps/streets/style.json?key=tLpO7P2cZG0MPIqHCFYJ',
-            center: [-53.050133640018544, -26.652845315797606],
-            zoom: 5
-
+            center: [-52.956841093265155, -15.415179096013517],
+            zoom: 3.6548485032341023
         });
         setMap(map)
         map.loadImage(
