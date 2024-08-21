@@ -1790,11 +1790,22 @@ controller.copiarUnidadeTrabalho = async (
     let utOldNew = await t.any(
       `
         INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, tempo_estimado_minutos, lote_id, bloco_id, disponivel, prioridade)
-        SELECT nome, geom, epsg, dado_producao_id, ut_subfases.subfase_id AS subfase_id, dificuldade, tempo_estimado_minutos, lote_id, bloco_id, disponivel, prioridade
-        FROM macrocontrole.unidade_trabalho
+        SELECT 
+          ut.nome, 
+          ut.geom, 
+          ut.epsg, 
+          ut.dado_producao_id, 
+          ut_subfases.subfase_id AS subfase_id, 
+          ut.dificuldade, 
+          ut.tempo_estimado_minutos, 
+          ut.lote_id, 
+          ut.bloco_id, 
+          ut.disponivel, 
+          ut.prioridade
+        FROM macrocontrole.unidade_trabalho AS ut
         JOIN unnest(ARRAY[${utIdSubfaseIdPairsPg.join(',')}]) AS ut_subfases(ut_id, subfase_id)
-        ON macrocontrole.unidade_trabalho.id = ut_subfases.ut_id
-        RETURNING id, ut_subfases.ut_id AS old_id
+        ON ut.id = ut_subfases.ut_id
+        RETURNING ut.id, ut_subfases.ut_id AS old_id
       `
     );
     // Group the returned rows by old_id
