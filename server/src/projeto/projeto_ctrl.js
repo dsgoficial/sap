@@ -809,6 +809,26 @@ controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRev
 controller.criaAtividades = async (unidadeTrabalhoIds, etapaIds) => {
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
 
+    // Check if all unidade_trabalho IDs have an associated produto
+    const missingProdutos = await t.any(
+      `
+      SELECT ut.id
+      FROM macrocontrole.unidade_trabalho ut
+      LEFT JOIN macrocontrole.relacionamento_produto rp ON ut.id = rp.ut_id
+      WHERE ut.id IN ($<unidadeTrabalhoIds:csv>)
+      GROUP BY ut.id
+      HAVING COUNT(rp.p_id) = 0
+      `,
+      { unidadeTrabalhoIds }
+    );
+
+    if (missingProdutos.length > 0) {
+      throw new AppError(
+        'Uma ou mais unidades de trabalho não têm um produto associado.',
+        httpCode.BadRequest
+      );
+    }
+
     const etapasCorrecao  = await t.any(
       `
       WITH prox AS (SELECT e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
@@ -833,9 +853,7 @@ controller.criaAtividades = async (unidadeTrabalhoIds, etapaIds) => {
     SELECT DISTINCT e.id AS etapa_id, ut.id AS unidade_trabalho_id, 1 AS tipo_situacao_id
     FROM macrocontrole.unidade_trabalho AS ut
     INNER JOIN macrocontrole.etapa AS e ON e.subfase_id = ut.subfase_id AND e.lote_id = ut.lote_id
-    LEFT JOIN (
-      SELECT id, etapa_id, unidade_trabalho_id FROM macrocontrole.atividade WHERE tipo_situacao_id != 5
-      ) AS a ON ut.id = a.unidade_trabalho_id AND a.etapa_id = e.id
+    LEFT JOIN macrocontrole.atividade AS a ON ut.id = a.unidade_trabalho_id AND e.id = a.etapa_id
     WHERE ut.id IN ($<unidadeTrabalhoIds:csv>) AND e.id IN ($<etapaIds:csv>) AND a.id IS NULL
     `,
       { unidadeTrabalhoIds, etapaIds }
