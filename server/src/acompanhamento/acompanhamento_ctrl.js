@@ -698,7 +698,7 @@ controller.getDadosSiteAcompanhamento = async () => {
   const dados = await db.sapConn.any(
     `
     SELECT p.id AS projeto_id, p.nome AS projeto, p.descricao AS descricao_projeto, l.id AS lote_id, l.nome AS lote, l.descricao AS descricao_lote,
-    f.id AS fase_id, 
+    f.tipo_fase_id AS fase_id, 
     json_build_array(json_build_array(ST_XMin(prod.bounds), ST_YMin(prod.bounds)), json_build_array(ST_XMax(prod.bounds), ST_YMax(prod.bounds))) AS bounds
     FROM macrocontrole.projeto AS p
     INNER JOIN macrocontrole.lote AS l ON l.projeto_id = p.id
