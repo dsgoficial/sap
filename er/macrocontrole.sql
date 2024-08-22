@@ -78,7 +78,8 @@ CREATE TABLE macrocontrole.fase(
     id SERIAL NOT NULL PRIMARY KEY,
     tipo_fase_id SMALLINT NOT NULL REFERENCES dominio.tipo_fase (code),
     linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
-    ordem INTEGER NOT NULL
+    ordem INTEGER NOT NULL,
+	UNIQUE (linha_producao_id, ordem)
 );
 
 CREATE TABLE macrocontrole.subfase(

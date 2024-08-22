@@ -761,24 +761,24 @@ controller.getDadosSiteAcompanhamento = async () => {
     INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id
     INNER JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id
     INNER JOIN (
-      SELECT sit.id, CASE WHEN sit.completed THEN max(sit.fase_id) ELSE NULL END AS fase_atual
+      SELECT sit.id, CASE WHEN sit.completed THEN max(sit.ordem) ELSE NULL END AS ordem_atual
       FROM (
-      SELECT p.id, sf.fase_id, bool_and(ut.completed) AS completed
-      FROM macrocontrole.produto AS p
-      LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
-      LEFT JOIN (
-        SELECT ut.id, ut.subfase_id, (CASE WHEN count(*) - count(a.data_fim) = 0 THEN TRUE ELSE FALSE END) AS completed 
-        FROM macrocontrole.unidade_trabalho AS ut
-        INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
-        GROUP BY ut.id
-      ) AS ut ON rp.ut_id = ut.id
-      LEFT JOIN macrocontrole.subfase AS sf ON sf.id = ut.subfase_id
-      GROUP BY p.id, sf.fase_id
-      ORDER BY p.id, sf.fase_id) AS sit
+          SELECT p.id, f.ordem, sf.fase_id, bool_or(ut.completed) AS completed
+          FROM macrocontrole.produto AS p
+          LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+          LEFT JOIN (
+            SELECT ut.id, ut.subfase_id, (CASE WHEN count(a.data_inicio) > 0 THEN TRUE ELSE FALSE END) AS completed 
+            FROM macrocontrole.unidade_trabalho AS ut
+            INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+            GROUP BY ut.id
+          ) AS ut ON rp.ut_id = ut.id
+          LEFT JOIN macrocontrole.subfase AS sf ON sf.id = ut.subfase_id
+          LEFT JOIN macrocontrole.fase AS f ON f.id = sf.fase_id
+          GROUP BY p.id, sf.fase_id, f.ordem
+      ) AS sit
       GROUP BY sit.id, sit.completed
-      ORDER BY sit.id
     ) AS sit ON sit.id = p.id
-	  LEFT JOIN macrocontrole.fase AS f ON f.id = sit.fase_atual
+	  LEFT JOIN macrocontrole.fase AS f ON f.ordem = sit.ordem_atual AND f.linha_producao_id = l.linha_producao_id
 	  LEFT JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
     WHERE proj.finalizado IS FALSE
     GROUP BY p.lote_id;
