@@ -727,8 +727,8 @@ controller.getDadosSiteAcompanhamento = async () => {
       aux_lotes[d.projeto_id][d.lote_id] = {}
       aux_lotes[d.projeto_id][d.lote_id]['legend'] = [0]
     }
-    aux_lotes[d.projeto_id][d.lote_id]['name'] = d.lote
-    aux_lotes[d.projeto_id][d.lote_id]['subtitle'] = d.subtitle
+    aux_lotes[d.projeto_id][d.lote_id]['name'] = d.lote_id
+    aux_lotes[d.projeto_id][d.lote_id]['subtitle'] = d.lote
     aux_lotes[d.projeto_id][d.lote_id]['description'] = d.descricao_lote
     aux_lotes[d.projeto_id][d.lote_id]['legend'].push(d.fase_id)
 
