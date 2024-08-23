@@ -5,7 +5,7 @@ const path = require('path');
 
 const readFile = util.promisify(fs.readFile);
 
-const { db } = require('../database')
+const { db, disableTriggers } = require('../database')
 
 const { AppError, httpCode } = require('../utils')
 
@@ -212,7 +212,7 @@ controller.deleteProdutosSemUT = async () => {
 };
 
 controller.deleteLoteSemProduto = async () => {
-  return db.sapConn.tx(async t => {
+  const deletedLotes = await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const lotesToDelete = await t.any(
       `SELECT l.id
       FROM macrocontrole.lote AS l
@@ -321,6 +321,12 @@ controller.deleteLoteSemProduto = async () => {
 
     return deletedLotes;
   });
+  
+  for (const lote of deletedLotes) {
+    await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(db.sapConn, lote.id);
+  }
+  
+  return deletedLotes;
 };
 
 
