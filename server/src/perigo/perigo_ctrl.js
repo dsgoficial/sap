@@ -194,5 +194,55 @@ controller.deleteInsumo = async insumoIds => {
   })
 }
 
+controller.deleteProdutosSemUT = async () => {
+  return db.sapConn.tx(async t => {
+    const deletedProducts = await t.any(
+      `DELETE FROM macrocontrole.produto
+      WHERE id IN (
+        SELECT p.id
+        FROM macrocontrole.produto AS p
+        LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+        WHERE rp.ut_id IS NULL
+      )
+      RETURNING id`
+    );
+    
+    return deletedProducts;
+  });
+};
+
+controller.deleteUTSemAtividade = async () => {
+  return db.sapConn.tx(async t => {
+    const deletedUTs = await t.any(
+      `DELETE FROM macrocontrole.unidade_trabalho
+      WHERE id IN (
+        SELECT ut.id
+        FROM macrocontrole.unidade_trabalho AS ut
+        LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+        WHERE a.id IS NULL
+      )
+      RETURNING id`
+    );
+    
+    return deletedUTs;
+  });
+};
+
+controller.deleteLoteSemProduto = async () => {
+  return db.sapConn.tx(async t => {
+    const deletedLotes = await t.any(
+      `DELETE FROM macrocontrole.lote
+      WHERE id IN (
+        SELECT l.id
+        FROM macrocontrole.lote AS l
+        LEFT JOIN macrocontrole.produto AS p ON p.lote_id = l.id
+        WHERE p.id IS NULL
+      )
+      RETURNING id`
+    );
+    
+    return deletedLotes;
+  });
+};
 
 module.exports = controller

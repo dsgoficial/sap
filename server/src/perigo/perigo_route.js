@@ -521,4 +521,130 @@ router.put(
   })
 )
 
+/**
+ * @swagger
+ * /api/perigo/produtos_sem_unidade_trabalho:
+ *   delete:
+ *     summary: Deleta Produtos sem UT
+ *     description: Deleta produtos sem unidade de trabalho relacionados.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Produtos sem unidade de trabalho removidos com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 deletedProducts:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ *                     description: ID of the deleted product
+ */
+router.delete(
+  '/produtos_sem_unidade_trabalho',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await perigoCtrl.deleteProdutosSemUT()
+
+    const msg = 'Produtos sem unidade de trabalho removidos com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/perigo/ut_sem_atividade:
+ *   delete:
+ *     summary: Deleta Unidades de Trabalho sem Atividade
+ *     description: Deleta unidades de trabalho que não possuem atividades associadas.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unidades de Trabalho sem atividade removidas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 deletedUTs:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ *                     description: ID of the deleted Unidade de Trabalho
+ */
+router.delete(
+  '/ut_sem_atividade',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await perigoCtrl.deleteUTSemAtividade()
+
+    const msg = 'Unidades de Trabalho sem atividade removidos com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/perigo/lote_sem_produto:
+ *   delete:
+ *     summary: Deleta Lotes sem Produtos
+ *     description: Deleta lotes que não possuem produtos associados.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - perigo
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lotes sem produtos removidos com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 deletedLotes:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ *                     description: ID of the deleted Lote
+ */
+router.delete(
+  '/lote_sem_produto',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await perigoCtrl.deleteLoteSemProduto()
+
+    const msg = 'Lotes sem produtos removidos com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 module.exports = router
