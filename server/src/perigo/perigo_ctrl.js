@@ -323,9 +323,9 @@ controller.deleteLoteSemProduto = async () => {
   });
   
   for (const lote of deletedLotes) {
-    await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(db.sapConn, lote.id);
+    await disableTriggers.refreshMaterializedViewFromLote(db.sapConn, lote.id);
   }
-  
+
   return deletedLotes;
 };
 
