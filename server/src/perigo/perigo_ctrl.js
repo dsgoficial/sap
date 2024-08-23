@@ -211,38 +211,117 @@ controller.deleteProdutosSemUT = async () => {
   });
 };
 
-controller.deleteUTSemAtividade = async () => {
-  return db.sapConn.tx(async t => {
-    const deletedUTs = await t.any(
-      `DELETE FROM macrocontrole.unidade_trabalho
-      WHERE id IN (
-        SELECT ut.id
-        FROM macrocontrole.unidade_trabalho AS ut
-        LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
-        WHERE a.id IS NULL
-      )
-      RETURNING id`
-    );
-    
-    return deletedUTs;
-  });
-};
-
 controller.deleteLoteSemProduto = async () => {
   return db.sapConn.tx(async t => {
+    const lotesToDelete = await t.any(
+      `SELECT l.id
+      FROM macrocontrole.lote AS l
+      LEFT JOIN macrocontrole.produto AS p ON p.lote_id = l.id
+      WHERE p.id IS NULL`
+    );
+
+    if (lotesToDelete.length === 0) {
+      return []; // No lotes to delete
+    }
+
+    const loteIds = lotesToDelete.map(lote => lote.id);
+
+    const existingUnidades = await t.any(
+      `SELECT id FROM macrocontrole.unidade_trabalho WHERE lote_id IN ($<loteIds:csv>)`,
+      { loteIds }
+    );
+
+    if (existingUnidades.length > 0) {
+      const unidadesWithAtividades = await t.any(
+        `SELECT ut.id
+        FROM macrocontrole.unidade_trabalho ut
+        WHERE ut.lote_id IN ($<loteIds:csv>)
+        AND EXISTS (
+          SELECT 1 FROM macrocontrole.atividade a WHERE a.unidade_trabalho_id = ut.id
+        )`,
+        { loteIds }
+      );
+
+      if (unidadesWithAtividades.length > 0) {
+        throw new AppError('Não é possível deletar lotes com Unidades de Trabalho que possuem Atividades associadas.', httpCode.BadRequest);
+      }
+
+      await t.none(`DELETE FROM macrocontrole.insumo_unidade_trabalho WHERE unidade_trabalho_id IN ($<unidadeIds:csv>)`, { unidadeIds: existingUnidades.map(u => u.id) });
+
+      await t.none(`DELETE FROM macrocontrole.unidade_trabalho WHERE id IN ($<unidadeIds:csv>)`, { unidadeIds: existingUnidades.map(u => u.id) });
+    }
+
+    const etapasWithAtividades = await t.any(
+      `SELECT e.id
+      FROM macrocontrole.etapa e
+      WHERE e.lote_id IN ($<loteIds:csv>)
+      AND EXISTS (
+        SELECT 1 FROM macrocontrole.atividade a WHERE a.etapa_id = e.id
+      )`,
+      { loteIds }
+    );
+
+    if (etapasWithAtividades.length > 0) {
+      throw new AppError('Não é possível deletar lotes com Etapas que possuem Atividades associadas.', httpCode.BadRequest);
+    }
+
+    await t.none(`DELETE FROM macrocontrole.restricao_etapa WHERE etapa_anterior_id IN (SELECT id FROM macrocontrole.etapa WHERE lote_id IN ($<loteIds:csv>)) OR etapa_posterior_id IN (SELECT id FROM macrocontrole.etapa WHERE lote_id IN ($<loteIds:csv>))`, { loteIds });
+
+    const blocosWithPerfil = await t.any(
+      `SELECT b.id
+      FROM macrocontrole.bloco b
+      WHERE b.lote_id IN ($<loteIds:csv>)
+      AND EXISTS (
+        SELECT 1 FROM macrocontrole.perfil_bloco_operador pbo WHERE pbo.bloco_id = b.id
+      )`,
+      { loteIds }
+    );
+
+    if (blocosWithPerfil.length > 0) {
+      throw new AppError('Não é possível deletar lotes com Blocos que possuem Perfil de Operador associado.', httpCode.BadRequest);
+    }
+
+    const blocosWithUnidades = await t.any(
+      `SELECT b.id
+      FROM macrocontrole.bloco b
+      WHERE b.lote_id IN ($<loteIds:csv>)
+      AND EXISTS (
+        SELECT 1 FROM macrocontrole.unidade_trabalho ut WHERE ut.bloco_id = b.id
+      )`,
+      { loteIds }
+    );
+
+    if (blocosWithUnidades.length > 0) {
+      throw new AppError('Não é possível deletar lotes com Blocos que possuem Unidades de Trabalho associadas.', httpCode.BadRequest);
+    }
+
+    await t.none(`DELETE FROM macrocontrole.perfil_requisito_finalizacao WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_fme WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_configuracao_qgis WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_estilo WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_regras WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_menu WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_tema WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_model_qgis WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_linhagem WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_workflow_dsgtools WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_alias WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.pit WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+
+
+    await t.none(`DELETE FROM macrocontrole.etapa WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.bloco WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+
     const deletedLotes = await t.any(
       `DELETE FROM macrocontrole.lote
-      WHERE id IN (
-        SELECT l.id
-        FROM macrocontrole.lote AS l
-        LEFT JOIN macrocontrole.produto AS p ON p.lote_id = l.id
-        WHERE p.id IS NULL
-      )
-      RETURNING id`
+      WHERE id IN ($<loteIds:csv>)
+      RETURNING id`,
+      { loteIds }
     );
-    
+
     return deletedLotes;
   });
 };
+
 
 module.exports = controller
