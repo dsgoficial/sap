@@ -104,5 +104,18 @@ ALTER FUNCTION acompanhamento.cria_view_acompanhamento_lote(integer, integer)
 
 UPDATE macrocontrole.lote SET id=id;
 
+CREATE OR REPLACE FUNCTION macrocontrole.update_relacionamento_produto()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+    PERFORM macrocontrole.handle_relacionamento_produto_insert_update(ARRAY[NEW.id]);
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    PERFORM macrocontrole.handle_relacionamento_produto_delete(ARRAY[OLD.id]);
+    RETURN OLD;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 UPDATE public.versao
 SET nome = '2.2.1' WHERE code = 1;
