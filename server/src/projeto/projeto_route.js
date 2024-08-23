@@ -4155,6 +4155,46 @@ router.post(
 
 /**
  * @swagger
+ * /api/projeto/produto:
+ *   delete:
+ *     summary: Deleta produtos
+ *     description: Remove produtos do sistema com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Produtos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/produtosIds'
+ *     responses:
+ *       200:
+ *         description: Produtos deletados com sucesso
+ */
+router.delete(
+  '/produto',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.produtosIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deleteProdutos(
+      req.body.produto_ids
+    )
+
+    const msg = 'Produtos deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+/**
+ * @swagger
  * /api/projeto/lote:
  *   get:
  *     summary: Retorna os lotes

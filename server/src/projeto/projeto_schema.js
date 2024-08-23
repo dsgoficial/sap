@@ -1152,6 +1152,14 @@ models.perfilDificuldadeOperadorIds = Joi.object().keys({
     .min(1)
 })
 
+models.produtosIds = Joi.object().keys({
+  produto_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 models.configuracaoLoteCopiar = Joi.object().keys({
   lote_id_origem: Joi.number().integer().strict().required(),
   lote_id_destino: Joi.number().integer().strict().required(),
@@ -2473,6 +2481,16 @@ models.workflowsIds = Joi.object().keys({
  *             type: integer
  *       required:
  *         - lote_ids
+ * 
+ *     produtosIds:
+ *       type: object
+ *       properties:
+ *         lote_ids:
+ *           type: array
+ *           items:
+ *             type: integer
+ *       required:
+ *         - produto_ids
  *     
  *     blocos:
  *       type: object

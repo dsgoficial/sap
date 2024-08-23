@@ -597,7 +597,6 @@ CREATE TABLE macrocontrole.relacionamento_produto (
   PRIMARY KEY (p_id, ut_id)
 );
 
-
 CREATE OR REPLACE FUNCTION macrocontrole.handle_relacionamento_produto_insert_update(p_ids INTEGER[])
 RETURNS VOID AS $$
 BEGIN

@@ -1766,6 +1766,13 @@ controller.deletaUnidadeTrabalho = async unidadeTrabalhoIds => {
     )
 
     await t.any(
+      `DELETE FROM macrocontrole.relacionamento_produto
+      WHERE ut_id in ($<unidadeTrabalhoIds:csv>)
+    `,
+      { unidadeTrabalhoIds }
+    )
+
+    await t.any(
       `DELETE FROM macrocontrole.unidade_trabalho
       WHERE id in ($<unidadeTrabalhoIds:csv>)
     `,
@@ -1927,6 +1934,40 @@ controller.criaProdutos = async (produtos, loteId) => {
   })
   await disableTriggers.handleRelacionamentoProdutoInsertUpdate(db.sapConn, produtoIds)
   await disableTriggers.refreshMaterializedViewFromLoteOnlyLote(db.sapConn, loteId)
+}
+
+controller.deleteProdutos = async produtoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.produto
+      WHERE id in ($<produtoIds:csv>)`,
+      { produtoIds }
+    )
+    if (exists && exists.length < produtoIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um produto',
+        httpCode.BadRequest
+      )
+    }
+
+    const existsAssociation = await t.any(
+      `SELECT p_id FROM macrocontrole.relacionamento_produto 
+      WHERE p_id in ($<produtoIds:csv>)`,
+      { produtoIds }
+    )
+    if (existsAssociation && existsAssociation.length > 0) {
+      throw new AppError(
+        'O lote possui produtos associados',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.produto
+      WHERE id in ($<produtoIds:csv>)`,
+      { produtoIds }
+    )
+  })
 }
 
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {
