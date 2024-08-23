@@ -807,7 +807,7 @@ controller.getObservacao = async (atividadeId) => {
 
 controller.getViewsAcompanhamento = async (emAndamento, bloco) => {
 
-    let query = `
+  let query = `
     SELECT foo.schema, foo.nome, foo.tipo, p.finalizado, l.nome AS lote 
     FROM (
       SELECT 
@@ -845,7 +845,7 @@ controller.getViewsAcompanhamento = async (emAndamento, bloco) => {
       null AS lote;
   `;
 
-  const views = await db.sapConn.any(query, { bloco });
+  let views = await db.sapConn.any(query, { bloco });
 
   if (!views) {
     return null
@@ -1095,7 +1095,7 @@ controller.iniciaAtividadeModoLocal = async (atividadeId, usuarioId) => {
       data_inicio = $<dataInicio>, tipo_situacao_id = 2, usuario_id = $<usuarioId>
       WHERE id = $<atividadeId>
       `,
-        { dataInicio, atividadeId, usuarioId}
+        { dataInicio, atividadeId, usuarioId }
       )
     } catch (error) {
       throw new AppError(
@@ -1116,7 +1116,7 @@ controller.finalizaAtividadeModoLocal = async (atividadeId, usuarioUUID, dataIni
       data_fim = $<dataFim>, data_inicio = $<dataInicio>, tipo_situacao_id = 4, usuario_id = $<usuarioId>
       WHERE id = $<atividadeId>
       `,
-        { dataFim, dataInicio, atividadeId, usuarioId}
+        { dataFim, dataInicio, atividadeId, usuarioId }
       )
     } catch (error) {
       console.log(error)
@@ -1200,17 +1200,17 @@ controller.deletaRelatorioAlteracao = async relatorioIds => {
 
 
 controller.atualizaPropriedadesUT = async unidadesTrabalho => {
-  
+
   function int(col) {
     return {
-        name: col,
-        skip() {
-            const val = this[col];
-            return val === null || val === undefined;
-        },
-        init() {
-            return parseInt(this[col]);
-        }
+      name: col,
+      skip() {
+        const val = this[col];
+        return val === null || val === undefined;
+      },
+      init() {
+        return parseInt(this[col]);
+      }
     };
   }
 

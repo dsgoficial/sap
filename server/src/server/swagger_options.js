@@ -7,7 +7,7 @@ const swaggerOptions = {
     openapi: '3.0.0',
     info: {
       title: 'Sistema de Apoio a Produção',
-      version: '2.2.0',
+      version: '2.2.1',
       description: 'API HTTP para utilização do Sistema de Apoio a Produção'
     },
     components: {

@@ -103,3 +103,6 @@ ALTER FUNCTION acompanhamento.cria_view_acompanhamento_lote(integer, integer)
 
 
 UPDATE macrocontrole.lote SET id=id;
+
+UPDATE public.versao
+SET nome = '2.2.1' WHERE code = 1;
