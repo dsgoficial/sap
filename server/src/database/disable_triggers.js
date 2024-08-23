@@ -1,19 +1,23 @@
 const dt = {}
 
 dt.disableTriggerForTableInTransaction = async (db, schema, table, operationCallback) => {
-    return db.tx(async t => {
+    const result = db.tx(async t => {
         await t.none(`ALTER TABLE $<schema:name>.$<table:name> DISABLE TRIGGER ALL;`, { schema, table });
-        await operationCallback(t);
+        const r = await operationCallback(t);
         await t.none(`ALTER TABLE  $<schema:name>.$<table:name> ENABLE TRIGGER ALL;`, { schema, table });
+        return r;
     });
+    return result
 }
 
 dt.disableAllTriggersInTransaction = async (db, operationCallback) => {
-    return db.tx(async t => {
+    const result = await db.tx(async t => {
         await t.none("SET LOCAL session_replication_role = 'replica';");
-        await operationCallback(t);
+        const r = await operationCallback(t);
         await t.none("SET LOCAL session_replication_role = 'origin';");
+        return r;
     });
+    return result
 }
 
 dt.reCreateSubfaseMaterializedViewFromFases = async (db, loteId, faseIds) => {
