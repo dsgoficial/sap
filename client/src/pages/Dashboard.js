@@ -260,9 +260,9 @@ export default function Dashboard() {
 
     React.useEffect(() => {
         setPieDataPoints([
-            { y: completedProducts, label: "Finalizados" },
-            { y: totalProducts - (completedProducts + runningProducts), label: "Não Iniciado" },
-            { y: runningProducts, label: "Em Execução" }
+            { y: completedProducts/totalProducts, label: "Finalizados" },
+            { y: 1 - (completedProducts + runningProducts)/totalProducts, label: "Não Iniciado" },
+            { y: runningProducts/totalProducts, label: "Em Execução" }
         ])
     }, [
         totalProducts,

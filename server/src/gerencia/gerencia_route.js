@@ -2153,7 +2153,7 @@ router.post(
     body: gerenciaSchema.filaPrioritaria
   }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaFilaPrioritaria(req.body.fila_prioritaria)
+    await gerenciaCtrl.criaFilaPrioritaria(req.body.atividade_ids, req.body.usuario_prioridade_id, req.body.prioridade)
 
     const msg = 'Entradas da fila prioritária criadas com sucesso'
 
