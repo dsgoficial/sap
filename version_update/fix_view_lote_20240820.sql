@@ -117,5 +117,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+ALTER TABLE macrocontrole.pit
+ADD CONSTRAINT unique_pit UNIQUE(lote_id, ano);
+
+ALTER TABLE macrocontrole.fase
+ADD CONSTRAINT unique_fase UNIQUE (linha_producao_id, ordem);
+
 UPDATE public.versao
 SET nome = '2.2.1' WHERE code = 1;

@@ -650,7 +650,8 @@ CREATE TABLE macrocontrole.pit(
 	id SERIAL NOT NULL PRIMARY KEY,
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	meta INTEGER NOT NULL,
-	ano INTEGER NOT NULL
+	ano INTEGER NOT NULL,
+	UNIQUE(lote_id, ano)
 );
 
 CREATE TABLE macrocontrole.relatorio_alteracao(
