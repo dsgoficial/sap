@@ -1,14 +1,10 @@
 'use strict'
 
 const express = require('express')
-
 const { schemaValidation, asyncHandler, httpCode } = require('../utils')
-
 const { verifyAdmin, verifyLogin } = require('../login')
-
 const campoCtrl = require('./campo_ctrl')
 const campoSchema = require('./campo_schema')
-
 const router = express.Router()
 
 /**
@@ -41,16 +37,15 @@ const router = express.Router()
  *                     type: object
  *                     description: Detalhes de um campo específico
  */
-
 router.get(
-    '/campos',
-    asyncHandler(async (req, res, next) => {
-        const dados = await campoCtrl.getCampos()
+  '/campos',
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getCampos()
 
-        const msg = 'Campos retornado com sucesso'
+    const msg = 'Campos retornado com sucesso'
 
-        return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-    })
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
 )
 
 /**
@@ -68,7 +63,7 @@ router.get(
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
  *           description: ID do campo
  *     responses:
  *       200:
@@ -88,17 +83,16 @@ router.get(
  *                   type: object
  *                   description: Detalhes do campo específico
  */
-
 router.get(
-    '/campos/:id',
-    schemaValidation({ params: campoSchema.idParams }),
-    asyncHandler(async (req, res, next) => {
-        const dados = await campoCtrl.getCampoById(req.params.id)
+  '/campos/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getCampoById(req.params.uuid)
 
-        const msg = 'Dados do campo retornado com sucesso'
+    const msg = 'Dados do campo retornado com sucesso'
 
-        return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-    })
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
 )
 
 /**
@@ -131,7 +125,7 @@ router.get(
  *                     type: string
  *                     description: Órgão responsável pelo campo
  *                   pit:
- *                     type: string
+ *                     type: integer
  *                     description: Informações sobre o PIT
  *                   descricao:
  *                     type: string
@@ -153,6 +147,14 @@ router.get(
  *                   situacao_id:
  *                     type: integer
  *                     description: ID da situação do campo
+ *                   produtos_id:
+ *                     type: array
+ *                     items:
+ *                       type: integer
+ *                       description: ID dos produtos
+ *                     required: true
+ *                     minItems: 1
+ *                     uniqueItems: true
  *     responses:
  *       200:
  *         description: Campo criado com sucesso
@@ -171,18 +173,17 @@ router.get(
  *                   type: object
  *                   description: Dados do campo recém-criado
  */
-
 router.post(
-    '/campos',
-    schemaValidation({ body: campoSchema.campo }),
-    asyncHandler(async (req, res, next) => {
-      const dados = await campoCtrl.criaCampo(req.body.campo)
-  
-      const msg = 'Campo criado com sucesso'
-  
-      return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-    })
-  )
+  '/campos',
+  schemaValidation({ body: campoSchema.campo }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.criaCampo(req.body.campo)
+
+    const msg = 'Campo criado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
 
 /**
  * @swagger
@@ -401,37 +402,442 @@ router.post(
  *                   description: Mensagem de erro genérica
  *                   example: "Ocorreu um erro interno no servidor."
  */
+router.put(
+  '/campos/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams, body: campoSchema.campo }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.atualizaCampo(req.params.uuid, req.body.campo)
 
+    const msg = 'Campo atualizado com sucesso'
 
-  router.put(
-    '/campos/:id',
-    schemaValidation({ params: campoSchema.idParams, body: campoSchema.campo }),
-    asyncHandler(async (req, res, next) => {
-      const dados = await campoCtrl.atualizaCampo(req.params.id, req.body.campo)
-  
-      const msg = 'Campo atualizado com sucesso'
-  
-      return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-    })
-  )
-
-
-// Delete Campo, testar se tem imagem, se tem tracker
-// Deletar imagem, inserir imagem
-// Deletar tracker, inserir tracker, update tracker
-
-router.delete(
-    '/campos/:id',
-    verifyAdmin,
-    schemaValidation({ params: campoSchema.idParams }),
-    asyncHandler(async (req, res, next) => {
-        await campoCtrl.deletaCampo(req.params.id)
-
-        const msg = 'Campo deletado com sucesso'
-
-        return res.sendJsonAndLog(true, msg, httpCode.OK)
-    })
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
 )
 
+/**
+ * @swagger
+ * /api/campo/campos/{id}:
+ *   delete:
+ *     summary: Deleta um campo e todas as suas referências associadas
+ *     description: Remove um campo do sistema, incluindo todas as suas referências em outras tabelas como relacionamento_campo_produto, imagem, e track. Requer privilégios de administrador.
+ *     tags:
+ *       - Campo
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do campo a ser deletado
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Campo deletado com sucesso, junto com todas as suas referências associadas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica se a operação foi bem-sucedida
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem descritiva do resultado
+ *                   example: "Campo deletado com sucesso"
+ *       400:
+ *         description: Erro de validação no ID fornecido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que a operação falhou
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro de validação
+ *                   example: "ID inválido fornecido"
+ *       401:
+ *         description: Não autorizado. Token de autenticação ausente ou inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que a operação falhou devido à falta de autorização
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro de autorização
+ *                   example: "Acesso negado. Credenciais inválidas."
+ *       404:
+ *         description: Campo não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que o campo especificado não foi encontrado
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro indicando que o recurso não foi encontrado
+ *                   example: "Campo com o ID especificado não foi encontrado."
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que ocorreu um erro interno no servidor
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro genérica
+ *                   example: "Ocorreu um erro interno no servidor."
+ */
+router.delete(
+  '/campos/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    await campoCtrl.deletaCampo(req.params.uuid)
+
+    const msg = 'Campo deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/campo/fotos:
+ *   post:
+ *     summary: Cria novas fotos associadas a um campo
+ *     description: Permite ao usuário fazer upload de novas fotos para um campo específico, fornecendo as informações necessárias no corpo da requisição.
+ *     tags:
+ *       - Campo
+ *     security:
+ *       - adminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               campo_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID do campo ao qual as fotos estão associadas
+ *                 example: "123e4567-e89b-12d3-a456-426614174000"
+ *               descricao:
+ *                 type: string
+ *                 description: Descrição da foto
+ *                 example: "Uma descrição da foto"
+ *               foto:
+ *                 type: string
+ *                 format: binary
+ *                 description: O arquivo de foto a ser carregado
+ *                 example: "foto.jpg"
+ *     responses:
+ *       200:
+ *         description: Fotos criadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica se a operação foi bem-sucedida
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem descritiva do resultado
+ *                   example: "Fotos criadas com sucesso"
+ *       400:
+ *         description: Erro de validação nos dados fornecidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que a operação falhou
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro de validação
+ *                   example: "Dados fornecidos são inválidos"
+ *       401:
+ *         description: Não autorizado. Token de autenticação ausente ou inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que a operação falhou devido à falta de autorização
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro de autorização
+ *                   example: "Acesso negado. Credenciais inválidas."
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que ocorreu um erro interno no servidor
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro genérica
+ *                   example: "Ocorreu um erro interno no servidor."
+ */
+router.post(
+  '/fotos',
+  schemaValidation({ body: campoSchema.fotos }),
+  asyncHandler(async (req, res, next) => {
+      await campoCtrl.criaFotos(req.body)
+
+      const msg = 'Fotos criadas com sucesso'
+
+      return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/campo/fotos/{id}:
+ *   delete:
+ *     summary: Deleta uma foto específica
+ *     description: Remove uma foto do sistema com base no ID fornecido. Requer privilégios de administrador.
+ *     tags:
+ *       - Campo
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID da foto a ser deletada
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Foto deletada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica se a operação foi bem-sucedida
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem descritiva do resultado
+ *                   example: "Fotos deletadas com sucesso"
+ *       400:
+ *         description: Erro de validação no ID fornecido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que a operação falhou
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro de validação
+ *                   example: "ID inválido fornecido"
+ *       401:
+ *         description: Não autorizado. Token de autenticação ausente ou inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que a operação falhou devido à falta de autorização
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro de autorização
+ *                   example: "Acesso negado. Credenciais inválidas."
+ *       404:
+ *         description: Foto não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que a foto especificada não foi encontrada
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro indicando que o recurso não foi encontrado
+ *                   example: "Foto com o ID especificado não foi encontrada."
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que ocorreu um erro interno no servidor
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro genérica
+ *                   example: "Ocorreu um erro interno no servidor."
+ */
+router.delete(
+  '/fotos/:id',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    await campoCtrl.deletaFotos(req.params.uuid)
+
+    const msg = 'Fotos deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+);
+
+/**
+ * @swagger
+ * /api/campo/fotos/{campo_id}:
+ *   delete:
+ *     summary: Deleta todas as fotos associadas a um campo específico
+ *     description: Remove todas as fotos do sistema que estão associadas a um campo específico, identificado pelo seu `campo_id`. Requer privilégios de administrador.
+ *     tags:
+ *       - Campo
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: campo_id
+ *         required: true
+ *         description: ID do campo cujas fotos devem ser deletadas
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Fotos deletadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica se a operação foi bem-sucedida
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem descritiva do resultado
+ *                   example: "Fotos deletadas com sucesso"
+ *       400:
+ *         description: Erro de validação no ID fornecido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que a operação falhou
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro de validação
+ *                   example: "ID inválido fornecido"
+ *       401:
+ *         description: Não autorizado. Token de autenticação ausente ou inválido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que a operação falhou devido à falta de autorização
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro de autorização
+ *                   example: "Acesso negado. Credenciais inválidas."
+ *       404:
+ *         description: Campo ou fotos não encontrados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que o campo especificado ou as fotos associadas não foram encontrados
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro indicando que o recurso não foi encontrado
+ *                   example: "Campo ou fotos associadas não foram encontrados."
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   description: Indica que ocorreu um erro interno no servidor
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   description: Mensagem de erro genérica
+ *                   example: "Ocorreu um erro interno no servidor."
+ */
+router.delete(
+  '/fotos/:campo_id',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    await campoCtrl.deletaFotosByCampo(req.params.uuid)
+
+    const msg = 'Fotos deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+);
 
 module.exports = router
