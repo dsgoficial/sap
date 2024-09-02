@@ -153,7 +153,8 @@ INSERT INTO dominio.tipo_insumo (code, nome) VALUES
 (6, 'Serviço WMS'),
 (7, 'Serviço WFS'),
 (8, 'XYZ Tiles'),
-(9, 'Download via HTTP');
+(9, 'Download via HTTP'),
+(10, 'ArcGis MapServer');
 
 CREATE TABLE dominio.tipo_dado_producao(
 	code SMALLINT NOT NULL PRIMARY KEY,
