@@ -1369,21 +1369,6 @@ controller.getFilaPrioritaria = async () => {
   )
 }
 
-controller.criaFilaPrioritaria = async filaPrioritaria => {
-  return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet([
-      'atividade_id', 'usuario_id', 'prioridade'
-    ])
-
-    const query = db.pgp.helpers.insert(filaPrioritaria, cs, {
-      table: 'fila_prioritaria',
-      schema: 'macrocontrole'
-    })
-
-    await t.none(query)
-  })
-}
-
 controller.atualizaFilaPrioritaria = async filaPrioritaria => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
@@ -1442,21 +1427,6 @@ controller.getFilaPrioritariaGrupo = async () => {
     INNER JOIN macrocontrole.bloco AS bl ON bl.id = ut.bloco_id
     `
   )
-}
-
-controller.criaFilaPrioritariaGrupo = async filaPrioritariaGrupo => {
-  return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet([
-      'atividade_id', 'perfil_producao_id', 'prioridade'
-    ])
-
-    const query = db.pgp.helpers.insert(filaPrioritariaGrupo, cs, {
-      table: 'fila_prioritaria_grupo',
-      schema: 'macrocontrole'
-    })
-
-    await t.none(query)
-  })
 }
 
 controller.atualizaFilaPrioritariaGrupo = async filaPrioritariaGrupo => {
