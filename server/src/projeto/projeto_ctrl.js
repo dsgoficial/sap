@@ -3521,17 +3521,17 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_monitoramento){
-    await db.sapConn.any(
-      `
-      INSERT INTO microcontrole.perfil_monitoramento(tipo_monitoramento_id,subfase_id,lote_id)
-      SELECT pe.tipo_monitoramento_id, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM microcontrole.perfil_monitoramento AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+  // if(copiar_monitoramento){
+  //   await db.sapConn.any(
+  //     `
+  //     INSERT INTO microcontrole.perfil_monitoramento(tipo_monitoramento_id,subfase_id,lote_id)
+  //     SELECT pe.tipo_monitoramento_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+  //     FROM microcontrole.perfil_monitoramento AS pe
+  //     WHERE pe.lote_id = $<lote_id_origem>
+  //     `,
+  //     { lote_id_origem, lote_id_destino }
+  //   )
+  // }
 
 }
 
