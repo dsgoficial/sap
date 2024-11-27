@@ -808,7 +808,7 @@ controller.getObservacao = async (atividadeId) => {
 controller.getViewsAcompanhamento = async (emAndamento, bloco) => {
 
   let query = `
-    SELECT foo.schema, foo.nome, foo.tipo, p.finalizado, l.nome AS lote 
+    SELECT foo.schema, foo.nome, foo.tipo, p.status_id, l.nome AS lote 
     FROM (
       SELECT 
         'acompanhamento' AS schema, 
@@ -841,7 +841,7 @@ controller.getViewsAcompanhamento = async (emAndamento, bloco) => {
       'acompanhamento' AS schema, 
       'bloco' AS nome, 
       'bloco' AS tipo, 
-      false AS finalizado, 
+      1 AS status_id, 
       null AS lote;
   `;
 
@@ -852,7 +852,7 @@ controller.getViewsAcompanhamento = async (emAndamento, bloco) => {
   }
 
   if (emAndamento) {
-    views = views.filter((v) => !v.finalizado)
+    views = views.filter((v) => v.status_id == 1)
   }
 
   const dados = {}

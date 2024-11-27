@@ -538,8 +538,21 @@ controller.getLogin = async () => {
   return dados
 }
 
-controller.getBlocos = async () => {
-  return db.sapConn.any('SELECT id, nome, prioridade, lote_id FROM macrocontrole.bloco')
+controller.getBlocos = async (filtroExecucao) => {
+  if(filtroExecucao){
+    return db.sapConn.any(`
+      SELECT b.id, b.nome, b.prioridade, b.lote_id, b.status_id, s.nome AS status
+      FROM macrocontrole.bloco AS b
+      INNER JOIN dominio.status AS s ON b.status_id = s.code
+      WHERE p.status_id = 1`
+    )
+  } else {
+    return db.sapConn.any(`
+      SELECT b.id, b.nome, b.prioridade, b.lote_id, b.status_id, s.nome AS status
+      FROM macrocontrole.bloco AS b
+      INNER JOIN dominio.status AS s ON b.status_id = s.code`
+    )
+  }
 }
 
 controller.unidadeTrabalhoBloco = async (unidadeTrabalhoIds, bloco) => {
@@ -869,11 +882,20 @@ controller.criaAtividades = async (unidadeTrabalhoIds, etapaIds) => {
   await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, unidadeTrabalhoIds)
 }
 
-controller.getProjetos = async () => {
-  return db.sapConn.any(
-    'SELECT id, nome, nome_abrev, descricao, finalizado FROM macrocontrole.projeto'
-  )
-}
+controller.getProjetos = async (filtroExecucao) => {
+  if(filtroExecucao){
+    return db.sapConn.any(
+      `SELECT p.id, p.nome, p.nome_abrev, p.descricao, p.status_id, s.nome AS status FROM macrocontrole.projeto AS p
+      INNER JOIN dominio.status AS s ON p.status_id = s.code
+      WHERE p.status_id = 1`
+    )
+  } else {
+    return db.sapConn.any(
+      `SELECT p.id, p.nome, p.nome_abrev, p.descricao, p.status_id, s.nome AS status FROM macrocontrole.projeto AS p
+      INNER JOIN dominio.status AS s ON p.status_id = s.code`
+    ) 
+  }
+  }
 
 controller.getLinhasProducao = async () => {
   return db.sapConn.any(
@@ -2239,14 +2261,27 @@ controller.deletaPlugins = async pluginsId => {
   })
 }
 
-controller.getLote = async () => {
-  return db.sapConn.any(
-    `SELECT l.id, l.nome, l.nome_abrev, l.denominador_escala, l.linha_producao_id, l.projeto_id, l.descricao,
-    lp.tipo_produto_id
-    FROM macrocontrole.lote AS l
-    INNER JOIN macrocontrole.linha_producao AS lp ON l.linha_producao_id = lp.id
-    `
-  )
+controller.getLote = async (filtroExecucao) => {
+  if(filtroExecucao){
+    return db.sapConn.any(
+      `SELECT l.id, l.nome, l.nome_abrev, l.denominador_escala, l.linha_producao_id, l.projeto_id, l.descricao,
+      lp.tipo_produto_id, l.status_id, s.nome AS status
+      FROM macrocontrole.lote AS l
+      INNER JOIN macrocontrole.linha_producao AS lp ON l.linha_producao_id = lp.id
+      INNER JOIN dominio.status AS s ON l.status_id = s.code
+      WHERE l.status_id = 1
+      `
+    )
+  } else {
+    return db.sapConn.any(
+      `SELECT l.id, l.nome, l.nome_abrev, l.denominador_escala, l.linha_producao_id, l.projeto_id, l.descricao,
+      lp.tipo_produto_id, l.status_id, s.nome AS status
+      FROM macrocontrole.lote AS l
+      INNER JOIN macrocontrole.linha_producao AS lp ON l.linha_producao_id = lp.id
+      INNER JOIN dominio.status AS s ON l.status_id = s.code
+      `
+    )
+  }
 }
 
 controller.criaProjetos = async projetos => {
@@ -2256,7 +2291,7 @@ controller.criaProjetos = async projetos => {
       'nome',
       'nome_abrev',
       'descricao',
-      'finalizado'
+      'status_id'
     ])
 
     const query = db.pgp.helpers.insert(projetos, cs, {
@@ -2276,7 +2311,7 @@ controller.atualizaProjetos = async projetos => {
       'nome',
       'nome_abrev',
       'descricao',
-      'finalizado'
+      'status_id'
     ])
 
     const query =
@@ -2336,7 +2371,8 @@ controller.criaLotes = async lotes => {
       'denominador_escala',
       'linha_producao_id',
       'projeto_id',
-      'descricao'
+      'descricao',
+      'status_id'
     ])
 
     const query = db.pgp.helpers.insert(lotes, cs, {
@@ -2358,7 +2394,8 @@ controller.atualizaLotes = async lotes => {
       'denominador_escala',
       'linha_producao_id',
       'projeto_id',
-      'descricao'
+      'descricao',
+      'status_id'
     ])
 
     const query =
@@ -2415,7 +2452,8 @@ controller.criaBlocos = async blocos => {
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
       'prioridade',
-      'lote_id'
+      'lote_id',
+      'status_id'
     ])
 
     const query = db.pgp.helpers.insert(blocos, cs, {
@@ -2434,7 +2472,8 @@ controller.atualizaBlocos = async blocos => {
       'id',
       'nome',
       'prioridade',
-      'lote_id'
+      'lote_id',
+      'status_id'
     ])
 
     const query =

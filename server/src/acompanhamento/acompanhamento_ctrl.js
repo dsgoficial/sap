@@ -685,7 +685,7 @@ controller.situacaoSubfase = async () => {
     INNER JOIN macrocontrole.subfase AS s ON s.id = c.subfase_id
     INNER JOIN macrocontrole.lote AS l ON l.id = b.lote_id
     INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
-    WHERE p.finalizado IS FALSE
+    WHERE p.status_id = 1
     ORDER BY b.prioridade,s.ordem
   `,
   )
@@ -708,7 +708,7 @@ controller.getDadosSiteAcompanhamento = async () => {
       FROM macrocontrole.produto
       GROUP BY lote_id
       ) AS prod ON prod.lote_id = l.id
-    WHERE p.finalizado IS FALSE
+    WHERE p.status_id = 1
     ORDER BY p.id, l.id, f.ordem;
   `)
 
@@ -780,7 +780,7 @@ controller.getDadosSiteAcompanhamento = async () => {
     ) AS sit ON sit.id = p.id
 	  LEFT JOIN macrocontrole.fase AS f ON f.ordem = sit.ordem_atual AND f.linha_producao_id = l.linha_producao_id
 	  LEFT JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
-    WHERE proj.finalizado IS FALSE
+    WHERE proj.status_id = 1
     GROUP BY p.lote_id;
   `)
 

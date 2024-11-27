@@ -870,7 +870,7 @@ models.projeto = Joi.object().keys({
         nome: Joi.string().required(),
         nome_abrev: Joi.string().required(),
         descricao: Joi.string().required(),
-        finalizado: Joi.boolean().strict().required()
+        status_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -884,7 +884,7 @@ models.projetoUpdate = Joi.object().keys({
         nome: Joi.string().required(),
         nome_abrev: Joi.string().required(),
         descricao: Joi.string().required(),
-        finalizado: Joi.boolean().strict().required()
+        status_id: Joi.number().integer().strict().required()
       })
     )
     .unique('id')
@@ -909,7 +909,8 @@ models.lotes = Joi.object().keys({
         denominador_escala: Joi.number().integer().strict().required(),
         linha_producao_id: Joi.number().integer().strict().required(),
         projeto_id: Joi.number().integer().strict().required(),
-        descricao: Joi.string().required()
+        descricao: Joi.string().required(),
+        status_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -925,7 +926,8 @@ models.loteUpdate = Joi.object().keys({
         denominador_escala: Joi.number().integer().strict().required(),
         linha_producao_id: Joi.number().integer().strict().required(),
         projeto_id: Joi.number().integer().strict().required(),
-        descricao: Joi.string().required()
+        descricao: Joi.string().required(),
+        status_id: Joi.number().integer().strict().required()
       })
     )
     .unique('id')
@@ -948,7 +950,8 @@ models.blocos = Joi.object().keys({
       Joi.object().keys({
         nome: Joi.string().required(),
         prioridade: Joi.number().integer().strict().required(),
-        lote_id: Joi.number().integer().strict().required()
+        lote_id: Joi.number().integer().strict().required(),
+        status_id: Joi.number().integer().strict().required()
       })
     )
     .required()
@@ -961,7 +964,8 @@ models.blocoUpdate = Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         nome: Joi.string().required(),
         prioridade: Joi.number().integer().strict().required(),
-        lote_id: Joi.number().integer().strict().required()
+        lote_id: Joi.number().integer().strict().required(),
+        status_id: Joi.number().integer().strict().required()
       })
     )
     .unique('id')
@@ -1248,10 +1252,21 @@ models.workflowsIds = Joi.object().keys({
     .min(1)
 })
 
+models.statusQuery = Joi.object().keys({
+  status: Joi.string().valid('execucao', 'finalizado')
+})
+
 /**
  * @swagger
  * components:
  *   schemas:
+ *     statusQuery:
+ *       type: object
+ *       properties:
+ *         proxima:
+ *           type: string
+ *           enum: [execucao, finalizado]
+ *           description: Indica se deve filtrar o status do lote
  *     idParams:
  *       type: object
  *       properties:
@@ -2388,8 +2403,8 @@ models.workflowsIds = Joi.object().keys({
  *                 type: string
  *               descricao:
  *                 type: string
- *               finalizado:
- *                 type: boolean
+ *               status_id:
+ *                 type: integer
  *       required:
  *         - projetos
  *     
@@ -2409,8 +2424,8 @@ models.workflowsIds = Joi.object().keys({
  *                 type: string
  *               descricao:
  *                 type: string
- *               finalizado:
- *                 type: boolean
+ *               status_id:
+ *                 type: integer
  *       required:
  *         - projetos
  *     

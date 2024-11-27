@@ -1514,8 +1514,11 @@ router.get(
 router.get(
   '/bloco',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.statusQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getBlocos()
+    const dados = await projetoCtrl.getBlocos(req.query.status === 'execucao')
 
     const msg = 'Blocos retornados com sucesso'
 
@@ -1893,15 +1896,21 @@ router.post(
  *                   descricao:
  *                     type: string
  *                     description: Descrição do projeto
- *                   finalizado:
- *                     type: boolean
- *                     description: Indica se o projeto está finalizado
+ *                   status_id:
+ *                     type: integer
+ *                     description: Indica o id do status do projeto
+ *                   status:
+ *                     type: string
+ *                     description: Indica o status do projeto
  */
 router.get(
   '/projetos',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.statusQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getProjetos()
+    const dados = await projetoCtrl.getProjetos(req.query.status === 'execucao')
 
     const msg = 'Projetos retornados com sucesso'
 
@@ -4203,6 +4212,14 @@ router.delete(
  *       - application/json
  *     tags:
  *       - Lotes
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [execucao, finalizado]
+ *         description: Indica se deve filtrar o status do lote
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -4225,8 +4242,11 @@ router.delete(
 router.get(
   '/lote',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.statusQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getLote()
+    const dados = await projetoCtrl.getLote(req.query.status === 'execucao')
 
     const msg = 'Lotes retornados'
 
