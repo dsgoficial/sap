@@ -10,17 +10,7 @@ INSERT INTO dominio.status (code, nome) VALUES
 (2, 'Finalizado'),	
 (3, 'Abandonado');
 
-ALTER TABLE macrocontrole.projeto
-DROP COLUMN finalizado;
-
-ALTER TABLE macrocontrole.projeto
-ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
-
-ALTER TABLE macrocontrole.lote
-ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
-
-ALTER TABLE macrocontrole.bloco
-ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
+DROP MATERIALIZED VIEW IF EXISTS acompanhamento.bloco;
 
 CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_bloco()
   RETURNS void AS
@@ -88,6 +78,20 @@ $$
 $$
 LANGUAGE plpgsql VOLATILE
   COST 100;
+
+ALTER TABLE macrocontrole.projeto
+DROP COLUMN finalizado;
+
+ALTER TABLE macrocontrole.projeto
+ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
+
+ALTER TABLE macrocontrole.lote
+ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
+
+ALTER TABLE macrocontrole.bloco
+ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
+
+SELECT acompanhamento.cria_view_acompanhamento_bloco();
 
 -- Trigger para verificar se um lote pode ser finalizado com base no status dos blocos
 CREATE OR REPLACE FUNCTION macrocontrole.chk_lote_status() RETURNS TRIGGER AS $$
