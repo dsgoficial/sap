@@ -11,6 +11,18 @@ const projetoSchema = require('./projeto_schema')
 
 const router = express.Router()
 
+
+router.get(
+  '/status',
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getStatus()
+
+    const msg = 'Valores possíveis para status retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 /**
  * @swagger
  * /api/projeto/tipo_produto:

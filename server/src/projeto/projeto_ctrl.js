@@ -14,6 +14,11 @@ const {
 
 const controller = {}
 
+controller.getStatus = async () => {
+  return db.sapConn
+    .any('SELECT code, nome FROM dominio.status')
+}
+
 controller.getTipoProduto = async () => {
   return db.sapConn
     .any('SELECT code, nome FROM dominio.tipo_produto')
@@ -544,7 +549,7 @@ controller.getBlocos = async (filtroExecucao) => {
       SELECT b.id, b.nome, b.prioridade, b.lote_id, b.status_id, s.nome AS status
       FROM macrocontrole.bloco AS b
       INNER JOIN dominio.status AS s ON b.status_id = s.code
-      WHERE p.status_id = 1`
+      WHERE b.status_id = 1`
     )
   } else {
     return db.sapConn.any(`
@@ -2305,26 +2310,38 @@ controller.criaProjetos = async projetos => {
 
 controller.atualizaProjetos = async projetos => {
   return db.sapConn.tx(async t => {
+    try {
+      const cs = new db.pgp.helpers.ColumnSet([
+        'id',
+        'nome',
+        'nome_abrev',
+        'descricao',
+        'status_id'
+      ])
 
-    const cs = new db.pgp.helpers.ColumnSet([
-      'id',
-      'nome',
-      'nome_abrev',
-      'descricao',
-      'status_id'
-    ])
-
-    const query =
-      db.pgp.helpers.update(
-        projetos,
-        cs,
-        { table: 'projeto', schema: 'macrocontrole' },
-        {
-          tableAlias: 'X',
-          valueAlias: 'Y'
-        }
-      ) + 'WHERE Y.id = X.id'
-    await t.none(query)
+      const query =
+        db.pgp.helpers.update(
+          projetos,
+          cs,
+          { table: 'projeto', schema: 'macrocontrole' },
+          {
+            tableAlias: 'X',
+            valueAlias: 'Y'
+          }
+        ) + 'WHERE Y.id = X.id'
+      
+      await t.none(query)
+    } catch (error) {
+      // Verifica se o erro é da trigger de status do projeto
+      if (error.message.includes('Cannot finalize project while lots are still in progress')) {
+        throw new AppError(
+          'Não é possível finalizar o projeto. Existem lotes em andamento.',
+          httpCode.BadRequest
+        )
+      }
+      // Relança outros erros inesperados
+      throw error
+    }
   })
 }
 
