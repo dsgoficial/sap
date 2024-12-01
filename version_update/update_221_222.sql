@@ -12,6 +12,18 @@ INSERT INTO dominio.status (code, nome) VALUES
 
 DROP MATERIALIZED VIEW IF EXISTS acompanhamento.bloco;
 
+ALTER TABLE macrocontrole.projeto
+DROP COLUMN finalizado;
+
+ALTER TABLE macrocontrole.projeto
+ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
+
+ALTER TABLE macrocontrole.lote
+ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
+
+ALTER TABLE macrocontrole.bloco
+ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
+
 CREATE OR REPLACE FUNCTION acompanhamento.cria_view_acompanhamento_bloco()
   RETURNS void AS
 $$
@@ -21,7 +33,7 @@ $$
   DECLARE r record;
   BEGIN
       view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.bloco AS 
-      SELECT b.id, b.nome, b.prioridade, l.nome AS lote, st.nome AS status, b.geom';
+      SELECT b.id, b.nome, b.prioridade, l.nome AS lote, st_projeto.nome AS projeto_status, st_lote.nome AS lote_status, st_bloco.nome AS bloco_status, b.geom';
 
       FOR r in SELECT pf.id, pf.nome FROM macrocontrole.perfil_producao AS pf
       LOOP
@@ -64,7 +76,9 @@ $$
                                 GROUP BY b.id) AS b
                                 INNER JOIN macrocontrole.lote AS l ON l.id = b.lote_id
                                 INNER JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id
-                                INNER JOIN dominio.status AS st ON proj.status_id = st.code';
+                                INNER JOIN dominio.status AS st_projeto ON proj.status_id = st_projeto.code
+                                INNER JOIN dominio.status AS st_lote ON l.status_id = st_lote.code
+                                INNER JOIN dominio.status AS st_bloco ON b.status_id = st_bloco.code';
       view_txt := view_txt || jointxt;
 
       EXECUTE view_txt;
@@ -78,18 +92,6 @@ $$
 $$
 LANGUAGE plpgsql VOLATILE
   COST 100;
-
-ALTER TABLE macrocontrole.projeto
-DROP COLUMN finalizado;
-
-ALTER TABLE macrocontrole.projeto
-ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
-
-ALTER TABLE macrocontrole.lote
-ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
-
-ALTER TABLE macrocontrole.bloco
-ADD COLUMN status_id SMALLINT NOT NULL REFERENCES dominio.status (code) DEFAULT 1;
 
 SELECT acompanhamento.cria_view_acompanhamento_bloco();
 
@@ -116,7 +118,7 @@ ALTER FUNCTION macrocontrole.chk_lote_status()
     OWNER TO postgres;
 
 CREATE TRIGGER chk_lote_status_consistency
-    BEFORE UPDATE ON macrocontrole.lote
+    BEFORE INSERT OR UPDATE ON macrocontrole.lote
     FOR EACH ROW
     EXECUTE PROCEDURE macrocontrole.chk_lote_status();
 
@@ -143,9 +145,38 @@ ALTER FUNCTION macrocontrole.chk_projeto_status()
     OWNER TO postgres;
 
 CREATE TRIGGER chk_projeto_status_consistency
-    BEFORE UPDATE ON macrocontrole.projeto
+    BEFORE INSERT OR UPDATE ON macrocontrole.projeto
     FOR EACH ROW
     EXECUTE PROCEDURE macrocontrole.chk_projeto_status();
+
+CREATE OR REPLACE FUNCTION macrocontrole.chk_bloco_status() RETURNS TRIGGER AS $$
+BEGIN
+    -- Verifica status do lote relacionado
+    IF EXISTS (
+        SELECT 1
+        FROM macrocontrole.lote
+        WHERE id = NEW.lote_id
+        AND status_id != 1
+    ) THEN
+        -- Se o lote está finalizado, não permite blocos em execução ou alteração de status
+        IF NEW.status_id = 1 THEN
+            RAISE EXCEPTION 'Cannot create or update block in progress for finalized or abandoned lot';
+        ELSE
+            RAISE EXCEPTION 'Cannot modify block status for finalized or abandoned lot';
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_bloco_status()
+    OWNER TO postgres;
+
+CREATE TRIGGER chk_bloco_status_consistency
+    BEFORE INSERT OR UPDATE ON macrocontrole.bloco
+    FOR EACH ROW
+    EXECUTE PROCEDURE macrocontrole.chk_bloco_status();
 
 UPDATE public.versao
 SET nome = '2.2.2' WHERE code = 1;

@@ -685,7 +685,7 @@ ALTER FUNCTION macrocontrole.chk_lote_status()
     OWNER TO postgres;
 
 CREATE TRIGGER chk_lote_status_consistency
-    BEFORE UPDATE ON macrocontrole.lote
+    BEFORE INSERT OR UPDATE ON macrocontrole.lote
     FOR EACH ROW
     EXECUTE PROCEDURE macrocontrole.chk_lote_status();
 
@@ -712,8 +712,37 @@ ALTER FUNCTION macrocontrole.chk_projeto_status()
     OWNER TO postgres;
 
 CREATE TRIGGER chk_projeto_status_consistency
-    BEFORE UPDATE ON macrocontrole.projeto
+    BEFORE INSERT OR UPDATE ON macrocontrole.projeto
     FOR EACH ROW
     EXECUTE PROCEDURE macrocontrole.chk_projeto_status();
+
+CREATE OR REPLACE FUNCTION macrocontrole.chk_bloco_status() RETURNS TRIGGER AS $$
+BEGIN
+    -- Verifica status do lote relacionado
+    IF EXISTS (
+        SELECT 1
+        FROM macrocontrole.lote
+        WHERE id = NEW.lote_id
+        AND status_id != 1
+    ) THEN
+        -- Se o lote está finalizado, não permite blocos em execução ou alteração de status
+        IF NEW.status_id = 1 THEN
+            RAISE EXCEPTION 'Cannot create or update block in progress for finalized or abandoned lot';
+        ELSE
+            RAISE EXCEPTION 'Cannot modify block status for finalized or abandoned lot';
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_bloco_status()
+    OWNER TO postgres;
+
+CREATE TRIGGER chk_bloco_status_consistency
+    BEFORE INSERT OR UPDATE ON macrocontrole.bloco
+    FOR EACH ROW
+    EXECUTE PROCEDURE macrocontrole.chk_bloco_status();
 
 COMMIT;

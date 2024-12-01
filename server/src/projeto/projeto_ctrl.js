@@ -544,7 +544,7 @@ controller.getLogin = async () => {
 }
 
 controller.getBlocos = async (filtroExecucao) => {
-  if(filtroExecucao){
+  if (filtroExecucao) {
     return db.sapConn.any(`
       SELECT b.id, b.nome, b.prioridade, b.lote_id, b.status_id, s.nome AS status
       FROM macrocontrole.bloco AS b
@@ -772,7 +772,7 @@ controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRev
       { lote_id }
     )
 
-    if(atividadesRevisao){
+    if (atividadesRevisao) {
       await t.any(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
@@ -788,7 +788,7 @@ controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRev
       )
     }
 
-    if(atividadeRevCor){
+    if (atividadeRevCor) {
       await t.any(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
@@ -804,7 +804,7 @@ controller.criaTodasAtividades = async (lote_id, atividadesRevisao, atividadeRev
       )
     }
 
-    if(atividadeRefFin){
+    if (atividadeRefFin) {
       await t.any(
         `
       INSERT INTO macrocontrole.atividade(etapa_id, unidade_trabalho_id, tipo_situacao_id)
@@ -847,7 +847,7 @@ controller.criaAtividades = async (unidadeTrabalhoIds, etapaIds) => {
       );
     }
 
-    const etapasCorrecao  = await t.any(
+    const etapasCorrecao = await t.any(
       `
       WITH prox AS (SELECT e.id, lead(e.id, 1) OVER(PARTITION BY e.subfase_id ORDER BY e.ordem) as prox_id
       FROM macrocontrole.etapa AS e)
@@ -888,7 +888,7 @@ controller.criaAtividades = async (unidadeTrabalhoIds, etapaIds) => {
 }
 
 controller.getProjetos = async (filtroExecucao) => {
-  if(filtroExecucao){
+  if (filtroExecucao) {
     return db.sapConn.any(
       `SELECT p.id, p.nome, p.nome_abrev, p.descricao, p.status_id, s.nome AS status FROM macrocontrole.projeto AS p
       INNER JOIN dominio.status AS s ON p.status_id = s.code
@@ -898,9 +898,9 @@ controller.getProjetos = async (filtroExecucao) => {
     return db.sapConn.any(
       `SELECT p.id, p.nome, p.nome_abrev, p.descricao, p.status_id, s.nome AS status FROM macrocontrole.projeto AS p
       INNER JOIN dominio.status AS s ON p.status_id = s.code`
-    ) 
+    )
   }
-  }
+}
 
 controller.getLinhasProducao = async () => {
   return db.sapConn.any(
@@ -2267,7 +2267,7 @@ controller.deletaPlugins = async pluginsId => {
 }
 
 controller.getLote = async (filtroExecucao) => {
-  if(filtroExecucao){
+  if (filtroExecucao) {
     return db.sapConn.any(
       `SELECT l.id, l.nome, l.nome_abrev, l.denominador_escala, l.linha_producao_id, l.projeto_id, l.descricao,
       lp.tipo_produto_id, l.status_id, s.nome AS status
@@ -2310,38 +2310,46 @@ controller.criaProjetos = async projetos => {
 
 controller.atualizaProjetos = async projetos => {
   return db.sapConn.tx(async t => {
-    try {
-      const cs = new db.pgp.helpers.ColumnSet([
-        'id',
-        'nome',
-        'nome_abrev',
-        'descricao',
-        'status_id'
-      ])
 
-      const query =
-        db.pgp.helpers.update(
-          projetos,
-          cs,
-          { table: 'projeto', schema: 'macrocontrole' },
-          {
-            tableAlias: 'X',
-            valueAlias: 'Y'
-          }
-        ) + 'WHERE Y.id = X.id'
-      
-      await t.none(query)
-    } catch (error) {
-      // Verifica se o erro é da trigger de status do projeto
-      if (error.message.includes('Cannot finalize project while lots are still in progress')) {
+    const projetosFinalizando = projetos.filter(p => p.status_id !== 1);
+    if (projetosFinalizando.length > 0) {
+      const query = `
+        SELECT COUNT(*) 
+        FROM macrocontrole.lote 
+        WHERE projeto_id = ANY($1)
+        AND status_id = 1
+      `;
+
+      const lotesEmAndamento = await t.one(query, [projetosFinalizando.map(p => p.id)]);
+
+      if (parseInt(lotesEmAndamento.count) > 0) {
         throw new AppError(
           'Não é possível finalizar o projeto. Existem lotes em andamento.',
           httpCode.BadRequest
-        )
+        );
       }
-      // Relança outros erros inesperados
-      throw error
     }
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'nome_abrev',
+      'descricao',
+      'status_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        projetos,
+        cs,
+        { table: 'projeto', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
   })
 }
 
@@ -2382,6 +2390,29 @@ controller.deletaProjetos = async projetoIds => {
 controller.criaLotes = async lotes => {
   return db.sapConn.tx(async t => {
 
+    const lotesEmExecucao = lotes.filter(l => l.status_id === 1);
+
+    if (lotesEmExecucao.length > 0) {
+      const query = `
+        SELECT COUNT(*) 
+        FROM macrocontrole.projeto 
+        WHERE id = ANY($1) 
+        AND status_id != 1
+      `;
+
+      const projetosFinalizados = await t.one(
+        query,
+        [lotesEmExecucao.map(l => l.projeto_id)]
+      );
+
+      if (parseInt(projetosFinalizados.count) > 0) {
+        throw new AppError(
+          'Não é possível criar lotes em execução em projetos finalizados ou abandonados.',
+          httpCode.BadRequest
+        );
+      }
+    }
+
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
       'nome_abrev',
@@ -2403,6 +2434,24 @@ controller.criaLotes = async lotes => {
 
 controller.atualizaLotes = async lotes => {
   return db.sapConn.tx(async t => {
+    const lotesFinalizando = lotes.filter(l => l.status_id !== 1);
+    if (lotesFinalizando.length > 0) {
+      const query = `
+        SELECT COUNT(*) 
+        FROM macrocontrole.bloco 
+        WHERE lote_id = ANY($1) 
+        AND status_id = 1
+      `;
+
+      const blocosEmAndamento = await t.one(query, [lotesFinalizando.map(l => l.id)]);
+
+      if (parseInt(blocosEmAndamento.count) > 0) {
+        throw new AppError(
+          'Não é possível finalizar o lote. Existem blocos em andamento.',
+          httpCode.BadRequest
+        );
+      }
+    }
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
@@ -2466,6 +2515,29 @@ controller.deletaLotes = async loteIds => {
 controller.criaBlocos = async blocos => {
   return db.sapConn.tx(async t => {
 
+    const blocosEmExecucao = blocos.filter(b => b.status_id === 1);
+
+    if (blocosEmExecucao.length > 0) {
+      const query = `
+        SELECT COUNT(*) 
+        FROM macrocontrole.lote 
+        WHERE id = ANY($1) 
+        AND status_id != 1
+      `;
+
+      const lotesFinalizados = await t.one(
+        query,
+        [blocosEmExecucao.map(b => b.lote_id)]
+      );
+
+      if (parseInt(lotesFinalizados.count) > 0) {
+        throw new AppError(
+          'Não é possível criar blocos em execução em lotes finalizados ou abandonados.',
+          httpCode.BadRequest
+        );
+      }
+    }
+
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
       'prioridade',
@@ -2484,6 +2556,30 @@ controller.criaBlocos = async blocos => {
 
 controller.atualizaBlocos = async blocos => {
   return db.sapConn.tx(async t => {
+
+    const blocosEmExecucao = blocos.filter(b => b.status_id === 1);
+      
+      if (blocosEmExecucao.length > 0) {
+        // Usa diretamente o lote_id dos blocos, igual na criação
+        const query = `
+          SELECT COUNT(*) 
+          FROM macrocontrole.lote 
+          WHERE id = ANY($1) 
+          AND status_id != 1
+        `;
+        
+        const lotesFinalizados = await t.one(
+          query, 
+          [blocosEmExecucao.map(b => b.lote_id)]
+        );
+        
+        if (parseInt(lotesFinalizados.count) > 0) {
+          throw new AppError(
+            'Não é possível manter ou colocar blocos em execução em lotes finalizados ou abandonados.',
+            httpCode.BadRequest
+          );
+        }
+      }
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
@@ -3012,7 +3108,7 @@ controller.cutUnidadeTrabalho = async (unidadeTrabalhoId, cutGeoms) => {
   let utIdsFixed;
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     let execution = await t.any(
-        `SELECT 1 FROM macrocontrole.atividade AS a
+      `SELECT 1 FROM macrocontrole.atividade AS a
         WHERE a.unidade_trabalho_id = $<unidadeTrabalhoId> AND a.tipo_situacao_id IN (2,3)`,
       { unidadeTrabalhoId }
     )
@@ -3122,7 +3218,7 @@ controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
       { firstId, unidadeTrabalhoIds }
     )
     let fixedIds = updatedIds.map(c => c.id);
-    if(fixedIds.length > 0){
+    if (fixedIds.length > 0) {
       await t.none(
         `INSERT INTO macrocontrole.atividade(etapa_id,unidade_trabalho_id,tipo_situacao_id,observacao)
         SELECT a.etapa_id, $<firstId> AS unidade_trabalho_id, 1, a.observacao
@@ -3207,22 +3303,22 @@ controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
 controller.insereLinhaProducao = async linha_producao => {
   return db.sapConn.tx(async t => {
     const linha = await t.one(
-      `INSERT INTO macrocontrole.linha_producao(nome, descricao, nome_abrev, tipo_produto_id) VALUES($1, $2, $3, $4) RETURNING id`, 
+      `INSERT INTO macrocontrole.linha_producao(nome, descricao, nome_abrev, tipo_produto_id) VALUES($1, $2, $3, $4) RETURNING id`,
       [linha_producao.nome, linha_producao.descricao, linha_producao.nome_abrev, linha_producao.tipo_produto_id]
-      );
+    );
 
     let subfaseMap = {};
     for (const fase of linha_producao.fases) {
       const faseInserted = await t.one(
         `INSERT INTO macrocontrole.fase(tipo_fase_id, linha_producao_id, ordem) VALUES($1, $2, $3) RETURNING id`,
         [fase.tipo_fase_id, linha.id, fase.ordem]
-        );
+      );
 
       for (const subfase of fase.subfases) {
         const subfaseInserted = await t.one(
-          `INSERT INTO macrocontrole.subfase(nome, fase_id, ordem) VALUES($1, $2, $3) RETURNING id`, 
+          `INSERT INTO macrocontrole.subfase(nome, fase_id, ordem) VALUES($1, $2, $3) RETURNING id`,
           [subfase.nome, faseInserted.id, subfase.ordem]
-          );
+        );
         subfaseMap[subfase.nome] = subfaseInserted.id;
       }
 
@@ -3232,7 +3328,7 @@ controller.insereLinhaProducao = async linha_producao => {
         await t.none(
           `INSERT INTO macrocontrole.pre_requisito_subfase(tipo_pre_requisito_id, subfase_anterior_id, subfase_posterior_id) VALUES($1, $2, $3)`,
           [preReq.tipo_pre_requisito_id, anteriorId, posteriorId]
-          );
+        );
       }
     }
 
@@ -3245,7 +3341,7 @@ controller.insereLinhaProducao = async linha_producao => {
       } else {
         camadaId = camadaQuery.id;
       }
-      
+
       const subfaseId = subfaseMap[prop.subfase];
       await t.none(
         `INSERT INTO macrocontrole.propriedades_camada(camada_id, atributo_filtro_subfase, camada_apontamento, camada_incomum, atributo_situacao_correcao, atributo_justificativa_apontamento, subfase_id) 
@@ -3445,7 +3541,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_estilo){
+  if (copiar_estilo) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_estilo(grupo_estilo_id,subfase_id,lote_id)
@@ -3457,7 +3553,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_menu){
+  if (copiar_menu) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_menu(menu_id,menu_revisao,subfase_id,lote_id)
@@ -3469,7 +3565,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_regra){
+  if (copiar_regra) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_regras(layer_rules_id,subfase_id,lote_id)
@@ -3481,7 +3577,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_modelo){
+  if (copiar_modelo) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_model_qgis(qgis_model_id,parametros,requisito_finalizacao,tipo_rotina_id,ordem,subfase_id,lote_id)
@@ -3493,7 +3589,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_workflow){
+  if (copiar_workflow) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_workflow_dsgtools(workflow_dsgtools_id,requisito_finalizacao,subfase_id,lote_id)
@@ -3505,7 +3601,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_alias){
+  if (copiar_alias) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_alias(alias_id,subfase_id,lote_id)
@@ -3517,7 +3613,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_linhagem){
+  if (copiar_linhagem) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_linhagem(tipo_exibicao_id,subfase_id,lote_id)
@@ -3529,7 +3625,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_finalizacao){
+  if (copiar_finalizacao) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_requisito_finalizacao(descricao,ordem,subfase_id,lote_id)
@@ -3541,7 +3637,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_tema){
+  if (copiar_tema) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_tema(tema_id,subfase_id,lote_id)
@@ -3553,7 +3649,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_fme){
+  if (copiar_fme) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_fme(gerenciador_fme_id,rotina,requisito_finalizacao,tipo_rotina_id,ordem,subfase_id,lote_id)
@@ -3565,7 +3661,7 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if(copiar_configuracao_qgis){
+  if (copiar_configuracao_qgis) {
     await db.sapConn.any(
       `
       INSERT INTO macrocontrole.perfil_configuracao_qgis(tipo_configuracao_id,parametros,subfase_id,lote_id)

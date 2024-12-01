@@ -13,7 +13,8 @@ models.proximaQuery = Joi.object().keys({
 })
 
 models.emAndamentoQuery = Joi.object().keys({
-  em_andamento: Joi.string().valid('true', 'false'),
+  em_andamento_projeto: Joi.string().valid('true', 'false'),
+  em_andamento_lote: Joi.string().valid('true', 'false'),
   bloco: Joi.number().integer().optional()
 })
 
