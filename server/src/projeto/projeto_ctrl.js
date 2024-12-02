@@ -526,12 +526,23 @@ controller.getDadoProducao = async () => {
 
 controller.getDatabase = async () => {
   return db.sapConn.any(
-    `SELECT id, tipo_dado_producao_id, configuracao_producao,
-    split_part(configuracao_producao, ':', 1) AS servidor,
-    split_part(split_part(configuracao_producao, ':', 2), '/', 1) AS porta,
-    split_part(split_part(configuracao_producao, ':', 2), '/', 2) AS nome
-    FROM macrocontrole.dado_producao
-    WHERE tipo_dado_producao_id in (2,3)`
+    `SELECT 
+      dp.id,
+      dp.tipo_dado_producao_id,
+      dp.configuracao_producao,
+      split_part(dp.configuracao_producao, ':', 1) AS servidor,
+      split_part(split_part(dp.configuracao_producao, ':', 2), '/', 1) AS porta,
+      split_part(split_part(dp.configuracao_producao, ':', 2), '/', 2) AS nome,
+      CASE 
+        WHEN bool_or(l.status_id = 1) THEN 1
+        WHEN bool_or(l.status_id = 2) THEN 2
+        ELSE 3
+      END AS lote_status_id
+    FROM macrocontrole.dado_producao dp
+    LEFT JOIN macrocontrole.unidade_trabalho ut ON ut.dado_producao_id = dp.id
+    LEFT JOIN macrocontrole.lote l ON l.id = ut.lote_id
+    WHERE dp.tipo_dado_producao_id in (2,3)
+    GROUP BY dp.id, dp.tipo_dado_producao_id, dp.configuracao_producao`
   )
 }
 
