@@ -294,6 +294,26 @@ dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
     return db.any(sqlview.view);
 }
 
+dt.refreshMaterializedViewFromBlocos = async (db, blocoIds) => {
+    let sqlview = await db.one(
+        `SELECT string_agg(query, ' ') AS view FROM (
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+                SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+                FROM pg_matviews AS pgm
+                INNER JOIN (
+                    SELECT DISTINCT 'lote_' || ut.lote_id || '_subfase_' || ut.subfase_id AS viewname
+                    FROM macrocontrole.unidade_trabalho AS ut
+                    WHERE ut.bloco_id IN ($<blocoIds:csv>)
+                ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS subfase
+        ) AS foo;`,
+        { blocoIds }
+    );
+
+    return db.any(sqlview.view);
+}
+
 dt.handleRelacionamentoUtInsertUpdate = async (db, utIds) => {
     await db.func(
         `macrocontrole.handle_relacionamento_ut_insert_update`,

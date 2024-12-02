@@ -2560,7 +2560,6 @@ controller.atualizaBlocos = async blocos => {
     const blocosEmExecucao = blocos.filter(b => b.status_id === 1);
       
       if (blocosEmExecucao.length > 0) {
-        // Usa diretamente o lote_id dos blocos, igual na criação
         const query = `
           SELECT COUNT(*) 
           FROM macrocontrole.lote 
@@ -2600,6 +2599,8 @@ controller.atualizaBlocos = async blocos => {
         }
       ) + 'WHERE Y.id = X.id'
     await t.none(query)
+
+    await disableTriggers.refreshMaterializedViewFromBlocos(t, blocos.map(b => b.id))
   })
 }
 
