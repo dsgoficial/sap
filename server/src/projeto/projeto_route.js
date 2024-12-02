@@ -3722,8 +3722,11 @@ router.delete(
 router.get(
   '/grupo_insumo',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.disponivelQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getGrupoInsumo()
+    const dados = await projetoCtrl.getGrupoInsumo(req.query.disponivel === 'true')
 
     const msg = 'Grupos de insumos retornados com sucesso'
 

@@ -329,7 +329,8 @@ FOR EACH ROW EXECUTE PROCEDURE macrocontrole.chk_lote_ut();
 
 CREATE TABLE macrocontrole.grupo_insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) UNIQUE NOT NULL
+	nome VARCHAR(255) UNIQUE NOT NULL,
+	disponivel BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE macrocontrole.insumo(

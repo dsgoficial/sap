@@ -178,6 +178,8 @@ CREATE TRIGGER chk_bloco_status_consistency
     FOR EACH ROW
     EXECUTE PROCEDURE macrocontrole.chk_bloco_status();
 
+ALTER TABLE macrocontrole.grupo_insumo ADD COLUMN disponivel BOOLEAN DEFAULT TRUE;
+
 UPDATE public.versao
 SET nome = '2.2.2' WHERE code = 1;
 

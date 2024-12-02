@@ -1660,9 +1660,15 @@ controller.criaPerfilEstilos = async perfilEstilos => {
   return db.sapConn.none(query)
 }
 
-controller.getGrupoInsumo = async () => {
-  return db.sapConn.any(`SELECT id, nome
+controller.getGrupoInsumo = async (filtroDisponivel) => {
+  if (filtroDisponivel) {
+    return db.sapConn.any(`SELECT id, nome, disponivel
+    FROM macrocontrole.grupo_insumo
+    WHERE disponivel = true`)
+  } else {
+    return db.sapConn.any(`SELECT id, nome, disponivel
     FROM macrocontrole.grupo_insumo`)
+  }
 }
 
 controller.deletaGrupoInsumo = async grupoInsumoIds => {
@@ -1704,7 +1710,8 @@ controller.atualizaGrupoInsumo = async grupo_insumos => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
-      'nome'
+      'nome',
+      'disponivel'
     ])
 
     const query =
@@ -1724,7 +1731,8 @@ controller.atualizaGrupoInsumo = async grupo_insumos => {
 controller.gravaGrupoInsumo = async grupo_insumos => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
-      'nome'
+      'nome',
+      'disponivel'
     ])
 
     const query = db.pgp.helpers.insert(grupo_insumos, cs, {

@@ -842,20 +842,21 @@ models.grupoInsumo = Joi.object().keys({
   grupo_insumos: Joi.array()
     .items(
       Joi.object().keys({
-        nome: Joi.string().required()
+        nome: Joi.string().required(),
+        disponivel: Joi.boolean().required()
       })
     )
     .required()
     .min(1)
 })
 
-
 models.grupoInsumoAtualizacao = Joi.object().keys({
   grupo_insumos: Joi.array()
     .items(
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
-        nome: Joi.string().required()
+        nome: Joi.string().required(),
+        disponivel: Joi.boolean().required()
       })
     )
     .unique('id')
@@ -1255,6 +1256,11 @@ models.workflowsIds = Joi.object().keys({
 models.statusQuery = Joi.object().keys({
   status: Joi.string().valid('execucao', 'finalizado')
 })
+
+models.disponivelQuery = Joi.object().keys({
+  disponivel: Joi.string().valid('true', 'false')
+})
+
 
 /**
  * @swagger
