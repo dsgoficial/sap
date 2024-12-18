@@ -534,6 +534,7 @@ controller.getDatabase = async () => {
       split_part(split_part(dp.configuracao_producao, ':', 2), '/', 1) AS porta,
       split_part(split_part(dp.configuracao_producao, ':', 2), '/', 2) AS nome,
       CASE 
+        WHEN COUNT(ut.id) = 0 THEN 1
         WHEN bool_or(l.status_id = 1) THEN 1
         WHEN bool_or(l.status_id = 2) THEN 2
         ELSE 3
