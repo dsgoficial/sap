@@ -261,6 +261,19 @@ models.unidadeTrabalhoMerge = Joi.object().keys({
   merge_geom: Joi.string().required()
 })
 
+models.linhaProducaoAtualizacao = Joi.object().keys({
+  linhas_producao: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        disponivel: Joi.boolean().required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
 models.linhaProducao = Joi.object().keys({
   linha_producao: Joi.object({
     nome: Joi.string().required(),
@@ -1259,6 +1272,10 @@ models.statusQuery = Joi.object().keys({
 
 models.disponivelQuery = Joi.object().keys({
   disponivel: Joi.string().valid('true', 'false')
+})
+
+models.ativoQuery = Joi.object().keys({
+  status: Joi.string().valid('ativo', 'inativo')
 })
 
 

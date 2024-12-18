@@ -180,6 +180,8 @@ CREATE TRIGGER chk_bloco_status_consistency
 
 ALTER TABLE macrocontrole.grupo_insumo ADD COLUMN disponivel BOOLEAN DEFAULT TRUE;
 
+ALTER TABLE macrocontrole.linha_producao ADD COLUMN disponivel BOOLEAN DEFAULT TRUE;
+
 UPDATE public.versao
 SET nome = '2.2.2' WHERE code = 1;
 

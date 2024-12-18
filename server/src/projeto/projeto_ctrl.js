@@ -913,13 +913,23 @@ controller.getProjetos = async (filtroExecucao) => {
   }
 }
 
-controller.getLinhasProducao = async () => {
-  return db.sapConn.any(
-    `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto
-    FROM macrocontrole.linha_producao AS lp
-    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
-    `
-  )
+controller.getLinhasProducao = async (filtroAtivo) => {
+  if (filtroAtivo){
+    return db.sapConn.any(
+      `SELECT lp.id AS linha_producao_id, lp.nome_abrev AS linha_producao_abrev, lp.disponivel, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto
+      FROM macrocontrole.linha_producao AS lp
+      INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
+      WHERE lp.disponivel = TRUE
+      `
+    )
+  } else {
+    return db.sapConn.any(
+      `SELECT lp.id AS linha_producao_id, lp.nome_abrev AS linha_producao_abrev, lp.disponivel, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto
+      FROM macrocontrole.linha_producao AS lp
+      INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
+      `
+    )
+  }
 }
 
 controller.getFases = async () => {
@@ -933,19 +943,36 @@ controller.getFases = async () => {
   )
 }
 
-controller.getSubfases = async () => {
-  return db.sapConn.any(
-    `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto,
-    f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase, l.id AS lote_id, l.nome AS lote, p.id AS projeto_id, p.nome AS projeto,
-    sf.id AS subfase_id, sf.nome AS subfase, l.nome_abrev AS lote_nome_abrev, p.nome_abrev AS projeto_nome_abrev
-    FROM macrocontrole.linha_producao AS lp
-    INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = lp.id
-    INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
-    INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
-    INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
-    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
-    INNER JOIN macrocontrole.subfase AS sf ON sf.fase_id = f.id`
-  )
+controller.getSubfases = async (filtroAtivo) => {
+  if (filtroAtivo){
+    return db.sapConn.any(
+      `SELECT lp.id AS linha_producao_id, lp.disponivel AS linha_producao_ativa, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto,
+      f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase, l.id AS lote_id, l.nome AS lote, p.id AS projeto_id, p.nome AS projeto,
+      sf.id AS subfase_id, sf.nome AS subfase, l.nome_abrev AS lote_nome_abrev, p.nome_abrev AS projeto_nome_abrev
+      FROM macrocontrole.linha_producao AS lp
+      INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = lp.id
+      INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
+      INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
+      INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
+      INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+      INNER JOIN macrocontrole.subfase AS sf ON sf.fase_id = f.id
+      WHERE lp.disponivel = TRUE`
+    )
+  }
+  else {
+    return db.sapConn.any(
+      `SELECT lp.id AS linha_producao_id, lp.disponivel AS linha_producao_ativa, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto,
+      f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase, l.id AS lote_id, l.nome AS lote, p.id AS projeto_id, p.nome AS projeto,
+      sf.id AS subfase_id, sf.nome AS subfase, l.nome_abrev AS lote_nome_abrev, p.nome_abrev AS projeto_nome_abrev
+      FROM macrocontrole.linha_producao AS lp
+      INNER JOIN macrocontrole.lote AS l ON l.linha_producao_id = lp.id
+      INNER JOIN macrocontrole.projeto AS p ON p.id = l.projeto_id
+      INNER JOIN dominio.tipo_produto AS tp ON tp.code = lp.tipo_produto_id
+      INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
+      INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+      INNER JOIN macrocontrole.subfase AS sf ON sf.fase_id = f.id`
+    )
+  }
 }
 
 controller.getAllSubfases = async () => {
@@ -2573,6 +2600,28 @@ controller.criaBlocos = async blocos => {
   })
 }
 
+controller.atualizaLinhaProducao = async linhasProducao => {
+  return db.sapConn.tx(async t => {
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'disponivel'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        linhasProducao,
+        cs,
+        { table: 'linha_producao', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
 controller.atualizaBlocos = async blocos => {
   return db.sapConn.tx(async t => {
 
@@ -3323,7 +3372,7 @@ controller.mergeUnidadeTrabalho = async (unidadeTrabalhoIds, mergeGeom) => {
 controller.insereLinhaProducao = async linha_producao => {
   return db.sapConn.tx(async t => {
     const linha = await t.one(
-      `INSERT INTO macrocontrole.linha_producao(nome, descricao, nome_abrev, tipo_produto_id) VALUES($1, $2, $3, $4) RETURNING id`,
+      `INSERT INTO macrocontrole.linha_producao(nome, descricao, nome_abrev, tipo_produto_id, disponivel) VALUES($1, $2, $3, $4, true) RETURNING id`,
       [linha_producao.nome, linha_producao.descricao, linha_producao.nome_abrev, linha_producao.tipo_produto_id]
     );
 

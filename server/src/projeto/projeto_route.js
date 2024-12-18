@@ -2070,8 +2070,11 @@ router.delete(
 router.get(
   '/linha_producao',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.ativoQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getLinhasProducao()
+    const dados = await projetoCtrl.getLinhasProducao(req.query.status === 'ativo')
 
     const msg = 'Linhas de produção retornadas com sucesso'
 
@@ -2152,8 +2155,11 @@ router.get(
 router.get(
   '/subfases',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.ativoQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getSubfases()
+    const dados = await projetoCtrl.getSubfases(req.query.status === 'ativo')
 
     const msg = 'Subfases retornadas com sucesso'
 
@@ -5140,6 +5146,46 @@ router.post(
     )
 
     const msg = 'Linha de produção inserida com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/linha_producao:
+ *   put:
+ *     summary: Atualiza uma ou mais linhas de produção existente
+ *     description: Atualiza os dados de uma ou mais linhas de produção.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Linha de Produção
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/linhaProducaoAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Linha de produção atualizada com sucesso
+ *       404:
+ *         description: Linha de produção não encontrada
+ */
+router.put(
+  '/linha_producao',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.linhaProducaoAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaLinhaProducao(
+      req.body.linhas_producao
+    )
+
+    const msg = 'Linha de produção atualizada com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
