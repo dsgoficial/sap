@@ -517,10 +517,22 @@ controller.deletaMenus = async menusId => {
 
 controller.getDadoProducao = async () => {
   return db.sapConn.any(
-    `SELECT dp.id, dp.tipo_dado_producao_id, tdp.nome AS tipo_dado_producao,
-    dp.configuracao_producao
+    `SELECT 
+      dp.id, 
+      dp.tipo_dado_producao_id, 
+      tdp.nome AS tipo_dado_producao,
+      dp.configuracao_producao,
+      CASE 
+        WHEN COUNT(ut.id) = 0 THEN 1
+        WHEN bool_or(l.status_id = 1) THEN 1
+        WHEN bool_or(l.status_id = 2) THEN 2
+        ELSE 3
+      END AS lote_status_id
     FROM macrocontrole.dado_producao AS dp
-    INNER JOIN dominio.tipo_dado_producao AS tdp On tdp.code = dp.tipo_dado_producao_id`
+    INNER JOIN dominio.tipo_dado_producao AS tdp ON tdp.code = dp.tipo_dado_producao_id
+    LEFT JOIN macrocontrole.unidade_trabalho ut ON ut.dado_producao_id = dp.id
+    LEFT JOIN macrocontrole.lote l ON l.id = ut.lote_id
+    GROUP BY dp.id, dp.tipo_dado_producao_id, tdp.nome, dp.configuracao_producao`
   )
 }
 
@@ -915,7 +927,7 @@ controller.getProjetos = async (filtroExecucao) => {
 }
 
 controller.getLinhasProducao = async (filtroAtivo) => {
-  if (filtroAtivo){
+  if (filtroAtivo) {
     return db.sapConn.any(
       `SELECT lp.id AS linha_producao_id, lp.nome_abrev AS linha_producao_abrev, lp.disponivel, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto
       FROM macrocontrole.linha_producao AS lp
@@ -945,7 +957,7 @@ controller.getFases = async () => {
 }
 
 controller.getSubfases = async (filtroAtivo) => {
-  if (filtroAtivo){
+  if (filtroAtivo) {
     return db.sapConn.any(
       `SELECT lp.id AS linha_producao_id, lp.disponivel AS linha_producao_ativa, lp.nome AS linha_producao, lp.tipo_produto_id, lp.descricao, tp.nome AS tipo_produto,
       f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase, l.id AS lote_id, l.nome AS lote, p.id AS projeto_id, p.nome AS projeto,
@@ -2627,27 +2639,27 @@ controller.atualizaBlocos = async blocos => {
   return db.sapConn.tx(async t => {
 
     const blocosEmExecucao = blocos.filter(b => b.status_id === 1);
-      
-      if (blocosEmExecucao.length > 0) {
-        const query = `
+
+    if (blocosEmExecucao.length > 0) {
+      const query = `
           SELECT COUNT(*) 
           FROM macrocontrole.lote 
           WHERE id = ANY($1) 
           AND status_id != 1
         `;
-        
-        const lotesFinalizados = await t.one(
-          query, 
-          [blocosEmExecucao.map(b => b.lote_id)]
+
+      const lotesFinalizados = await t.one(
+        query,
+        [blocosEmExecucao.map(b => b.lote_id)]
+      );
+
+      if (parseInt(lotesFinalizados.count) > 0) {
+        throw new AppError(
+          'Não é possível manter ou colocar blocos em execução em lotes finalizados ou abandonados.',
+          httpCode.BadRequest
         );
-        
-        if (parseInt(lotesFinalizados.count) > 0) {
-          throw new AppError(
-            'Não é possível manter ou colocar blocos em execução em lotes finalizados ou abandonados.',
-            httpCode.BadRequest
-          );
-        }
       }
+    }
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
