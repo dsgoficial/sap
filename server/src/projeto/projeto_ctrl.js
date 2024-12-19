@@ -3595,6 +3595,22 @@ controller.copiarConfiguracaoLote = async (
   copiar_configuracao_qgis,
   copiar_monitoramento
 ) => {
+  let valid = await db.sapConn.any(
+    `
+    SELECT 1
+    FROM macrocontrole.lote AS l1
+    INNER JOIN macrocontrole.lote AS l2 ON l1.linha_producao_id = l2.linha_producao_id
+    WHERE l1.id = $<lote_id_origem> AND l2.id = $<lote_id_destino> AND l1.id != l2.id
+    `,
+    { lote_id_origem, lote_id_destino }
+  )
+  if (valid.length === 0) {
+    throw new AppError(
+      'Lotes inválidos',
+      httpCode.BadRequest
+    )
+  }
+
   if (copiar_estilo) {
     await db.sapConn.any(
       `
