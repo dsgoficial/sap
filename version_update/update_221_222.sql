@@ -182,6 +182,8 @@ ALTER TABLE macrocontrole.grupo_insumo ADD COLUMN disponivel BOOLEAN DEFAULT TRU
 
 ALTER TABLE macrocontrole.linha_producao ADD COLUMN disponivel BOOLEAN DEFAULT TRUE;
 
+UPDATE macrocontrole.linha_producao SET disponivel = FALSE WHERE nome_abrev in ('cdgv_edgv_213','carta_topo','carta_orto','cdgv_mgcp_trd44','cdgv_edgv_3_orto','cdgv_edgv_3')
+
 UPDATE public.versao
 SET nome = '2.2.2' WHERE code = 1;
 
