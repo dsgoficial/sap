@@ -2502,6 +2502,28 @@ controller.atualizaLotes = async lotes => {
         AND status_id = 1
       `;
 
+      // Check for linha_producao_id changes
+      for (const lote of lotes) {
+        const query = `
+        SELECT l.linha_producao_id,
+               EXISTS(SELECT 1 FROM macrocontrole.etapa e WHERE e.lote_id = l.id) AS has_etapas,
+               EXISTS(SELECT 1 FROM macrocontrole.unidade_trabalho ut WHERE ut.lote_id = l.id) AS has_uts
+        FROM macrocontrole.lote l
+        WHERE l.id = $1
+      `;
+
+        const result = await t.one(query, [lote.id]);
+
+        if (result.linha_producao_id !== lote.linha_producao_id) {
+          if (result.has_etapas || result.has_uts) {
+            throw new AppError(
+              'Não é possível alterar a linha de produção do lote pois existem etapas ou unidades de trabalho associadas.',
+              httpCode.BadRequest
+            );
+          }
+        }
+      }
+
       const blocosEmAndamento = await t.one(query, [lotesFinalizando.map(l => l.id)]);
 
       if (parseInt(blocosEmAndamento.count) > 0) {
