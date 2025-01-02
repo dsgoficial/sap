@@ -136,7 +136,7 @@ WHERE s.nome IN ('Verificação final', 'Extração da Hidrografia e Altimetria'
 AND lp.nome_abrev = 'cdgv_edgv_3_orto'
 )
 SELECT id_camada.id, false, id_subfase.id, false FROM id_camada
-CROSS JOIN id_subfase
+CROSS JOIN id_subfase;
 
 UPDATE public.versao
 SET nome = '2.2.1' WHERE code = 1;
