@@ -20,7 +20,7 @@ CREATE TABLE macrocontrole.linha_producao(
 	nome_abrev VARCHAR(255) NOT NULL UNIQUE,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	descricao TEXT,
-	disponivel BOOLEAN NOT NULL DEFAULT TRUE
+	disponivel BOOLEAN NOT NULL DEFAULT TRUE,
 	UNIQUE(nome)
 );
 
