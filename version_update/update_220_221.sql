@@ -123,20 +123,5 @@ ADD CONSTRAINT unique_pit UNIQUE(lote_id, ano);
 ALTER TABLE macrocontrole.fase
 ADD CONSTRAINT unique_fase UNIQUE (linha_producao_id, ordem);
 
-INSERT INTO macrocontrole.propriedades_camada (camada_id, camada_apontamento, subfase_id, camada_incomum)
-WITH id_camada AS (
-SELECT id FROM macrocontrole.camada
-WHERE nome IN ('cobter_massa_dagua_a', 'elemnat_elemento_hidrografico_a', 'elemnat_ilha_a', 'elemnat_terreno_sujeito_inundacao_a')
-),
-id_subfase AS (
-SELECT s.id FROM macrocontrole.subfase as s
-INNER JOIN macrocontrole.fase as f ON f.id = s.fase_id
-INNER JOIN macrocontrole.linha_producao as lp ON lp.id = f.linha_producao_id
-WHERE s.nome IN ('Verificação final', 'Extração da Hidrografia e Altimetria', 'Extração de Planimetria')
-AND lp.nome_abrev = 'cdgv_edgv_3_orto'
-)
-SELECT id_camada.id, false, id_subfase.id, false FROM id_camada
-CROSS JOIN id_subfase;
-
 UPDATE public.versao
 SET nome = '2.2.1' WHERE code = 1;
