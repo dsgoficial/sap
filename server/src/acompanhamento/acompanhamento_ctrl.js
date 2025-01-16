@@ -398,7 +398,8 @@ controller.atividadeUsuarios = async () => {
 
 controller.acompanhamentoGrade = async () => {
   const dado_producao = await db.sapConn.any(
-    `SELECT a.id AS atividade_id, dp.configuracao_producao, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, a.data_inicio,
+    `SELECT a.id AS atividade_id, ut.id AS unidade_trabalho_id, a.etapa_id,
+    dp.configuracao_producao, tpg.nome_abrev || ' ' || u.nome_guerra as usuario, a.data_inicio,
     te.nome AS etapa, s.nome AS subfase, tf.nome AS fase, l.nome_abrev AS lote, p.nome_abrev AS projeto, b.nome AS bloco
       FROM macrocontrole.atividade AS a
       INNER JOIN macrocontrole.unidade_trabalho AS ut on ut.id = a.unidade_trabalho_id
@@ -429,6 +430,20 @@ controller.acompanhamentoGrade = async () => {
     const gridConn = await db.createAdminConn(servidor, porta, banco, false)
 
     try {
+      // First check if the new columns exist
+      const columns = await gridConn.any(
+        `SELECT column_name 
+         FROM information_schema.columns 
+         WHERE table_name = 'aux_grid_revisao_a' 
+         AND column_name IN ('unidade_trabalho_id', 'etapa_id')`
+      )
+      
+      // Build the appropriate WHERE clause based on available columns
+      const hasNewFields = columns.length === 2
+      const whereClause = hasNewFields 
+        ? `WHERE unidade_trabalho_id = $1 AND etapa_id = $2`
+        : `WHERE atividade_id = $1`
+
       const grade = await gridConn.any(
         `WITH
         xrank AS (
@@ -438,14 +453,14 @@ controller.acompanhamentoGrade = async () => {
             visited,
             DENSE_RANK() OVER (ORDER BY ST_XMin(geom)) AS j
           FROM public.aux_grid_revisao_a
-          WHERE atividade_id = $1
+          ${whereClause}
         ),
         yrank AS (
           SELECT 
             id,
             DENSE_RANK() OVER (ORDER BY ST_YMin(geom) DESC) AS i
           FROM public.aux_grid_revisao_a
-          WHERE atividade_id = $1
+          ${whereClause}
         )
         SELECT 
           x.j,
@@ -454,12 +469,13 @@ controller.acompanhamentoGrade = async () => {
           x.visited
         FROM xrank AS x
         JOIN yrank AS y ON x.id = y.id
-        ORDER BY j,i        
-        `, info.atividade_id
+        ORDER BY j,i`,
+        hasNewFields 
+          ? [info.unidade_trabalho_id, info.etapa_id]
+          : [info.atividade_id]
       )
 
-      info.grade = grade;
-
+      info.grade = grade
       grades.push(info)
 
     } catch (error) {
@@ -468,7 +484,6 @@ controller.acompanhamentoGrade = async () => {
   }
 
   return grades
-
 }
 
 controller.atividadeSubfase = async () => {
