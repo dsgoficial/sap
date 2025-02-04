@@ -61,86 +61,24 @@ router.get(
   })
 );
 
-/**
- * @swagger
- * /api/rh/atividades_por_periodo:
- *   get:
- *     summary: Retorna atividades dentro de um período específico.
- *     description: |
- *       Retorna uma lista de atividades que ocorreram dentro de um período específico.
- *       Pode ser filtrada por nome do usuário e ordenada por diferentes campos.
- *     produces:
- *       - application/json
- *     tags:
- *       - RH
- *     parameters:
- *       - name: dataInicio
- *         in: query
- *       - name: dataFim
- *         in: query
- *     responses:
- *       200:
- *         description: Lista de atividades retornada com sucesso.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     description: ID da atividade.
- *                   etapa_id:
- *                     type: integer
- *                     description: ID da etapa associada.
- *                   unidade_trabalho_id:
- *                     type: integer
- *                     description: ID da unidade de trabalho.
- *                   usuario_id:
- *                     type: integer
- *                     description: ID do usuário.
- *                   tipo_situacao_id:
- *                     type: integer
- *                     description: ID do tipo de situação.
- *                   data_inicio:
- *                     type: string
- *                     format: date-time
- *                     description: Data de início da atividade.
- *                   data_fim:
- *                     type: string
- *                     format: date-time
- *                     description: Data de fim da atividade.
- *                   nome_usuario:
- *                     type: string
- *                     description: Nome do usuário associado à atividade.
- *                   bloco_id:
- *                     type: integer
- *                     description: ID do bloco associado à unidade de trabalho.
- *                   nome_bloco:
- *                     type: string
- *                     description: Nome do bloco associado à unidade de trabalho.
- *       400:
- *         description: Erro de validação nos parâmetros fornecidos.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: Mensagem de erro.
- *       500:
- *         description: Erro interno no servidor.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   description: Mensagem de erro.
- *
- */
+router.get(
+  '/lote_stats/:dataInicio/:dataFim',
+  asyncHandler(async (req, res, next) => {
+    const { dataInicio, dataFim } = req.params;
+    const dados = await rhCtrl.getAllLoteStatsByDate(dataInicio, dataFim);
+    const msg = 'Estatísticas de lote retornadas com sucesso';
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.get(
+  '/bloco_stats/:dataInicio/:dataFim',
+  asyncHandler(async (req, res, next) => {
+    const { dataInicio, dataFim } = req.params;
+    const dados = await rhCtrl.getAllBlocksStatsByDate(dataInicio, dataFim);
+    const msg = 'Estatísticas de bloco retornadas com sucesso';
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+)
 
 module.exports = router
