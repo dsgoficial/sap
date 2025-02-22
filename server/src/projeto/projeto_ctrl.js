@@ -1874,78 +1874,83 @@ controller.copiarUnidadeTrabalho = async (
   unidadeTrabalhoIds,
   associarInsumos
 ) => {
-  let newUnidadeTrabalhoIds
+  let newUnidadeTrabalhoIds = [];
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
-    let utIdSubfaseIdPairs = unidadeTrabalhoIds.flatMap(utId => subfaseIds.map(subfaseId => ({ utId, subfaseId })));
-    let utIdSubfaseIdPairsPg = utIdSubfaseIdPairs.map(pair => `(${pair.utId}, ${pair.subfaseId})`);
+    // Mapeamento de UT original para suas novas UTs
+    const utMapping = {};
 
-    // Insert all rows in a single operation
-    let utOldNew = await t.any(
-      `
-        INSERT INTO macrocontrole.unidade_trabalho(nome, geom, epsg, dado_producao_id, subfase_id, dificuldade, tempo_estimado_minutos, lote_id, bloco_id, disponivel, prioridade)
-        SELECT 
-          ut.nome, 
-          ut.geom, 
-          ut.epsg, 
-          ut.dado_producao_id, 
-          ut_subfases.subfase_id AS subfase_id, 
-          ut.dificuldade, 
-          ut.tempo_estimado_minutos, 
-          ut.lote_id, 
-          ut.bloco_id, 
-          ut.disponivel, 
-          ut.prioridade
-        FROM macrocontrole.unidade_trabalho AS ut
-        JOIN unnest(ARRAY[${utIdSubfaseIdPairsPg.join(',')}]) AS ut_subfases(ut_id, subfase_id)
-        ON ut.id = ut_subfases.ut_id
-        RETURNING ut.id, ut_subfases.ut_id AS old_id
-      `
-    );
-    // Group the returned rows by old_id
-    let utOldNewGrouped = utOldNew.reduce((acc, row) => {
-      if (!(row.old_id in acc)) {
-        acc[row.old_id] = [];
+    // Para cada combinação de UT e subfase, fazer o insert
+    for (const utId of unidadeTrabalhoIds) {
+      utMapping[utId] = [];
+      
+      for (const subfaseId of subfaseIds) {
+        const result = await t.one(
+          `
+          INSERT INTO macrocontrole.unidade_trabalho(
+            nome, geom, epsg, dado_producao_id, subfase_id, 
+            dificuldade, tempo_estimado_minutos, lote_id, 
+            bloco_id, disponivel, prioridade
+          )
+          SELECT 
+            nome, 
+            geom, 
+            epsg, 
+            dado_producao_id, 
+            $2 AS subfase_id, 
+            dificuldade, 
+            tempo_estimado_minutos, 
+            lote_id, 
+            bloco_id, 
+            disponivel, 
+            prioridade
+          FROM macrocontrole.unidade_trabalho
+          WHERE id = $1
+          RETURNING id
+          `,
+          [utId, subfaseId]
+        );
+        
+        const newId = result.id;
+        newUnidadeTrabalhoIds.push(newId);
+        utMapping[utId].push(newId);
       }
-      acc[row.old_id].push(row.id);
-      return acc;
-    }, {});
-
-    // Replace utOldNew with the grouped version
-    utOldNew = utOldNewGrouped;
-    newUnidadeTrabalhoIds = [].concat(...Object.values(utOldNew));
+    }
 
     if (associarInsumos) {
+      // Buscar todos os insumos das unidades de trabalho originais
       const insumos = await t.any(
         'SELECT unidade_trabalho_id, insumo_id, caminho_padrao FROM macrocontrole.insumo_unidade_trabalho WHERE unidade_trabalho_id in ($<unidadeTrabalhoIds:csv>)',
         { unidadeTrabalhoIds }
-      )
-      const dadosInsumos = []
-      insumos.forEach(i => {
-        utOldNew[i.unidade_trabalho_id].forEach(j => {
-          dadosInsumos.push({
-            insumo_id: i.insumo_id,
-            unidade_trabalho_id: j,
-            caminho_padrao: i.caminho_padrao
-          })
-        })
-      })
+      );
 
-      const cs = new db.pgp.helpers.ColumnSet([
-        'insumo_id',
-        'unidade_trabalho_id',
-        'caminho_padrao'
-      ])
+      // Criar novos registros de insumos usando o mapeamento
+      const dadosInsumos = insumos.flatMap(insumo => 
+        utMapping[insumo.unidade_trabalho_id].map(newUtId => ({
+          insumo_id: insumo.insumo_id,
+          unidade_trabalho_id: newUtId,
+          caminho_padrao: insumo.caminho_padrao
+        }))
+      );
 
-      const query = db.pgp.helpers.insert(dadosInsumos, cs, {
-        table: 'insumo_unidade_trabalho',
-        schema: 'macrocontrole'
-      })
+      if (dadosInsumos.length > 0) {
+        const cs = new db.pgp.helpers.ColumnSet([
+          'insumo_id',
+          'unidade_trabalho_id',
+          'caminho_padrao'
+        ]);
 
-      await t.none(query)
+        const query = db.pgp.helpers.insert(dadosInsumos, cs, {
+          table: 'insumo_unidade_trabalho',
+          schema: 'macrocontrole'
+        });
+
+        await t.none(query);
+      }
     }
-  })
-  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, newUnidadeTrabalhoIds)
-  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, newUnidadeTrabalhoIds)
+  });
+
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, newUnidadeTrabalhoIds);
+  await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, newUnidadeTrabalhoIds);
 }
 
 controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
