@@ -50,8 +50,6 @@ CREATE TABLE dgeo.qgis_shortcuts(
 );
 
 INSERT INTO dgeo.qgis_shortcuts (ferramenta, idioma, atalho, owner) VALUES
-('Ligar/Desligar camada','português','Y', 'sap'),
-('Ligar/Desligar camada','inglês','Y', 'sap'),
 ('Sair do QGIS','português','', 'sap'),
 ('Exit QGIS','inglês','', 'sap'),
 ('Mesclar feições selecionadas','português','M', 'sap'),
@@ -108,6 +106,8 @@ INSERT INTO dgeo.qgis_shortcuts (ferramenta, idioma, atalho, owner) VALUES
 ('DSGTools: Free Hand Reshape','inglês','Shift+R', 'sap'),
 ('Mostrar/Esconder marcadores para feições selecionadas','português','B', 'sap'),
 ('Mostrar/Esconder marcadores para feições selecionadas','inglês','B', 'sap'),
+('DSGTools: Active Layer Visibility','português','Y', 'sap'),
+('DSGTools: Active Layer Visibility','inglês','Y', 'sap'),
 ('Próximo estilo','português','Shift+W', 'sap'),
 ('Próximo estilo','inglês','Shift+W', 'sap'),
 ('Último estilo','português','Shift+Q', 'sap'),
