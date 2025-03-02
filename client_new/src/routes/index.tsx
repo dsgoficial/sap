@@ -185,7 +185,7 @@ const Router = () => {
           ),
         },
         {
-          path: 'micro-control',
+          path: 'microcontrol',
           element: (
             <PrivateRoute requiredRole={UserRole.ADMIN}>
               <Suspense fallback={<LoadingFallback />}>

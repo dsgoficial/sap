@@ -1,12 +1,10 @@
 // Path: features\auth\components\AuthStatus.tsx
 import { useMemo } from 'react';
-import { Box, Typography, Chip, Avatar, styled } from '@mui/material';
+import { Box, Chip, styled } from '@mui/material';
 import { useAuthStore } from '@/stores/authStore';
-import { formatInitials } from '@/utils/formatters';
 
 interface AuthStatusProps {
   showRole?: boolean;
-  showAvatar?: boolean;
   vertical?: boolean;
 }
 
@@ -21,7 +19,6 @@ const StatusContainer = styled(Box, {
 
 export const AuthStatus = ({
   showRole = true,
-  showAvatar = true,
   vertical = false,
 }: AuthStatusProps) => {
   const { user, isAuthenticated } = useAuthStore();
@@ -36,10 +33,6 @@ export const AuthStatus = ({
     return user.role === 'ADMIN' ? 'Administrador' : 'Usuário';
   }, [user?.role]);
 
-  // Fallback para nome de usuário
-  const username = user?.username || 'Usuário';
-  const initials = formatInitials(username);
-
   if (!isAuthenticated) {
     return (
       <StatusContainer vertical={vertical}>
@@ -50,30 +43,7 @@ export const AuthStatus = ({
 
   return (
     <StatusContainer vertical={vertical}>
-      {showAvatar && (
-        <Avatar
-          sx={{
-            width: 32,
-            height: 32,
-            bgcolor: roleColor === 'primary' ? 'primary.main' : 'success.main',
-            fontSize: '0.875rem',
-          }}
-        >
-          {initials}
-        </Avatar>
-      )}
-
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        <Typography
-          variant="body2"
-          sx={{
-            fontWeight: 'medium',
-            lineHeight: 1.2,
-          }}
-        >
-          {username}
-        </Typography>
-
         {showRole && (
           <Chip
             label={roleName}

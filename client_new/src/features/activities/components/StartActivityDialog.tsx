@@ -5,9 +5,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  Button,
+  Button
 } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
 
 interface StartActivityDialogProps {
   open: boolean;
@@ -34,13 +33,13 @@ export const StartActivityDialog = ({
         <Button onClick={onClose} disabled={isSubmitting}>
           Não
         </Button>
-        <LoadingButton
+        <Button
           onClick={onConfirm}
           loading={isSubmitting}
           variant="contained"
         >
           Sim
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Dialog>
   );

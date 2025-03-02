@@ -1,8 +1,8 @@
 // Path: features\dashboard\layouts\DashboardLayout.tsx
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { styled, useTheme } from '@mui/material/styles';
-import { useMediaQuery } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardNavbar from './DashboardNavbar';
 
@@ -12,15 +12,13 @@ const APP_BAR_DESKTOP = 92;
 const DRAWER_WIDTH = 280;
 
 // Styled components
-const RootStyle = styled('div')({
+const RootStyle = styled(Box)(({ theme: _theme }) => ({
   display: 'flex',
   minHeight: '100%',
   overflow: 'hidden',
-});
+}));
 
-const MainStyle = styled('div', {
-  shouldForwardProp: prop => prop !== 'open',
-})<{ open: boolean }>(({ theme, open }) => ({
+const MainStyle = styled(Box)<{ open?: boolean }>(({ theme, open }) => ({
   flexGrow: 1,
   overflow: 'auto',
   minHeight: '100%',
@@ -31,7 +29,8 @@ const MainStyle = styled('div', {
   [theme.breakpoints.up('lg')]: {
     paddingTop: APP_BAR_DESKTOP + 24,
     marginLeft: open ? DRAWER_WIDTH : 0,
-    transition: theme.transitions.create('margin', {
+    width: open ? `calc(100% - ${DRAWER_WIDTH}px)` : '100%',
+    transition: theme.transitions.create(['margin', 'width'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
     }),
@@ -45,27 +44,36 @@ const MainStyle = styled('div', {
 }));
 
 const DashboardLayout = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(true);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
-  const [open, setOpen] = useState(!isMobile);
 
-  // Close sidebar automatically on mobile
-  const handleDrawerToggle = () => {
-    setOpen(prevOpen => !prevOpen);
+  // Toggle for mobile drawer
+  const handleMobileDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  // Toggle for desktop drawer
+  const handleDesktopDrawerToggle = () => {
+    setDesktopOpen(!desktopOpen);
   };
 
   return (
     <RootStyle>
       <DashboardNavbar
-        isOpenSidebar={open}
-        onOpenSidebar={handleDrawerToggle}
+        onOpenSidebar={isMobile ? handleMobileDrawerToggle : handleDesktopDrawerToggle}
       />
+      
       <DashboardSidebar
-        isOpenSidebar={open}
-        onCloseSidebar={handleDrawerToggle}
+        mobileOpen={mobileOpen}
+        desktopOpen={desktopOpen}
+        onMobileClose={handleMobileDrawerToggle}
+        onDesktopClose={handleDesktopDrawerToggle}
         drawerWidth={DRAWER_WIDTH}
       />
-      <MainStyle open={open}>
+      
+      <MainStyle open={desktopOpen}>
         <Outlet />
       </MainStyle>
     </RootStyle>

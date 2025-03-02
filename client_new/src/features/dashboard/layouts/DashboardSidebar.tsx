@@ -1,18 +1,16 @@
 // Path: features\dashboard\layouts\DashboardSidebar.tsx
-import { useEffect } from 'react';
+import { useRef } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   Box,
   Drawer,
   Typography,
-  Avatar,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Divider,
   IconButton,
-  useMediaQuery,
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -28,8 +26,10 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import { useAuthStore } from '@/stores/authStore';
 
 interface DashboardSidebarProps {
-  isOpenSidebar: boolean;
-  onCloseSidebar: () => void;
+  mobileOpen: boolean;
+  desktopOpen: boolean;
+  onMobileClose: () => void;
+  onDesktopClose: () => void;
   drawerWidth?: number;
 }
 
@@ -42,21 +42,18 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
 
 const DashboardSidebar = ({
-  isOpenSidebar,
-  onCloseSidebar,
+  mobileOpen,
+  desktopOpen,
+  onMobileClose,
+  onDesktopClose,
   drawerWidth = 280,
 }: DashboardSidebarProps) => {
   const { pathname } = useLocation();
   const { isAdmin } = useAuthStore();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
-
-  // Close sidebar on mobile when navigating
-  useEffect(() => {
-    if (isMobile && isOpenSidebar) {
-      onCloseSidebar();
-    }
-  }, [pathname, isMobile, isOpenSidebar, onCloseSidebar]);
+  
+  // Use ref for close button to avoid focus issues
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Define menu items
   const menuItems = [
@@ -109,13 +106,13 @@ const DashboardSidebar = ({
       adminOnly: true,
     },
     {
-      title: 'Micro Controle',
-      path: '/micro-control',
+      title: 'Microcontrole',
+      path: '/microcontrol',
       icon: <SettingsIcon />,
       adminOnly: true,
     },
     {
-      title: 'Mapas de Acompanhamento',
+      title: 'Mapas',
       path: '/maps',
       icon: <MapIcon />,
       adminOnly: true,
@@ -126,7 +123,24 @@ const DashboardSidebar = ({
     item => !item.adminOnly || (item.adminOnly && isAdmin),
   );
 
-  const drawer = (
+  // Handler for closing with blur to prevent focus issues
+  const handleClose = (isMobileDrawer: boolean) => {
+    // First blur any active elements to prevent focus retention
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    
+    // Then close the drawer after a slight delay
+    setTimeout(() => {
+      if (isMobileDrawer) {
+        onMobileClose();
+      } else {
+        onDesktopClose();
+      }
+    }, 10);
+  };
+
+  const drawer = (isMobileDrawer: boolean) => (
     <>
       <DrawerHeader>
         <Box
@@ -137,20 +151,16 @@ const DashboardSidebar = ({
             px: 2,
           }}
         >
-          <Avatar
-            src="/images/logo.png"
-            alt="SAP Logo"
-            sx={{ width: 40, height: 40, mr: 2 }}
-          />
-
-          {isOpenSidebar && (
-            <Typography variant="h6" noWrap>
-              Menu
-            </Typography>
-          )}
+          <Typography variant="h6" noWrap>
+            Menu
+          </Typography>
         </Box>
 
-        <IconButton onClick={onCloseSidebar}>
+        <IconButton 
+          onClick={() => handleClose(isMobileDrawer)}
+          ref={isMobileDrawer ? undefined : closeButtonRef}
+          tabIndex={0}
+        >
           <ChevronLeftIcon />
         </IconButton>
       </DrawerHeader>
@@ -164,20 +174,22 @@ const DashboardSidebar = ({
             component={RouterLink}
             to={item.path}
             selected={pathname === item.path}
+            onClick={() => {
+              if (isMobileDrawer) {
+                handleClose(true);
+              }
+            }}
             sx={{
               minHeight: 48,
-              justifyContent: isOpenSidebar ? 'initial' : 'center',
+              justifyContent: 'initial',
               px: 2.5,
-              // Increase touch target on mobile
-              ...(isMobile && {
-                py: 1.5,
-              }),
+              py: isMobileDrawer ? 1.5 : 1,
             }}
           >
             <ListItemIcon
               sx={{
                 minWidth: 0,
-                mr: isOpenSidebar ? 3 : 'auto',
+                mr: 3,
                 justifyContent: 'center',
               }}
             >
@@ -186,7 +198,6 @@ const DashboardSidebar = ({
             <ListItemText
               primary={item.title}
               sx={{
-                opacity: isOpenSidebar ? 1 : 0,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -201,57 +212,57 @@ const DashboardSidebar = ({
   return (
     <>
       {/* Mobile drawer */}
-      {isMobile && (
-        <Drawer
-          variant="temporary"
-          open={isOpenSidebar}
-          onClose={onCloseSidebar}
-          ModalProps={{
-            keepMounted: true, // Better performance on mobile
-          }}
-          sx={{
-            display: { xs: 'block', lg: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-            },
-          }}
-        >
-          {drawer}
-        </Drawer>
-      )}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={() => handleClose(true)}
+        disableEnforceFocus
+        keepMounted
+        ModalProps={{
+          keepMounted: true, // Better performance on mobile
+        }}
+        sx={{
+          display: { xs: 'block', lg: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+          },
+        }}
+      >
+        {drawer(true)}
+      </Drawer>
 
-      {/* Desktop drawer */}
+      {/* Desktop drawer - now using PERMANENT variant which doesn't use aria-hidden */}
       <Drawer
         variant="permanent"
-        open={isOpenSidebar}
+        open={desktopOpen}
         sx={{
           display: { xs: 'none', lg: 'block' },
-          width: isOpenSidebar
-            ? drawerWidth
-            : theme => `calc(${theme.spacing(7)} + 1px)`,
-          flexShrink: 0,
-          whiteSpace: 'nowrap',
-          boxSizing: 'border-box',
           '& .MuiDrawer-paper': {
-            width: isOpenSidebar
-              ? drawerWidth
-              : theme => `calc(${theme.spacing(7)} + 1px)`,
-            transition: theme =>
-              theme.transitions.create('width', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
-            overflowX: 'hidden',
-          },
-          transition: theme =>
-            theme.transitions.create('width', {
+            position: 'relative',
+            whiteSpace: 'nowrap',
+            width: desktopOpen ? drawerWidth : theme.spacing(7),
+            transition: theme.transitions.create('width', {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.enteringScreen,
             }),
+            boxSizing: 'border-box',
+            overflowX: 'hidden',
+            border: 'none',
+            ...(desktopOpen && {
+              width: drawerWidth,
+            }),
+            ...(!desktopOpen && {
+              width: theme.spacing(7),
+              [theme.breakpoints.up('sm')]: {
+                width: theme.spacing(9),
+              },
+            }),
+          },
+          zIndex: 0,
         }}
       >
-        {drawer}
+        {drawer(false)}
       </Drawer>
     </>
   );

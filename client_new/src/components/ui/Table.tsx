@@ -1,5 +1,5 @@
 // Path: components\ui\Table.tsx
-import { ReactNode, useState, useEffect, useMemo } from 'react';
+import { ReactNode, useState, useEffect, useMemo, useCallback, memo } from 'react';
 import {
   Table as MuiTable,
   TableProps as MuiTableProps,
@@ -24,16 +24,11 @@ import {
   IconButton,
   Collapse,
   Button,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
   Divider,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 
 interface Column<T extends Record<string, any>> {
   id: string;
@@ -141,6 +136,48 @@ const DEFAULT_LOCALIZATION = {
   },
 };
 
+// Isolated search input component that doesn't re-render with parent
+interface SearchBarProps {
+  placeholder: string;
+  onSearch: (term: string) => void;
+}
+
+const SearchBar = memo(({ placeholder, onSearch }: SearchBarProps) => {
+  // Use local state for input value to avoid losing focus
+  const [inputValue, setInputValue] = useState('');
+  
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
+    setInputValue(newValue);
+    onSearch(newValue);
+  };
+  
+  return (
+    <SearchContainer>
+      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          size="small"
+          placeholder={placeholder}
+          value={inputValue}
+          onChange={handleChange}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+    </SearchContainer>
+  );
+});
+
+// Ensure displayName is set for memoized component
+SearchBar.displayName = 'SearchBar';
+
 export function Table<T extends Record<string, any>>({
   columns,
   rows,
@@ -170,11 +207,23 @@ export function Table<T extends Record<string, any>>({
     },
   };
 
-  // Column visibility state
+  // Columns state - keeping for mobile prioritization
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
     {},
   );
-  const [showColumnSelector, setShowColumnSelector] = useState(false);
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredRows, setFilteredRows] = useState<T[]>(rows);
+  
+  // Internal sorting state when external sorting is not provided
+  const [internalSorting, setInternalSorting] = useState<{
+    orderBy: string;
+    order: 'asc' | 'desc';
+  } | null>(null);
+  
+  // Card view for mobile
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // Initialize column visibility based on priority
   useEffect(() => {
@@ -191,13 +240,10 @@ export function Table<T extends Record<string, any>>({
     setVisibleColumns(initialVisibility);
   }, [columns, isMobile]);
 
-  // Search state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredRows, setFilteredRows] = useState<T[]>(rows);
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Card view for mobile
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  // Search handler - memoized to prevent recreating it on each render
+  const handleSearch = useCallback((term: string) => {
+    setSearchTerm(term);
+  }, []);
 
   // Update filtered rows when search term or rows change
   useEffect(() => {
@@ -219,6 +265,41 @@ export function Table<T extends Record<string, any>>({
     setFilteredRows(filtered);
   }, [searchTerm, rows]);
 
+  // Apply sorting to filtered rows
+  const sortedRows = useMemo(() => {
+    let sortedData = [...filteredRows];
+    
+    // Use external sorting if provided, otherwise use internal
+    const sortConfig = sorting || internalSorting;
+    
+    if (sortConfig && sortConfig.orderBy) {
+      sortedData.sort((a, b) => {
+        // Get values to compare
+        const valueA = a[sortConfig.orderBy];
+        const valueB = b[sortConfig.orderBy];
+        
+        // Handle nulls/undefined
+        if (valueA == null) return sortConfig.order === 'asc' ? -1 : 1;
+        if (valueB == null) return sortConfig.order === 'asc' ? 1 : -1;
+        
+        // Different comparison based on data type
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+          return sortConfig.order === 'asc' ? valueA - valueB : valueB - valueA;
+        }
+        
+        // Default string comparison
+        const stringA = String(valueA).toLowerCase();
+        const stringB = String(valueB).toLowerCase();
+        return sortConfig.order === 'asc'
+          ? stringA.localeCompare(stringB)
+          : stringB.localeCompare(stringA);
+      });
+    }
+    
+    return sortedData;
+  }, [filteredRows, sorting, internalSorting]);
+
+  // Row key getter
   const getRowKey = (row: T, index: number): string | number => {
     if (rowKey) {
       return rowKey(row);
@@ -226,17 +307,47 @@ export function Table<T extends Record<string, any>>({
     return index;
   };
 
+  // Row click handler
   const handleRowClick = (row: T) => {
     if (onRowClick) {
       onRowClick(row);
     }
   };
 
+  // Row expansion toggle (mobile view)
   const toggleRowExpansion = (rowId: string | number) => {
     setExpandedRows(prev => ({
       ...prev,
       [rowId.toString()]: !prev[rowId.toString()],
     }));
+  };
+
+  // Column sort handler
+  const handleSort = (columnId: string) => {
+    // Column must be sortable to proceed
+    if (!columns.find(col => col.id === columnId)?.sortable) {
+      return;
+    }
+    
+    // If external sorting is provided, use it
+    if (sorting && sorting.onSort) {
+      sorting.onSort(columnId);
+      return;
+    }
+    
+    // Otherwise use internal sorting
+    setInternalSorting(prevSort => {
+      if (!prevSort || prevSort.orderBy !== columnId) {
+        // New column - start with ascending
+        return { orderBy: columnId, order: 'asc' };
+      } else {
+        // Toggle direction
+        return {
+          orderBy: columnId,
+          order: prevSort.order === 'asc' ? 'desc' : 'asc',
+        };
+      }
+    });
   };
 
   // Filter visible columns for current view
@@ -256,83 +367,14 @@ export function Table<T extends Record<string, any>>({
     );
   }
 
-  // Column selector component
-  const ColumnSelector = () => (
-    <Collapse in={showColumnSelector}>
-      <Box sx={{ p: 2, bgcolor: 'background.paper', mb: 1 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Mostrar/Ocultar Colunas
-        </Typography>
-        <FormGroup>
-          {columns.map(column => (
-            <FormControlLabel
-              key={column.id}
-              control={
-                <Checkbox
-                  checked={!!visibleColumns[column.id]}
-                  onChange={() => {
-                    setVisibleColumns(prev => ({
-                      ...prev,
-                      [column.id]: !prev[column.id],
-                    }));
-                  }}
-                  size="small"
-                />
-              }
-              label={<Typography variant="body2">{column.label}</Typography>}
-            />
-          ))}
-        </FormGroup>
-      </Box>
-    </Collapse>
-  );
-
-  // Search and filter component
-  const SearchBar = () => (
-    <SearchContainer>
-      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          size="small"
-          placeholder={searchPlaceholder || localization.searchPlaceholder}
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<ViewColumnIcon />}
-          onClick={() => setShowColumnSelector(!showColumnSelector)}
-        >
-          {isMobile ? '' : 'Colunas'}
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<FilterListIcon />}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          {isMobile ? '' : 'Filtros'}
-        </Button>
-      </Box>
-
-      <ColumnSelector />
-    </SearchContainer>
-  );
-
   // Render empty state
-  if (filteredRows.length === 0) {
+  if (sortedRows.length === 0) {
     return (
       <Paper>
-        <SearchBar />
+        <SearchBar
+          placeholder={searchPlaceholder || localization.searchPlaceholder}
+          onSearch={handleSearch}
+        />
         <EmptyContainer>
           <Typography variant="body2" color="text.secondary">
             {emptyMessage || localization.emptyDataMessage}
@@ -342,13 +384,19 @@ export function Table<T extends Record<string, any>>({
     );
   }
 
+  // Get current sort config (external or internal)
+  const sortConfig = sorting || internalSorting;
+
   // Card view for mobile devices
   if (isMobile) {
     return (
       <Paper sx={{ maxHeight, overflow: 'auto' }}>
-        <SearchBar />
+        <SearchBar
+          placeholder={searchPlaceholder || localization.searchPlaceholder}
+          onSearch={handleSearch}
+        />
         <Box sx={{ p: 2 }}>
-          {filteredRows.map((row, idx) => {
+          {sortedRows.map((row, idx) => {
             const rowId = getRowKey(row, idx);
             const isExpanded = expandedRows[rowId.toString()];
 
@@ -491,7 +539,10 @@ export function Table<T extends Record<string, any>>({
   // Table view for desktop/tablet
   return (
     <Paper sx={{ maxHeight, overflow: 'auto' }}>
-      <SearchBar />
+      <SearchBar
+        placeholder={searchPlaceholder || localization.searchPlaceholder}
+        onSearch={handleSearch}
+      />
       <TableContainer sx={{ maxHeight }}>
         <MuiTable stickyHeader={stickyHeader} {...rest}>
           <TableHead>
@@ -504,15 +555,18 @@ export function Table<T extends Record<string, any>>({
                     minWidth: column.minWidth,
                     maxWidth: column.maxWidth,
                     fontWeight: 600,
+                    cursor: column.sortable ? 'pointer' : 'default',
                   }}
+                  onClick={() => handleSort(column.id)}
                 >
-                  {sorting && column.sortable ? (
+                  {column.sortable ? (
                     <TableSortLabel
-                      active={sorting.orderBy === column.id}
+                      active={sortConfig ? sortConfig.orderBy === column.id : false}
                       direction={
-                        sorting.orderBy === column.id ? sorting.order : 'asc'
+                        sortConfig && sortConfig.orderBy === column.id
+                          ? sortConfig.order
+                          : 'asc'
                       }
-                      onClick={() => sorting.onSort(column.id)}
                     >
                       {column.label}
                     </TableSortLabel>
@@ -524,7 +578,7 @@ export function Table<T extends Record<string, any>>({
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredRows.map((row, index) => {
+            {sortedRows.map((row, index) => {
               const backgroundColor = rowBackgroundColor
                 ? rowBackgroundColor(row, index)
                 : undefined;

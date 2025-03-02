@@ -1,5 +1,5 @@
 // Path: features\map\components\MapVisualization.tsx
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import {
   Paper,
@@ -14,13 +14,9 @@ import {
   Collapse,
   Button,
 } from '@mui/material';
-import Map, {
-  Source,
-  Layer,
-  LayerProps,
-  NavigationControl,
-} from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import L from 'leaflet';
+import { MapContainer, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import MapLegend from './MapLegend';
 import LayerControl from './LayerControl';
 import { MapLayer, LegendItem } from '@/types/map';
@@ -30,7 +26,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 
-const MapContainer = styled(Box)(({ theme }) => ({
+const MapContainerWrapper = styled(Box)(({ theme }) => ({
   height: '70vh',
   position: 'relative',
   [theme.breakpoints.down('sm')]: {
@@ -42,7 +38,7 @@ const ControlsContainer = styled(Box)(({ theme }) => ({
   position: 'absolute',
   top: 10,
   right: 10,
-  zIndex: 1,
+  zIndex: 999,
   backgroundColor: 'rgba(255, 255, 255, 0.8)',
   padding: theme.spacing(1),
   borderRadius: theme.shape.borderRadius,
@@ -59,7 +55,7 @@ const MobileFab = styled(Fab)(({ theme }) => ({
   position: 'absolute',
   bottom: 20,
   right: 20,
-  zIndex: 10,
+  zIndex: 999,
   [theme.breakpoints.up('md')]: {
     display: 'none',
   },
@@ -69,7 +65,7 @@ const FullscreenButton = styled(IconButton)(({ theme }) => ({
   position: 'absolute',
   top: 10,
   right: 10,
-  zIndex: 10,
+  zIndex: 999,
   backgroundColor: 'rgba(255, 255, 255, 0.8)',
   '&:hover': {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -83,7 +79,7 @@ const LegendBox = styled(Box)(({ theme }) => ({
   position: 'absolute',
   bottom: 10,
   left: 10,
-  zIndex: 1,
+  zIndex: 999,
   backgroundColor: 'rgba(255, 255, 255, 0.8)',
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(1),
@@ -98,7 +94,7 @@ const LegendToggle = styled(Button)(({ theme }) => ({
   position: 'absolute',
   bottom: 10,
   left: 10,
-  zIndex: 10,
+  zIndex: 999,
   backgroundColor: 'rgba(255, 255, 255, 0.8)',
   minWidth: 'auto',
   padding: theme.spacing(0.5),
@@ -132,13 +128,27 @@ const MapVisualization = ({
     zoom: 3.65,
   },
 }: MapVisualizationProps) => {
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<L.Map | null>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showLegend, setShowLegend] = useState(!isMobile);
+
+  // Fix Leaflet's default icon paths
+  useEffect(() => {
+    // Fix for the TypeScript error - using type assertion to tell TypeScript
+    // that we know what we're doing with the internal property
+    // @ts-ignore - _getIconUrl exists in the implementation but not in the type definitions
+    delete L.Icon.Default.prototype._getIconUrl;
+    
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
+  }, []);
 
   // Function to toggle fullscreen
   const toggleFullscreen = () => {
@@ -153,29 +163,15 @@ const MapVisualization = ({
     }
   };
 
-  // Helper function to get fill color - simplified to return a valid string
-  const getFillColorRules = (): string => {
-    // Return a static color that's compatible with the expected type
-    return '#4682B4'; // Steel blue color
-  };
-
-  // Layer definitions for fill and line
-  const fillLayer: LayerProps = {
-    id: 'fill-layer',
-    type: 'fill',
-    paint: {
-      'fill-color': getFillColorRules(),
-      'fill-opacity': 0.8,
-    },
-  };
-
-  const lineLayer: LayerProps = {
-    id: 'line-layer',
-    type: 'line',
-    paint: {
-      'line-color': '#050505',
-      'line-width': 0.5,
-    },
+  // Style function for GeoJSON
+  const getLayerStyle = () => {
+    return {
+      fillColor: '#4682B4', // Steel blue color
+      weight: 0.5,
+      opacity: 1,
+      color: '#050505',
+      fillOpacity: 0.8,
+    };
   };
 
   return (
@@ -196,75 +192,70 @@ const MapVisualization = ({
         {title}
       </Typography>
 
-      <MapContainer>
-        <Map
+      <MapContainerWrapper>
+        <MapContainer
+          center={[initialViewState.latitude, initialViewState.longitude]}
+          zoom={initialViewState.zoom}
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={false}
           ref={mapRef}
-          mapLib={import('maplibre-gl')}
-          mapStyle="https://api.maptiler.com/maps/streets/style.json?key=tLpO7P2cZG0MPIqHCFYJ"
-          initialViewState={initialViewState}
-          style={{ width: '100%', height: '100%' }}
-          touchZoomRotate={true}
-          dragRotate={false}
         >
-          {layers.map(
-            layer =>
-              visibleLayers[layer.id] && (
-                <Source
-                  key={layer.id}
-                  id={layer.id}
-                  type="geojson"
-                  data={layer.geojson}
-                >
-                  <Layer {...fillLayer} id={`${layer.id}-fill`} />
-                  <Layer {...lineLayer} id={`${layer.id}-line`} />
-                </Source>
-              ),
-          )}
-
-          {/* Desktop controls */}
-          <ControlsContainer>
-            <LayerControl
-              layers={layers.map(l => ({ id: l.id, name: l.name }))}
-              visibility={visibleLayers}
-              onToggle={onToggleLayer}
-            />
-          </ControlsContainer>
-
-          {/* Map controls positioned for better mobile experience */}
-          <NavigationControl
-            position={isMobile ? 'bottom-right' : 'top-right'}
-            showCompass={false}
-            style={{ marginRight: isMobile ? 80 : 10 }}
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-
-          {/* Fullscreen button */}
-          <FullscreenButton
-            onClick={toggleFullscreen}
-            aria-label="Toggle fullscreen"
-            size="small"
-          >
-            {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-          </FullscreenButton>
-
-          {/* Legend toggle button */}
-          {isMobile && (
-            <LegendToggle
-              startIcon={<InfoIcon />}
-              size="small"
-              onClick={() => setShowLegend(!showLegend)}
-              variant="outlined"
-            >
-              {showLegend ? 'Ocultar' : 'Legenda'}
-            </LegendToggle>
+          
+          {/* Render each GeoJSON layer if visible */}
+          {layers.map(layer => 
+            visibleLayers[layer.id] && (
+              <GeoJSON 
+                key={layer.id}
+                data={layer.geojson}
+                style={getLayerStyle}
+              />
+            )
           )}
 
-          {/* Legend positioned at bottom left */}
-          <Collapse in={showLegend} timeout={300}>
-            <LegendBox>
-              <MapLegend items={legendItems} />
-            </LegendBox>
-          </Collapse>
-        </Map>
+          {/* Add Zoom Control in a better position for mobile */}
+          <ZoomControl position={isMobile ? 'bottomright' : 'topright'} />
+        </MapContainer>
+
+        {/* Desktop controls */}
+        <ControlsContainer>
+          <LayerControl
+            layers={layers.map(l => ({ id: l.id, name: l.name }))}
+            visibility={visibleLayers}
+            onToggle={onToggleLayer}
+          />
+        </ControlsContainer>
+
+        {/* Fullscreen button */}
+        <FullscreenButton
+          onClick={toggleFullscreen}
+          aria-label="Toggle fullscreen"
+          size="small"
+        >
+          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+        </FullscreenButton>
+
+        {/* Legend toggle button */}
+        {isMobile && (
+          <LegendToggle
+            startIcon={<InfoIcon />}
+            size="small"
+            onClick={() => setShowLegend(!showLegend)}
+            variant="outlined"
+          >
+            {showLegend ? 'Ocultar' : 'Legenda'}
+          </LegendToggle>
+        )}
+
+        {/* Legend positioned at bottom left */}
+        <Collapse in={showLegend} timeout={300}>
+          <LegendBox>
+            <MapLegend items={legendItems} />
+          </LegendBox>
+        </Collapse>
 
         {/* Mobile layers button */}
         <MobileFab
@@ -319,7 +310,7 @@ const MapVisualization = ({
             <MapLegend items={legendItems} />
           </Box>
         </Drawer>
-      </MapContainer>
+      </MapContainerWrapper>
     </Paper>
   );
 };

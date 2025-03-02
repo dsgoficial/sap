@@ -56,8 +56,8 @@ export default defineConfig(({ mode }) => {
               'zod'
             ],
             'vendor-maps': [
-              'maplibre-gl',
-              'react-map-gl'
+              'leaflet',
+              'react-leaflet'
             ]
           }
         }

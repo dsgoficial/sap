@@ -24,7 +24,7 @@ const LayerControl = ({ layers, visibility, onToggle }: LayerControlProps) => {
   return (
     <>
       <Typography variant="subtitle2" gutterBottom>
-        Layers
+        Camadas
       </Typography>
       <List dense sx={{ pt: 0 }}>
         {layers.map(layer => (

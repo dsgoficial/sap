@@ -1,3 +1,4 @@
+// Path: components\layouts\AuthLayout.tsx
 import { ReactNode } from 'react';
 import { Box, Container, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
@@ -39,13 +40,13 @@ export const AuthLayout = ({
   return (
     <BackgroundBox bgImageNumber={backgroundImageNumber}>
       <Container maxWidth={maxWidth} sx={{ py: 4 }}>
-          {title && (
-            <Typography component="h1" variant="h5" gutterBottom>
-              {title}
-            </Typography>
-          )}
+        {title && (
+          <Typography component="h1" variant="h5" gutterBottom>
+            {title}
+          </Typography>
+        )}
 
-          {children}
+        {children}
       </Container>
     </BackgroundBox>
   );

@@ -13,8 +13,8 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
+  Button
 } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -173,7 +173,7 @@ const Login = () => {
                 }}
               />
 
-              <LoadingButton
+              <Button
                 type="submit"
                 fullWidth
                 variant="contained"
@@ -186,7 +186,7 @@ const Login = () => {
                 }}
               >
                 Entrar
-              </LoadingButton>
+              </Button>
             </Box>
           </Paper>
         </Container>

@@ -38,13 +38,11 @@ interface TimelineVisualizationProps {
   idBar?: string;
   options: VisavailOptions;
   dataset: VisavailDataset[];
-  height?: number;
 }
 
 export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
   options,
-  dataset,
-  height = 500,
+  dataset
 }) => {
   const transformedGroups: TimelineGroup[] = dataset.map(item => {
     const timelineItems: TimelineItem[] = item.data.map(
@@ -73,7 +71,6 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
       <EnhancedTimeline
         title={options.title.text}
         groups={transformedGroups}
-        height={height}
       />
     </Box>
   );

@@ -17,19 +17,3 @@ export const formatDate = (dateString?: string | Date | null): string => {
     return '';
   }
 };
-
-/**
- * Formata iniciais de um nome (ex: "John Doe" -> "JD")
- * @param name Nome completo
- * @returns Iniciais ou string vazia se inválido
- */
-export const formatInitials = (name?: string | null): string => {
-  if (!name) return '';
-
-  return name
-    .split(' ')
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
-};

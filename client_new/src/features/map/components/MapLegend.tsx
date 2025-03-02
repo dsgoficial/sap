@@ -10,7 +10,7 @@ const MapLegend = ({ items }: MapLegendProps) => {
   return (
     <Box>
       <Typography variant="subtitle2" gutterBottom>
-        Legend
+        Legenda
       </Typography>
       {items.map((item, index) => (
         <Box

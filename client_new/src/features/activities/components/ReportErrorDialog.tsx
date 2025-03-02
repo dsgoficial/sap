@@ -16,10 +16,9 @@ import {
   useMediaQuery,
   useTheme,
   IconButton,
-  Typography,
+  Typography
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { LoadingButton } from '@mui/lab';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -198,14 +197,14 @@ export const ReportErrorDialog = ({
           >
             Cancelar
           </Button>
-          <LoadingButton
+          <Button
             type="submit"
             loading={isSubmitting}
             variant="contained"
             color="primary"
           >
             Enviar
-          </LoadingButton>
+          </Button>
         </DialogActions>
       </form>
     </Dialog>
