@@ -1,7 +1,6 @@
 // Path: App.tsx
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
 import theme from './lib/theme';
@@ -25,7 +24,6 @@ const App = () => {
             </BrowserRouter>
           </SnackbarProvider>
         </ThemeProvider>
-        <ReactQueryDevtools initialIsOpen={false} position="bottom" />
       </QueryClientProvider>
     </ErrorBoundary>
   );

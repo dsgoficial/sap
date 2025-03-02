@@ -78,6 +78,7 @@ const Login = () => {
               flexDirection: 'column',
               alignItems: 'center',
               borderRadius: 2,
+              boxShadow: theme.shadows[2],
               backdropFilter: 'blur(5px)',
               backgroundColor: 'rgba(255, 255, 255, 0.9)',
             }}
