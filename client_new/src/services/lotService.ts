@@ -7,9 +7,14 @@ import { LotSubphaseData } from '../types/lot';
  * Get lot statistics
  */
 export const getLots = async (): Promise<ApiResponse<LotSubphaseData[]>> => {
-  const year = new Date().getFullYear();
-  const response = await apiClient.get<ApiResponse<LotSubphaseData[]>>(
-    `/api/acompanhamento/pit/subfase/${year}`
-  );
-  return response.data;
+  try {
+    const year = new Date().getFullYear();
+    const response = await apiClient.get<ApiResponse<LotSubphaseData[]>>(
+      `/api/acompanhamento/pit/subfase/${year}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching lots:', error);
+    throw error;
+  }
 };

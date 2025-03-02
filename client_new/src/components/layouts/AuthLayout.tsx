@@ -14,7 +14,7 @@ interface AuthLayoutProps {
 const defaultImageNumber = Math.floor(Math.random() * 5) + 1;
 
 const BackgroundBox = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'bgImageNumber'
+  shouldForwardProp: prop => prop !== 'bgImageNumber',
 })<{ bgImageNumber: number }>(({ bgImageNumber }) => ({
   backgroundImage: `url('/images/img-${bgImageNumber}.jpg')`,
   backgroundPosition: 'center',
@@ -38,11 +38,11 @@ const ContentPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: 'rgba(255, 255, 255, 0.9)',
 }));
 
-export const AuthLayout = ({ 
-  children, 
+export const AuthLayout = ({
+  children,
   title,
   backgroundImageNumber = defaultImageNumber,
-  maxWidth = 'sm'
+  maxWidth = 'sm',
 }: AuthLayoutProps) => {
   return (
     <BackgroundBox bgImageNumber={backgroundImageNumber}>
@@ -53,7 +53,7 @@ export const AuthLayout = ({
               {title}
             </Typography>
           )}
-          
+
           {children}
         </ContentPaper>
       </Container>

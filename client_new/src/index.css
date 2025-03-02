@@ -18,7 +18,7 @@ body {
   font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #F4F6F8;
+  background-color: #f4f6f8;
 }
 
 a {
@@ -48,7 +48,7 @@ a {
 div.tooltip-donut {
   position: absolute;
   text-align: center;
-  padding: .5rem;
+  padding: 0.5rem;
   background: white;
   color: #313639;
   border: 1px solid #313639;

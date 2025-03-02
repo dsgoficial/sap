@@ -1,5 +1,5 @@
 // Path: components\ui\Table.tsx
-import React, { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import {
   Table as MuiTable,
   TableProps as MuiTableProps,
@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
-export interface Column<T> {
+interface Column<T extends Record<string, any>> {
   id: string;
   label: string;
   align?: 'left' | 'center' | 'right';
@@ -30,7 +30,8 @@ export interface Column<T> {
   sortable?: boolean;
 }
 
-export interface TableProps<T> extends Omit<MuiTableProps, 'rows'> {
+interface TableProps<T extends Record<string, any>>
+  extends Omit<MuiTableProps, 'rows'> {
   columns: Column<T>[];
   rows: T[];
   isLoading?: boolean;
@@ -62,16 +63,11 @@ export interface TableProps<T> extends Omit<MuiTableProps, 'rows'> {
       previousPage?: string;
       nextPage?: string;
       lastPage?: string;
-    }
+    };
   };
 }
 
-const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-  borderRadius: theme.shape.borderRadius,
-  boxShadow: theme.shadows[1],
-}));
-
-const LoadingContainer = styled(Box)(({ theme }) => ({
+const LoadingContainer = styled(Box)(() => ({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
@@ -112,10 +108,10 @@ const DEFAULT_LOCALIZATION = {
     previousPage: 'Página anterior',
     nextPage: 'Próxima página',
     lastPage: 'Última página',
-  }
+  },
 };
 
-export function Table<T>({
+export function Table<T extends Record<string, any>>({
   columns,
   rows,
   isLoading = false,
@@ -137,8 +133,8 @@ export function Table<T>({
     ...customLocalization,
     pagination: {
       ...DEFAULT_LOCALIZATION.pagination,
-      ...(customLocalization?.pagination || {})
-    }
+      ...(customLocalization?.pagination || {}),
+    },
   };
 
   // Search state
@@ -156,7 +152,7 @@ export function Table<T>({
     const filtered = rows.filter(row => {
       // Search through all properties of the row
       return Object.keys(row).some(key => {
-        const value = (row as any)[key];
+        const value = row[key];
         if (value === null || value === undefined) return false;
         return String(value).toLowerCase().includes(searchTermLower);
       });
@@ -181,11 +177,11 @@ export function Table<T>({
   // Render loading state
   if (isLoading) {
     return (
-      <StyledTableContainer component={Paper}>
+      <Paper>
         <LoadingContainer>
           <CircularProgress />
         </LoadingContainer>
-      </StyledTableContainer>
+      </Paper>
     );
   }
 
@@ -198,7 +194,7 @@ export function Table<T>({
         size="small"
         placeholder={searchPlaceholder || localization.searchPlaceholder}
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={e => setSearchTerm(e.target.value)}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -213,77 +209,85 @@ export function Table<T>({
   // Render empty state
   if (filteredRows.length === 0) {
     return (
-      <StyledTableContainer component={Paper}>
+      <Paper>
         <SearchBar />
         <EmptyContainer>
           <Typography variant="body2" color="text.secondary">
             {emptyMessage || localization.emptyDataMessage}
           </Typography>
         </EmptyContainer>
-      </StyledTableContainer>
+      </Paper>
     );
   }
 
   return (
-    <StyledTableContainer component={Paper} sx={{ maxHeight }}>
+    <Paper sx={{ maxHeight }}>
       <SearchBar />
-      <MuiTable stickyHeader={stickyHeader} {...rest}>
-        <TableHead>
-          <TableRow>
-            {columns.map((column) => (
-              <TableCell
-                key={column.id}
-                align={column.align || 'left'}
-                style={{ 
-                  minWidth: column.minWidth,
-                  maxWidth: column.maxWidth,
-                  fontWeight: 600,
-                }}
-              >
-                {sorting && column.sortable ? (
-                  <TableSortLabel
-                    active={sorting.orderBy === column.id}
-                    direction={sorting.orderBy === column.id ? sorting.order : 'asc'}
-                    onClick={() => sorting.onSort(column.id)}
-                  >
-                    {column.label}
-                  </TableSortLabel>
-                ) : (
-                  column.label
-                )}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredRows.map((row, index) => {
-            const backgroundColor = rowBackgroundColor ? rowBackgroundColor(row, index) : undefined;
-            
-            return (
-              <TableRow
-                hover
-                onClick={() => handleRowClick(row)}
-                key={getRowKey(row, index)}
-                sx={{
-                  cursor: onRowClick ? 'pointer' : 'default',
-                  backgroundColor,
-                  '&:nth-of-type(odd)': !backgroundColor ? { backgroundColor: 'action.hover' } : {},
-                  '&:last-child td, &:last-child th': { border: 0 },
-                }}
-              >
-                {columns.map((column) => {
-                  const value = row[column.id as keyof T];
-                  return (
-                    <TableCell key={column.id} align={column.align || 'left'}>
-                      {column.format ? column.format(value, row) : value}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </MuiTable>
+      <TableContainer sx={{ maxHeight }}>
+        <MuiTable stickyHeader={stickyHeader} {...rest}>
+          <TableHead>
+            <TableRow>
+              {columns.map(column => (
+                <TableCell
+                  key={column.id}
+                  align={column.align || 'left'}
+                  style={{
+                    minWidth: column.minWidth,
+                    maxWidth: column.maxWidth,
+                    fontWeight: 600,
+                  }}
+                >
+                  {sorting && column.sortable ? (
+                    <TableSortLabel
+                      active={sorting.orderBy === column.id}
+                      direction={
+                        sorting.orderBy === column.id ? sorting.order : 'asc'
+                      }
+                      onClick={() => sorting.onSort(column.id)}
+                    >
+                      {column.label}
+                    </TableSortLabel>
+                  ) : (
+                    column.label
+                  )}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredRows.map((row, index) => {
+              const backgroundColor = rowBackgroundColor
+                ? rowBackgroundColor(row, index)
+                : undefined;
+
+              return (
+                <TableRow
+                  hover
+                  onClick={() => handleRowClick(row)}
+                  key={getRowKey(row, index)}
+                  sx={{
+                    cursor: onRowClick ? 'pointer' : 'default',
+                    backgroundColor,
+                    '&:nth-of-type(odd)': !backgroundColor
+                      ? { backgroundColor: 'action.hover' }
+                      : {},
+                    '&:last-child td, &:last-child th': { border: 0 },
+                  }}
+                >
+                  {columns.map(column => {
+                    const value = row[column.id];
+                    return (
+                      <TableCell key={column.id} align={column.align || 'left'}>
+                        {column.format ? column.format(value, row) : value}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </MuiTable>
+      </TableContainer>
 
       {pagination && (
         <PaginationContainer>
@@ -298,7 +302,7 @@ export function Table<T>({
             variant="outlined"
             shape="rounded"
             aria-label="Navegação paginada"
-            getItemAriaLabel={(type) => {
+            getItemAriaLabel={type => {
               switch (type) {
                 case 'first':
                   return localization.pagination?.firstPage || '';
@@ -315,6 +319,6 @@ export function Table<T>({
           />
         </PaginationContainer>
       )}
-    </StyledTableContainer>
+    </Paper>
   );
 }

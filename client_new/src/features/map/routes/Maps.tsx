@@ -1,18 +1,23 @@
 // Path: features\map\routes\Maps.tsx
-import { useEffect } from 'react';
-import { Container, Box, Typography, Alert, CircularProgress } from '@mui/material';
-import Page from '../../../components/Page';
-import { useMapData, getLegendItems } from '../hooks/useMap';
+import {
+  Container,
+  Box,
+  Typography,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import Page from '@/components/Page/Page';
+import { useMapData, getLegendItems } from '@/hooks/useMap';
 import MapVisualization from '../components/MapVisualization';
-import { useMapStore } from '../store/mapStore';
-import { useAuthStore } from '../../../stores/authStore';
+import { useMapStore } from '@/stores/mapStore';
+import { useAuthStore } from '@/stores/authStore';
 import { Navigate } from 'react-router-dom';
 
 export const Maps = () => {
   const { isAdmin } = useAuthStore();
-  const { isLoading, isError, error } = useMapData();
+  const { isLoading, isError } = useMapData();
   const { layers, visibleLayers, toggleLayerVisibility } = useMapStore();
-  
+
   // Redirect if not admin
   if (!isAdmin) {
     return <Navigate to="/login" replace />;
@@ -22,7 +27,12 @@ export const Maps = () => {
     return (
       <Page title="Mapas de Acompanhamento">
         <Container maxWidth="xl">
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="60vh"
+          >
             <CircularProgress />
           </Box>
         </Container>
@@ -60,12 +70,10 @@ export const Maps = () => {
           initialViewState={{
             longitude: -52.956841,
             latitude: -15.415179,
-            zoom: 3.65
+            zoom: 3.65,
           }}
         />
       </Container>
     </Page>
   );
 };
-
-export default Maps;

@@ -1,7 +1,7 @@
 // Path: features\dashboard\components\StatusCards.tsx
 import { Grid, Paper, Typography, Box, LinearProgress } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { DashboardSummary } from '../../../types/dashboard';
+import { DashboardSummary } from '@/types/dashboard';
 
 interface StatusCardsProps {
   data: DashboardSummary;
@@ -14,12 +14,12 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   flexDirection: 'column',
   height: 200,
   justifyContent: 'center',
-  alignItems: 'center'
+  alignItems: 'center',
 }));
 
 const ProgressContainer = styled(Box)(({ theme }) => ({
   width: '100%',
-  marginTop: theme.spacing(2)
+  marginTop: theme.spacing(2),
 }));
 
 export const StatusCards = ({ data, isLoading }: StatusCardsProps) => {
@@ -41,7 +41,7 @@ export const StatusCards = ({ data, isLoading }: StatusCardsProps) => {
           )}
         </StyledPaper>
       </Grid>
-      
+
       <Grid item xs={12} md={4}>
         <StyledPaper elevation={2}>
           <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -57,17 +57,17 @@ export const StatusCards = ({ data, isLoading }: StatusCardsProps) => {
                 {data.progressPercentage.toFixed(2)}%
               </Typography>
               <ProgressContainer>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={data.progressPercentage} 
-                  sx={{ height: 10, borderRadius: 1 }} 
+                <LinearProgress
+                  variant="determinate"
+                  value={data.progressPercentage}
+                  sx={{ height: 10, borderRadius: 1 }}
                 />
               </ProgressContainer>
             </>
           )}
         </StyledPaper>
       </Grid>
-      
+
       <Grid item xs={12} md={4}>
         <StyledPaper elevation={2}>
           <Typography variant="h6" color="text.secondary" gutterBottom>

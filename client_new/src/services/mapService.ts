@@ -1,24 +1,33 @@
 // Path: services\mapService.ts
 import apiClient from '../lib/axios';
 import { ApiResponse } from '../types/api';
-import { ViewsResponse, GeoJSONData } from '../types/map';
 
 /**
- * Get available map views
+ * Get map views
  */
-export const getViews = async (): Promise<ApiResponse<ViewsResponse>> => {
-  const response = await apiClient.get<ApiResponse<ViewsResponse>>(
-    '/api/gerencia/view_acompanhamento?em_andamento=true'
-  );
-  return response.data;
+export const getViews = async () => {
+  try {
+    const response = await apiClient.get<ApiResponse<any>>(
+      '/api/producao/views',
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching map views:', error);
+    throw error;
+  }
 };
 
 /**
- * Get GeoJSON data for a specific lot
+ * Get GeoJSON data for a lot
  */
-export const getLotGeoJSON = async (lot: string): Promise<ApiResponse<GeoJSONData[]>> => {
-  const response = await apiClient.get<ApiResponse<GeoJSONData[]>>(
-    `/api/acompanhamento/mapa/${lot}`
-  );
-  return response.data;
+export const getLotGeoJSON = async (lotName: string) => {
+  try {
+    const response = await apiClient.get<ApiResponse<any>>(
+      `/api/producao/views/lote/${lotName}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching GeoJSON for lot ${lotName}:`, error);
+    throw error;
+  }
 };

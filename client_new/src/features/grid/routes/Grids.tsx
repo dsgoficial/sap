@@ -1,11 +1,15 @@
 // Path: features\grid\routes\Grids.tsx
-import { useState } from 'react';
-import { Container, Box, Typography, Alert, CircularProgress } from '@mui/material';
-import Page from '../../../components/Page';
-import { useGridStatistics } from '../hooks/useGrid';
-import GridCard from '../components/GridCard';
-import { UserRole } from '../../../types/auth';
-import { useAuthStore } from '../../../stores/authStore';
+import {
+  Container,
+  Box,
+  Typography,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import Page from '@/components/Page/Page';
+import { useGridStatistics } from '@/hooks/useGrid';
+import { GridCard } from '../components/GridCard';
+import { useAuthStore } from '@/stores/authStore';
 import { Navigate } from 'react-router-dom';
 
 export const Grids = () => {
@@ -21,7 +25,12 @@ export const Grids = () => {
     return (
       <Page title="Grade de Acompanhamento">
         <Container maxWidth="xl">
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="60vh"
+          >
             <CircularProgress />
           </Box>
         </Container>
@@ -54,12 +63,13 @@ export const Grids = () => {
             flexWrap: 'wrap',
             justifyContent: 'center',
             gap: 2,
-            width: '100%'
+            width: '100%',
           }}
         >
-          {data && data.map((grid, idx) => (
-            <GridCard key={idx} id={idx} grid={grid} />
-          ))}
+          {data &&
+            data.map((grid, idx) => (
+              <GridCard key={idx} id={idx} grid={grid} />
+            ))}
 
           {data && data.length === 0 && (
             <Alert severity="info" sx={{ width: '100%', mt: 2 }}>
@@ -71,5 +81,3 @@ export const Grids = () => {
     </Page>
   );
 };
-
-export default Grids;

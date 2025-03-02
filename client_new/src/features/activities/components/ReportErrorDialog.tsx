@@ -1,27 +1,25 @@
 // Path: features\activities\components\ReportErrorDialog.tsx
-import { useState, useEffect } from 'react';
-import { 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  Button, 
-  TextField, 
-  FormControl, 
-  InputLabel, 
-  MenuItem, 
-  Select, 
+import { useEffect } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   FormHelperText,
-  Box
+  Box,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
-import { getErrorTypes } from '../../../services/activityService';
-import { ErrorReport } from '../../../types/activity';
-import { useActivities } from '../../../hooks/useActivities';
+import { ErrorReport, ErrorType } from '@/types/activity';
+import { useActivities } from '@/hooks/useActivities';
 
 // Form validation schema
 const errorReportSchema = z.object({
@@ -41,27 +39,27 @@ interface ReportErrorDialogProps {
   isSubmitting: boolean;
 }
 
-export const ReportErrorDialog = ({ 
-  open, 
-  onClose, 
-  onSubmit, 
-  isSubmitting 
+export const ReportErrorDialog = ({
+  open,
+  onClose,
+  onSubmit,
+  isSubmitting,
 }: ReportErrorDialogProps) => {
   const { currentActivity, errorTypes } = useActivities();
-  
-  const { 
-    control, 
-    handleSubmit, 
+
+  const {
+    control,
+    handleSubmit,
     reset,
-    formState: { errors } 
+    formState: { errors },
   } = useForm<ErrorReportForm>({
     resolver: zodResolver(errorReportSchema),
     defaultValues: {
       tipo_problema_id: 0,
       descricao: '',
-    }
+    },
   });
-  
+
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
@@ -71,20 +69,20 @@ export const ReportErrorDialog = ({
       });
     }
   }, [open, reset]);
-  
+
   const onFormSubmit = (data: ErrorReportForm) => {
     if (!currentActivity?.id) return;
-    
+
     onSubmit({
       atividade_id: currentActivity.id,
-      ...data
+      ...data,
     });
   };
-  
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Reportar Problema</DialogTitle>
-      
+
       <form onSubmit={handleSubmit(onFormSubmit)}>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
@@ -93,27 +91,37 @@ export const ReportErrorDialog = ({
               control={control}
               render={({ field }) => (
                 <FormControl fullWidth error={!!errors.tipo_problema_id}>
-                  <InputLabel id="error-type-label">Tipo de Problema</InputLabel>
+                  <InputLabel id="error-type-label">
+                    Tipo de Problema
+                  </InputLabel>
                   <Select
                     {...field}
                     labelId="error-type-label"
                     label="Tipo de Problema"
                     value={field.value || ''}
                   >
-                    <MenuItem value={0} disabled>Selecione o tipo de problema</MenuItem>
-                    {errorTypes.map((type) => (
-                      <MenuItem key={type.tipo_problema_id} value={type.tipo_problema_id}>
-                        {type.tipo_problema}
-                      </MenuItem>
-                    ))}
+                    <MenuItem value={0} disabled>
+                      Selecione o tipo de problema
+                    </MenuItem>
+                    {Array.isArray(errorTypes) &&
+                      errorTypes.map((type: ErrorType) => (
+                        <MenuItem
+                          key={type.tipo_problema_id}
+                          value={type.tipo_problema_id}
+                        >
+                          {type.tipo_problema}
+                        </MenuItem>
+                      ))}
                   </Select>
                   {errors.tipo_problema_id && (
-                    <FormHelperText>{errors.tipo_problema_id.message}</FormHelperText>
+                    <FormHelperText>
+                      {errors.tipo_problema_id.message}
+                    </FormHelperText>
                   )}
                 </FormControl>
               )}
             />
-            
+
             <Controller
               name="descricao"
               control={control}
@@ -131,13 +139,13 @@ export const ReportErrorDialog = ({
             />
           </Box>
         </DialogContent>
-        
+
         <DialogActions>
           <Button onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <LoadingButton 
-            type="submit" 
+          <LoadingButton
+            type="submit"
             loading={isSubmitting}
             variant="contained"
             color="primary"

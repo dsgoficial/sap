@@ -1,9 +1,9 @@
 // Path: features\grid\components\Grid.tsx
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { styled } from '@mui/material/styles';
-import { Box, Typography, Paper } from '@mui/material';
-import { GridItem, GridData } from '../types';
+import { Typography, Paper } from '@mui/material';
+import { GridItem, GridData } from '@/types/grid';
 
 // Styled components
 const GridContainer = styled('div')({
@@ -35,91 +35,102 @@ interface GridProps {
   height?: number;
 }
 
-export const Grid = ({ 
-  id, 
-  data, 
+export const Grid = ({
+  id: _id, // Renamed to _id to indicate it's not used
+  data,
   onItemHover,
-  width = 11, 
-  height = 11 
+  width = 11,
+  height = 11,
 }: GridProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  
+
   // Calculate grid size
   const calculateGrid = () => {
-    if (!data.grade || data.grade.length === 0) return { rowSize: 0, colSize: 0 };
-    
+    if (!data.grade || data.grade.length === 0)
+      return { rowSize: 0, colSize: 0 };
+
     const rowSize = Math.max(...data.grade.map(item => item.i));
     const colSize = Math.max(...data.grade.map(item => item.j));
-    
+
     return { rowSize, colSize };
   };
-  
+
   const { rowSize, colSize } = calculateGrid();
-  
+
   // D3 code for grid visualization
   useEffect(() => {
     if (!svgRef.current || rowSize === 0 || colSize === 0) return;
-    
+
     // Clear previous content
     d3.select(svgRef.current).selectAll('*').remove();
-    
+
     // Create matrix data
     const createGridData = () => {
-      const matrix: (GridItem & { 
-        x: number; 
-        y: number; 
-        width: number; 
-        height: number; 
+      const matrix: (GridItem & {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
       })[][] = Array(rowSize)
         .fill(undefined)
         .map(() => Array(colSize).fill(undefined));
-      
+
       data.grade.forEach(item => {
-        if (item.i > 0 && item.j > 0 && item.i <= rowSize && item.j <= colSize) {
+        if (
+          item.i > 0 &&
+          item.j > 0 &&
+          item.i <= rowSize &&
+          item.j <= colSize
+        ) {
           matrix[item.i - 1][item.j - 1] = {
             x: (item.j - 1) * width,
             y: (item.i - 1) * height,
             width,
             height,
-            ...item
+            ...item,
           };
         }
       });
-      
+
       return matrix;
     };
-    
+
     const gridData = createGridData();
-    
+
     // Create SVG
-    const svg = d3.select(svgRef.current)
+    const svg = d3
+      .select(svgRef.current)
       .attr('width', colSize * width + 1)
       .attr('height', rowSize * height + 1);
-    
+
     // Create rows
-    const row = svg.selectAll('.row')
+    const row = svg
+      .selectAll('.row')
       .data(gridData)
-      .enter().append('g')
+      .enter()
+      .append('g')
       .attr('class', 'row');
-    
+
     // Create cells
-    const cells = row.selectAll('.square')
+    row
+      .selectAll('.square')
       .data(d => d)
-      .enter().append('rect')
+      .enter()
+      .append('rect')
       .attr('class', 'square')
-      .style('fill', d => d?.visited ? "#AAC8A7" : '#fff')
+      .style('fill', d => (d?.visited ? '#AAC8A7' : '#fff'))
       .attr('x', d => d?.x || 0)
       .attr('y', d => d?.y || 0)
       .attr('width', width)
       .attr('height', height)
       .style('stroke', '#222')
-      .on('mouseover', function(event, d) {
+      .on('mouseover', function (event, d) {
         if (!d?.visited) return;
-        
+
         // Update current item
         onItemHover(d);
-        
+
         // Show tooltip
         if (tooltipRef.current) {
           d3.select(tooltipRef.current)
@@ -130,39 +141,41 @@ export const Grid = ({
       })
       .on('mouseout', () => {
         onItemHover(null);
-        
+
         // Hide tooltip
         if (tooltipRef.current) {
-          d3.select(tooltipRef.current)
-            .style('opacity', 0);
+          d3.select(tooltipRef.current).style('opacity', 0);
         }
       });
-      
   }, [data, width, height, rowSize, colSize, onItemHover]);
-  
+
   // Calculate progress percentage
-  const progressPercentage = data.grade?.length > 0
-    ? ((data.grade.filter(item => item.visited).length / data.grade.length) * 100).toFixed(2)
-    : '0';
-  
+  const progressPercentage =
+    data.grade?.length > 0
+      ? (
+          (data.grade.filter(item => item.visited).length / data.grade.length) *
+          100
+        ).toFixed(2)
+      : '0';
+
   return (
     <Paper elevation={1} sx={{ p: 2, height: '300px', width: '100%' }}>
       <Typography variant="h6" align="center" gutterBottom>
         {`${data.projeto || ''} - ${data.lote || ''}`}
       </Typography>
-      
+
       <Typography variant="body2" align="center">
         {`Progresso: ${progressPercentage}%`}
       </Typography>
-      
+
       <GridContainer>
         <svg ref={svgRef} />
-        
+
         <GridTooltip ref={tooltipRef}>
           {/* Tooltip content will be dynamically updated */}
         </GridTooltip>
       </GridContainer>
-      
+
       {data.usuario && (
         <Typography variant="body2" align="center">
           Usuário: {data.usuario}
@@ -171,5 +184,3 @@ export const Grid = ({
     </Paper>
   );
 };
-
-export default Grid;

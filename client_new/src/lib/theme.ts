@@ -69,16 +69,12 @@ const theme = createTheme({
   shape: {
     borderRadius: 8,
   },
-  shadows: [
-    'none',
-    '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
-    // ... other shadows (customized as needed)
-  ],
   components: {
     MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: '0px 0px 2px rgba(0, 0, 0, 0.05), 0px 2px 10px rgba(0, 0, 0, 0.05)',
+          boxShadow:
+            '0px 0px 2px rgba(0, 0, 0, 0.05), 0px 2px 10px rgba(0, 0, 0, 0.05)',
           borderRadius: 12,
         },
       },

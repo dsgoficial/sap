@@ -1,9 +1,9 @@
 // Path: features\grid\components\GridCard.tsx
-import React, { useState } from 'react';
-import { Box, Card, CardContent, Typography } from '@mui/material';
-import Grid from './Grid';
-import { GridData, GridItem } from '../types';
-import { formatDate } from '../../../utils/formatters';
+import { useState } from 'react';
+import { Card, CardContent, Typography } from '@mui/material';
+import { Grid } from './Grid';
+import { GridData, GridItem } from '@/types/grid';
+import { formatDate } from '@/utils/formatters';
 
 interface GridCardProps {
   id: number;
@@ -11,11 +11,14 @@ interface GridCardProps {
 }
 
 export const GridCard = ({ id, grid }: GridCardProps) => {
-  const [currentMouseover, setCurrentMouseover] = useState<GridItem | null>(null);
+  const [currentMouseover, setCurrentMouseover] = useState<GridItem | null>(
+    null,
+  );
 
   const countTotal = grid.grade.length;
   const countVisited = grid.grade.filter(item => item.visited).length;
-  const progressPercentage = countTotal > 0 ? ((countVisited / countTotal) * 100).toFixed(2) : '0';
+  const progressPercentage =
+    countTotal > 0 ? ((countVisited / countTotal) * 100).toFixed(2) : '0';
 
   return (
     <Card
@@ -23,7 +26,7 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
         display: 'flex',
         flexDirection: 'column',
         gap: 3,
-        padding: '5px'
+        padding: '5px',
       }}
     >
       <CardContent
@@ -33,14 +36,10 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          height: '1px'
+          height: '1px',
         }}
       >
-        {countTotal > 0 && (
-          <Typography>
-            {`${progressPercentage}%`}
-          </Typography>
-        )}
+        {countTotal > 0 && <Typography>{`${progressPercentage}%`}</Typography>}
 
         <Typography>
           {currentMouseover && formatDate(currentMouseover.data_atualizacao)}
@@ -54,14 +53,14 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
           justifyContent: 'center',
           paddingBottom: '0px',
           width: '250px',
-          height: '250px'
+          height: '250px',
         }}
       >
         {countTotal > 0 && (
           <Grid
             id={id.toString()}
             data={grid}
-            onItemHover={(item) => setCurrentMouseover(item)}
+            onItemHover={item => setCurrentMouseover(item)}
           />
         )}
       </CardContent>
@@ -73,7 +72,7 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 1
+          gap: 1,
         }}
       >
         {[
@@ -81,14 +80,14 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
           grid.usuario,
           `${grid.projeto || '-'}-${grid.lote || '-'}`,
           `${grid.fase || '-'}-${grid.bloco || '-'}`,
-          `${grid.subfase || '-'}-${grid.etapa || '-'}`
+          `${grid.subfase || '-'}-${grid.etapa || '-'}`,
         ].map((label, idx) => (
           <Typography
             key={idx}
             sx={{
               textAlign: 'center',
               inlineSize: '250px',
-              overflowWrap: 'break-word'
+              overflowWrap: 'break-word',
             }}
           >
             {label}
@@ -98,5 +97,3 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
     </Card>
   );
 };
-
-export default GridCard;

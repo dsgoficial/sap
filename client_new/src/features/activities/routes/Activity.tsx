@@ -8,7 +8,7 @@ export const Activity = () => {
       <Typography variant="h4" align="center" gutterBottom>
         Sistema de Apoio à Produção
       </Typography>
-      
+
       <Box sx={{ mt: 4 }}>
         <ActivityCard />
       </Box>

@@ -1,24 +1,25 @@
 // Path: features\auth\routes\Login.tsx
 import { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { 
-  Container, 
-  TextField, 
-  Button, 
-  Box, 
-  Avatar, 
-  Typography, 
-  Alert 
+import {
+  Box,
+  TextField,
+  Avatar,
+  Typography,
+  Alert,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useSnackbar } from 'notistack';
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { AuthLayout } from '@/components/layouts/AuthLayout';
-import Page from '@/components/Page';
-import { useAuthStore } from '@/stores/authStore';
+import Page from '@/components/Page/Page';
+import { useAuth } from '@/hooks/useAuth';
 
 // Form validation schema
 const loginSchema = z.object({
@@ -29,40 +30,27 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const { enqueueSnackbar } = useSnackbar();
   const location = useLocation();
-  const { isAuthenticated, login } = useAuthStore();
-  const [error, setError] = useState<string | null>(null);
-  
+  const { isAuthenticated, login, error: authError } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+
   // Get the random image number (1-5) for consistent layout with the original
   const [randomImageNumber] = useState(() => Math.floor(Math.random() * 5) + 1);
 
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { errors, isSubmitting } 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       usuario: '',
-      senha: ''
-    }
+      senha: '',
+    },
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    try {
-      const success = await login(data);
-      if (success) {
-        enqueueSnackbar('Login realizado com sucesso!', { variant: 'success' });
-        // Navigate is handled by the auth store
-      } else {
-        setError('Usuário ou senha inválidos');
-        enqueueSnackbar('Usuário e Senha não encontrados!', { variant: 'error' });
-      }
-    } catch (error) {
-      setError('Erro ao fazer login. Tente novamente.');
-      enqueueSnackbar('Falha na autenticação', { variant: 'error' });
-    }
+    login(data);
   };
 
   // Redirect if already authenticated
@@ -72,10 +60,18 @@ const Login = () => {
   }
 
   return (
-    <Page title="Sistema de Apoio à Produção">
+    <Page title="Login | Sistema de Apoio à Produção">
       {/* Use AuthLayout with our random background image number */}
       <AuthLayout backgroundImageNumber={randomImageNumber}>
-        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            mb: 3,
+          }}
+        >
           <Avatar sx={{ bgcolor: 'primary.main', mb: 2 }}>
             <AutoGraphIcon />
           </Avatar>
@@ -83,14 +79,18 @@ const Login = () => {
             Sistema de Apoio à Produção
           </Typography>
         </Box>
-        
-        {error && (
+
+        {authError && (
           <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
-            {error}
+            {authError}
           </Alert>
         )}
-        
-        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%', mt: 1 }}>
+
+        <Box
+          component="form"
+          onSubmit={handleSubmit(onSubmit)}
+          sx={{ width: '100%', mt: 1 }}
+        >
           <TextField
             margin="normal"
             fullWidth
@@ -102,19 +102,31 @@ const Login = () => {
             error={!!errors.usuario}
             helperText={errors.usuario?.message}
           />
-          
+
           <TextField
             margin="normal"
             fullWidth
             id="senha"
             label="Senha"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
             {...register('senha')}
             error={!!errors.senha}
             helperText={errors.senha?.message}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
-          
+
           <LoadingButton
             type="submit"
             fullWidth

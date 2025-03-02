@@ -4,30 +4,35 @@ import { ApiResponse } from '../types/api';
 import { LoginRequest, LoginResponse } from '../types/auth';
 
 const APLICACAO = 'sap_web';
+const TOKEN_EXPIRY_KEY = '@sap_web-Token-Expiry';
 
 /**
  * Login user with username and password
  */
-export const login = async (credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
-  const response = await apiClient.post<ApiResponse<LoginResponse>>('/api/login', {
-    usuario: credentials.usuario,
-    senha: credentials.senha,
-    aplicacao: APLICACAO,
-    cliente: 'sap'
-  });
-  
-  return response.data;
-};
-
-/**
- * Check if the current token is still valid
- */
-export const validateToken = async (): Promise<boolean> => {
+export const login = async (
+  credentials: LoginRequest,
+): Promise<ApiResponse<LoginResponse>> => {
   try {
-    // This could be a lightweight endpoint that just checks token validity
-    await apiClient.get('/api/validate-token');
-    return true;
+    const response = await apiClient.post<ApiResponse<LoginResponse>>(
+      '/api/login',
+      {
+        usuario: credentials.usuario,
+        senha: credentials.senha,
+        aplicacao: APLICACAO,
+        cliente: 'sap',
+      },
+    );
+
+    // If login is successful, store token expiry (assuming token valid for 24 hours)
+    if (response.data.success && response.data.dados.token) {
+      const expiryTime = new Date();
+      expiryTime.setHours(expiryTime.getHours() + 24);
+      localStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toISOString());
+    }
+
+    return response.data;
   } catch (error) {
-    return false;
+    console.error('Error during login:', error);
+    throw error;
   }
 };

@@ -1,5 +1,5 @@
 // Path: lib\axios.ts
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError } from 'axios';
 import { ApiError } from '../types/api';
 
 // Token storage key
@@ -16,21 +16,21 @@ const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
-  (config) => {
+  config => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor to handle errors
 apiClient.interceptors.response.use(
-  (response) => response,
+  response => response,
   (error: AxiosError) => {
     const apiError: ApiError = {
       message: error.message || 'An unexpected error occurred',
@@ -45,7 +45,7 @@ apiClient.interceptors.response.use(
     }
 
     return Promise.reject(apiError);
-  }
+  },
 );
 
 export default apiClient;

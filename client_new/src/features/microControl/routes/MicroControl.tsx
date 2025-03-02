@@ -1,23 +1,26 @@
 // Path: features\microControl\routes\MicroControl.tsx
-import { useState } from 'react';
-import { Container, Box, Typography, Alert, CircularProgress } from '@mui/material';
-import Page from '../../../components/Page';
-import { useMicroControlData } from '../hooks/useMicroControl';
-import { Table } from '../../../components/ui/Table';
-import { useAuthStore } from '../../../stores/authStore';
+import {
+  Container,
+  Box,
+  Typography,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import Page from '@/components/Page/Page';
+import { useMicroControlData } from '@/hooks/useMicroControl';
+import { Table } from '@/components/ui/Table';
+import { useAuthStore } from '@/stores/authStore';
 import { Navigate } from 'react-router-dom';
 
 export const MicroControl = () => {
   const { isAdmin } = useAuthStore();
-  const { 
-    runningActivities, 
-    completedActivities, 
-    isLoading, 
+  const {
+    runningActivities,
+    completedActivities,
     isLoadingRunning,
     isLoadingCompleted,
-    error, 
     errorRunning,
-    errorCompleted 
+    errorCompleted,
   } = useMicroControlData();
 
   // Redirect if not admin
@@ -37,7 +40,7 @@ export const MicroControl = () => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            gap: 2
+            gap: 2,
           }}
         >
           {/* Running Activities Table */}
@@ -52,7 +55,8 @@ export const MicroControl = () => {
               </Box>
             ) : errorRunning ? (
               <Alert severity="error" sx={{ mb: 2 }}>
-                Erro ao carregar atividades em execução. Por favor, tente novamente.
+                Erro ao carregar atividades em execução. Por favor, tente
+                novamente.
               </Alert>
             ) : runningActivities.length === 0 ? (
               <Alert severity="info" sx={{ mb: 2 }}>
@@ -74,7 +78,7 @@ export const MicroControl = () => {
                   { id: 'duration', label: 'Duração', align: 'left' },
                 ]}
                 rows={runningActivities}
-                rowKey={(row) => row.atividade_id}
+                rowKey={row => row.atividade_id}
               />
             )}
           </Box>
@@ -91,7 +95,8 @@ export const MicroControl = () => {
               </Box>
             ) : errorCompleted ? (
               <Alert severity="error" sx={{ mb: 2 }}>
-                Erro ao carregar atividades finalizadas. Por favor, tente novamente.
+                Erro ao carregar atividades finalizadas. Por favor, tente
+                novamente.
               </Alert>
             ) : completedActivities.length === 0 ? (
               <Alert severity="info" sx={{ mb: 2 }}>
@@ -113,7 +118,7 @@ export const MicroControl = () => {
                   { id: 'data_fim', label: 'Data Fim', align: 'left' },
                 ]}
                 rows={completedActivities}
-                rowKey={(row) => row.atividade_id}
+                rowKey={row => row.atividade_id}
               />
             )}
           </Box>
@@ -122,5 +127,3 @@ export const MicroControl = () => {
     </Page>
   );
 };
-
-export default MicroControl;
