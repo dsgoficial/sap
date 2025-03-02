@@ -10,6 +10,8 @@ import {
   Box,
   Alert,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useActivities } from '@/hooks/useActivities';
@@ -25,6 +27,8 @@ export const ActivityCard = () => {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const { handleActivityError } = useActivityErrorHandler();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const {
     currentActivity,
@@ -86,20 +90,34 @@ export const ActivityCard = () => {
           )}
         </CardContent>
 
-        <CardActions sx={{ justifyContent: 'center', p: 2 }}>
+        <CardActions
+          sx={{
+            justifyContent: 'center',
+            p: isMobile ? 1 : 2,
+            flexDirection: isMobile ? 'column' : 'row',
+          }}
+        >
           <Box
             sx={{
               width: '100%',
               display: 'flex',
               flexDirection: 'column',
-              gap: 2,
+              gap: isMobile ? 1 : 2,
             }}
           >
             {!isLoadingActivity && !currentActivity && (
-              <ButtonGroup variant="outlined" sx={{ alignSelf: 'center' }}>
+              <ButtonGroup
+                variant="outlined"
+                sx={{
+                  alignSelf: 'center',
+                  width: isMobile ? '100%' : 'auto',
+                }}
+                orientation={isMobile ? 'vertical' : 'horizontal'}
+              >
                 <Button
                   onClick={() => setShowStartDialog(true)}
                   disabled={isStartingActivity}
+                  fullWidth={isMobile}
                 >
                   {isStartingActivity ? 'Iniciando...' : 'Iniciar Atividade'}
                 </Button>
@@ -113,16 +131,25 @@ export const ActivityCard = () => {
             )}
 
             {currentActivity && !activityByQgis && (
-              <ButtonGroup variant="outlined" sx={{ alignSelf: 'center' }}>
+              <ButtonGroup
+                variant="outlined"
+                sx={{
+                  alignSelf: 'center',
+                  width: isMobile ? '100%' : 'auto',
+                }}
+                orientation={isMobile ? 'vertical' : 'horizontal'}
+              >
                 <Button
                   onClick={() => setShowErrorDialog(true)}
                   disabled={isReportingError}
+                  fullWidth={isMobile}
                 >
                   Reportar Problema
                 </Button>
                 <Button
                   onClick={() => setShowFinishDialog(true)}
                   disabled={isFinishingActivity}
+                  fullWidth={isMobile}
                 >
                   {isFinishingActivity ? 'Finalizando...' : 'Finalizar'}
                 </Button>

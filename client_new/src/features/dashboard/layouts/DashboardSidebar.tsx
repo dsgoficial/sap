@@ -1,6 +1,6 @@
 // Path: features\dashboard\layouts\DashboardSidebar.tsx
 import { useEffect } from 'react';
-import { useLocation, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   Box,
   Drawer,
@@ -12,8 +12,9 @@ import {
   ListItemText,
   Divider,
   IconButton,
+  useMediaQuery,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -47,13 +48,15 @@ const DashboardSidebar = ({
 }: DashboardSidebarProps) => {
   const { pathname } = useLocation();
   const { isAdmin } = useAuthStore();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
 
   // Close sidebar on mobile when navigating
   useEffect(() => {
-    if (isOpenSidebar) {
+    if (isMobile && isOpenSidebar) {
       onCloseSidebar();
     }
-  }, [pathname, isOpenSidebar, onCloseSidebar]);
+  }, [pathname, isMobile, isOpenSidebar, onCloseSidebar]);
 
   // Define menu items
   const menuItems = [
@@ -123,35 +126,8 @@ const DashboardSidebar = ({
     item => !item.adminOnly || (item.adminOnly && isAdmin),
   );
 
-  return (
-    <Drawer
-      variant="permanent"
-      open={isOpenSidebar}
-      sx={{
-        width: isOpenSidebar
-          ? drawerWidth
-          : theme => `calc(${theme.spacing(7)} + 1px)`,
-        flexShrink: 0,
-        whiteSpace: 'nowrap',
-        boxSizing: 'border-box',
-        '& .MuiDrawer-paper': {
-          width: isOpenSidebar
-            ? drawerWidth
-            : theme => `calc(${theme.spacing(7)} + 1px)`,
-          transition: theme =>
-            theme.transitions.create('width', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-          overflowX: 'hidden',
-        },
-        transition: theme =>
-          theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
-      }}
-    >
+  const drawer = (
+    <>
       <DrawerHeader>
         <Box
           sx={{
@@ -192,6 +168,10 @@ const DashboardSidebar = ({
               minHeight: 48,
               justifyContent: isOpenSidebar ? 'initial' : 'center',
               px: 2.5,
+              // Increase touch target on mobile
+              ...(isMobile && {
+                py: 1.5,
+              }),
             }}
           >
             <ListItemIcon
@@ -215,7 +195,65 @@ const DashboardSidebar = ({
           </ListItemButton>
         ))}
       </List>
-    </Drawer>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile drawer */}
+      {isMobile && (
+        <Drawer
+          variant="temporary"
+          open={isOpenSidebar}
+          onClose={onCloseSidebar}
+          ModalProps={{
+            keepMounted: true, // Better performance on mobile
+          }}
+          sx={{
+            display: { xs: 'block', lg: 'none' },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: drawerWidth,
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      )}
+
+      {/* Desktop drawer */}
+      <Drawer
+        variant="permanent"
+        open={isOpenSidebar}
+        sx={{
+          display: { xs: 'none', lg: 'block' },
+          width: isOpenSidebar
+            ? drawerWidth
+            : theme => `calc(${theme.spacing(7)} + 1px)`,
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
+          boxSizing: 'border-box',
+          '& .MuiDrawer-paper': {
+            width: isOpenSidebar
+              ? drawerWidth
+              : theme => `calc(${theme.spacing(7)} + 1px)`,
+            transition: theme =>
+              theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+            overflowX: 'hidden',
+          },
+          transition: theme =>
+            theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+        }}
+      >
+        {drawer}
+      </Drawer>
+    </>
   );
 };
 

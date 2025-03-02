@@ -8,7 +8,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { Typography, Box, Paper } from '@mui/material';
+import { Typography, Box, Paper, useTheme, useMediaQuery } from '@mui/material';
 
 interface PieChartDataPoint {
   label: string;
@@ -34,6 +34,17 @@ export const PieChart = ({
   showLegend = true,
   showLabels = true,
 }: PieChartProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
+  // Calculate responsive height
+  const responsiveHeight = isMobile
+    ? Math.min(250, height)
+    : isTablet
+      ? Math.min(280, height)
+      : height;
+
   // Transform data for Recharts format
   const chartData = useMemo(
     () =>
@@ -44,7 +55,7 @@ export const PieChart = ({
     [data],
   );
 
-  // Custom label renderer
+  // Custom label renderer - simplified for mobile
   const renderCustomizedLabel = ({
     cx,
     cy,
@@ -55,6 +66,9 @@ export const PieChart = ({
     name,
   }: any) => {
     if (!showLabels) return null;
+
+    // Don't show labels on mobile if too small
+    if (isMobile && percent < 0.1) return null;
 
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -68,10 +82,20 @@ export const PieChart = ({
         fill="white"
         textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
+        fontSize={isMobile ? 10 : 12}
       >
-        {`${name}: ${(percent * 100).toFixed(0)}%`}
+        {isMobile
+          ? `${(percent * 100).toFixed(0)}%`
+          : `${name}: ${(percent * 100).toFixed(0)}%`}
       </text>
     );
+  };
+
+  // Calculate optimal outer radius based on container size
+  const getOuterRadius = () => {
+    if (isMobile) return '55%';
+    if (isTablet) return '60%';
+    return '70%';
   };
 
   return (
@@ -79,13 +103,17 @@ export const PieChart = ({
       elevation={1}
       sx={{
         width: '100%',
-        height,
-        p: 2,
+        height: responsiveHeight,
+        p: isMobile ? 1 : 2,
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      <Typography variant="h6" align="center" gutterBottom>
+      <Typography
+        variant={isMobile ? 'subtitle1' : 'h6'}
+        align="center"
+        gutterBottom
+      >
         {title}
       </Typography>
 
@@ -98,9 +126,9 @@ export const PieChart = ({
               data={chartData}
               cx="50%"
               cy="50%"
-              labelLine={showLabels}
+              labelLine={showLabels && !isMobile}
               label={renderCustomizedLabel}
-              outerRadius="70%"
+              outerRadius={getOuterRadius()}
             >
               {chartData.map((_entry, index) => (
                 <Cell
@@ -112,8 +140,20 @@ export const PieChart = ({
                 />
               ))}
             </Pie>
-            {showLegend && <Legend />}
+            {showLegend && (
+              <Legend
+                wrapperStyle={{
+                  fontSize: isMobile ? 10 : 12,
+                  paddingTop: isMobile ? 5 : 10,
+                }}
+                layout={isMobile ? 'horizontal' : 'vertical'}
+                verticalAlign={isMobile ? 'bottom' : 'middle'}
+                align={isMobile ? 'center' : 'right'}
+              />
+            )}
             <Tooltip
+              wrapperStyle={{ fontSize: isMobile ? 10 : 12 }}
+              contentStyle={{ padding: isMobile ? 4 : 8 }}
               formatter={(value: number) => [`${value}`, 'Valor']}
               labelFormatter={name => `${name}`}
             />

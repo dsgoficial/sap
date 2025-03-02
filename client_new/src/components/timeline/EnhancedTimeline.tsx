@@ -1,7 +1,7 @@
 // Path: components\timeline\EnhancedTimeline.tsx
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { styled } from '@mui/material/styles';
-import { Box, Typography, Paper, useTheme } from '@mui/material';
+import { Box, Typography, Paper, useTheme, useMediaQuery } from '@mui/material';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
@@ -13,6 +13,7 @@ export interface TimelineItem {
   endDate: Date;
   status: string; // "1" for available, "0" for unavailable
   label?: string; // Optional label for the tooltip
+  visited?: boolean; // Adding this property to fix type error
 }
 
 export interface TimelineGroup {
@@ -79,6 +80,19 @@ const TimelineContainer = styled(Box)(({ theme }) => ({
   '& .subchartBrush': {
     cursor: 'grab',
   },
+  [theme.breakpoints.down('sm')]: {
+    '& .axis text': {
+      fontSize: '10px',
+    },
+    '& .zoom-controls': {
+      top: '5px',
+      right: '5px',
+      gap: '2px',
+    },
+    '& .zoom-button': {
+      padding: '3px',
+    },
+  },
 }));
 
 const TimelineTooltip = styled('div')(({ theme }) => ({
@@ -114,6 +128,11 @@ const TimelineTooltip = styled('div')(({ theme }) => ({
   '& .tooltip-status-text': {
     fontWeight: 'medium',
   },
+  [theme.breakpoints.down('sm')]: {
+    padding: '6px 10px',
+    fontSize: '10px',
+    maxWidth: '200px',
+  },
 }));
 
 const NoDataContainer = styled(Box)(({ theme }) => ({
@@ -133,6 +152,8 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
   endDate: customEndDate,
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [brushExtent, setBrushExtent] = useState<[Date, Date] | null>(null);
@@ -140,18 +161,49 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
     null,
   );
 
-  // Constants for rendering
-  const MARGIN = { top: 40, right: 20, bottom: 50, left: 150 };
-  const ROW_HEIGHT = 30;
-  const ROW_PADDING = 15;
-  const SUBCHART_HEIGHT = 40;
-
-  // Calculate dimensions
-  const contentHeight = groups.length * (ROW_HEIGHT + ROW_PADDING);
-  const totalHeight = Math.max(
-    height,
-    contentHeight + MARGIN.top + MARGIN.bottom + SUBCHART_HEIGHT + 20,
+  // Constants for rendering - responsive adjustments
+  const MARGIN = useMemo(
+    () => ({
+      top: isMobile ? 30 : 40,
+      right: isMobile ? 10 : 20,
+      bottom: isMobile ? 40 : 50,
+      left: isMobile ? 100 : 150,
+    }),
+    [isMobile],
   );
+
+  const ROW_HEIGHT = isMobile ? 20 : 30;
+  const ROW_PADDING = isMobile ? 10 : 15;
+  const SUBCHART_HEIGHT = isMobile ? 30 : 40;
+
+  // Calculate responsive dimensions
+  const responsiveHeight = useMemo(() => {
+    if (isMobile) return Math.min(300, height);
+    if (isTablet) return Math.min(350, height);
+    return height;
+  }, [height, isMobile, isTablet]);
+
+  // Calculate content height based on responsive dimensions
+  const contentHeight = useMemo(
+    () => groups.length * (ROW_HEIGHT + ROW_PADDING),
+    [groups.length, ROW_HEIGHT, ROW_PADDING],
+  );
+
+  const totalHeight = useMemo(
+    () =>
+      Math.max(
+        responsiveHeight,
+        contentHeight + MARGIN.top + MARGIN.bottom + SUBCHART_HEIGHT + 20,
+      ),
+    [
+      responsiveHeight,
+      contentHeight,
+      MARGIN.top,
+      MARGIN.bottom,
+      SUBCHART_HEIGHT,
+    ],
+  );
+
   const getWidth = () =>
     svgRef.current
       ? svgRef.current.clientWidth - MARGIN.left - MARGIN.right
@@ -296,7 +348,8 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
     // Create axes
     const xAxis = d3
       .axisBottom(x)
-      .tickFormat(d => d3.timeFormat('%b %Y')(d as Date));
+      .tickFormat(d => d3.timeFormat(isMobile ? '%b' : '%b %Y')(d as Date))
+      .ticks(isMobile ? 5 : 10);
 
     const gX = g
       .append('g')
@@ -308,7 +361,8 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
     const gridGenerator = d3
       .axisBottom(x)
       .tickSize(-contentHeight)
-      .tickFormat(() => '');
+      .tickFormat(() => '')
+      .ticks(isMobile ? 5 : 10);
 
     const gGrid = g
       .append('g')
@@ -335,6 +389,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
       .attr('text-anchor', 'end')
       .attr('dominant-baseline', 'middle')
       .attr('fill', theme.palette.text.primary)
+      .style('font-size', isMobile ? '10px' : '12px')
       .text(d => d.title);
 
     // Function to update bar positions during zoom
@@ -407,7 +462,8 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
         .attr('ry', 4)
         .style('cursor', 'pointer')
         .on('mouseover', function (event, d) {
-          if (!tooltipRef.current) return;
+          // Using status instead of visited for the condition
+          if (d.status !== '1') return;
 
           const tooltip = d3.select(tooltipRef.current);
 
@@ -423,7 +479,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
             ${d.label ? `<div class="tooltip-info">${d.label}</div>` : ''}
           `);
 
-          // Position tooltip near mouse
+          // Position tooltip near mouse or touch point
           const [x, y] = d3.pointer(event, document.body);
           tooltip
             .style('left', `${x + 15}px`)
@@ -433,16 +489,48 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
         .on('mouseout', function () {
           if (!tooltipRef.current) return;
           d3.select(tooltipRef.current).style('opacity', 0);
+        })
+        .on('touchstart', function (event, d) {
+          // Handle touch events for mobile
+          event.preventDefault();
+          if (d.status !== '1') return;
+
+          const tooltip = d3.select(tooltipRef.current);
+
+          // Show tooltip with data details
+          tooltip.html(`
+            <div class="tooltip-title">${groups[groupIndex].title}</div>
+            <div class="tooltip-date">De: ${formatDate(d.startDate)}</div>
+            <div class="tooltip-date">Até: ${formatDate(d.endDate)}</div>
+            <div class="tooltip-status">
+              <div class="tooltip-status-icon" style="background-color: ${d.status === '1' ? theme.palette.success.main : theme.palette.error.main}"></div>
+              <div class="tooltip-status-text">${d.status === '1' ? 'Disponível' : 'Indisponível'}</div>
+            </div>
+            ${d.label ? `<div class="tooltip-info">${d.label}</div>` : ''}
+          `);
+
+          // Position tooltip near touch point
+          const touchY = event.touches[0].clientY;
+          const touchX = event.touches[0].clientX;
+          tooltip
+            .style('left', `${touchX + 15}px`)
+            .style('top', `${touchY - 10}px`)
+            .style('opacity', 1);
+
+          // Hide tooltip after delay
+          setTimeout(() => {
+            tooltip.style('opacity', 0);
+          }, 3000);
         });
     });
 
-    // Create sub-chart (overview)
+    // Create sub-chart (overview) - simplified for mobile
     const subchartGroup = svg
       .append('g')
       .attr('class', 'subchart')
       .attr(
         'transform',
-        `translate(${MARGIN.left},${MARGIN.top + contentHeight + 30})`,
+        `translate(${MARGIN.left},${MARGIN.top + contentHeight + (isMobile ? 20 : 30)})`,
       );
 
     // Add background for subchart
@@ -453,31 +541,57 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
       .attr('fill', theme.palette.background.default)
       .attr('rx', 4);
 
-    // Create mini bars for overview
-    groups.forEach((group, groupIndex) => {
-      const rowHeight = SUBCHART_HEIGHT / groups.length;
+    // Create mini bars for overview - simplified visualization for mobile
+    if (!isMobile) {
+      groups.forEach((group, groupIndex) => {
+        const rowHeight = SUBCHART_HEIGHT / groups.length;
 
-      subchartGroup
-        .selectAll(`.subchart-bar-${groupIndex}`)
-        .data(group.data)
-        .enter()
-        .append('rect')
-        .attr('class', `subchart-bar-${groupIndex}`)
-        .attr('x', d => xBrush(d.startDate))
-        .attr('y', groupIndex * rowHeight)
-        .attr('width', d =>
-          Math.max(xBrush(d.endDate) - xBrush(d.startDate), 2),
-        )
-        .attr('height', rowHeight)
-        .attr('fill', d =>
-          d.status === '1'
-            ? theme.palette.success.main
-            : theme.palette.error.main,
-        )
-        .attr('opacity', 0.7)
-        .attr('rx', 2)
-        .attr('ry', 2);
-    });
+        subchartGroup
+          .selectAll(`.subchart-bar-${groupIndex}`)
+          .data(group.data)
+          .enter()
+          .append('rect')
+          .attr('class', `subchart-bar-${groupIndex}`)
+          .attr('x', d => xBrush(d.startDate))
+          .attr('y', groupIndex * rowHeight)
+          .attr('width', d =>
+            Math.max(xBrush(d.endDate) - xBrush(d.startDate), 2),
+          )
+          .attr('height', rowHeight)
+          .attr('fill', d =>
+            d.status === '1'
+              ? theme.palette.success.main
+              : theme.palette.error.main,
+          )
+          .attr('opacity', 0.7)
+          .attr('rx', 2)
+          .attr('ry', 2);
+      });
+    } else {
+      // For mobile, just show a simplified timeline
+      groups.forEach(group => {
+        group.data.forEach(item => {
+          subchartGroup
+            .append('rect')
+            .attr('x', xBrush(item.startDate))
+            .attr('y', 0)
+            .attr(
+              'width',
+              Math.max(xBrush(item.endDate) - xBrush(item.startDate), 2),
+            )
+            .attr('height', SUBCHART_HEIGHT)
+            .attr(
+              'fill',
+              item.status === '1'
+                ? theme.palette.success.main
+                : theme.palette.error.main,
+            )
+            .attr('opacity', 0.3)
+            .attr('rx', 2)
+            .attr('ry', 2);
+        });
+      });
+    }
 
     // Add brush for subchart navigation
     const brush = d3
@@ -517,7 +631,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
       .attr('class', 'subchartBrush')
       .call(brush);
 
-    // Add axis for subchart
+    // Add axis for subchart - fewer ticks on mobile
     subchartGroup
       .append('g')
       .attr('class', 'axis')
@@ -525,8 +639,8 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
       .call(
         d3
           .axisBottom(xBrush)
-          .ticks(5)
-          .tickFormat(d => d3.timeFormat('%b %Y')(d as Date)),
+          .ticks(isMobile ? 3 : 5)
+          .tickFormat(d => d3.timeFormat(isMobile ? '%b' : '%b %Y')(d as Date)),
       );
 
     // Initial brush selection if needed
@@ -549,11 +663,20 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
     theme,
     brushExtent,
     zoomTransform,
+    isMobile,
+    MARGIN,
+    ROW_HEIGHT,
+    ROW_PADDING,
+    SUBCHART_HEIGHT,
+    contentHeight,
   ]);
 
   if (groups.length === 0) {
     return (
-      <Paper elevation={1} sx={{ p: 2, height, width: '100%' }}>
+      <Paper
+        elevation={1}
+        sx={{ p: 2, height: responsiveHeight, width: '100%' }}
+      >
         <Typography variant="h6" align="center" gutterBottom>
           {title}
         </Typography>
@@ -567,8 +690,15 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
   }
 
   return (
-    <Paper elevation={1} sx={{ p: 2, height: totalHeight, width: '100%' }}>
-      <Typography variant="h6" align="center" gutterBottom>
+    <Paper
+      elevation={1}
+      sx={{ p: isMobile ? 1 : 2, height: totalHeight, width: '100%' }}
+    >
+      <Typography
+        variant={isMobile ? 'subtitle1' : 'h6'}
+        align="center"
+        gutterBottom
+      >
         {title}
       </Typography>
 
@@ -576,18 +706,22 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = ({
         {/* Zoom control buttons */}
         <div className="zoom-controls">
           <div className="zoom-button" onClick={resetZoom} title="Reset zoom">
-            <ZoomOutMapIcon fontSize="small" />
+            <ZoomOutMapIcon fontSize={isMobile ? 'small' : 'small'} />
           </div>
           <div className="zoom-button" onClick={zoomIn} title="Zoom in">
-            <ZoomInIcon fontSize="small" />
+            <ZoomInIcon fontSize={isMobile ? 'small' : 'small'} />
           </div>
           <div className="zoom-button" onClick={zoomOut} title="Zoom out">
-            <ZoomOutIcon fontSize="small" />
+            <ZoomOutIcon fontSize={isMobile ? 'small' : 'small'} />
           </div>
         </div>
 
         {/* Main SVG container */}
-        <svg ref={svgRef} width="100%" height={totalHeight - 60} />
+        <svg
+          ref={svgRef}
+          width="100%"
+          height={totalHeight - (isMobile ? 40 : 60)}
+        />
 
         {/* Tooltip */}
         <TimelineTooltip ref={tooltipRef} />

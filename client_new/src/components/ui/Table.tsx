@@ -1,5 +1,5 @@
 // Path: components\ui\Table.tsx
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useMemo } from 'react';
 import {
   Table as MuiTable,
   TableProps as MuiTableProps,
@@ -17,8 +17,23 @@ import {
   TextField,
   InputAdornment,
   styled,
+  Card,
+  CardContent,
+  useMediaQuery,
+  useTheme,
+  IconButton,
+  Collapse,
+  Button,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Divider,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 
 interface Column<T extends Record<string, any>> {
   id: string;
@@ -28,6 +43,7 @@ interface Column<T extends Record<string, any>> {
   maxWidth?: number;
   format?: (value: any, row: T) => ReactNode;
   sortable?: boolean;
+  priority?: number; // Higher number = higher priority (show on mobile)
 }
 
 interface TableProps<T extends Record<string, any>>
@@ -89,12 +105,26 @@ const PaginationContainer = styled(Box)(({ theme }) => ({
   justifyContent: 'flex-end',
   padding: theme.spacing(2),
   backgroundColor: theme.palette.background.paper,
+  [theme.breakpoints.down('sm')]: {
+    justifyContent: 'center',
+    padding: theme.spacing(1),
+  },
 }));
 
 const SearchContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   paddingBottom: theme.spacing(1),
   backgroundColor: theme.palette.background.paper,
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(1),
+  },
+}));
+
+const CardViewItem = styled(Card)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  [theme.breakpoints.down('sm')]: {
+    marginBottom: theme.spacing(1),
+  },
 }));
 
 // Default Portuguese localization
@@ -127,6 +157,9 @@ export function Table<T extends Record<string, any>>({
   localization: customLocalization,
   ...rest
 }: TableProps<T>) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   // Merge custom localization with default
   const localization = {
     ...DEFAULT_LOCALIZATION,
@@ -137,9 +170,34 @@ export function Table<T extends Record<string, any>>({
     },
   };
 
+  // Column visibility state
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+
+  // Initialize column visibility based on priority
+  useEffect(() => {
+    const initialVisibility: Record<string, boolean> = {};
+    columns.forEach(column => {
+      if (isMobile) {
+        // On mobile, only show high priority columns by default
+        initialVisibility[column.id] =
+          column.priority !== undefined ? column.priority >= 3 : true;
+      } else {
+        initialVisibility[column.id] = true;
+      }
+    });
+    setVisibleColumns(initialVisibility);
+  }, [columns, isMobile]);
+
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredRows, setFilteredRows] = useState<T[]>(rows);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Card view for mobile
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // Update filtered rows when search term or rows change
   useEffect(() => {
@@ -174,6 +232,19 @@ export function Table<T extends Record<string, any>>({
     }
   };
 
+  const toggleRowExpansion = (rowId: string | number) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [rowId.toString()]: !prev[rowId.toString()],
+    }));
+  };
+
+  // Filter visible columns for current view
+  const displayColumns = useMemo(
+    () => columns.filter(column => visibleColumns[column.id]),
+    [columns, visibleColumns],
+  );
+
   // Render loading state
   if (isLoading) {
     return (
@@ -185,24 +256,75 @@ export function Table<T extends Record<string, any>>({
     );
   }
 
-  // Search bar component
+  // Column selector component
+  const ColumnSelector = () => (
+    <Collapse in={showColumnSelector}>
+      <Box sx={{ p: 2, bgcolor: 'background.paper', mb: 1 }}>
+        <Typography variant="subtitle2" gutterBottom>
+          Mostrar/Ocultar Colunas
+        </Typography>
+        <FormGroup>
+          {columns.map(column => (
+            <FormControlLabel
+              key={column.id}
+              control={
+                <Checkbox
+                  checked={!!visibleColumns[column.id]}
+                  onChange={() => {
+                    setVisibleColumns(prev => ({
+                      ...prev,
+                      [column.id]: !prev[column.id],
+                    }));
+                  }}
+                  size="small"
+                />
+              }
+              label={<Typography variant="body2">{column.label}</Typography>}
+            />
+          ))}
+        </FormGroup>
+      </Box>
+    </Collapse>
+  );
+
+  // Search and filter component
   const SearchBar = () => (
     <SearchContainer>
-      <TextField
-        fullWidth
-        variant="outlined"
-        size="small"
-        placeholder={searchPlaceholder || localization.searchPlaceholder}
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-        }}
-      />
+      <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          size="small"
+          placeholder={searchPlaceholder || localization.searchPlaceholder}
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<ViewColumnIcon />}
+          onClick={() => setShowColumnSelector(!showColumnSelector)}
+        >
+          {isMobile ? '' : 'Colunas'}
+        </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<FilterListIcon />}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          {isMobile ? '' : 'Filtros'}
+        </Button>
+      </Box>
+
+      <ColumnSelector />
     </SearchContainer>
   );
 
@@ -220,14 +342,161 @@ export function Table<T extends Record<string, any>>({
     );
   }
 
+  // Card view for mobile devices
+  if (isMobile) {
+    return (
+      <Paper sx={{ maxHeight, overflow: 'auto' }}>
+        <SearchBar />
+        <Box sx={{ p: 2 }}>
+          {filteredRows.map((row, idx) => {
+            const rowId = getRowKey(row, idx);
+            const isExpanded = expandedRows[rowId.toString()];
+
+            return (
+              <CardViewItem
+                key={rowId}
+                elevation={1}
+                sx={{
+                  bgcolor: rowBackgroundColor
+                    ? rowBackgroundColor(row, idx)
+                    : idx % 2 === 0
+                      ? 'action.hover'
+                      : 'background.paper',
+                }}
+              >
+                <CardContent sx={{ pb: 1, pt: 1, px: 2 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography variant="subtitle1" component="div">
+                      {/* Display first high priority column as title */}
+                      {(() => {
+                        const mainColumn =
+                          columns.find(col => col.priority === 5) || columns[0];
+                        const value = row[mainColumn.id];
+                        return mainColumn.format
+                          ? mainColumn.format(value, row)
+                          : value;
+                      })()}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => toggleRowExpansion(rowId)}
+                    >
+                      {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </IconButton>
+                  </Box>
+
+                  {/* Always show key info (priority >= 4) */}
+                  <Box sx={{ mt: 1 }}>
+                    {columns
+                      .filter(
+                        col => (col.priority || 0) >= 4 && col.priority !== 5,
+                      )
+                      .map(column => (
+                        <Box
+                          key={column.id}
+                          sx={{
+                            mb: 0.5,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            {column.label}:
+                          </Typography>
+                          <Typography variant="body2">
+                            {column.format
+                              ? column.format(row[column.id], row)
+                              : row[column.id]}
+                          </Typography>
+                        </Box>
+                      ))}
+                  </Box>
+
+                  {/* Show all other visible columns when expanded */}
+                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                    <Divider sx={{ my: 1 }} />
+                    <Box sx={{ mt: 1 }}>
+                      {columns
+                        .filter(
+                          col =>
+                            visibleColumns[col.id] &&
+                            (col.priority === undefined || col.priority < 4) &&
+                            col.priority !== 5,
+                        )
+                        .map(column => (
+                          <Box
+                            key={column.id}
+                            sx={{
+                              mb: 0.5,
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {column.label}:
+                            </Typography>
+                            <Typography variant="body2">
+                              {column.format
+                                ? column.format(row[column.id], row)
+                                : row[column.id]}
+                            </Typography>
+                          </Box>
+                        ))}
+                    </Box>
+                  </Collapse>
+
+                  {onRowClick && (
+                    <Box sx={{ mt: 1, textAlign: 'right' }}>
+                      <Button
+                        size="small"
+                        onClick={() => handleRowClick(row)}
+                        sx={{ minWidth: '80px' }}
+                      >
+                        Ver detalhes
+                      </Button>
+                    </Box>
+                  )}
+                </CardContent>
+              </CardViewItem>
+            );
+          })}
+
+          {pagination && (
+            <PaginationContainer>
+              <Pagination
+                count={Math.ceil(pagination.totalRows / pagination.rowsPerPage)}
+                page={pagination.page}
+                onChange={(_, page) => pagination.onPageChange(page)}
+                color="primary"
+                size="small"
+                siblingCount={0}
+                boundaryCount={1}
+              />
+            </PaginationContainer>
+          )}
+        </Box>
+      </Paper>
+    );
+  }
+
+  // Table view for desktop/tablet
   return (
-    <Paper sx={{ maxHeight }}>
+    <Paper sx={{ maxHeight, overflow: 'auto' }}>
       <SearchBar />
       <TableContainer sx={{ maxHeight }}>
         <MuiTable stickyHeader={stickyHeader} {...rest}>
           <TableHead>
             <TableRow>
-              {columns.map(column => (
+              {displayColumns.map(column => (
                 <TableCell
                   key={column.id}
                   align={column.align || 'left'}
@@ -274,7 +543,7 @@ export function Table<T extends Record<string, any>>({
                     '&:last-child td, &:last-child th': { border: 0 },
                   }}
                 >
-                  {columns.map(column => {
+                  {displayColumns.map(column => {
                     const value = row[column.id];
                     return (
                       <TableCell key={column.id} align={column.align || 'left'}>

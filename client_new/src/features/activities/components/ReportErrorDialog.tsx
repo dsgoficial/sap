@@ -13,7 +13,12 @@ import {
   Select,
   FormHelperText,
   Box,
+  useMediaQuery,
+  useTheme,
+  IconButton,
+  Typography,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { LoadingButton } from '@mui/lab';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,6 +51,8 @@ export const ReportErrorDialog = ({
   isSubmitting,
 }: ReportErrorDialogProps) => {
   const { currentActivity, errorTypes } = useActivities();
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   const {
     control,
@@ -80,12 +87,50 @@ export const ReportErrorDialog = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Reportar Problema</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      fullScreen={fullScreen}
+      scroll="paper"
+      aria-labelledby="report-problem-dialog-title"
+    >
+      <DialogTitle
+        id="report-problem-dialog-title"
+        sx={{
+          m: 0,
+          p: 2,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="h6">Reportar Problema</Typography>
+        {fullScreen && (
+          <IconButton
+            aria-label="close"
+            onClick={onClose}
+            sx={{
+              color: theme => theme.palette.grey[500],
+            }}
+            size="small"
+          >
+            <CloseIcon />
+          </IconButton>
+        )}
+      </DialogTitle>
 
       <form onSubmit={handleSubmit(onFormSubmit)}>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+        <DialogContent dividers sx={{ p: fullScreen ? 2 : 3 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              pt: fullScreen ? 0 : 1,
+            }}
+          >
             <Controller
               name="tipo_problema_id"
               control={control}
@@ -99,6 +144,8 @@ export const ReportErrorDialog = ({
                     labelId="error-type-label"
                     label="Tipo de Problema"
                     value={field.value || ''}
+                    variant={fullScreen ? 'outlined' : 'standard'}
+                    sx={{ mb: 1 }}
                   >
                     <MenuItem value={0} disabled>
                       Selecione o tipo de problema
@@ -130,18 +177,25 @@ export const ReportErrorDialog = ({
                   {...field}
                   label="Descrição"
                   multiline
-                  rows={4}
+                  rows={fullScreen ? 6 : 4}
                   fullWidth
                   error={!!errors.descricao}
                   helperText={errors.descricao?.message}
+                  variant={fullScreen ? 'outlined' : 'standard'}
+                  placeholder="Descreva o problema em detalhes para melhor compreensão..."
                 />
               )}
             />
           </Box>
         </DialogContent>
 
-        <DialogActions>
-          <Button onClick={onClose} disabled={isSubmitting}>
+        <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+          <Button
+            onClick={onClose}
+            disabled={isSubmitting}
+            color="inherit"
+            variant={fullScreen ? 'outlined' : 'text'}
+          >
             Cancelar
           </Button>
           <LoadingButton

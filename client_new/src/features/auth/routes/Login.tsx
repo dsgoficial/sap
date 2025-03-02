@@ -9,6 +9,10 @@ import {
   Alert,
   InputAdornment,
   IconButton,
+  Container,
+  Paper,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { z } from 'zod';
@@ -33,6 +37,8 @@ const Login = () => {
   const location = useLocation();
   const { isAuthenticated, login, error: authError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Get the random image number (1-5) for consistent layout with the original
   const [randomImageNumber] = useState(() => Math.floor(Math.random() * 5) + 1);
@@ -63,80 +69,126 @@ const Login = () => {
     <Page title="Login | Sistema de Apoio à Produção">
       {/* Use AuthLayout with our random background image number */}
       <AuthLayout backgroundImageNumber={randomImageNumber}>
-        <Box
-          sx={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            mb: 3,
-          }}
-        >
-          <Avatar sx={{ bgcolor: 'primary.main', mb: 2 }}>
-            <AutoGraphIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Sistema de Apoio à Produção
-          </Typography>
-        </Box>
-
-        {authError && (
-          <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
-            {authError}
-          </Alert>
-        )}
-
-        <Box
-          component="form"
-          onSubmit={handleSubmit(onSubmit)}
-          sx={{ width: '100%', mt: 1 }}
-        >
-          <TextField
-            margin="normal"
-            fullWidth
-            id="usuario"
-            label="Usuário"
-            autoComplete="username"
-            autoFocus
-            {...register('usuario')}
-            error={!!errors.usuario}
-            helperText={errors.usuario?.message}
-          />
-
-          <TextField
-            margin="normal"
-            fullWidth
-            id="senha"
-            label="Senha"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="current-password"
-            {...register('senha')}
-            error={!!errors.senha}
-            helperText={errors.senha?.message}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+        <Container maxWidth="xs" sx={{ py: isMobile ? 2 : 8 }}>
+          <Paper
+            elevation={3}
+            sx={{
+              p: isMobile ? 2 : 3,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              borderRadius: 2,
+              backdropFilter: 'blur(5px)',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
             }}
-          />
-
-          <LoadingButton
-            type="submit"
-            fullWidth
-            variant="contained"
-            loading={isSubmitting}
-            sx={{ mt: 3, mb: 2 }}
           >
-            Entrar
-          </LoadingButton>
-        </Box>
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                mb: 3,
+              }}
+            >
+              <Avatar
+                sx={{ bgcolor: 'primary.main', mb: 2, width: 56, height: 56 }}
+              >
+                <AutoGraphIcon fontSize={isMobile ? 'medium' : 'large'} />
+              </Avatar>
+              <Typography
+                component="h1"
+                variant={isMobile ? 'h5' : 'h4'}
+                align="center"
+                sx={{ mb: 1 }}
+              >
+                Sistema de Apoio à Produção
+              </Typography>
+            </Box>
+
+            {authError && (
+              <Alert
+                severity="error"
+                sx={{ mb: 2, width: '100%' }}
+                variant="filled"
+              >
+                {authError}
+              </Alert>
+            )}
+
+            <Box
+              component="form"
+              onSubmit={handleSubmit(onSubmit)}
+              sx={{ width: '100%', mt: 1 }}
+              noValidate
+            >
+              <TextField
+                margin="normal"
+                fullWidth
+                id="usuario"
+                label="Usuário"
+                autoComplete="username"
+                autoFocus
+                {...register('usuario')}
+                error={!!errors.usuario}
+                helperText={errors.usuario?.message}
+                variant={isMobile ? 'outlined' : 'standard'}
+                sx={{ mb: 2 }}
+                InputProps={{
+                  sx: { fontSize: isMobile ? '0.9rem' : '1rem' },
+                }}
+              />
+
+              <TextField
+                margin="normal"
+                fullWidth
+                id="senha"
+                label="Senha"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                {...register('senha')}
+                error={!!errors.senha}
+                helperText={errors.senha?.message}
+                variant={isMobile ? 'outlined' : 'standard'}
+                InputProps={{
+                  sx: { fontSize: isMobile ? '0.9rem' : '1rem' },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        aria-label={
+                          showPassword ? 'Hide password' : 'Show password'
+                        }
+                      >
+                        {showPassword ? (
+                          <VisibilityOffIcon />
+                        ) : (
+                          <VisibilityIcon />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <LoadingButton
+                type="submit"
+                fullWidth
+                variant="contained"
+                loading={isSubmitting}
+                sx={{
+                  mt: 3,
+                  mb: 2,
+                  py: isMobile ? 1 : 1.5,
+                  fontSize: isMobile ? '0.9rem' : '1rem',
+                }}
+              >
+                Entrar
+              </LoadingButton>
+            </Box>
+          </Paper>
+        </Container>
       </AuthLayout>
     </Page>
   );

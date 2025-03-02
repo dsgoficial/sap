@@ -1,7 +1,8 @@
 // Path: features\dashboard\layouts\DashboardLayout.tsx
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { styled } from '@mui/material';
+import { styled, useTheme } from '@mui/material/styles';
+import { useMediaQuery } from '@mui/material';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardNavbar from './DashboardNavbar';
 
@@ -25,30 +26,43 @@ const MainStyle = styled('div', {
   minHeight: '100%',
   paddingTop: APP_BAR_MOBILE + 24,
   paddingBottom: theme.spacing(10),
+  paddingLeft: theme.spacing(2),
+  paddingRight: theme.spacing(2),
   [theme.breakpoints.up('lg')]: {
     paddingTop: APP_BAR_DESKTOP + 24,
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(2),
     marginLeft: open ? DRAWER_WIDTH : 0,
     transition: theme.transitions.create('margin', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
     }),
   },
+  [theme.breakpoints.down('sm')]: {
+    paddingTop: APP_BAR_MOBILE + 16,
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
+    paddingBottom: theme.spacing(6),
+  },
 }));
 
 const DashboardLayout = () => {
-  const [open, setOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+  const [open, setOpen] = useState(!isMobile);
+
+  // Close sidebar automatically on mobile
+  const handleDrawerToggle = () => {
+    setOpen(prevOpen => !prevOpen);
+  };
 
   return (
     <RootStyle>
       <DashboardNavbar
         isOpenSidebar={open}
-        onOpenSidebar={() => setOpen(true)}
+        onOpenSidebar={handleDrawerToggle}
       />
       <DashboardSidebar
         isOpenSidebar={open}
-        onCloseSidebar={() => setOpen(false)}
+        onCloseSidebar={handleDrawerToggle}
         drawerWidth={DRAWER_WIDTH}
       />
       <MainStyle open={open}>

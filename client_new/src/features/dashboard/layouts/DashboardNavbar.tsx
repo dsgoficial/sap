@@ -11,8 +11,10 @@ import {
   ListItemIcon,
   Box,
   Avatar,
+  useMediaQuery,
+  Tooltip,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
@@ -39,13 +41,13 @@ const StyledAppBar = styled(AppBar, {
   WebkitBackdropFilter: 'blur(6px)',
   backgroundColor: 'rgba(255, 255, 255, 0.95)',
   color: theme.palette.text.primary,
+  transition: theme.transitions.create(['margin', 'width'], {
+    easing: theme.transitions.easing.easeOut,
+    duration: theme.transitions.duration.enteringScreen,
+  }),
   [theme.breakpoints.up('lg')]: {
     width: isopensidebar ? `calc(100% - ${drawerwidth}px)` : '100%',
     marginLeft: isopensidebar ? `${drawerwidth}px` : 0,
-    transition: theme.transitions.create(['margin', 'width'], {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
   },
 }));
 
@@ -56,11 +58,10 @@ interface StyledMenuButtonProps {
 const StyledMenuButton = styled(IconButton, {
   shouldForwardProp: prop => prop !== 'isopensidebar',
 })<StyledMenuButtonProps>(({ isopensidebar, theme }) => ({
-  display: 'inline-flex',
+  marginRight: theme.spacing(2),
   [theme.breakpoints.up('lg')]: {
     display: isopensidebar ? 'none' : 'inline-flex',
   },
-  marginRight: theme.spacing(2),
 }));
 
 const DashboardNavbar = ({
@@ -71,6 +72,8 @@ const DashboardNavbar = ({
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -92,38 +95,59 @@ const DashboardNavbar = ({
       isopensidebar={isOpenSidebar ? 1 : 0}
       drawerwidth={drawerWidth}
     >
-      <Toolbar>
+      <Toolbar
+        sx={{
+          height: isMobile ? 64 : 'auto',
+          minHeight: { xs: 64, sm: 'auto' },
+          px: { xs: 1, sm: 2 },
+        }}
+      >
         <StyledMenuButton
           edge="start"
           color="inherit"
           aria-label="open drawer"
           onClick={onOpenSidebar}
           isopensidebar={isOpenSidebar ? 1 : 0}
+          sx={{ mr: isMobile ? 1 : 2 }}
         >
           <MenuIcon />
         </StyledMenuButton>
 
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          SAP - Sistema de Apoio à Produção
+        <Typography
+          variant={isMobile ? 'body1' : 'h6'}
+          noWrap
+          component="div"
+          sx={{
+            flexGrow: 1,
+            fontSize: { xs: '0.9rem', sm: '1.25rem' },
+          }}
+        >
+          {isMobile ? 'SAP' : 'SAP - Sistema de Apoio à Produção'}
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {/* Use AuthStatus here */}
-          <Box sx={{ mr: 2 }}>
-            <AuthStatus showAvatar={false} />
-          </Box>
+          {!isMobile && (
+            <Box sx={{ mr: 2 }}>
+              <AuthStatus showAvatar={false} />
+            </Box>
+          )}
 
-          <IconButton
-            color="inherit"
-            edge="end"
-            onClick={handleMenuOpen}
-            sx={{ mr: 1 }}
-          >
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-              {user?.username?.charAt(0)?.toUpperCase() || 'U'}
-            </Avatar>
-            <KeyboardArrowDownIcon fontSize="small" sx={{ ml: 0.5 }} />
-          </IconButton>
+          <Tooltip title={user?.username || 'Usuário'}>
+            <IconButton
+              color="inherit"
+              edge="end"
+              onClick={handleMenuOpen}
+              sx={{ ml: isMobile ? 0 : 1 }}
+            >
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+              </Avatar>
+              {!isMobile && (
+                <KeyboardArrowDownIcon fontSize="small" sx={{ ml: 0.5 }} />
+              )}
+            </IconButton>
+          </Tooltip>
 
           <Menu
             anchorEl={anchorEl}
@@ -132,9 +156,16 @@ const DashboardNavbar = ({
             PaperProps={{
               elevation: 0,
               sx: {
+                width: { xs: '100%', sm: 'auto' },
+                minWidth: { xs: '100%', sm: 200 },
+                maxWidth: '100%',
                 overflow: 'visible',
                 filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
                 mt: 1.5,
+                ...(isMobile && {
+                  left: '0 !important',
+                  right: '0 !important',
+                }),
                 '& .MuiAvatar-root': {
                   width: 32,
                   height: 32,
