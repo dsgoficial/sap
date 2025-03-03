@@ -41,7 +41,7 @@ const BackgroundBox = styled(Box)(({ theme }) => ({
     // Add appropriate overlay for each theme
     backgroundColor:
       theme.palette.mode === 'dark'
-        ? alpha(theme.palette.common.black, 0.7) // Darker overlay for dark mode
+        ? alpha(theme.palette.common.black, 0.4) // Darker overlay for dark mode
         : alpha(theme.palette.common.white, 0.1), // Lighter overlay for light mode
     zIndex: 1,
   },
@@ -67,7 +67,7 @@ export const AuthLayout = ({
   return (
     <BackgroundBox
       sx={{
-        backgroundImage: `url('/src/assets/images/img-${backgroundImageNumber}.jpg')`,
+        backgroundImage: `url('/images/img-${backgroundImageNumber}.jpg')`,
       }}
     >
       <ContentContainer maxWidth={maxWidth}>
