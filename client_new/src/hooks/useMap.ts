@@ -12,12 +12,22 @@ export const useMapData = () => {
   const viewsQuery = useQuery({
     queryKey: ['mapViews'],
     queryFn: getViews,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Filter the views to get only lot type views
-  const lotViews =
-    viewsQuery.data?.dados.views.filter((view: any) => view.tipo === 'lote') ||
-    [];
+  // Safely extract and filter lot views
+  const lotViews = (() => {
+    try {
+      if (!viewsQuery.data?.dados?.views) return [];
+      return viewsQuery.data.dados.views.filter(
+        (view: any) => view && view.tipo === 'lote' && view.nome,
+      );
+    } catch (error) {
+      console.error('Error extracting lot views:', error);
+      return [];
+    }
+  })();
 
   // Get GeoJSON data for each lot
   const geoJSONQuery = useQuery({
@@ -25,26 +35,37 @@ export const useMapData = () => {
     queryFn: async () => {
       if (lotViews.length === 0) return [];
 
-      const promises = lotViews.map((view: any) => getLotGeoJSON(view.nome));
-      const results = await Promise.all(promises);
+      // Use Promise.allSettled to handle individual failures gracefully
+      const promises = lotViews.map((view: any) =>
+        getLotGeoJSON(view.nome).catch(error => {
+          console.error(`Error fetching GeoJSON for ${view.nome}:`, error);
+          return { dados: [] }; // Return empty data on error
+        }),
+      );
+
+      const results = await Promise.allSettled(promises);
 
       // Transform results into MapLayer objects
       const layers: MapLayer[] = [];
 
       results.forEach((result, index) => {
-        if (result.dados?.length > 0 && result.dados[0].geojson) {
-          layers.push({
-            id: lotViews[index].nome,
-            name: lotViews[index].nome,
-            geojson: result.dados[0].geojson,
-            visible: true,
-          });
+        if (result.status === 'fulfilled') {
+          const data = result.value;
+          if (data?.dados?.length > 0 && data.dados[0]?.geojson) {
+            layers.push({
+              id: lotViews[index].nome,
+              name: lotViews[index].nome,
+              geojson: data.dados[0].geojson,
+              visible: true,
+            });
+          }
         }
       });
 
       return layers;
     },
     enabled: lotViews.length > 0,
+    retry: 1,
   });
 
   // Update the store when layers data is loaded

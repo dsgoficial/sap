@@ -1,5 +1,13 @@
 // Path: components\ui\Table.tsx
-import { ReactNode, useState, useEffect, useMemo, useCallback, memo } from 'react';
+import {
+  ReactNode,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  memo,
+  ComponentType,
+} from 'react';
 import {
   Table as MuiTable,
   TableProps as MuiTableProps,
@@ -145,13 +153,13 @@ interface SearchBarProps {
 const SearchBar = memo(({ placeholder, onSearch }: SearchBarProps) => {
   // Use local state for input value to avoid losing focus
   const [inputValue, setInputValue] = useState('');
-  
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     setInputValue(newValue);
     onSearch(newValue);
   };
-  
+
   return (
     <SearchContainer>
       <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
@@ -178,6 +186,194 @@ const SearchBar = memo(({ placeholder, onSearch }: SearchBarProps) => {
 // Ensure displayName is set for memoized component
 SearchBar.displayName = 'SearchBar';
 
+// Base interfaces for row components
+interface TableRowItemProps<T extends Record<string, any>> {
+  columns: Column<T>[];
+  row: T;
+  index: number;
+  onClick: (row: T) => void;
+  backgroundColor?: string;
+}
+
+interface MobileCardProps<T extends Record<string, any>> {
+  row: T;
+  columns: Column<T>[];
+  rowId: string | number;
+  index: number;
+  isExpanded: boolean;
+  toggleExpansion: (id: string | number) => void;
+  onRowClick?: (row: T) => void;
+  backgroundColor?: string;
+  visibleColumns: Record<string, boolean>;
+}
+
+// Create type-safe factories for our memoized components
+function createTableRowItem<T extends Record<string, any>>() {
+  const component = memo(
+    ({ columns, row, onClick, backgroundColor }: TableRowItemProps<T>) => {
+      return (
+        <TableRow
+          hover
+          onClick={() => onClick(row)}
+          sx={{
+            cursor: typeof onClick === 'function' ? 'pointer' : 'default',
+            backgroundColor,
+            '&:nth-of-type(odd)': !backgroundColor
+              ? { backgroundColor: 'action.hover' }
+              : {},
+            '&:last-child td, &:last-child th': { border: 0 },
+          }}
+        >
+          {columns.map(column => {
+            const value = row[column.id];
+            return (
+              <TableCell key={column.id} align={column.align || 'left'}>
+                {column.format ? column.format(value, row) : value}
+              </TableCell>
+            );
+          })}
+        </TableRow>
+      );
+    },
+  );
+  component.displayName = 'TableRowItem';
+  return component as ComponentType<TableRowItemProps<T>>;
+}
+
+function createMobileCard<T extends Record<string, any>>() {
+  const component = memo(
+    ({
+      row,
+      columns,
+      rowId,
+      index,
+      isExpanded,
+      toggleExpansion,
+      onRowClick,
+      backgroundColor,
+      visibleColumns,
+    }: MobileCardProps<T>) => {
+      const mainColumn = useMemo(
+        () => columns.find(col => col.priority === 5) || columns[0],
+        [columns],
+      );
+
+      const highPriorityColumns = useMemo(
+        () =>
+          columns.filter(col => (col.priority || 0) >= 4 && col.priority !== 5),
+        [columns],
+      );
+
+      const otherColumns = useMemo(
+        () =>
+          columns.filter(
+            col =>
+              visibleColumns[col.id] &&
+              (col.priority === undefined || col.priority < 4) &&
+              col.priority !== 5,
+          ),
+        [columns, visibleColumns],
+      );
+
+      const mainValue = useMemo(() => {
+        const value = row[mainColumn.id];
+        return mainColumn.format ? mainColumn.format(value, row) : value;
+      }, [row, mainColumn]);
+
+      return (
+        <CardViewItem
+          elevation={1}
+          sx={{
+            bgcolor:
+              backgroundColor ||
+              (index % 2 === 0 ? 'action.hover' : 'background.paper'),
+          }}
+        >
+          <CardContent sx={{ pb: 1, pt: 1, px: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Typography variant="subtitle1" component="div">
+                {mainValue}
+              </Typography>
+              <IconButton size="small" onClick={() => toggleExpansion(rowId)}>
+                {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+
+            {/* Always show key info (priority >= 4) */}
+            <Box sx={{ mt: 1 }}>
+              {highPriorityColumns.map(column => (
+                <Box
+                  key={column.id}
+                  sx={{
+                    mb: 0.5,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    {column.label}:
+                  </Typography>
+                  <Typography variant="body2">
+                    {column.format
+                      ? column.format(row[column.id], row)
+                      : row[column.id]}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+
+            {/* Show all other visible columns when expanded */}
+            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+              <Divider sx={{ my: 1 }} />
+              <Box sx={{ mt: 1 }}>
+                {otherColumns.map(column => (
+                  <Box
+                    key={column.id}
+                    sx={{
+                      mb: 0.5,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      {column.label}:
+                    </Typography>
+                    <Typography variant="body2">
+                      {column.format
+                        ? column.format(row[column.id], row)
+                        : row[column.id]}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Collapse>
+
+            {onRowClick && (
+              <Box sx={{ mt: 1, textAlign: 'right' }}>
+                <Button
+                  size="small"
+                  onClick={() => onRowClick(row)}
+                  sx={{ minWidth: '80px' }}
+                >
+                  Ver detalhes
+                </Button>
+              </Box>
+            )}
+          </CardContent>
+        </CardViewItem>
+      );
+    },
+  );
+  component.displayName = 'MobileCard';
+  return component as ComponentType<MobileCardProps<T>>;
+}
+
 export function Table<T extends Record<string, any>>({
   columns,
   rows,
@@ -197,15 +393,22 @@ export function Table<T extends Record<string, any>>({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Create type-specific components for this instance
+  const TableRowItem = useMemo(() => createTableRowItem<T>(), []);
+  const MobileCard = useMemo(() => createMobileCard<T>(), []);
+
   // Merge custom localization with default
-  const localization = {
-    ...DEFAULT_LOCALIZATION,
-    ...customLocalization,
-    pagination: {
-      ...DEFAULT_LOCALIZATION.pagination,
-      ...(customLocalization?.pagination || {}),
-    },
-  };
+  const localization = useMemo(
+    () => ({
+      ...DEFAULT_LOCALIZATION,
+      ...customLocalization,
+      pagination: {
+        ...DEFAULT_LOCALIZATION.pagination,
+        ...(customLocalization?.pagination || {}),
+      },
+    }),
+    [customLocalization],
+  );
 
   // Columns state - keeping for mobile prioritization
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
@@ -215,13 +418,13 @@ export function Table<T extends Record<string, any>>({
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredRows, setFilteredRows] = useState<T[]>(rows);
-  
+
   // Internal sorting state when external sorting is not provided
   const [internalSorting, setInternalSorting] = useState<{
     orderBy: string;
     order: 'asc' | 'desc';
   } | null>(null);
-  
+
   // Card view for mobile
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
@@ -268,25 +471,25 @@ export function Table<T extends Record<string, any>>({
   // Apply sorting to filtered rows
   const sortedRows = useMemo(() => {
     let sortedData = [...filteredRows];
-    
+
     // Use external sorting if provided, otherwise use internal
     const sortConfig = sorting || internalSorting;
-    
+
     if (sortConfig && sortConfig.orderBy) {
       sortedData.sort((a, b) => {
         // Get values to compare
         const valueA = a[sortConfig.orderBy];
         const valueB = b[sortConfig.orderBy];
-        
+
         // Handle nulls/undefined
         if (valueA == null) return sortConfig.order === 'asc' ? -1 : 1;
         if (valueB == null) return sortConfig.order === 'asc' ? 1 : -1;
-        
+
         // Different comparison based on data type
         if (typeof valueA === 'number' && typeof valueB === 'number') {
           return sortConfig.order === 'asc' ? valueA - valueB : valueB - valueA;
         }
-        
+
         // Default string comparison
         const stringA = String(valueA).toLowerCase();
         const stringB = String(valueB).toLowerCase();
@@ -295,65 +498,84 @@ export function Table<T extends Record<string, any>>({
           : stringB.localeCompare(stringA);
       });
     }
-    
+
     return sortedData;
   }, [filteredRows, sorting, internalSorting]);
 
   // Row key getter
-  const getRowKey = (row: T, index: number): string | number => {
-    if (rowKey) {
-      return rowKey(row);
-    }
-    return index;
-  };
-
-  // Row click handler
-  const handleRowClick = (row: T) => {
-    if (onRowClick) {
-      onRowClick(row);
-    }
-  };
-
-  // Row expansion toggle (mobile view)
-  const toggleRowExpansion = (rowId: string | number) => {
-    setExpandedRows(prev => ({
-      ...prev,
-      [rowId.toString()]: !prev[rowId.toString()],
-    }));
-  };
+  const getRowKey = useCallback(
+    (row: T, index: number): string | number => {
+      if (rowKey) {
+        return rowKey(row);
+      }
+      return index;
+    },
+    [rowKey],
+  );
 
   // Column sort handler
-  const handleSort = (columnId: string) => {
-    // Column must be sortable to proceed
-    if (!columns.find(col => col.id === columnId)?.sortable) {
-      return;
-    }
-    
-    // If external sorting is provided, use it
-    if (sorting && sorting.onSort) {
-      sorting.onSort(columnId);
-      return;
-    }
-    
-    // Otherwise use internal sorting
-    setInternalSorting(prevSort => {
-      if (!prevSort || prevSort.orderBy !== columnId) {
-        // New column - start with ascending
-        return { orderBy: columnId, order: 'asc' };
-      } else {
-        // Toggle direction
-        return {
-          orderBy: columnId,
-          order: prevSort.order === 'asc' ? 'desc' : 'asc',
-        };
+  const handleSort = useCallback(
+    (columnId: string) => {
+      // Column must be sortable to proceed
+      if (!columns.find(col => col.id === columnId)?.sortable) {
+        return;
       }
-    });
-  };
+
+      // If external sorting is provided, use it
+      if (sorting && sorting.onSort) {
+        sorting.onSort(columnId);
+        return;
+      }
+
+      // Otherwise use internal sorting
+      setInternalSorting(prevSort => {
+        if (!prevSort || prevSort.orderBy !== columnId) {
+          // New column - start with ascending
+          return { orderBy: columnId, order: 'asc' };
+        } else {
+          // Toggle direction
+          return {
+            orderBy: columnId,
+            order: prevSort.order === 'asc' ? 'desc' : 'asc',
+          };
+        }
+      });
+    },
+    [columns, sorting],
+  );
 
   // Filter visible columns for current view
   const displayColumns = useMemo(
     () => columns.filter(column => visibleColumns[column.id]),
     [columns, visibleColumns],
+  );
+
+  // Handle pagination change - memoized
+  const handlePageChange = useCallback(
+    (_event: React.ChangeEvent<unknown>, page: number) => {
+      if (pagination) {
+        pagination.onPageChange(page);
+      }
+    },
+    [pagination],
+  );
+
+  // Toggle row expansion for mobile view
+  const toggleRowExpansion = useCallback((rowId: string | number) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [rowId.toString()]: !prev[rowId.toString()],
+    }));
+  }, []);
+
+  // Handle row click with empty fallback for when onRowClick is undefined
+  const handleRowClick = useCallback(
+    (row: T) => {
+      if (onRowClick) {
+        onRowClick(row);
+      }
+    },
+    [onRowClick],
   );
 
   // Render loading state
@@ -398,123 +620,24 @@ export function Table<T extends Record<string, any>>({
         <Box sx={{ p: 2 }}>
           {sortedRows.map((row, idx) => {
             const rowId = getRowKey(row, idx);
-            const isExpanded = expandedRows[rowId.toString()];
+            const isExpanded = !!expandedRows[rowId.toString()];
+            const bg = rowBackgroundColor
+              ? rowBackgroundColor(row, idx)
+              : undefined;
 
             return (
-              <CardViewItem
+              <MobileCard
                 key={rowId}
-                elevation={1}
-                sx={{
-                  bgcolor: rowBackgroundColor
-                    ? rowBackgroundColor(row, idx)
-                    : idx % 2 === 0
-                      ? 'action.hover'
-                      : 'background.paper',
-                }}
-              >
-                <CardContent sx={{ pb: 1, pt: 1, px: 2 }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Typography variant="subtitle1" component="div">
-                      {/* Display first high priority column as title */}
-                      {(() => {
-                        const mainColumn =
-                          columns.find(col => col.priority === 5) || columns[0];
-                        const value = row[mainColumn.id];
-                        return mainColumn.format
-                          ? mainColumn.format(value, row)
-                          : value;
-                      })()}
-                    </Typography>
-                    <IconButton
-                      size="small"
-                      onClick={() => toggleRowExpansion(rowId)}
-                    >
-                      {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </IconButton>
-                  </Box>
-
-                  {/* Always show key info (priority >= 4) */}
-                  <Box sx={{ mt: 1 }}>
-                    {columns
-                      .filter(
-                        col => (col.priority || 0) >= 4 && col.priority !== 5,
-                      )
-                      .map(column => (
-                        <Box
-                          key={column.id}
-                          sx={{
-                            mb: 0.5,
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          <Typography variant="caption" color="text.secondary">
-                            {column.label}:
-                          </Typography>
-                          <Typography variant="body2">
-                            {column.format
-                              ? column.format(row[column.id], row)
-                              : row[column.id]}
-                          </Typography>
-                        </Box>
-                      ))}
-                  </Box>
-
-                  {/* Show all other visible columns when expanded */}
-                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                    <Divider sx={{ my: 1 }} />
-                    <Box sx={{ mt: 1 }}>
-                      {columns
-                        .filter(
-                          col =>
-                            visibleColumns[col.id] &&
-                            (col.priority === undefined || col.priority < 4) &&
-                            col.priority !== 5,
-                        )
-                        .map(column => (
-                          <Box
-                            key={column.id}
-                            sx={{
-                              mb: 0.5,
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {column.label}:
-                            </Typography>
-                            <Typography variant="body2">
-                              {column.format
-                                ? column.format(row[column.id], row)
-                                : row[column.id]}
-                            </Typography>
-                          </Box>
-                        ))}
-                    </Box>
-                  </Collapse>
-
-                  {onRowClick && (
-                    <Box sx={{ mt: 1, textAlign: 'right' }}>
-                      <Button
-                        size="small"
-                        onClick={() => handleRowClick(row)}
-                        sx={{ minWidth: '80px' }}
-                      >
-                        Ver detalhes
-                      </Button>
-                    </Box>
-                  )}
-                </CardContent>
-              </CardViewItem>
+                row={row}
+                columns={columns}
+                rowId={rowId}
+                index={idx}
+                isExpanded={isExpanded}
+                toggleExpansion={toggleRowExpansion}
+                onRowClick={onRowClick}
+                backgroundColor={bg}
+                visibleColumns={visibleColumns}
+              />
             );
           })}
 
@@ -523,7 +646,7 @@ export function Table<T extends Record<string, any>>({
               <Pagination
                 count={Math.ceil(pagination.totalRows / pagination.rowsPerPage)}
                 page={pagination.page}
-                onChange={(_, page) => pagination.onPageChange(page)}
+                onChange={handlePageChange}
                 color="primary"
                 size="small"
                 siblingCount={0}
@@ -561,7 +684,9 @@ export function Table<T extends Record<string, any>>({
                 >
                   {column.sortable ? (
                     <TableSortLabel
-                      active={sortConfig ? sortConfig.orderBy === column.id : false}
+                      active={
+                        sortConfig ? sortConfig.orderBy === column.id : false
+                      }
                       direction={
                         sortConfig && sortConfig.orderBy === column.id
                           ? sortConfig.order
@@ -579,33 +704,19 @@ export function Table<T extends Record<string, any>>({
           </TableHead>
           <TableBody>
             {sortedRows.map((row, index) => {
-              const backgroundColor = rowBackgroundColor
+              const bg = rowBackgroundColor
                 ? rowBackgroundColor(row, index)
                 : undefined;
 
               return (
-                <TableRow
-                  hover
-                  onClick={() => handleRowClick(row)}
+                <TableRowItem
                   key={getRowKey(row, index)}
-                  sx={{
-                    cursor: onRowClick ? 'pointer' : 'default',
-                    backgroundColor,
-                    '&:nth-of-type(odd)': !backgroundColor
-                      ? { backgroundColor: 'action.hover' }
-                      : {},
-                    '&:last-child td, &:last-child th': { border: 0 },
-                  }}
-                >
-                  {displayColumns.map(column => {
-                    const value = row[column.id];
-                    return (
-                      <TableCell key={column.id} align={column.align || 'left'}>
-                        {column.format ? column.format(value, row) : value}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
+                  columns={displayColumns}
+                  row={row}
+                  index={index}
+                  onClick={handleRowClick}
+                  backgroundColor={bg}
+                />
               );
             })}
           </TableBody>
@@ -617,7 +728,7 @@ export function Table<T extends Record<string, any>>({
           <Pagination
             count={Math.ceil(pagination.totalRows / pagination.rowsPerPage)}
             page={pagination.page}
-            onChange={(_, page) => pagination.onPageChange(page)}
+            onChange={handlePageChange}
             color="primary"
             showFirstButton
             showLastButton

@@ -1,6 +1,6 @@
 // Path: features\auth\routes\Login.tsx
 import { useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import {
   Box,
   TextField,
@@ -13,7 +13,7 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
-  Button
+  Button,
 } from '@mui/material';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -34,11 +34,15 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAuthenticated, login, error: authError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Get redirect path from query params (React Router v7 style)
+  const from = searchParams.get('from') || '/';
 
   // Get the random image number (1-5) for consistent layout with the original
   const [randomImageNumber] = useState(() => Math.floor(Math.random() * 5) + 1);
@@ -56,12 +60,16 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    login(data);
+    const loginResult = await login(data);
+    // The login function now correctly returns a promise that resolves to a boolean
+    if (loginResult) {
+      // Use navigate in React Router v7 style
+      navigate(from, { replace: true });
+    }
   };
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    const from = location.state?.from?.pathname || '/';
     return <Navigate to={from} replace />;
   }
 
@@ -177,7 +185,7 @@ const Login = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                loading={isSubmitting}
+                disabled={isSubmitting}
                 sx={{
                   mt: 3,
                   mb: 2,
@@ -185,7 +193,7 @@ const Login = () => {
                   fontSize: isMobile ? '0.9rem' : '1rem',
                 }}
               >
-                Entrar
+                {isSubmitting ? 'Entrando...' : 'Entrar'}
               </Button>
             </Box>
           </Paper>

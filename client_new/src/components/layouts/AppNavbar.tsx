@@ -1,4 +1,4 @@
-// Path: features\dashboard\layouts\DashboardNavbar.tsx
+// Path: components\layouts\AppNavbar.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -33,10 +33,8 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
   color: theme.palette.text.primary,
 }));
 
-const DashboardNavbar = ({
-  onOpenSidebar,
-}: DashboardNavbarProps) => {
-  const navigate = useNavigate();
+const DashboardNavbar = ({ onOpenSidebar }: DashboardNavbarProps) => {
+  const navigate = useNavigate(); // React Router v7 navigation hook
   const { user, logout } = useAuthStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const theme = useTheme();
@@ -53,7 +51,8 @@ const DashboardNavbar = ({
   const handleLogout = () => {
     handleMenuClose();
     logout();
-    navigate('/login');
+    // Use navigate function for programmatic navigation in React Router v7
+    navigate('/login', { replace: true });
   };
 
   return (

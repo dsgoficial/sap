@@ -1,10 +1,10 @@
-// Path: features\dashboard\layouts\DashboardLayout.tsx
+// Path: components\layouts\AppLayout.tsx
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
 import { Box, useMediaQuery, useTheme } from '@mui/material';
-import DashboardSidebar from './DashboardSidebar';
-import DashboardNavbar from './DashboardNavbar';
+import DashboardSidebar from './AppSidebar';
+import DashboardNavbar from './AppNavbar';
 
 // Constants
 const APP_BAR_MOBILE = 64;
@@ -28,9 +28,9 @@ const MainStyle = styled(Box)<{ open?: boolean }>(({ theme, open }) => ({
   paddingRight: theme.spacing(2),
   [theme.breakpoints.up('lg')]: {
     paddingTop: APP_BAR_DESKTOP + 24,
-    marginLeft: open ? DRAWER_WIDTH : 0,
+    // Fix: Remove the marginLeft and just set width to account for sidebar
     width: open ? `calc(100% - ${DRAWER_WIDTH}px)` : '100%',
-    transition: theme.transitions.create(['margin', 'width'], {
+    transition: theme.transitions.create(['width'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
     }),
@@ -62,9 +62,11 @@ const DashboardLayout = () => {
   return (
     <RootStyle>
       <DashboardNavbar
-        onOpenSidebar={isMobile ? handleMobileDrawerToggle : handleDesktopDrawerToggle}
+        onOpenSidebar={
+          isMobile ? handleMobileDrawerToggle : handleDesktopDrawerToggle
+        }
       />
-      
+
       <DashboardSidebar
         mobileOpen={mobileOpen}
         desktopOpen={desktopOpen}
@@ -72,7 +74,7 @@ const DashboardLayout = () => {
         onDesktopClose={handleDesktopDrawerToggle}
         drawerWidth={DRAWER_WIDTH}
       />
-      
+
       <MainStyle open={desktopOpen}>
         <Outlet />
       </MainStyle>

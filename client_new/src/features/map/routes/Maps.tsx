@@ -10,28 +10,21 @@ import Page from '@/components/Page/Page';
 import { useMapData, getLegendItems } from '@/hooks/useMap';
 import MapVisualization from '../components/MapVisualization';
 import { useMapStore } from '@/stores/mapStore';
-import { useAuthStore } from '@/stores/authStore';
-import { Navigate } from 'react-router-dom';
 
 export const Maps = () => {
-  const { isAdmin } = useAuthStore();
-  const { isLoading, isError } = useMapData();
+  const { isLoading, isError, error } = useMapData();
   const { layers, visibleLayers, toggleLayerVisibility } = useMapStore();
-
-  // Redirect if not admin
-  if (!isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
 
   if (isLoading) {
     return (
       <Page title="Mapas de Acompanhamento">
-        <Container maxWidth="xl">
+        <Container maxWidth="xl" disableGutters>
           <Box
             display="flex"
             justifyContent="center"
             alignItems="center"
             minHeight="60vh"
+            width="100%"
           >
             <CircularProgress />
           </Box>
@@ -43,9 +36,26 @@ export const Maps = () => {
   if (isError) {
     return (
       <Page title="Mapas de Acompanhamento">
-        <Container maxWidth="xl">
-          <Alert severity="error" sx={{ mt: 2 }}>
-            Erro ao carregar dados de mapas. Por favor, tente novamente.
+        <Container maxWidth="xl" disableGutters>
+          <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
+            Erro ao carregar dados de mapas:{' '}
+            {error?.message || 'Tente novamente mais tarde.'}
+          </Alert>
+        </Container>
+      </Page>
+    );
+  }
+
+  // Check if we have any layers before trying to render the map
+  if (!layers || layers.length === 0) {
+    return (
+      <Page title="Mapas de Acompanhamento">
+        <Container maxWidth="xl" disableGutters>
+          <Typography variant="h4" sx={{ mb: 3 }}>
+            Mapas de Acompanhamento
+          </Typography>
+          <Alert severity="info" sx={{ mt: 2, width: '100%' }}>
+            Nenhum dado de mapa disponível para visualização.
           </Alert>
         </Container>
       </Page>
@@ -56,23 +66,25 @@ export const Maps = () => {
 
   return (
     <Page title="Mapas de Acompanhamento">
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" disableGutters>
         <Typography variant="h4" sx={{ mb: 3 }}>
           Mapas de Acompanhamento
         </Typography>
 
-        <MapVisualization
-          title="Visão Geral"
-          layers={layers}
-          legendItems={legendItems}
-          visibleLayers={visibleLayers}
-          onToggleLayer={toggleLayerVisibility}
-          initialViewState={{
-            longitude: -52.956841,
-            latitude: -15.415179,
-            zoom: 3.65,
-          }}
-        />
+        <Box sx={{ width: '100%' }}>
+          <MapVisualization
+            title="Visão Geral"
+            layers={layers}
+            legendItems={legendItems}
+            visibleLayers={visibleLayers}
+            onToggleLayer={toggleLayerVisibility}
+            initialViewState={{
+              longitude: -52.956841,
+              latitude: -15.415179,
+              zoom: 3.65,
+            }}
+          />
+        </Box>
       </Container>
     </Page>
   );

@@ -24,7 +24,7 @@ export const UserActivities = () => {
   if (isLoading) {
     return (
       <Page title="Atividades por Usuário">
-        <Container>
+        <Container maxWidth="xl" disableGutters>
           <Box
             display="flex"
             justifyContent="center"
@@ -41,7 +41,7 @@ export const UserActivities = () => {
   if (error) {
     return (
       <Page title="Atividades por Usuário">
-        <Container>
+        <Container maxWidth="xl" disableGutters>
           <Alert severity="error" sx={{ mt: 2 }}>
             Erro ao carregar dados de atividades por usuário. Por favor, tente
             novamente.
@@ -53,7 +53,7 @@ export const UserActivities = () => {
 
   return (
     <Page title="Atividades por Usuário">
-      <Container>
+      <Container maxWidth="xl" disableGutters>
         <Typography variant="h4" sx={{ mb: 3 }}>
           Atividades por Usuário
         </Typography>

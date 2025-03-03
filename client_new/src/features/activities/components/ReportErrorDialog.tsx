@@ -16,7 +16,7 @@ import {
   useMediaQuery,
   useTheme,
   IconButton,
-  Typography
+  Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useForm, Controller } from 'react-hook-form';

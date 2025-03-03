@@ -1,6 +1,7 @@
 // Path: lib\axios.ts
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { ApiError } from '../types/api';
+import { logoutAndRedirect } from '../stores/authStore';
 
 // Token storage key
 const TOKEN_KEY = '@sap_web-Token';
@@ -39,9 +40,8 @@ apiClient.interceptors.response.use(
 
     // Handle 401 and 403 errors (unauthorized/forbidden)
     if (error.response?.status === 401 || error.response?.status === 403) {
-      // Clear token and redirect to login
-      localStorage.removeItem(TOKEN_KEY);
-      window.location.href = '/login';
+      // Use the logoutAndRedirect function to ensure proper state cleanup
+      logoutAndRedirect();
     }
 
     return Promise.reject(apiError);

@@ -1,6 +1,6 @@
-// Path: features\dashboard\layouts\DashboardSidebar.tsx
+// Path: components\layouts\AppSidebar.tsx
 import { useRef } from 'react';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Box,
   Drawer,
@@ -51,7 +51,7 @@ const DashboardSidebar = ({
   const { pathname } = useLocation();
   const { isAdmin } = useAuthStore();
   const theme = useTheme();
-  
+
   // Use ref for close button to avoid focus issues
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -129,7 +129,7 @@ const DashboardSidebar = ({
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    
+
     // Then close the drawer after a slight delay
     setTimeout(() => {
       if (isMobileDrawer) {
@@ -156,7 +156,7 @@ const DashboardSidebar = ({
           </Typography>
         </Box>
 
-        <IconButton 
+        <IconButton
           onClick={() => handleClose(isMobileDrawer)}
           ref={isMobileDrawer ? undefined : closeButtonRef}
           tabIndex={0}
@@ -171,7 +171,7 @@ const DashboardSidebar = ({
         {filteredItems.map(item => (
           <ListItemButton
             key={item.path}
-            component={RouterLink}
+            component={Link} // Changed from RouterLink to Link
             to={item.path}
             selected={pathname === item.path}
             onClick={() => {

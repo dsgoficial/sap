@@ -1,5 +1,11 @@
 // Path: features\map\components\MapVisualization.tsx
-import { useRef, useState, useEffect } from 'react';
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
 import { styled } from '@mui/material/styles';
 import {
   Paper,
@@ -142,16 +148,27 @@ const MapVisualization = ({
     // that we know what we're doing with the internal property
     // @ts-ignore - _getIconUrl exists in the implementation but not in the type definitions
     delete L.Icon.Default.prototype._getIconUrl;
-    
+
     L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconRetinaUrl:
+        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      shadowUrl:
+        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     });
   }, []);
 
-  // Function to toggle fullscreen
-  const toggleFullscreen = () => {
+  // Memoized functions
+  const toggleDrawer = useCallback(() => {
+    setDrawerOpen(prev => !prev);
+  }, []);
+
+  const toggleLegend = useCallback(() => {
+    setShowLegend(prev => !prev);
+  }, []);
+
+  // Function to toggle fullscreen - memoized
+  const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
       setIsFullscreen(true);
@@ -161,10 +178,10 @@ const MapVisualization = ({
         setIsFullscreen(false);
       }
     }
-  };
+  }, []);
 
-  // Style function for GeoJSON
-  const getLayerStyle = () => {
+  // Style function for GeoJSON - memoized to prevent recreation on every render
+  const layerStyle = useMemo(() => {
     return {
       fillColor: '#4682B4', // Steel blue color
       weight: 0.5,
@@ -172,7 +189,57 @@ const MapVisualization = ({
       color: '#050505',
       fillOpacity: 0.8,
     };
-  };
+  }, []);
+
+  // Memoize center coordinates
+  const center = useMemo(
+    () =>
+      [initialViewState.latitude, initialViewState.longitude] as [
+        number,
+        number,
+      ],
+    [initialViewState.latitude, initialViewState.longitude],
+  );
+
+  // Memoize drawer contents to prevent recreation on each render
+  const drawerContent = useMemo(
+    () => (
+      <>
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Typography variant="h6">Camadas do Mapa</Typography>
+          <IconButton
+            onClick={toggleDrawer}
+            aria-label="Fechar menu de camadas"
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Divider />
+        <Box sx={{ p: 2 }}>
+          <LayerControl
+            layers={layers.map(l => ({ id: l.id, name: l.name }))}
+            visibility={visibleLayers}
+            onToggle={onToggleLayer}
+          />
+        </Box>
+        <Divider />
+        <Box sx={{ p: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Legenda
+          </Typography>
+          <MapLegend items={legendItems} />
+        </Box>
+      </>
+    ),
+    [layers, visibleLayers, onToggleLayer, legendItems, toggleDrawer],
+  );
 
   return (
     <Paper
@@ -194,7 +261,7 @@ const MapVisualization = ({
 
       <MapContainerWrapper>
         <MapContainer
-          center={[initialViewState.latitude, initialViewState.longitude]}
+          center={center}
           zoom={initialViewState.zoom}
           style={{ height: '100%', width: '100%' }}
           zoomControl={false}
@@ -204,16 +271,17 @@ const MapVisualization = ({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          
+
           {/* Render each GeoJSON layer if visible */}
-          {layers.map(layer => 
-            visibleLayers[layer.id] && (
-              <GeoJSON 
-                key={layer.id}
-                data={layer.geojson}
-                style={getLayerStyle}
-              />
-            )
+          {layers.map(
+            layer =>
+              visibleLayers[layer.id] && (
+                <GeoJSON
+                  key={layer.id}
+                  data={layer.geojson}
+                  style={layerStyle}
+                />
+              ),
           )}
 
           {/* Add Zoom Control in a better position for mobile */}
@@ -243,7 +311,7 @@ const MapVisualization = ({
           <LegendToggle
             startIcon={<InfoIcon />}
             size="small"
-            onClick={() => setShowLegend(!showLegend)}
+            onClick={toggleLegend}
             variant="outlined"
           >
             {showLegend ? 'Ocultar' : 'Legenda'}
@@ -261,7 +329,7 @@ const MapVisualization = ({
         <MobileFab
           color="primary"
           size="medium"
-          onClick={() => setDrawerOpen(true)}
+          onClick={toggleDrawer}
           aria-label="Show layers"
         >
           <LayersIcon />
@@ -271,7 +339,7 @@ const MapVisualization = ({
         <Drawer
           anchor="right"
           open={drawerOpen && isMobile}
-          onClose={() => setDrawerOpen(false)}
+          onClose={toggleDrawer}
           PaperProps={{
             sx: {
               width: '80%',
@@ -281,38 +349,11 @@ const MapVisualization = ({
             },
           }}
         >
-          <Box
-            sx={{
-              p: 2,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <Typography variant="h6">Camadas do Mapa</Typography>
-            <IconButton onClick={() => setDrawerOpen(false)}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          <Divider />
-          <Box sx={{ p: 2 }}>
-            <LayerControl
-              layers={layers.map(l => ({ id: l.id, name: l.name }))}
-              visibility={visibleLayers}
-              onToggle={onToggleLayer}
-            />
-          </Box>
-          <Divider />
-          <Box sx={{ p: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Legenda
-            </Typography>
-            <MapLegend items={legendItems} />
-          </Box>
+          {drawerContent}
         </Drawer>
       </MapContainerWrapper>
     </Paper>
   );
 };
 
-export default MapVisualization;
+export default React.memo(MapVisualization);

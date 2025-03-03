@@ -66,16 +66,61 @@ export const MicroControl = () => {
               <Table
                 title=""
                 columns={[
-                  { id: 'projeto_nome', label: 'Projeto', align: 'left', sortable: true },
+                  {
+                    id: 'projeto_nome',
+                    label: 'Projeto',
+                    align: 'left',
+                    sortable: true,
+                  },
                   { id: 'lote', label: 'Lote', align: 'left', sortable: true },
-                  { id: 'fase_nome', label: 'Fase', align: 'left', sortable: true },
-                  { id: 'subfase_nome', label: 'Subfase', align: 'left', sortable: true },
-                  { id: 'etapa_nome', label: 'Etapa', align: 'left', sortable: true },
-                  { id: 'bloco', label: 'Bloco', align: 'left', sortable: true },
-                  { id: 'atividade_id', label: 'Atividade ID', align: 'left', sortable: true },
-                  { id: 'usuario', label: 'Usuário', align: 'left', sortable: true },
-                  { id: 'data_inicio', label: 'Data Início', align: 'left', sortable: true },
-                  { id: 'duration', label: 'Duração', align: 'left', sortable: true },
+                  {
+                    id: 'fase_nome',
+                    label: 'Fase',
+                    align: 'left',
+                    sortable: true,
+                  },
+                  {
+                    id: 'subfase_nome',
+                    label: 'Subfase',
+                    align: 'left',
+                    sortable: true,
+                  },
+                  {
+                    id: 'etapa_nome',
+                    label: 'Etapa',
+                    align: 'left',
+                    sortable: true,
+                  },
+                  {
+                    id: 'bloco',
+                    label: 'Bloco',
+                    align: 'left',
+                    sortable: true,
+                  },
+                  {
+                    id: 'atividade_id',
+                    label: 'Atividade ID',
+                    align: 'left',
+                    sortable: true,
+                  },
+                  {
+                    id: 'usuario',
+                    label: 'Usuário',
+                    align: 'left',
+                    sortable: true,
+                  },
+                  {
+                    id: 'data_inicio',
+                    label: 'Data Início',
+                    align: 'left',
+                    sortable: true,
+                  },
+                  {
+                    id: 'duration',
+                    label: 'Duração',
+                    align: 'left',
+                    sortable: true,
+                  },
                 ]}
                 rows={runningActivities}
                 rowKey={row => row.atividade_id}

@@ -1,12 +1,12 @@
 // Path: hooks\useDashboard.ts
-import { useQuery } from '@tanstack/react-query';
 import { getDashboardData } from '../services/dashboardService';
 import { DashboardData } from '../types/dashboard';
 
 /**
  * Transform raw API data into dashboard-ready format
+ * This is separated so it can be reused by both the loader and the hook
  */
-const transformDashboardData = (
+export const transformDashboardData = (
   data: Awaited<ReturnType<typeof getDashboardData>>,
 ): DashboardData => {
   const { quantityData, finishedData, runningData, pitData } = data;
@@ -90,16 +90,4 @@ const transformDashboardData = (
     lotProgressData,
     monthlyData,
   };
-};
-
-/**
- * Hook to fetch and transform dashboard data
- */
-export const useDashboard = () => {
-  return useQuery({
-    queryKey: ['dashboard'],
-    queryFn: getDashboardData,
-    select: transformDashboardData,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
 };

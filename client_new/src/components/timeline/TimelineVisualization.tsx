@@ -42,7 +42,7 @@ interface TimelineVisualizationProps {
 
 export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
   options,
-  dataset
+  dataset,
 }) => {
   const transformedGroups: TimelineGroup[] = dataset.map(item => {
     const timelineItems: TimelineItem[] = item.data.map(
@@ -68,10 +68,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
 
   return (
     <Box className="visavail" sx={{ width: '100%' }}>
-      <EnhancedTimeline
-        title={options.title.text}
-        groups={transformedGroups}
-      />
+      <EnhancedTimeline title={options.title.text} groups={transformedGroups} />
     </Box>
   );
 };

@@ -1,6 +1,6 @@
 // Path: features\grid\components\Grid.tsx
-import { useEffect, useRef } from 'react';
-import * as d3 from 'd3';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { select } from 'd3';
 import { styled } from '@mui/material/styles';
 import { Typography, Paper } from '@mui/material';
 import { GridItem, GridData } from '@/types/grid';
@@ -45,8 +45,8 @@ export const Grid = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  // Calculate grid size
-  const calculateGrid = () => {
+  // Calculate grid size - memoized to prevent recalculation
+  const { rowSize, colSize } = useMemo(() => {
     if (!data.grade || data.grade.length === 0)
       return { rowSize: 0, colSize: 0 };
 
@@ -54,53 +54,89 @@ export const Grid = ({
     const colSize = Math.max(...data.grade.map(item => item.j));
 
     return { rowSize, colSize };
-  };
+  }, [data.grade]);
 
-  const { rowSize, colSize } = calculateGrid();
+  // Memoize handlers to prevent recreation on each render
+  const handlers = useMemo(() => {
+    return {
+      mouseOver: (d: GridItem) => {
+        if (!d?.visited) return;
+
+        // Update current item
+        onItemHover(d);
+
+        // Show tooltip
+        if (tooltipRef.current) {
+          select(tooltipRef.current).style('opacity', 1);
+        }
+      },
+      mouseMove: (event: MouseEvent) => {
+        if (tooltipRef.current) {
+          select(tooltipRef.current)
+            .style('left', `${event.pageX + 10}px`)
+            .style('top', `${event.pageY + 10}px`);
+        }
+      },
+      mouseOut: () => {
+        onItemHover(null);
+
+        // Hide tooltip
+        if (tooltipRef.current) {
+          select(tooltipRef.current).style('opacity', 0);
+        }
+      },
+    };
+  }, [onItemHover]);
+
+  // Memoize cell style
+  const cellStyles = useMemo(
+    () => ({
+      visited: '#AAC8A7',
+      default: '#fff',
+      stroke: '#222',
+    }),
+    [],
+  );
+
+  // Create matrix data - memoized to prevent recalculation on each render
+  const createGridData = useCallback(() => {
+    if (rowSize === 0 || colSize === 0) return [];
+
+    const matrix: (GridItem & {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    })[][] = Array(rowSize)
+      .fill(undefined)
+      .map(() => Array(colSize).fill(undefined));
+
+    data.grade.forEach(item => {
+      if (item.i > 0 && item.j > 0 && item.i <= rowSize && item.j <= colSize) {
+        matrix[item.i - 1][item.j - 1] = {
+          x: (item.j - 1) * width,
+          y: (item.i - 1) * height,
+          width,
+          height,
+          ...item,
+        };
+      }
+    });
+
+    return matrix;
+  }, [data.grade, rowSize, colSize, width, height]);
 
   // D3 code for grid visualization
   useEffect(() => {
     if (!svgRef.current || rowSize === 0 || colSize === 0) return;
 
     // Clear previous content
-    d3.select(svgRef.current).selectAll('*').remove();
-
-    // Create matrix data
-    const createGridData = () => {
-      const matrix: (GridItem & {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-      })[][] = Array(rowSize)
-        .fill(undefined)
-        .map(() => Array(colSize).fill(undefined));
-
-      data.grade.forEach(item => {
-        if (
-          item.i > 0 &&
-          item.j > 0 &&
-          item.i <= rowSize &&
-          item.j <= colSize
-        ) {
-          matrix[item.i - 1][item.j - 1] = {
-            x: (item.j - 1) * width,
-            y: (item.i - 1) * height,
-            width,
-            height,
-            ...item,
-          };
-        }
-      });
-
-      return matrix;
-    };
+    select(svgRef.current).selectAll('*').remove();
 
     const gridData = createGridData();
 
     // Create SVG
-    const svg = d3
-      .select(svgRef.current)
+    const svg = select(svgRef.current)
       .attr('width', colSize * width + 1)
       .attr('height', rowSize * height + 1);
 
@@ -119,44 +155,42 @@ export const Grid = ({
       .enter()
       .append('rect')
       .attr('class', 'square')
-      .style('fill', d => (d?.visited ? '#AAC8A7' : '#fff'))
+      .style('fill', d =>
+        d?.visited ? cellStyles.visited : cellStyles.default,
+      )
       .attr('x', d => d?.x || 0)
       .attr('y', d => d?.y || 0)
       .attr('width', width)
       .attr('height', height)
-      .style('stroke', '#222')
+      .style('stroke', cellStyles.stroke)
       .on('mouseover', function (event, d) {
-        if (!d?.visited) return;
-
-        // Update current item
-        onItemHover(d);
-
-        // Show tooltip
-        if (tooltipRef.current) {
-          d3.select(tooltipRef.current)
-            .style('opacity', 1)
-            .style('left', `${event.pageX + 10}px`)
-            .style('top', `${event.pageY + 10}px`);
-        }
+        handlers.mouseOver(d);
+        handlers.mouseMove(event as MouseEvent);
       })
-      .on('mouseout', () => {
-        onItemHover(null);
+      .on('mousemove', function (event) {
+        handlers.mouseMove(event as MouseEvent);
+      })
+      .on('mouseout', handlers.mouseOut);
+  }, [
+    data.grade,
+    width,
+    height,
+    rowSize,
+    colSize,
+    handlers,
+    cellStyles,
+    createGridData,
+  ]);
 
-        // Hide tooltip
-        if (tooltipRef.current) {
-          d3.select(tooltipRef.current).style('opacity', 0);
-        }
-      });
-  }, [data, width, height, rowSize, colSize, onItemHover]);
+  // Calculate progress percentage - memoized
+  const progressPercentage = useMemo(() => {
+    if (!data.grade || data.grade.length === 0) return '0';
 
-  // Calculate progress percentage
-  const progressPercentage =
-    data.grade?.length > 0
-      ? (
-          (data.grade.filter(item => item.visited).length / data.grade.length) *
-          100
-        ).toFixed(2)
-      : '0';
+    return (
+      (data.grade.filter(item => item.visited).length / data.grade.length) *
+      100
+    ).toFixed(2);
+  }, [data.grade]);
 
   return (
     <Paper elevation={1} sx={{ p: 2, height: '300px', width: '100%' }}>

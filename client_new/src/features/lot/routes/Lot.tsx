@@ -40,7 +40,7 @@ export const Lot = () => {
   if (isLoading) {
     return (
       <Page title="Acompanhamento Lote">
-        <Container>
+        <Container maxWidth="xl" disableGutters>
           <Box
             display="flex"
             justifyContent="center"
@@ -57,7 +57,7 @@ export const Lot = () => {
   if (error) {
     return (
       <Page title="Acompanhamento Lote">
-        <Container>
+        <Container maxWidth="xl" disableGutters>
           <Alert severity="error" sx={{ mt: 2 }}>
             Erro ao carregar dados de lotes. Por favor, tente novamente.
           </Alert>
@@ -68,7 +68,7 @@ export const Lot = () => {
 
   return (
     <Page title="Acompanhamento Lote">
-      <Container>
+      <Container maxWidth="xl" disableGutters>
         <Typography variant="h4" sx={{ mb: 3 }}>
           Acompanhamento Lote
         </Typography>
@@ -79,6 +79,7 @@ export const Lot = () => {
             flexDirection: 'column',
             justifyContent: 'center',
             gap: 2,
+            width: '100%',
           }}
         >
           {data &&
@@ -86,7 +87,7 @@ export const Lot = () => {
               <Box
                 key={idx}
                 sx={{
-                  width: '90%',
+                  width: '100%',
                 }}
               >
                 <Table

@@ -1,12 +1,12 @@
 // Path: App.tsx
-import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
 import theme from './lib/theme';
 import queryClient from './lib/queryClient';
-import Router from './routes';
+import router from './routes'; // Import the router configuration
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import { RouterProvider } from 'react-router-dom';
 
 const App = () => {
   return (
@@ -19,9 +19,7 @@ const App = () => {
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           >
             <CssBaseline />
-            <BrowserRouter>
-              <Router />
-            </BrowserRouter>
+            <RouterProvider router={router} />
           </SnackbarProvider>
         </ThemeProvider>
       </QueryClientProvider>

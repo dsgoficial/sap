@@ -1,6 +1,6 @@
 // Path: hooks\useAuth.ts
 import { useState, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
 import { LoginRequest } from '../types/auth';
@@ -18,31 +18,36 @@ export const useAuth = () => {
 
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const { enqueueSnackbar } = useSnackbar();
 
   const loginMutation = useMutation({
     mutationFn: storeLogin,
     onSuccess: success => {
       if (success) {
-        const from = location.state?.from?.pathname || '/';
-        navigate(from, { replace: true });
         setError(null);
         enqueueSnackbar('Login realizado com sucesso!', { variant: 'success' });
+        return true;
       } else {
         setError('Usuário ou senha inválidos');
         enqueueSnackbar('Usuário ou senha inválidos!', { variant: 'error' });
+        return false;
       }
     },
     onError: (error: Error) => {
       setError(error.message || 'Falha na autenticação');
       enqueueSnackbar('Falha na autenticação', { variant: 'error' });
+      return false;
     },
   });
 
   const login = useCallback(
-    (credentials: LoginRequest) => {
-      loginMutation.mutate(credentials);
+    async (credentials: LoginRequest): Promise<boolean> => {
+      try {
+        const result = await loginMutation.mutateAsync(credentials);
+        return !!result;
+      } catch (error) {
+        return false;
+      }
     },
     [loginMutation],
   );

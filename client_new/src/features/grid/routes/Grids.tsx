@@ -24,12 +24,13 @@ export const Grids = () => {
   if (isLoading) {
     return (
       <Page title="Grade de Acompanhamento">
-        <Container maxWidth="xl">
+        <Container maxWidth="xl" disableGutters>
           <Box
             display="flex"
             justifyContent="center"
             alignItems="center"
             minHeight="60vh"
+            width="100%"
           >
             <CircularProgress />
           </Box>
@@ -41,8 +42,8 @@ export const Grids = () => {
   if (error) {
     return (
       <Page title="Grade de Acompanhamento">
-        <Container maxWidth="xl">
-          <Alert severity="error" sx={{ mt: 2 }}>
+        <Container maxWidth="xl" disableGutters>
+          <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
             Erro ao carregar dados da grade. Por favor, tente novamente.
           </Alert>
         </Container>
@@ -52,7 +53,7 @@ export const Grids = () => {
 
   return (
     <Page title="Grade de Acompanhamento">
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" disableGutters>
         <Typography variant="h4" sx={{ mb: 3 }}>
           Grade de Acompanhamento
         </Typography>

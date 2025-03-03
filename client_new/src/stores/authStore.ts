@@ -9,6 +9,16 @@ const TOKEN_KEY = '@sap_web-Token';
 const USER_AUTHORIZATION_KEY = '@sap_web-User-Authorization';
 const USER_UUID_KEY = '@sap_web-User-uuid';
 const USER_NAME_KEY = '@sap_web-User-username';
+const TOKEN_EXPIRY_KEY = '@sap_web-Token-Expiry';
+
+// Function to check if token is expired
+export const isTokenExpired = (): boolean => {
+  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+  if (!expiry) return false; // No expiry time means we don't know, assume not expired
+
+  const expiryTime = new Date(expiry);
+  return expiryTime <= new Date();
+};
 
 interface AuthState {
   user: User | null;
@@ -76,6 +86,7 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem(USER_AUTHORIZATION_KEY);
         localStorage.removeItem(USER_UUID_KEY);
         localStorage.removeItem(USER_NAME_KEY);
+        localStorage.removeItem(TOKEN_EXPIRY_KEY);
 
         set({
           user: null,
@@ -94,6 +105,26 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
         isAdmin: state.isAdmin,
       }),
+      // Add an onRehydrate callback to check token expiration when store loads
+      onRehydrateStorage: () => state => {
+        // Check token expiration on rehydration
+        if (state && state.isAuthenticated && isTokenExpired()) {
+          // Token is expired, log out immediately
+          setTimeout(() => {
+            const store = useAuthStore.getState();
+            store.logout();
+          }, 0);
+        }
+      },
     },
   ),
 );
+
+// Static method for use outside React components
+export const logoutAndRedirect = () => {
+  const store = useAuthStore.getState();
+  store.logout();
+
+  // Use window.location.replace instead of href to avoid adding to history
+  window.location.replace('/login');
+};

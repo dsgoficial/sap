@@ -24,7 +24,7 @@ export const SubphaseSituation = () => {
   if (isLoading) {
     return (
       <Page title="Situação Subfase">
-        <Container>
+        <Container maxWidth="xl" disableGutters>
           <Box
             display="flex"
             justifyContent="center"
@@ -41,7 +41,7 @@ export const SubphaseSituation = () => {
   if (error) {
     return (
       <Page title="Situação Subfase">
-        <Container>
+        <Container maxWidth="xl" disableGutters>
           <Alert severity="error" sx={{ mt: 2 }}>
             Erro ao carregar dados de situação de subfases. Por favor, tente
             novamente.
@@ -53,7 +53,7 @@ export const SubphaseSituation = () => {
 
   return (
     <Page title="Situação Subfase">
-      <Container>
+      <Container maxWidth="xl" disableGutters>
         <Typography variant="h4" sx={{ mb: 3 }}>
           Situação Subfase
         </Typography>
@@ -63,6 +63,7 @@ export const SubphaseSituation = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
+            width: '100%',
           }}
         >
           {data &&
