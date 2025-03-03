@@ -1,6 +1,24 @@
 // Path: hooks\useLot.ts
 import { useQuery } from '@tanstack/react-query';
 import { getLots } from '@/services/lotService';
+import {
+  createQueryKey,
+  STALE_TIMES,
+  standardizeError,
+} from '@/lib/queryClient';
+import { LotSubphaseData } from '@/types/lot';
+import { ApiResponse } from '@/types/api';
+
+// Define query keys
+const QUERY_KEYS = {
+  LOT_DATA: createQueryKey('lotData'),
+};
+
+// Define the type for the transformed lot data
+export interface LotViewModel {
+  lot: string;
+  rows: Record<string, string | number>[];
+}
 
 // Month mapping
 const MONTHS = [
@@ -19,9 +37,15 @@ const MONTHS = [
 ];
 
 export const useLotData = () => {
-  return useQuery({
-    queryKey: ['lotData'],
+  // Fixed the TData type to match what select returns
+  const query = useQuery<
+    ApiResponse<LotSubphaseData[]>,
+    unknown,
+    LotViewModel[]
+  >({
+    queryKey: QUERY_KEYS.LOT_DATA,
     queryFn: getLots,
+    staleTime: STALE_TIMES.FREQUENT_DATA, // Lot data changes frequently
     select: data => {
       // Transform data for table display
       const tableData: Record<string, Record<string, number[]>> = {};
@@ -47,7 +71,7 @@ export const useLotData = () => {
       const currentMonthIdx = new Date().getMonth();
 
       // Transform to final format
-      const result: any[] = Object.keys(tableData).map(lotKey => {
+      const result: LotViewModel[] = Object.keys(tableData).map(lotKey => {
         return {
           lot: lotKey,
           rows: Object.keys(tableData[lotKey]).map(subphaseKey => {
@@ -72,4 +96,12 @@ export const useLotData = () => {
       return result;
     },
   });
+
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error ? standardizeError(query.error) : null,
+    refetch: query.refetch,
+  };
 };

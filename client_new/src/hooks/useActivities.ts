@@ -3,6 +3,18 @@ import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ErrorReport } from '../types/activity';
 import { useActivityService } from '@/services/activityService';
+import {
+  STALE_TIMES,
+  standardizeError,
+  createQueryKey,
+} from '@/lib/queryClient';
+// Removed unused import: import { ApiError } from '@/types/api';
+
+// Define query keys as constants
+const QUERY_KEYS = {
+  CURRENT_ACTIVITY: createQueryKey('currentActivity'),
+  ERROR_TYPES: createQueryKey('errorTypes'),
+};
 
 export const useActivities = () => {
   const queryClient = useQueryClient();
@@ -15,22 +27,64 @@ export const useActivities = () => {
     error: activityError,
     refetch: refetchActivity,
   } = useQuery({
-    queryKey: ['currentActivity'],
+    queryKey: QUERY_KEYS.CURRENT_ACTIVITY,
     queryFn: activityService.getCurrentActivity,
+    staleTime: STALE_TIMES.FREQUENT_DATA, // Activity data changes frequently
   });
 
   // Get error types
   const { data: errorTypesData } = useQuery({
-    queryKey: ['errorTypes'],
+    queryKey: QUERY_KEYS.ERROR_TYPES,
     queryFn: activityService.getErrorTypes,
-    staleTime: Infinity, // Error types rarely change
+    staleTime: STALE_TIMES.REFERENCE_DATA, // Error types rarely change
   });
 
   // Start activity mutation
   const startActivityMutation = useMutation({
     mutationFn: activityService.startActivity,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentActivity'] });
+      // Invalidate current activity to refresh data
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_ACTIVITY });
+    },
+    // Add optimistic update - assuming starting activity immediately gives a loading state
+    onMutate: async () => {
+      // Cancel any outgoing refetches to avoid overwriting our optimistic update
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.CURRENT_ACTIVITY,
+      });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(
+        QUERY_KEYS.CURRENT_ACTIVITY,
+      );
+
+      // Optimistically update to a loading/pending state
+      queryClient.setQueryData(QUERY_KEYS.CURRENT_ACTIVITY, {
+        success: true,
+        message: 'Starting activity...',
+        dados: {
+          atividade: {
+            id: 'pending',
+            nome: 'Iniciando atividade...',
+            dado_producao: {
+              tipo_dado_producao_id: 1,
+            },
+          },
+        },
+      });
+
+      // Return a context object with the snapshot
+      return { previousData };
+    },
+    onError: (error, _variables, context) => {
+      // If the mutation fails, roll back to the previous value
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          QUERY_KEYS.CURRENT_ACTIVITY,
+          context.previousData,
+        );
+      }
+      console.error('Error starting activity:', error);
     },
   });
 
@@ -38,16 +92,47 @@ export const useActivities = () => {
   const finishActivityMutation = useMutation({
     mutationFn: activityService.finishActivity,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentActivity'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_ACTIVITY });
+    },
+    // Add optimistic update for finishing activity
+    onMutate: async activityId => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: QUERY_KEYS.CURRENT_ACTIVITY,
+      });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(
+        QUERY_KEYS.CURRENT_ACTIVITY,
+      );
+
+      // Optimistically update to a loading/pending state
+      queryClient.setQueryData(QUERY_KEYS.CURRENT_ACTIVITY, {
+        success: true,
+        message: 'Finalizing activity...',
+        dados: {
+          atividade: null, // Assuming finishing means no current activity
+        },
+      });
+
+      return { previousData, activityId };
+    },
+    onError: (error, _variables, context) => {
+      // Roll back to the previous value
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          QUERY_KEYS.CURRENT_ACTIVITY,
+          context.previousData,
+        );
+      }
+      console.error('Error finishing activity:', error);
     },
   });
 
   // Report error mutation
   const reportErrorMutation = useMutation({
     mutationFn: activityService.reportError,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentActivity'] });
-    },
+    // No need to invalidate since reporting an error doesn't change the current activity
   });
 
   // Helper functions
@@ -75,6 +160,20 @@ export const useActivities = () => {
   const activityByQgis =
     currentActivity?.dado_producao?.tipo_dado_producao_id !== 1;
 
+  // Standardize error objects
+  const standardizedActivityError = activityError
+    ? standardizeError(activityError)
+    : null;
+  const standardizedStartError = startActivityMutation.error
+    ? standardizeError(startActivityMutation.error)
+    : null;
+  const standardizedFinishError = finishActivityMutation.error
+    ? standardizeError(finishActivityMutation.error)
+    : null;
+  const standardizedReportError = reportErrorMutation.error
+    ? standardizeError(reportErrorMutation.error)
+    : null;
+
   return {
     // Data
     currentActivity,
@@ -88,10 +187,10 @@ export const useActivities = () => {
     isReportingError: reportErrorMutation.isPending,
 
     // Error states
-    activityError,
-    startActivityError: startActivityMutation.error,
-    finishActivityError: finishActivityMutation.error,
-    reportErrorError: reportErrorMutation.error,
+    activityError: standardizedActivityError,
+    startActivityError: standardizedStartError,
+    finishActivityError: standardizedFinishError,
+    reportErrorError: standardizedReportError,
 
     // Actions
     startActivity: handleStartActivity,

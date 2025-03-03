@@ -11,8 +11,9 @@ import {
   ListItemText,
   Divider,
   IconButton,
+  useTheme,
 } from '@mui/material';
-import { styled, useTheme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -24,6 +25,7 @@ import MapIcon from '@mui/icons-material/Map';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useAuthStore } from '@/stores/authStore';
+import { useThemeMode } from '@/contexts/ThemeContext';
 
 interface DashboardSidebarProps {
   mobileOpen: boolean;
@@ -51,6 +53,7 @@ const DashboardSidebar = ({
   const { pathname } = useLocation();
   const { isAdmin } = useAuthStore();
   const theme = useTheme();
+  const { isDarkMode } = useThemeMode();
 
   // Use ref for close button to avoid focus issues
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -184,6 +187,22 @@ const DashboardSidebar = ({
               justifyContent: 'initial',
               px: 2.5,
               py: isMobileDrawer ? 1.5 : 1,
+              '&.Mui-selected': {
+                backgroundColor:
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(144, 202, 249, 0.16)'
+                    : 'rgba(33, 101, 209, 0.08)',
+                // Add selected color for dark mode
+                ...(theme.palette.mode === 'dark' && {
+                  color: 'primary.light',
+                }),
+              },
+              '&:hover': {
+                backgroundColor:
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(144, 202, 249, 0.08)'
+                    : 'rgba(33, 101, 209, 0.04)',
+              },
             }}
           >
             <ListItemIcon
@@ -191,6 +210,12 @@ const DashboardSidebar = ({
                 minWidth: 0,
                 mr: 3,
                 justifyContent: 'center',
+                color:
+                  pathname === item.path
+                    ? isDarkMode
+                      ? 'primary.light'
+                      : 'primary.main'
+                    : 'inherit',
               }}
             >
               {item.icon}
@@ -201,6 +226,14 @@ const DashboardSidebar = ({
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
+                '& .MuiTypography-root': {
+                  color:
+                    pathname === item.path
+                      ? isDarkMode
+                        ? 'primary.light'
+                        : 'primary.main'
+                      : 'inherit',
+                },
               }}
             />
           </ListItemButton>

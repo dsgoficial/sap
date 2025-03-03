@@ -28,6 +28,7 @@ export const ActivityCard = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { handleActivityError } = useActivityErrorHandler();
   const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const {
@@ -79,12 +80,35 @@ export const ActivityCard = () => {
 
   return (
     <>
-      <Card>
+      <Card
+        sx={{
+          transition: theme.transitions.create(
+            ['box-shadow', 'background-color'],
+            { duration: theme.transitions.duration.standard },
+          ),
+          boxShadow: isDarkMode
+            ? '0 4px 20px rgba(0,0,0,0.4)'
+            : '0 2px 10px rgba(0,0,0,0.1)',
+          borderRadius: 2,
+        }}
+      >
         <CardContent sx={{ textAlign: 'center' }}>
           {isLoadingActivity ? (
-            <CircularProgress size={24} sx={{ my: 1 }} />
+            <CircularProgress
+              size={24}
+              sx={{
+                my: 1,
+                color: isDarkMode ? 'primary.light' : 'primary.main',
+              }}
+            />
           ) : (
-            <Typography variant="h6">
+            <Typography
+              variant="h6"
+              sx={{
+                color: isDarkMode ? 'text.primary' : 'inherit',
+                fontWeight: 'medium',
+              }}
+            >
               {currentActivity?.nome || 'Sem atividade atual'}
             </Typography>
           )}
@@ -95,6 +119,7 @@ export const ActivityCard = () => {
             justifyContent: 'center',
             p: isMobile ? 1 : 2,
             flexDirection: isMobile ? 'column' : 'row',
+            bgcolor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.01)',
           }}
         >
           <Box
@@ -118,6 +143,12 @@ export const ActivityCard = () => {
                   onClick={() => setShowStartDialog(true)}
                   disabled={isStartingActivity}
                   fullWidth={isMobile}
+                  sx={{
+                    bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : undefined,
+                    '&:hover': {
+                      bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : undefined,
+                    },
+                  }}
                 >
                   {isStartingActivity ? 'Iniciando...' : 'Iniciar Atividade'}
                 </Button>
@@ -125,7 +156,16 @@ export const ActivityCard = () => {
             )}
 
             {currentActivity && activityByQgis && (
-              <Alert severity="warning">
+              <Alert
+                severity="warning"
+                sx={{
+                  bgcolor: isDarkMode ? 'rgba(237, 108, 2, 0.1)' : undefined,
+                  color: isDarkMode ? 'warning.light' : undefined,
+                  '& .MuiAlert-icon': {
+                    color: isDarkMode ? 'warning.light' : undefined,
+                  },
+                }}
+              >
                 Use o QGIS para acessar atividade!
               </Alert>
             )}
@@ -143,6 +183,12 @@ export const ActivityCard = () => {
                   onClick={() => setShowErrorDialog(true)}
                   disabled={isReportingError}
                   fullWidth={isMobile}
+                  sx={{
+                    bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : undefined,
+                    '&:hover': {
+                      bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : undefined,
+                    },
+                  }}
                 >
                   Reportar Problema
                 </Button>
@@ -150,6 +196,15 @@ export const ActivityCard = () => {
                   onClick={() => setShowFinishDialog(true)}
                   disabled={isFinishingActivity}
                   fullWidth={isMobile}
+                  color="success"
+                  sx={{
+                    bgcolor: isDarkMode ? 'rgba(46, 125, 50, 0.1)' : undefined,
+                    '&:hover': {
+                      bgcolor: isDarkMode
+                        ? 'rgba(46, 125, 50, 0.2)'
+                        : undefined,
+                    },
+                  }}
                 >
                   {isFinishingActivity ? 'Finalizando...' : 'Finalizar'}
                 </Button>
@@ -157,7 +212,16 @@ export const ActivityCard = () => {
             )}
 
             {activityError && (
-              <Alert severity="error">
+              <Alert
+                severity="error"
+                sx={{
+                  bgcolor: isDarkMode ? 'rgba(211, 47, 47, 0.1)' : undefined,
+                  color: isDarkMode ? 'error.light' : undefined,
+                  '& .MuiAlert-icon': {
+                    color: isDarkMode ? 'error.light' : undefined,
+                  },
+                }}
+              >
                 Erro ao carregar atividade. Por favor, tente novamente.
               </Alert>
             )}

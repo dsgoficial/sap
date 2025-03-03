@@ -9,11 +9,12 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Typography, Box, Paper, useTheme, useMediaQuery } from '@mui/material';
+import { useChartColors } from './ChartThemeConfig';
 
 interface PieChartDataPoint {
   label: string;
   value: number;
-  color?: string;
+  color?: string; // Now optional as we'll use theme colors if not provided
 }
 
 interface PieChartProps {
@@ -24,9 +25,6 @@ interface PieChartProps {
   showLabels?: boolean;
 }
 
-// Default colors if none provided
-const DEFAULT_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
-
 export const PieChart = React.memo(
   ({
     title,
@@ -36,6 +34,7 @@ export const PieChart = React.memo(
     showLabels = true,
   }: PieChartProps) => {
     const theme = useTheme();
+    const chartColors = useChartColors();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -98,13 +97,28 @@ export const PieChart = React.memo(
       return '70%';
     }, [isMobile, isTablet]);
 
+    // Apply theme colors to data
+    const themedData = useMemo(() => {
+      return data.map((item, index) => ({
+        ...item,
+        color:
+          item.color ||
+          chartColors.seriesColors[index % chartColors.seriesColors.length],
+      }));
+    }, [data, chartColors.seriesColors]);
+
     // Memoize tooltip and legend styles for consistent rendering
     const tooltipStyle = useMemo(
       () => ({
         wrapperStyle: { fontSize: isMobile ? 10 : 12 },
-        contentStyle: { padding: isMobile ? 4 : 8 },
+        contentStyle: {
+          padding: isMobile ? 4 : 8,
+          backgroundColor: chartColors.paper,
+          color: chartColors.textPrimary,
+          border: `1px solid ${chartColors.grid}`,
+        },
       }),
-      [isMobile],
+      [isMobile, chartColors],
     );
 
     // Legend style with proper type values
@@ -113,6 +127,7 @@ export const PieChart = React.memo(
         wrapperStyle: {
           fontSize: isMobile ? 10 : 12,
           paddingTop: isMobile ? 5 : 10,
+          color: chartColors.textPrimary,
         },
         layout: isMobile
           ? ('horizontal' as 'horizontal')
@@ -122,7 +137,7 @@ export const PieChart = React.memo(
           : ('middle' as 'middle'),
         align: isMobile ? ('center' as 'center') : ('right' as 'right'),
       }),
-      [isMobile],
+      [isMobile, chartColors],
     );
 
     // Tooltip formatters - memoized
@@ -167,18 +182,15 @@ export const PieChart = React.memo(
                 outerRadius={outerRadius}
               >
                 {chartData.map((_entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={
-                      data[index].color ||
-                      DEFAULT_COLORS[index % DEFAULT_COLORS.length]
-                    }
-                  />
+                  <Cell key={`cell-${index}`} fill={themedData[index].color} />
                 ))}
               </Pie>
               {showLegend && (
                 <Legend
-                  wrapperStyle={legendStyle.wrapperStyle}
+                  wrapperStyle={{
+                    ...legendStyle.wrapperStyle,
+                    color: chartColors.textPrimary,
+                  }}
                   layout={legendStyle.layout}
                   verticalAlign={legendStyle.verticalAlign}
                   align={legendStyle.align}

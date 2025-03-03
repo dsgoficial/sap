@@ -11,11 +11,12 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Typography, Paper, Box, useTheme, useMediaQuery } from '@mui/material';
+import { useChartColors } from './ChartThemeConfig';
 
 interface BarChartSeries {
   dataKey: string;
   name: string;
-  color: string;
+  color?: string; // Now optional as we'll use theme colors if not provided
 }
 
 interface BarChartProps {
@@ -37,6 +38,7 @@ export const BarChart = React.memo(
     stacked = false,
   }: BarChartProps) => {
     const theme = useTheme();
+    const chartColors = useChartColors();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -95,6 +97,16 @@ export const BarChart = React.memo(
       return null;
     }, [isMobile, data.length]);
 
+    // Apply theme-aware colors to the series
+    const themedSeries = useMemo(() => {
+      return displaySeries.map((s, index) => ({
+        ...s,
+        color:
+          s.color ||
+          chartColors.seriesColors[index % chartColors.seriesColors.length],
+      }));
+    }, [displaySeries, chartColors.seriesColors]);
+
     return (
       <Paper
         elevation={1}
@@ -123,19 +135,32 @@ export const BarChart = React.memo(
               margin={chartMargins}
               barSize={barSize}
             >
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
               <XAxis
                 dataKey={xAxisDataKey}
-                tick={{ fontSize: isMobile ? 10 : 12 }}
+                tick={{
+                  fontSize: isMobile ? 10 : 12,
+                  fill: chartColors.textPrimary,
+                }}
                 interval={isMobile ? 1 : 0}
+                stroke={chartColors.axis}
               />
               <YAxis
-                tick={{ fontSize: isMobile ? 10 : 12 }}
+                tick={{
+                  fontSize: isMobile ? 10 : 12,
+                  fill: chartColors.textPrimary,
+                }}
                 width={isMobile ? 30 : 40}
+                stroke={chartColors.axis}
               />
               <Tooltip
                 wrapperStyle={{ fontSize: isMobile ? 10 : 12 }}
-                contentStyle={{ padding: isMobile ? 4 : 8 }}
+                contentStyle={{
+                  padding: isMobile ? 4 : 8,
+                  backgroundColor: chartColors.paper,
+                  color: chartColors.textPrimary,
+                  border: `1px solid ${chartColors.grid}`,
+                }}
               />
               <Legend
                 wrapperStyle={{ fontSize: isMobile ? 10 : 12 }}
@@ -143,7 +168,7 @@ export const BarChart = React.memo(
                 height={isMobile ? 20 : 36}
               />
 
-              {displaySeries.map(s => (
+              {themedSeries.map(s => (
                 <Bar
                   key={s.dataKey}
                   dataKey={s.dataKey}

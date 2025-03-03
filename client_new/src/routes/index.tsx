@@ -78,9 +78,6 @@ const NotFound = lazy(() =>
   })),
 );
 
-// Import Dashboard loader
-import { dashboardLoader } from '../features/dashboard/routes/Dashboard';
-
 const LoadingFallback = () => (
   <Box
     sx={{
@@ -162,13 +159,7 @@ const routes: RouteObject[] = [
             <Dashboard />
           </Suspense>
         ),
-        loader: async () => {
-          // Chain loaders - first check admin, then load data
-          const adminResult = adminLoader();
-          // If admin loader returned a redirect, return it
-          if (adminResult) return adminResult;
-          return dashboardLoader();
-        },
+        loader: adminLoader, // Only check admin status, data loading is now in the hook
         errorElement: <ErrorBoundaryRoute />, // Route-specific error element
       },
       {
@@ -283,4 +274,11 @@ const routes: RouteObject[] = [
 // Create the router with the routes configuration
 const router = createBrowserRouter(routes);
 
+// Export router instance for use outside of components
 export default router;
+
+// Export a function to perform navigation from outside React components
+export const navigateToLogin = () => {
+  // This can be called from non-React contexts
+  window.location.href = '/login';
+};

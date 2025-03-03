@@ -1,5 +1,5 @@
 // Path: features\map\components\MapLegend.tsx
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import { LegendItem } from '@/types/map';
 
 interface MapLegendProps {
@@ -7,9 +7,16 @@ interface MapLegendProps {
 }
 
 const MapLegend = ({ items }: MapLegendProps) => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+
   return (
     <Box>
-      <Typography variant="subtitle2" gutterBottom>
+      <Typography
+        variant="subtitle2"
+        gutterBottom
+        sx={{ color: theme.palette.text.primary }}
+      >
         Legenda
       </Typography>
       {items.map((item, index) => (
@@ -22,11 +29,24 @@ const MapLegend = ({ items }: MapLegendProps) => {
               width: 16,
               height: 16,
               backgroundColor: item.color,
-              border: `${item.border ? '2px' : '1px'} solid ${item.border ? '#FF0000' : '#050505'}`,
+              border: `${item.border ? '2px' : '1px'} solid ${
+                isDarkMode && item.border
+                  ? '#FFFFFF'
+                  : isDarkMode
+                    ? '#CCCCCC'
+                    : item.border
+                      ? '#FF0000'
+                      : '#050505'
+              }`,
               mr: 1,
             }}
           />
-          <Typography variant="caption">{item.label}</Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: theme.palette.text.primary }}
+          >
+            {item.label}
+          </Typography>
         </Box>
       ))}
     </Box>

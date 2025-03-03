@@ -9,11 +9,20 @@ import {
 import Page from '@/components/Page/Page';
 import { useMapData, getLegendItems } from '@/hooks/useMap';
 import MapVisualization from '../components/MapVisualization';
-import { useMapStore } from '@/stores/mapStore';
+import {
+  useMapStore,
+  selectLayers,
+  selectVisibleLayers,
+} from '@/stores/mapStore';
 
 export const Maps = () => {
+  // Use the hook for data fetching and loading states
   const { isLoading, isError, error } = useMapData();
-  const { layers, visibleLayers, toggleLayerVisibility } = useMapStore();
+
+  // Use selectors for better performance
+  const layers = useMapStore(selectLayers);
+  const visibleLayers = useMapStore(selectVisibleLayers);
+  const { toggleLayerVisibility } = useMapStore();
 
   if (isLoading) {
     return (

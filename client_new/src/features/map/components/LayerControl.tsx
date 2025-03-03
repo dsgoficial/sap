@@ -7,6 +7,7 @@ import {
   ListItemText,
   Checkbox,
   Typography,
+  useTheme,
 } from '@mui/material';
 
 interface LayerInfo {
@@ -21,15 +22,33 @@ interface LayerControlProps {
 }
 
 const LayerControl = ({ layers, visibility, onToggle }: LayerControlProps) => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+
   return (
     <>
-      <Typography variant="subtitle2" gutterBottom>
+      <Typography
+        variant="subtitle2"
+        gutterBottom
+        sx={{ color: theme.palette.text.primary }}
+      >
         Camadas
       </Typography>
       <List dense sx={{ pt: 0 }}>
         {layers.map(layer => (
           <ListItem key={layer.id} disablePadding>
-            <ListItemButton onClick={() => onToggle(layer.id)} dense>
+            <ListItemButton
+              onClick={() => onToggle(layer.id)}
+              dense
+              sx={{
+                borderRadius: 1,
+                '&:hover': {
+                  backgroundColor: isDarkMode
+                    ? 'rgba(255, 255, 255, 0.08)'
+                    : 'rgba(0, 0, 0, 0.04)',
+                },
+              }}
+            >
               <ListItemIcon sx={{ minWidth: 36 }}>
                 <Checkbox
                   edge="start"
@@ -37,11 +56,25 @@ const LayerControl = ({ layers, visibility, onToggle }: LayerControlProps) => {
                   tabIndex={-1}
                   disableRipple
                   size="small"
+                  sx={{
+                    color: isDarkMode
+                      ? theme.palette.primary.light
+                      : theme.palette.primary.main,
+                    '&.Mui-checked': {
+                      color: isDarkMode
+                        ? theme.palette.primary.light
+                        : theme.palette.primary.main,
+                    },
+                  }}
                 />
               </ListItemIcon>
               <ListItemText
                 primary={layer.name}
-                primaryTypographyProps={{ variant: 'body2', noWrap: true }}
+                primaryTypographyProps={{
+                  variant: 'body2',
+                  noWrap: true,
+                  sx: { color: theme.palette.text.primary },
+                }}
               />
             </ListItemButton>
           </ListItem>

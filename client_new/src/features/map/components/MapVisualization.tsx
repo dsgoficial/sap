@@ -19,6 +19,7 @@ import {
   Divider,
   Collapse,
   Button,
+  alpha,
 } from '@mui/material';
 import L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
@@ -45,7 +46,10 @@ const ControlsContainer = styled(Box)(({ theme }) => ({
   top: 10,
   right: 10,
   zIndex: 999,
-  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  backgroundColor:
+    theme.palette.mode === 'dark'
+      ? alpha(theme.palette.background.paper, 0.9)
+      : 'rgba(255, 255, 255, 0.8)',
   padding: theme.spacing(1),
   borderRadius: theme.shape.borderRadius,
   maxHeight: 'calc(100% - 30px)',
@@ -55,6 +59,7 @@ const ControlsContainer = styled(Box)(({ theme }) => ({
   [theme.breakpoints.up('md')]: {
     display: 'block',
   },
+  boxShadow: theme.shadows[3],
 }));
 
 const MobileFab = styled(Fab)(({ theme }) => ({
@@ -72,9 +77,15 @@ const FullscreenButton = styled(IconButton)(({ theme }) => ({
   top: 10,
   right: 10,
   zIndex: 999,
-  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  backgroundColor:
+    theme.palette.mode === 'dark'
+      ? alpha(theme.palette.background.paper, 0.8)
+      : 'rgba(255, 255, 255, 0.8)',
   '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? alpha(theme.palette.background.paper, 0.9)
+        : 'rgba(255, 255, 255, 0.9)',
   },
   [theme.breakpoints.up('md')]: {
     top: 80,
@@ -86,10 +97,14 @@ const LegendBox = styled(Box)(({ theme }) => ({
   bottom: 10,
   left: 10,
   zIndex: 999,
-  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  backgroundColor:
+    theme.palette.mode === 'dark'
+      ? alpha(theme.palette.background.paper, 0.9)
+      : 'rgba(255, 255, 255, 0.8)',
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(1),
   maxWidth: '40%',
+  boxShadow: theme.shadows[3],
   [theme.breakpoints.down('sm')]: {
     maxWidth: '80%',
     bottom: 70, // Give space for mobile controls
@@ -101,11 +116,17 @@ const LegendToggle = styled(Button)(({ theme }) => ({
   bottom: 10,
   left: 10,
   zIndex: 999,
-  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  backgroundColor:
+    theme.palette.mode === 'dark'
+      ? alpha(theme.palette.background.paper, 0.8)
+      : 'rgba(255, 255, 255, 0.8)',
   minWidth: 'auto',
   padding: theme.spacing(0.5),
   '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? alpha(theme.palette.background.paper, 0.9)
+        : 'rgba(255, 255, 255, 0.9)',
   },
 }));
 
@@ -136,6 +157,7 @@ const MapVisualization = ({
 }: MapVisualizationProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -183,13 +205,28 @@ const MapVisualization = ({
   // Style function for GeoJSON - memoized to prevent recreation on every render
   const layerStyle = useMemo(() => {
     return {
-      fillColor: '#4682B4', // Steel blue color
+      fillColor: isDarkMode ? '#5A8CBA' : '#4682B4', // Adjusted for dark mode
       weight: 0.5,
       opacity: 1,
-      color: '#050505',
-      fillOpacity: 0.8,
+      color: isDarkMode ? '#CCCCCC' : '#050505', // Lighter border in dark mode
+      fillOpacity: isDarkMode ? 0.6 : 0.8, // Adjusted opacity for dark mode
     };
-  }, []);
+  }, [isDarkMode]);
+
+  // Memoize tile layer URL for dark/light mode
+  const tileLayerUrl = useMemo(() => {
+    // Use dark tiles for dark mode, normal tiles for light mode
+    return isDarkMode
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  }, [isDarkMode]);
+
+  // Memoize tile layer attribution
+  const tileAttribution = useMemo(() => {
+    return isDarkMode
+      ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  }, [isDarkMode]);
 
   // Memoize center coordinates
   const center = useMemo(
@@ -241,6 +278,16 @@ const MapVisualization = ({
     [layers, visibleLayers, onToggleLayer, legendItems, toggleDrawer],
   );
 
+  // Update map when the theme changes
+  useEffect(() => {
+    if (mapRef.current) {
+      // Force a redraw by invalidating the map size
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 0);
+    }
+  }, [isDarkMode]);
+
   return (
     <Paper
       elevation={1}
@@ -249,6 +296,13 @@ const MapVisualization = ({
         height: '80vh',
         overflow: 'hidden',
         position: 'relative',
+        bgcolor: theme.palette.background.paper,
+        transition: theme.transitions.create(
+          ['background-color', 'box-shadow'],
+          {
+            duration: theme.transitions.duration.standard,
+          },
+        ),
       }}
     >
       <Typography
@@ -266,11 +320,9 @@ const MapVisualization = ({
           style={{ height: '100%', width: '100%' }}
           zoomControl={false}
           ref={mapRef}
+          attributionControl={false} // We'll add attribution control separately for better styling
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <TileLayer attribution={tileAttribution} url={tileLayerUrl} />
 
           {/* Render each GeoJSON layer if visible */}
           {layers.map(
@@ -286,6 +338,24 @@ const MapVisualization = ({
 
           {/* Add Zoom Control in a better position for mobile */}
           <ZoomControl position={isMobile ? 'bottomright' : 'topright'} />
+
+          {/* Add attribution with proper styling */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              zIndex: 1000,
+              fontSize: '10px',
+              padding: '1px 5px',
+              background: isDarkMode
+                ? 'rgba(0,0,0,0.5)'
+                : 'rgba(255,255,255,0.5)',
+              color: isDarkMode ? '#ccc' : '#333',
+            }}
+          >
+            <div dangerouslySetInnerHTML={{ __html: tileAttribution }} />
+          </div>
         </MapContainer>
 
         {/* Desktop controls */}
@@ -346,6 +416,7 @@ const MapVisualization = ({
               maxWidth: 300,
               borderTopLeftRadius: theme.shape.borderRadius,
               borderBottomLeftRadius: theme.shape.borderRadius,
+              bgcolor: theme.palette.background.paper, // Ensure proper background color
             },
           }}
         >

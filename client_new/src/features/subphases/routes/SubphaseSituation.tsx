@@ -8,18 +8,12 @@ import {
 } from '@mui/material';
 import Page from '../../../components/Page/Page';
 import { useSubphaseSituation } from '@/hooks/useSubphases';
-import { StackedBarChart } from '@/components/charts/StackedBarChart'; // Using the shared component
-import { useAuthStore } from '../../../stores/authStore';
-import { Navigate } from 'react-router-dom';
+import { StackedBarChart } from '@/components/charts/StackedBarChart';
+import { ChartGroup } from '@/types/subphase';
 
 export const SubphaseSituation = () => {
-  const { isAdmin } = useAuthStore();
+  // Fixed type issues with data from hook
   const { data, isLoading, error } = useSubphaseSituation();
-
-  // Redirect if not admin
-  if (!isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
 
   if (isLoading) {
     return (
@@ -67,7 +61,7 @@ export const SubphaseSituation = () => {
           }}
         >
           {data &&
-            data.map((item, idx) => (
+            data.map((item: ChartGroup, idx: number) => (
               <StackedBarChart
                 key={idx}
                 title={item.title}

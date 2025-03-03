@@ -2,7 +2,7 @@
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { select } from 'd3';
 import { styled } from '@mui/material/styles';
-import { Typography, Paper } from '@mui/material';
+import { Typography, Paper, useTheme } from '@mui/material';
 import { GridItem, GridData } from '@/types/grid';
 
 // Styled components
@@ -16,16 +16,19 @@ const GridContainer = styled('div')({
   height: '100%',
 });
 
-const GridTooltip = styled('div')({
+const GridTooltip = styled('div')(({ theme }) => ({
   position: 'absolute',
-  background: 'white',
+  background: theme.palette.background.paper,
   padding: '5px',
-  border: '1px solid #ccc',
+  border: `1px solid ${theme.palette.divider}`,
   borderRadius: '4px',
   pointerEvents: 'none',
   opacity: 0,
   zIndex: 100,
-});
+  color: theme.palette.text.primary,
+  boxShadow: theme.shadows[1],
+  fontSize: 12,
+}));
 
 interface GridProps {
   id: string;
@@ -44,6 +47,8 @@ export const Grid = ({
 }: GridProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
 
   // Calculate grid size - memoized to prevent recalculation
   const { rowSize, colSize } = useMemo(() => {
@@ -88,14 +93,14 @@ export const Grid = ({
     };
   }, [onItemHover]);
 
-  // Memoize cell style
+  // Memoize cell style with theme support
   const cellStyles = useMemo(
     () => ({
-      visited: '#AAC8A7',
-      default: '#fff',
-      stroke: '#222',
+      visited: isDarkMode ? '#8BC34A' : '#AAC8A7', // Lighter green in dark mode
+      default: isDarkMode ? '#333333' : '#fff', // Darker background in dark mode
+      stroke: isDarkMode ? '#888888' : '#222', // Lighter stroke in dark mode
     }),
-    [],
+    [isDarkMode],
   );
 
   // Create matrix data - memoized to prevent recalculation on each render
@@ -193,7 +198,21 @@ export const Grid = ({
   }, [data.grade]);
 
   return (
-    <Paper elevation={1} sx={{ p: 2, height: '300px', width: '100%' }}>
+    <Paper
+      elevation={1}
+      sx={{
+        p: 2,
+        height: '300px',
+        width: '100%',
+        bgcolor: theme.palette.background.paper,
+        transition: theme.transitions.create(
+          ['background-color', 'box-shadow'],
+          {
+            duration: theme.transitions.duration.standard,
+          },
+        ),
+      }}
+    >
       <Typography variant="h6" align="center" gutterBottom>
         {`${data.projeto || ''} - ${data.lote || ''}`}
       </Typography>
@@ -205,9 +224,7 @@ export const Grid = ({
       <GridContainer>
         <svg ref={svgRef} />
 
-        <GridTooltip ref={tooltipRef}>
-          {/* Tooltip content will be dynamically updated */}
-        </GridTooltip>
+        <GridTooltip ref={tooltipRef} />
       </GridContainer>
 
       {data.usuario && (

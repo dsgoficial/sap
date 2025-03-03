@@ -5,21 +5,17 @@ import {
   Typography,
   Alert,
   CircularProgress,
+  Paper,
+  useTheme,
 } from '@mui/material';
 import Page from '@/components/Page/Page';
 import { useActivitySubphase } from '@/hooks/useSubphases';
 import { TimelineVisualization } from '@/components/timeline/TimelineVisualization';
-import { useAuthStore } from '@/stores/authStore';
-import { Navigate } from 'react-router-dom';
 
 export const Subphases = () => {
-  const { isAdmin } = useAuthStore();
+  // Removed redundant admin check - now handled by route loader
   const { data, isLoading, error } = useActivitySubphase();
-
-  // Redirect if not admin
-  if (!isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
+  const theme = useTheme();
 
   if (isLoading) {
     return (
@@ -68,14 +64,19 @@ export const Subphases = () => {
         >
           {data &&
             data.map((graph, idx) => (
-              <Box
+              <Paper
                 key={idx}
+                elevation={2}
                 sx={{
-                  backgroundColor: '#fff',
-                  padding: '20px',
-                  height: '100%',
-                  width: '100%',
-                  borderRadius: '8px',
+                  backgroundColor: theme.palette.background.paper,
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  transition: theme.transitions.create(
+                    ['background-color', 'box-shadow'],
+                    {
+                      duration: theme.transitions.duration.standard,
+                    },
+                  ),
                 }}
               >
                 <TimelineVisualization
@@ -84,7 +85,7 @@ export const Subphases = () => {
                   options={graph.options}
                   dataset={graph.dataset}
                 />
-              </Box>
+              </Paper>
             ))}
 
           {(!data || data.length === 0) && (

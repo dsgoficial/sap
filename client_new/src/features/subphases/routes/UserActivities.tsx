@@ -5,21 +5,17 @@ import {
   Typography,
   Alert,
   CircularProgress,
+  Paper,
+  useTheme,
 } from '@mui/material';
 import Page from '@/components/Page/Page';
 import { useUserActivities } from '@/hooks/useSubphases';
 import { TimelineVisualization } from '@/components/timeline/TimelineVisualization';
-import { useAuthStore } from '@/stores/authStore';
-import { Navigate } from 'react-router-dom';
 
 export const UserActivities = () => {
-  const { isAdmin } = useAuthStore();
+  // Removed redundant admin check - now handled by route loader
   const { data, isLoading, error } = useUserActivities();
-
-  // Redirect if not admin
-  if (!isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
+  const theme = useTheme();
 
   if (isLoading) {
     return (
@@ -58,13 +54,18 @@ export const UserActivities = () => {
           Atividades por Usuário
         </Typography>
 
-        <Box
+        <Paper
+          elevation={2}
           sx={{
-            backgroundColor: '#fff',
-            padding: '20px',
-            height: '100%',
-            width: '100%',
-            borderRadius: '8px',
+            backgroundColor: theme.palette.background.paper,
+            borderRadius: 2,
+            overflow: 'hidden',
+            transition: theme.transitions.create(
+              ['background-color', 'box-shadow'],
+              {
+                duration: theme.transitions.duration.standard,
+              },
+            ),
           }}
         >
           {data &&
@@ -83,7 +84,7 @@ export const UserActivities = () => {
               Nenhuma atividade por usuário disponível.
             </Alert>
           )}
-        </Box>
+        </Paper>
       </Container>
     </Page>
   );

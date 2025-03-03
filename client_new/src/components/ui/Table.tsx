@@ -33,6 +33,7 @@ import {
   Collapse,
   Button,
   Divider,
+  alpha,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -108,6 +109,10 @@ const PaginationContainer = styled(Box)(({ theme }) => ({
   justifyContent: 'flex-end',
   padding: theme.spacing(2),
   backgroundColor: theme.palette.background.paper,
+  borderTop: `1px solid ${theme.palette.divider}`,
+  transition: theme.transitions.create(['background-color', 'border-color'], {
+    duration: theme.transitions.duration.standard,
+  }),
   [theme.breakpoints.down('sm')]: {
     justifyContent: 'center',
     padding: theme.spacing(1),
@@ -118,6 +123,10 @@ const SearchContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   paddingBottom: theme.spacing(1),
   backgroundColor: theme.palette.background.paper,
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  transition: theme.transitions.create(['background-color', 'border-color'], {
+    duration: theme.transitions.duration.standard,
+  }),
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(1),
   },
@@ -125,6 +134,9 @@ const SearchContainer = styled(Box)(({ theme }) => ({
 
 const CardViewItem = styled(Card)(({ theme }) => ({
   marginBottom: theme.spacing(2),
+  transition: theme.transitions.create(['background-color', 'box-shadow'], {
+    duration: theme.transitions.duration.standard,
+  }),
   [theme.breakpoints.down('sm')]: {
     marginBottom: theme.spacing(1),
   },
@@ -153,6 +165,8 @@ interface SearchBarProps {
 const SearchBar = memo(({ placeholder, onSearch }: SearchBarProps) => {
   // Use local state for input value to avoid losing focus
   const [inputValue, setInputValue] = useState('');
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -173,9 +187,26 @@ const SearchBar = memo(({ placeholder, onSearch }: SearchBarProps) => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <SearchIcon color="action" />
               </InputAdornment>
             ),
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: isDark
+                  ? alpha(theme.palette.common.white, 0.23)
+                  : alpha(theme.palette.common.black, 0.23),
+              },
+              '&:hover fieldset': {
+                borderColor: isDark
+                  ? alpha(theme.palette.common.white, 0.4)
+                  : alpha(theme.palette.common.black, 0.4),
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: theme.palette.primary.main,
+              },
+            },
           }}
         />
       </Box>
@@ -210,7 +241,16 @@ interface MobileCardProps<T extends Record<string, any>> {
 // Create type-safe factories for our memoized components
 function createTableRowItem<T extends Record<string, any>>() {
   const component = memo(
-    ({ columns, row, onClick, backgroundColor }: TableRowItemProps<T>) => {
+    ({
+      columns,
+      row,
+      index: _index,
+      onClick,
+      backgroundColor,
+    }: TableRowItemProps<T>) => {
+      const theme = useTheme();
+      const isDark = theme.palette.mode === 'dark';
+
       return (
         <TableRow
           hover
@@ -219,15 +259,34 @@ function createTableRowItem<T extends Record<string, any>>() {
             cursor: typeof onClick === 'function' ? 'pointer' : 'default',
             backgroundColor,
             '&:nth-of-type(odd)': !backgroundColor
-              ? { backgroundColor: 'action.hover' }
+              ? {
+                  backgroundColor: isDark
+                    ? alpha(theme.palette.common.white, 0.05)
+                    : alpha(theme.palette.common.black, 0.03),
+                }
               : {},
             '&:last-child td, &:last-child th': { border: 0 },
+            '&:hover': {
+              backgroundColor: isDark
+                ? alpha(theme.palette.common.white, 0.08)
+                : alpha(theme.palette.common.black, 0.06),
+            },
+            transition: theme.transitions.create(['background-color'], {
+              duration: theme.transitions.duration.shortest,
+            }),
           }}
         >
           {columns.map(column => {
             const value = row[column.id];
             return (
-              <TableCell key={column.id} align={column.align || 'left'}>
+              <TableCell
+                key={column.id}
+                align={column.align || 'left'}
+                sx={{
+                  borderColor: theme.palette.divider,
+                  color: theme.palette.text.primary,
+                }}
+              >
                 {column.format ? column.format(value, row) : value}
               </TableCell>
             );
@@ -253,6 +312,9 @@ function createMobileCard<T extends Record<string, any>>() {
       backgroundColor,
       visibleColumns,
     }: MobileCardProps<T>) => {
+      const theme = useTheme();
+      const isDark = theme.palette.mode === 'dark';
+
       const mainColumn = useMemo(
         () => columns.find(col => col.priority === 5) || columns[0],
         [columns],
@@ -280,13 +342,27 @@ function createMobileCard<T extends Record<string, any>>() {
         return mainColumn.format ? mainColumn.format(value, row) : value;
       }, [row, mainColumn]);
 
+      // Calculate background color with theme awareness
+      const cardBgColor = useMemo(() => {
+        if (backgroundColor) return backgroundColor;
+        return index % 2 === 0
+          ? isDark
+            ? alpha(theme.palette.common.white, 0.05)
+            : alpha(theme.palette.common.black, 0.03)
+          : theme.palette.background.paper;
+      }, [backgroundColor, index, isDark, theme]);
+
       return (
         <CardViewItem
           elevation={1}
           sx={{
-            bgcolor:
-              backgroundColor ||
-              (index % 2 === 0 ? 'action.hover' : 'background.paper'),
+            bgcolor: cardBgColor,
+            '&:hover': {
+              boxShadow: theme.shadows[2],
+              bgcolor: isDark
+                ? alpha(theme.palette.common.white, 0.08)
+                : alpha(theme.palette.common.black, 0.04),
+            },
           }}
         >
           <CardContent sx={{ pb: 1, pt: 1, px: 2 }}>
@@ -297,10 +373,25 @@ function createMobileCard<T extends Record<string, any>>() {
                 alignItems: 'center',
               }}
             >
-              <Typography variant="subtitle1" component="div">
+              <Typography
+                variant="subtitle1"
+                component="div"
+                sx={{ color: theme.palette.text.primary }}
+              >
                 {mainValue}
               </Typography>
-              <IconButton size="small" onClick={() => toggleExpansion(rowId)}>
+              <IconButton
+                size="small"
+                onClick={() => toggleExpansion(rowId)}
+                sx={{
+                  color: theme.palette.action.active,
+                  '&:hover': {
+                    bgcolor: isDark
+                      ? alpha(theme.palette.common.white, 0.08)
+                      : alpha(theme.palette.common.black, 0.04),
+                  },
+                }}
+              >
                 {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
             </Box>
@@ -314,12 +405,24 @@ function createMobileCard<T extends Record<string, any>>() {
                     mb: 0.5,
                     display: 'flex',
                     justifyContent: 'space-between',
+                    alignItems: 'baseline',
                   }}
                 >
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mr: 1, flexShrink: 0 }}
+                  >
                     {column.label}:
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography
+                    variant="body2"
+                    color="text.primary"
+                    sx={{
+                      textAlign: 'right',
+                      wordBreak: 'break-word',
+                    }}
+                  >
                     {column.format
                       ? column.format(row[column.id], row)
                       : row[column.id]}
@@ -339,12 +442,24 @@ function createMobileCard<T extends Record<string, any>>() {
                       mb: 0.5,
                       display: 'flex',
                       justifyContent: 'space-between',
+                      alignItems: 'baseline',
                     }}
                   >
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mr: 1, flexShrink: 0 }}
+                    >
                       {column.label}:
                     </Typography>
-                    <Typography variant="body2">
+                    <Typography
+                      variant="body2"
+                      color="text.primary"
+                      sx={{
+                        textAlign: 'right',
+                        wordBreak: 'break-word',
+                      }}
+                    >
                       {column.format
                         ? column.format(row[column.id], row)
                         : row[column.id]}
@@ -360,6 +475,7 @@ function createMobileCard<T extends Record<string, any>>() {
                   size="small"
                   onClick={() => onRowClick(row)}
                   sx={{ minWidth: '80px' }}
+                  variant="outlined"
                 >
                   Ver detalhes
                 </Button>
@@ -391,6 +507,7 @@ export function Table<T extends Record<string, any>>({
   ...rest
 }: TableProps<T>) {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Create type-specific components for this instance
@@ -583,7 +700,9 @@ export function Table<T extends Record<string, any>>({
     return (
       <Paper>
         <LoadingContainer>
-          <CircularProgress />
+          <CircularProgress
+            sx={{ color: isDark ? 'primary.light' : 'primary.main' }}
+          />
         </LoadingContainer>
       </Paper>
     );
@@ -592,7 +711,16 @@ export function Table<T extends Record<string, any>>({
   // Render empty state
   if (sortedRows.length === 0) {
     return (
-      <Paper>
+      <Paper
+        sx={{
+          transition: theme.transitions.create(
+            ['background-color', 'box-shadow'],
+            {
+              duration: theme.transitions.duration.standard,
+            },
+          ),
+        }}
+      >
         <SearchBar
           placeholder={searchPlaceholder || localization.searchPlaceholder}
           onSearch={handleSearch}
@@ -612,7 +740,18 @@ export function Table<T extends Record<string, any>>({
   // Card view for mobile devices
   if (isMobile) {
     return (
-      <Paper sx={{ maxHeight, overflow: 'auto' }}>
+      <Paper
+        sx={{
+          maxHeight,
+          overflow: 'auto',
+          transition: theme.transitions.create(
+            ['background-color', 'box-shadow'],
+            {
+              duration: theme.transitions.duration.standard,
+            },
+          ),
+        }}
+      >
         <SearchBar
           placeholder={searchPlaceholder || localization.searchPlaceholder}
           onSearch={handleSearch}
@@ -651,6 +790,19 @@ export function Table<T extends Record<string, any>>({
                 size="small"
                 siblingCount={0}
                 boundaryCount={1}
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    color: theme.palette.text.primary,
+                    '&.Mui-selected': {
+                      backgroundColor: isDark
+                        ? alpha(theme.palette.primary.main, 0.2)
+                        : alpha(theme.palette.primary.main, 0.1),
+                      color: isDark
+                        ? theme.palette.primary.light
+                        : theme.palette.primary.main,
+                    },
+                  },
+                }}
               />
             </PaginationContainer>
           )}
@@ -661,13 +813,33 @@ export function Table<T extends Record<string, any>>({
 
   // Table view for desktop/tablet
   return (
-    <Paper sx={{ maxHeight, overflow: 'auto' }}>
+    <Paper
+      sx={{
+        maxHeight,
+        overflow: 'auto',
+        transition: theme.transitions.create(
+          ['background-color', 'box-shadow'],
+          {
+            duration: theme.transitions.duration.standard,
+          },
+        ),
+      }}
+    >
       <SearchBar
         placeholder={searchPlaceholder || localization.searchPlaceholder}
         onSearch={handleSearch}
       />
       <TableContainer sx={{ maxHeight }}>
-        <MuiTable stickyHeader={stickyHeader} {...rest}>
+        <MuiTable
+          stickyHeader={stickyHeader}
+          {...rest}
+          sx={{
+            '& .MuiTableCell-root': {
+              borderColor: theme.palette.divider,
+            },
+            ...rest.sx,
+          }}
+        >
           <TableHead>
             <TableRow>
               {displayColumns.map(column => (
@@ -681,6 +853,14 @@ export function Table<T extends Record<string, any>>({
                     cursor: column.sortable ? 'pointer' : 'default',
                   }}
                   onClick={() => handleSort(column.id)}
+                  sx={{
+                    backgroundColor: stickyHeader
+                      ? isDark
+                        ? theme.palette.grey[900]
+                        : theme.palette.common.white
+                      : 'inherit',
+                    color: theme.palette.text.primary,
+                  }}
                 >
                   {column.sortable ? (
                     <TableSortLabel
@@ -692,6 +872,19 @@ export function Table<T extends Record<string, any>>({
                           ? sortConfig.order
                           : 'asc'
                       }
+                      sx={{
+                        color: theme.palette.text.primary,
+                        '&.MuiTableSortLabel-active': {
+                          color: isDark
+                            ? theme.palette.primary.light
+                            : theme.palette.primary.main,
+                        },
+                        '& .MuiTableSortLabel-icon': {
+                          color: isDark
+                            ? `${theme.palette.primary.light} !important`
+                            : undefined,
+                        },
+                      }}
                     >
                       {column.label}
                     </TableSortLabel>
@@ -736,6 +929,30 @@ export function Table<T extends Record<string, any>>({
             variant="outlined"
             shape="rounded"
             aria-label="Navegação paginada"
+            sx={{
+              '& .MuiPaginationItem-root': {
+                color: theme.palette.text.primary,
+                borderColor: isDark
+                  ? alpha(theme.palette.common.white, 0.23)
+                  : undefined,
+                '&.Mui-selected': {
+                  backgroundColor: isDark
+                    ? alpha(theme.palette.primary.main, 0.2)
+                    : alpha(theme.palette.primary.main, 0.1),
+                  color: isDark
+                    ? theme.palette.primary.light
+                    : theme.palette.primary.main,
+                  borderColor: isDark
+                    ? theme.palette.primary.light
+                    : theme.palette.primary.main,
+                },
+                '&:hover': {
+                  backgroundColor: isDark
+                    ? alpha(theme.palette.common.white, 0.08)
+                    : alpha(theme.palette.common.black, 0.04),
+                },
+              },
+            }}
             getItemAriaLabel={type => {
               switch (type) {
                 case 'first':

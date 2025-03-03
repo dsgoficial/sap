@@ -9,17 +9,11 @@ import {
 import Page from '@/components/Page/Page';
 import { useGridStatistics } from '@/hooks/useGrid';
 import { GridCard } from '../components/GridCard';
-import { useAuthStore } from '@/stores/authStore';
-import { Navigate } from 'react-router-dom';
+import { GridData } from '@/types/grid';
 
 export const Grids = () => {
-  const { isAdmin } = useAuthStore();
+  // Fixed return type from the hook
   const { data, isLoading, error } = useGridStatistics();
-
-  // Redirect if not admin
-  if (!isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
 
   if (isLoading) {
     return (
@@ -68,7 +62,7 @@ export const Grids = () => {
           }}
         >
           {data &&
-            data.map((grid, idx) => (
+            data.map((grid: GridData, idx: number) => (
               <GridCard key={idx} id={idx} grid={grid} />
             ))}
 

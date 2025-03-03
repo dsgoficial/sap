@@ -7,10 +7,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 import Page from '@/components/Page/Page';
-import { usePITData } from '@/hooks/usePIT';
+import { usePITData, PitViewModel } from '@/hooks/usePIT';
 import { Table } from '@/components/ui/Table';
-import { useAuthStore } from '@/stores/authStore';
-import { Navigate } from 'react-router-dom';
 
 // Month definitions with correct types
 const MONTHS = [
@@ -29,13 +27,8 @@ const MONTHS = [
 ];
 
 export const PIT = () => {
-  const { isAdmin } = useAuthStore();
+  // Fixed type issues with data from hook
   const { data, isLoading, error } = usePITData();
-
-  // Redirect if not admin
-  if (!isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
 
   if (isLoading) {
     return (
@@ -83,7 +76,7 @@ export const PIT = () => {
           }}
         >
           {data &&
-            data.map((item, idx) => (
+            data.map((item: PitViewModel, idx: number) => (
               <Box key={idx} sx={{ width: '100%' }}>
                 <Table
                   title={item.project}

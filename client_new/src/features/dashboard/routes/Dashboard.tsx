@@ -8,56 +8,14 @@ import {
 } from '@mui/material';
 import { StatusCards } from '../components/StatusCards';
 import { ProductionCharts } from '../components/ProductionCharts';
-import { useLoaderData } from 'react-router-dom';
-import { getDashboardData } from '@/services/dashboardService';
-import { DashboardData } from '@/types/dashboard';
-import { transformDashboardData } from '@/hooks/useDashboard';
-
-// Interface for loader data
-interface DashboardLoaderData {
-  dashboardData?: DashboardData;
-  error?: boolean;
-  message?: string;
-}
-
-// Dashboard loader function - will be referenced in the router config
-export async function dashboardLoader() {
-  try {
-    const rawData = await getDashboardData();
-    const dashboardData = transformDashboardData(rawData);
-
-    return { dashboardData };
-  } catch (error) {
-    // Return error state that the component can handle
-    return {
-      error: true,
-      message:
-        error instanceof Error ? error.message : 'Unknown error occurred',
-    };
-  }
-}
+import { useDashboard } from '@/hooks/useDashboard';
 
 export const Dashboard = () => {
-  // Use the React Router v7 hook to access loader data
-  const { dashboardData, error, message } =
-    useLoaderData() as DashboardLoaderData;
+  // Use the custom hook to fetch dashboard data
+  const { dashboardData, isLoading, isError, error } = useDashboard();
 
-  // Check if data contains an error
-  if (error) {
-    return (
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Dashboard
-        </Typography>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Erro ao carregar dados do dashboard: {message || 'Tente novamente.'}
-        </Alert>
-      </Container>
-    );
-  }
-
-  // If we're still waiting for data but no error
-  if (!dashboardData) {
+  // Show loading state
+  if (isLoading) {
     return (
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Typography variant="h4" gutterBottom>
@@ -70,6 +28,36 @@ export const Dashboard = () => {
     );
   }
 
+  // Show error state
+  if (isError) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Dashboard
+        </Typography>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Erro ao carregar dados do dashboard:{' '}
+          {error?.message || 'Tente novamente.'}
+        </Alert>
+      </Container>
+    );
+  }
+
+  // If no data but no error either
+  if (!dashboardData) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Dashboard
+        </Typography>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Nenhum dado disponível para exibição.
+        </Alert>
+      </Container>
+    );
+  }
+
+  // Render dashboard with data
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>

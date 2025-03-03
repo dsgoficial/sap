@@ -7,10 +7,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 import Page from '@/components/Page/Page';
-import { useLotData } from '@/hooks/useLot';
+import { useLotData, LotViewModel } from '@/hooks/useLot';
 import { Table } from '@/components/ui/Table';
-import { useAuthStore } from '@/stores/authStore';
-import { Navigate } from 'react-router-dom';
 
 // Month definitions with correct types
 const MONTHS = [
@@ -29,13 +27,8 @@ const MONTHS = [
 ];
 
 export const Lot = () => {
-  const { isAdmin } = useAuthStore();
+  // Get data from the hook - now properly typed
   const { data, isLoading, error } = useLotData();
-
-  // Redirect if not admin
-  if (!isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
 
   if (isLoading) {
     return (
@@ -83,7 +76,7 @@ export const Lot = () => {
           }}
         >
           {data &&
-            data.map((item, idx) => (
+            data.map((item: LotViewModel, idx: number) => (
               <Box
                 key={idx}
                 sx={{

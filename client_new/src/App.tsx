@@ -1,18 +1,18 @@
 // Path: App.tsx
 import { QueryClientProvider } from '@tanstack/react-query';
-import { CssBaseline, ThemeProvider } from '@mui/material';
+import { CssBaseline } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
-import theme from './lib/theme';
 import queryClient from './lib/queryClient';
 import router from './routes'; // Import the router configuration
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { RouterProvider } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 const App = () => {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={theme}>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
           <SnackbarProvider
             maxSnack={3}
             autoHideDuration={5000}
@@ -21,8 +21,8 @@ const App = () => {
             <CssBaseline />
             <RouterProvider router={router} />
           </SnackbarProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };

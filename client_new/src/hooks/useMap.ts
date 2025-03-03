@@ -2,18 +2,40 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getViews, getLotGeoJSON } from '@/services/mapService';
-import { useMapStore } from '@/stores/mapStore';
+import {
+  useMapStore,
+  selectLayers,
+  selectVisibleLayers,
+} from '@/stores/mapStore';
 import { MapLayer } from '@/types/map';
+import {
+  createQueryKey,
+  STALE_TIMES,
+  standardizeError,
+} from '@/lib/queryClient';
+import { ApiResponse } from '@/types/api';
+
+// Define query keys
+const QUERY_KEYS = {
+  MAP_VIEWS: createQueryKey('mapViews'),
+  LOT_GEOJSON: (lotNames: string[]) =>
+    createQueryKey('lotGeoJSON', lotNames.join(',')),
+};
 
 export const useMapData = () => {
-  const { setLayers, setInitialVisibility } = useMapStore();
+  // Use selectors for better performance
+  const layers = useMapStore(selectLayers);
+  const visibleLayers = useMapStore(selectVisibleLayers);
+
+  // Get actions from the store - removed unused setInitialVisibility
+  const { setLayers } = useMapStore();
 
   // Get available views
-  const viewsQuery = useQuery({
-    queryKey: ['mapViews'],
+  const viewsQuery = useQuery<ApiResponse<any>, unknown, ApiResponse<any>>({
+    queryKey: QUERY_KEYS.MAP_VIEWS,
     queryFn: getViews,
     retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: STALE_TIMES.REFERENCE_DATA, // Views don't change frequently
   });
 
   // Safely extract and filter lot views
@@ -29,9 +51,12 @@ export const useMapData = () => {
     }
   })();
 
+  // Get lotView names for query key
+  const lotViewNames = lotViews.map((v: any) => v.nome);
+
   // Get GeoJSON data for each lot
-  const geoJSONQuery = useQuery({
-    queryKey: ['lotGeoJSON', lotViews.map((v: any) => v.nome)],
+  const geoJSONQuery = useQuery<any, unknown, MapLayer[]>({
+    queryKey: QUERY_KEYS.LOT_GEOJSON(lotViewNames),
     queryFn: async () => {
       if (lotViews.length === 0) return [];
 
@@ -46,13 +71,13 @@ export const useMapData = () => {
       const results = await Promise.allSettled(promises);
 
       // Transform results into MapLayer objects
-      const layers: MapLayer[] = [];
+      const newLayers: MapLayer[] = [];
 
       results.forEach((result, index) => {
         if (result.status === 'fulfilled') {
           const data = result.value;
           if (data?.dados?.length > 0 && data.dados[0]?.geojson) {
-            layers.push({
+            newLayers.push({
               id: lotViews[index].nome,
               name: lotViews[index].nome,
               geojson: data.dados[0].geojson,
@@ -62,24 +87,41 @@ export const useMapData = () => {
         }
       });
 
-      return layers;
+      return newLayers;
     },
     enabled: lotViews.length > 0,
     retry: 1,
+    staleTime: STALE_TIMES.REFERENCE_DATA, // GeoJSON data doesn't change frequently
   });
 
-  // Update the store when layers data is loaded
+  // Update the store when layers data is loaded, with race condition protection
   useEffect(() => {
-    if (geoJSONQuery.data) {
-      setLayers(geoJSONQuery.data);
-      setInitialVisibility();
+    if (geoJSONQuery.data && geoJSONQuery.data.length > 0) {
+      // Only update if the data has changed
+      const currentLayerIds = layers
+        .map(layer => layer.id)
+        .sort()
+        .join(',');
+      const newLayerIds = geoJSONQuery.data
+        .map(layer => layer.id)
+        .sort()
+        .join(',');
+
+      if (currentLayerIds !== newLayerIds) {
+        setLayers(geoJSONQuery.data);
+      }
     }
-  }, [geoJSONQuery.data, setLayers, setInitialVisibility]);
+  }, [geoJSONQuery.data, layers, setLayers]);
 
   return {
+    layers,
+    visibleLayers,
     isLoading: viewsQuery.isLoading || geoJSONQuery.isLoading,
     isError: viewsQuery.isError || geoJSONQuery.isError,
-    error: viewsQuery.error || geoJSONQuery.error,
+    error:
+      viewsQuery.error || geoJSONQuery.error
+        ? standardizeError(viewsQuery.error || geoJSONQuery.error)
+        : null,
     isSuccess: viewsQuery.isSuccess && geoJSONQuery.isSuccess,
   };
 };

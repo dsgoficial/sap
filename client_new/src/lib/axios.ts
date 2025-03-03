@@ -40,7 +40,7 @@ apiClient.interceptors.response.use(
 
     // Handle 401 and 403 errors (unauthorized/forbidden)
     if (error.response?.status === 401 || error.response?.status === 403) {
-      // Use the logoutAndRedirect function to ensure proper state cleanup
+      // Use the centralized logout and redirect function
       logoutAndRedirect();
     }
 

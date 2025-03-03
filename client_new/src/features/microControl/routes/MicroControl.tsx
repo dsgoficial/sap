@@ -9,11 +9,13 @@ import {
 import Page from '@/components/Page/Page';
 import { useMicroControlData } from '@/hooks/useMicroControl';
 import { Table } from '@/components/ui/Table';
-import { useAuthStore } from '@/stores/authStore';
-import { Navigate } from 'react-router-dom';
+import {
+  FormattedRunningActivity,
+  CompletedActivity,
+} from '@/types/microControl';
 
 export const MicroControl = () => {
-  const { isAdmin } = useAuthStore();
+  // Fixed type issues with data from hook
   const {
     runningActivities,
     completedActivities,
@@ -22,11 +24,6 @@ export const MicroControl = () => {
     errorRunning,
     errorCompleted,
   } = useMicroControlData();
-
-  // Redirect if not admin
-  if (!isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
 
   return (
     <Page title="Microcontrole">
@@ -63,7 +60,7 @@ export const MicroControl = () => {
                 Não há atividades em execução no momento.
               </Alert>
             ) : (
-              <Table
+              <Table<FormattedRunningActivity>
                 title=""
                 columns={[
                   {
@@ -148,7 +145,7 @@ export const MicroControl = () => {
                 Não há atividades finalizadas recentemente.
               </Alert>
             ) : (
-              <Table
+              <Table<CompletedActivity>
                 title=""
                 columns={[
                   { id: 'projeto_nome', label: 'Projeto', align: 'left' },

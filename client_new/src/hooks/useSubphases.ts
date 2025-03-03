@@ -6,19 +6,38 @@ import {
   getSubphasesSituation,
   getUserActivities,
 } from '@/services/subphaseService';
-import { ChartGroup, TimelineGroup } from '@/types/subphase';
+import { ChartGroup, TimelineGroup, SubphaseData } from '@/types/subphase';
+import {
+  createQueryKey,
+  STALE_TIMES,
+  standardizeError,
+} from '@/lib/queryClient';
+import { ApiResponse } from '@/types/api';
+
+// Define query keys
+const QUERY_KEYS = {
+  ACTIVITY_SUBPHASE: createQueryKey('activitySubphase'),
+  SUBPHASES_SITUATION: createQueryKey('subphasesSituation'),
+  USER_ACTIVITIES: createQueryKey('userActivities'),
+};
 
 export const useActivitySubphase = () => {
   const [graphs, setGraphs] = useState<TimelineGroup[]>([]);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['activitySubphase'],
+  // Fixed the query to use proper types
+  const query = useQuery<
+    ApiResponse<SubphaseData[]>,
+    unknown,
+    ApiResponse<SubphaseData[]>
+  >({
+    queryKey: QUERY_KEYS.ACTIVITY_SUBPHASE,
     queryFn: getActivitySubphase,
+    staleTime: STALE_TIMES.FREQUENT_DATA, // Activity subphase data changes frequently
   });
 
   // Transform the data exactly like the original implementation
   useEffect(() => {
-    if (!data?.dados) return;
+    if (!query.data?.dados) return;
 
     const transformData = () => {
       const graphsData: TimelineGroup[] = [];
@@ -26,7 +45,7 @@ export const useActivitySubphase = () => {
       let lastLot: TimelineGroup | null = null;
       let count = 0;
 
-      for (let [i, lot] of data.dados.entries()) {
+      for (let [i, lot] of query.data.dados.entries()) {
         if (!lastLot || lastLotName !== lot.lote) {
           if (lastLot) graphsData.push(lastLot);
 
@@ -65,13 +84,13 @@ export const useActivitySubphase = () => {
 
         lastLot.dataset.push({
           measure: lot.subfase,
-          data: lot.data.map(item => {
+          data: lot.data.map((item: [string, string, string]) => {
             // Ensure correct data format [startDate, status, endDate]
             return [item[0], item[1], item[2]];
           }),
         });
 
-        if (data.dados.length - 1 === i) {
+        if (query.data.dados.length - 1 === i) {
           if (lastLot) graphsData.push(lastLot);
         }
       }
@@ -80,19 +99,31 @@ export const useActivitySubphase = () => {
     };
 
     transformData();
-  }, [data]);
+  }, [query.data]);
 
   return {
     data: graphs,
-    isLoading,
-    error,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error ? standardizeError(query.error) : null,
+    refetch: query.refetch,
   };
 };
 
+// Define the type for situation data from API
+interface SituationData {
+  bloco: string;
+  subfase: string;
+  finalizadas: number;
+  nao_finalizadas: number;
+}
+
 export const useSubphaseSituation = () => {
-  return useQuery({
-    queryKey: ['subphaseSituation'],
+  // Fixed the type parameters to match what select returns
+  const query = useQuery<ApiResponse<SituationData[]>, unknown, ChartGroup[]>({
+    queryKey: QUERY_KEYS.SUBPHASES_SITUATION,
     queryFn: getSubphasesSituation,
+    staleTime: STALE_TIMES.FREQUENT_DATA, // Subphase situation data changes frequently
     select: data => {
       // Transform data for visualization
       const groupedData: Record<
@@ -103,7 +134,7 @@ export const useSubphaseSituation = () => {
         }
       > = {};
 
-      data.dados.forEach((element: any) => {
+      data.dados.forEach((element: SituationData) => {
         if (!groupedData[element.bloco]) {
           groupedData[element.bloco] = {
             dataPointA: [],
@@ -131,19 +162,38 @@ export const useSubphaseSituation = () => {
       return chartGroups;
     },
   });
+
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error ? standardizeError(query.error) : null,
+    refetch: query.refetch,
+  };
 };
+
+// Define the type for user activity data
+interface UserActivityData {
+  usuario: string;
+  data: [string, string, string][];
+}
 
 export const useUserActivities = () => {
   const [graphs, setGraphs] = useState<TimelineGroup[]>([]);
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['userActivities'],
+  const query = useQuery<
+    ApiResponse<UserActivityData[]>,
+    unknown,
+    ApiResponse<UserActivityData[]>
+  >({
+    queryKey: QUERY_KEYS.USER_ACTIVITIES,
     queryFn: getUserActivities,
+    staleTime: STALE_TIMES.FREQUENT_DATA, // User activities data changes frequently
   });
 
   // Transform the data exactly like the original implementation
   useEffect(() => {
-    if (!data?.dados) return;
+    if (!query.data?.dados) return;
 
     const transformData = () => {
       const graphsData: TimelineGroup[] = [
@@ -170,10 +220,10 @@ export const useUserActivities = () => {
               enabled: true,
             },
           },
-          dataset: data.dados.map((item: any) => {
+          dataset: query.data.dados.map((item: UserActivityData) => {
             return {
               measure: item.usuario,
-              data: item.data.map((dataItem: any) => {
+              data: item.data.map((dataItem: [string, string, string]) => {
                 // Ensure correct data format [startDate, status, endDate]
                 return [dataItem[0], dataItem[1], dataItem[2]];
               }),
@@ -186,11 +236,13 @@ export const useUserActivities = () => {
     };
 
     transformData();
-  }, [data]);
+  }, [query.data]);
 
   return {
     data: graphs,
-    isLoading,
-    error,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error ? standardizeError(query.error) : null,
+    refetch: query.refetch,
   };
 };

@@ -1,42 +1,96 @@
 // Path: stores\authStore.ts
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { User, UserRole, LoginResponse, LoginRequest } from '../types/auth';
 import { login as loginApi } from '../services/authService';
+import { navigateToLogin } from '../routes';
 
-// Storage keys
-const TOKEN_KEY = '@sap_web-Token';
-const USER_AUTHORIZATION_KEY = '@sap_web-User-Authorization';
-const USER_UUID_KEY = '@sap_web-User-uuid';
-const USER_NAME_KEY = '@sap_web-User-username';
-const TOKEN_EXPIRY_KEY = '@sap_web-Token-Expiry';
+// Storage keys for localStorage
+const STORAGE_KEYS = {
+  TOKEN: '@sap_web-Token',
+  USER_AUTHORIZATION: '@sap_web-User-Authorization',
+  USER_UUID: '@sap_web-User-uuid',
+  USER_NAME: '@sap_web-User-username',
+  TOKEN_EXPIRY: '@sap_web-Token-Expiry',
+} as const;
+
+// Helper functions for token management
+const tokenStorage = {
+  get: () => localStorage.getItem(STORAGE_KEYS.TOKEN),
+  set: (token: string) => localStorage.setItem(STORAGE_KEYS.TOKEN, token),
+  remove: () => localStorage.removeItem(STORAGE_KEYS.TOKEN),
+};
+
+const tokenExpiryStorage = {
+  get: () => localStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY),
+  set: (expiry: string) =>
+    localStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, expiry),
+  remove: () => localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY),
+};
 
 // Function to check if token is expired
 export const isTokenExpired = (): boolean => {
-  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+  const expiry = tokenExpiryStorage.get();
   if (!expiry) return false; // No expiry time means we don't know, assume not expired
 
   const expiryTime = new Date(expiry);
   return expiryTime <= new Date();
 };
 
+// Store user data to localStorage for legacy compatibility
+const saveUserDataToLocalStorage = (userData: {
+  token: string;
+  role: UserRole;
+  uuid: string;
+  username?: string;
+}): void => {
+  // Save token with 24-hour expiration
+  tokenStorage.set(userData.token);
+  const expiryTime = new Date();
+  expiryTime.setHours(expiryTime.getHours() + 24);
+  tokenExpiryStorage.set(expiryTime.toISOString());
+
+  // Save other user info
+  localStorage.setItem(STORAGE_KEYS.USER_AUTHORIZATION, userData.role);
+  localStorage.setItem(STORAGE_KEYS.USER_UUID, userData.uuid);
+  if (userData.username) {
+    localStorage.setItem(STORAGE_KEYS.USER_NAME, userData.username);
+  }
+};
+
+// Clear all user data from localStorage
+const clearUserDataFromLocalStorage = (): void => {
+  tokenStorage.remove();
+  tokenExpiryStorage.remove();
+  localStorage.removeItem(STORAGE_KEYS.USER_AUTHORIZATION);
+  localStorage.removeItem(STORAGE_KEYS.USER_UUID);
+  localStorage.removeItem(STORAGE_KEYS.USER_NAME);
+};
+
+// Define the AuthState interface
 interface AuthState {
+  // State
   user: User | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+
+  // Actions
   login: (credentials: LoginRequest) => Promise<boolean>;
   setUser: (loginResponse: LoginResponse) => void;
   logout: () => void;
   getRole: () => UserRole | null;
 }
 
+// Create the AuthStore with Zustand
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
+      // Initial state
       user: null,
       isAuthenticated: false,
       isAdmin: false,
 
+      // Actions
       login: async (credentials: LoginRequest) => {
         try {
           const response = await loginApi(credentials);
@@ -60,34 +114,30 @@ export const useAuthStore = create<AuthState>()(
           ? UserRole.ADMIN
           : UserRole.USER;
 
-        // Save to localStorage for legacy compatibility
-        localStorage.setItem(TOKEN_KEY, loginResponse.token);
-        localStorage.setItem(USER_AUTHORIZATION_KEY, role);
-        localStorage.setItem(USER_UUID_KEY, loginResponse.uuid);
-        if (loginResponse.username) {
-          localStorage.setItem(USER_NAME_KEY, loginResponse.username);
-        }
+        // Create user data object
+        const userData = {
+          uuid: loginResponse.uuid,
+          role,
+          token: loginResponse.token,
+          username: loginResponse.username,
+        };
 
+        // Save to localStorage for legacy compatibility
+        saveUserDataToLocalStorage(userData);
+
+        // Update Zustand state
         set({
-          user: {
-            uuid: loginResponse.uuid,
-            role,
-            token: loginResponse.token,
-            username: loginResponse.username,
-          },
+          user: userData,
           isAuthenticated: true,
           isAdmin: role === UserRole.ADMIN,
         });
       },
 
       logout: () => {
-        // Clear localStorage for legacy compatibility
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_AUTHORIZATION_KEY);
-        localStorage.removeItem(USER_UUID_KEY);
-        localStorage.removeItem(USER_NAME_KEY);
-        localStorage.removeItem(TOKEN_EXPIRY_KEY);
+        // Clear localStorage
+        clearUserDataFromLocalStorage();
 
+        // Reset Zustand state
         set({
           user: null,
           isAuthenticated: false,
@@ -105,14 +155,18 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
         isAdmin: state.isAdmin,
       }),
+      // Use a custom storage to handle JSON parsing/stringifying
+      storage: createJSONStorage(() => localStorage),
       // Add an onRehydrate callback to check token expiration when store loads
       onRehydrateStorage: () => state => {
         // Check token expiration on rehydration
-        if (state && state.isAuthenticated && isTokenExpired()) {
-          // Token is expired, log out immediately
+        if (state?.isAuthenticated && isTokenExpired()) {
+          // Clear the store if token is expired
+          clearUserDataFromLocalStorage();
+          // This will update the state after rehydration
           setTimeout(() => {
-            const store = useAuthStore.getState();
-            store.logout();
+            const authStore = useAuthStore.getState();
+            authStore.logout();
           }, 0);
         }
       },
@@ -120,11 +174,20 @@ export const useAuthStore = create<AuthState>()(
   ),
 );
 
-// Static method for use outside React components
-export const logoutAndRedirect = () => {
-  const store = useAuthStore.getState();
-  store.logout();
+// Selectors for performance optimization
+export const selectIsAuthenticated = (state: AuthState) =>
+  state.isAuthenticated;
+export const selectIsAdmin = (state: AuthState) => state.isAdmin;
+export const selectUser = (state: AuthState) => state.user;
+export const selectUsername = (state: AuthState) => state.user?.username;
 
-  // Use window.location.replace instead of href to avoid adding to history
-  window.location.replace('/login');
+// Use consistent navigation approach for auth-related redirects
+export const logoutAndRedirect = () => {
+  // Get the logout function from the store
+  const logout = useAuthStore.getState().logout;
+
+  // Logout the user
+  logout();
+
+  navigateToLogin();
 };
