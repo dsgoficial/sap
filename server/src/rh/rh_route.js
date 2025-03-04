@@ -37,45 +37,48 @@ router.get(
   })
 )
 
-/** 
-
-router.post(
-  '/grupo_estilos',
-  verifyAdmin,
-  schemaValidation({ body: rhSchema.grupoEstilos }),
+router.get(
+  '/atividades_por_periodo/:dataInicio/:dataFim',
   asyncHandler(async (req, res, next) => {
-    await projetoCtrl.gravaGrupoEstilos(req.body.grupo_estilos, req.usuarioId)
+    const { dataInicio, dataFim} = req.params;
+    const dados = await rhCtrl.getAtividadesPorPeriodo(dataInicio, dataFim);
+    const msg = 'Atividades por período retornadas com sucesso';
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
 
-    const msg = 'Grupo de estilos gravados com sucesso'
+router.get(
+  '/atividades_por_usuario_e_periodo/:usuarioId/:dataInicio/:dataFim',
+  verifyAdmin,
+  schemaValidation({
+    params: rhSchema.getAtividadesPorUsuarioEPeriodoParams
+  }),
+  asyncHandler(async (req, res, next) => {
+    const { usuarioId, dataInicio, dataFim } = req.params;
+    const dados = await rhCtrl.getAtividadesPorUsuarioEPeriodo(usuarioId, dataInicio, dataFim);
+    const msg = 'Atividades por usuário e período retornadas com sucesso';
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
+router.get(
+  '/lote_stats/:dataInicio/:dataFim',
+  asyncHandler(async (req, res, next) => {
+    const { dataInicio, dataFim } = req.params;
+    const dados = await rhCtrl.getAllLoteStatsByDate(dataInicio, dataFim);
+    const msg = 'Estatísticas de lote retornadas com sucesso';
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+);
+
+router.get(
+  '/bloco_stats/:dataInicio/:dataFim',
+  asyncHandler(async (req, res, next) => {
+    const { dataInicio, dataFim } = req.params;
+    const dados = await rhCtrl.getAllBlocksStatsByDate(dataInicio, dataFim);
+    const msg = 'Estatísticas de bloco retornadas com sucesso';
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
   })
 )
 
-router.put(
-  '/grupo_estilos',
-  verifyAdmin,
-  schemaValidation({ body: rhSchema.grupoEstilosAtualizacao }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.atualizaGrupoEstilos(req.body.grupo_estilos, req.usuarioId)
-
-    const msg = 'Grupo de estilos atualizados com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-
-router.delete(
-  '/grupo_estilos',
-  verifyAdmin,
-  schemaValidation({ body: rhSchema.grupoEstilosIds }),
-  asyncHandler(async (req, res, next) => {
-    await projetoCtrl.deletaGrupoEstilos(req.body.grupo_estilos_ids)
-
-    const msg = 'Grupo de estilos deletados com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
-*/
 module.exports = router
