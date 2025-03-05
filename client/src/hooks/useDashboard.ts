@@ -8,7 +8,6 @@ import {
   standardizeError,
 } from '@/lib/queryClient';
 
-// Define query keys
 const QUERY_KEYS = {
   DASHBOARD_DATA: createQueryKey('dashboardData'),
 };

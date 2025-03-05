@@ -14,7 +14,6 @@ import {
 } from '@/lib/queryClient';
 import { ApiResponse } from '@/types/api';
 
-// Define query keys
 const QUERY_KEYS = {
   ACTIVITY_SUBPHASE: createQueryKey('activitySubphase'),
   SUBPHASES_SITUATION: createQueryKey('subphasesSituation'),
@@ -24,7 +23,6 @@ const QUERY_KEYS = {
 export const useActivitySubphase = () => {
   const [graphs, setGraphs] = useState<TimelineGroup[]>([]);
 
-  // Fixed the query to use proper types
   const query = useQuery<
     ApiResponse<SubphaseData[]>,
     unknown,
@@ -119,7 +117,6 @@ interface SituationData {
 }
 
 export const useSubphaseSituation = () => {
-  // Fixed the type parameters to match what select returns
   const query = useQuery<ApiResponse<SituationData[]>, unknown, ChartGroup[]>({
     queryKey: QUERY_KEYS.SUBPHASES_SITUATION,
     queryFn: getSubphasesSituation,

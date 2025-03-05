@@ -28,7 +28,6 @@ const MainStyle = styled(Box)<{ open?: boolean }>(({ theme, open }) => ({
   paddingRight: theme.spacing(2),
   [theme.breakpoints.up('lg')]: {
     paddingTop: APP_BAR_DESKTOP + 24,
-    // Fix: Remove the marginLeft and just set width to account for sidebar
     width: open ? `calc(100% - ${DRAWER_WIDTH}px)` : '100%',
     transition: theme.transitions.create(['width'], {
       easing: theme.transitions.easing.sharp,

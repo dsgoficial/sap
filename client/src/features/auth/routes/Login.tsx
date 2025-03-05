@@ -44,7 +44,6 @@ const Login = () => {
   const { isDarkMode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Get redirect path from query params (React Router v7 style)
   const from = searchParams.get('from') || '/';
 
   // Get the random image number (1-5) for consistent layout with the original
@@ -64,9 +63,7 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormValues) => {
     const loginResult = await login(data);
-    // The login function now correctly returns a promise that resolves to a boolean
     if (loginResult) {
-      // Use navigate in React Router v7 style
       navigate(from, { replace: true });
     }
   };

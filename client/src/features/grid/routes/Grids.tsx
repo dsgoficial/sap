@@ -12,9 +12,7 @@ import { GridCard } from '../components/GridCard';
 import { GridData } from '@/types/grid';
 
 export const Grids = () => {
-  // Fixed return type from the hook
   const { data, isLoading, error } = useGridStatistics();
-
   if (isLoading) {
     return (
       <Page title="Grade de Acompanhamento">

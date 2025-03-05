@@ -12,7 +12,6 @@ import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { ChartGroup } from '@/types/subphase';
 
 export const SubphaseSituation = () => {
-  // Fixed type issues with data from hook
   const { data, isLoading, error } = useSubphaseSituation();
 
   if (isLoading) {

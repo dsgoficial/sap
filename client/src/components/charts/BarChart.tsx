@@ -42,7 +42,6 @@ export const BarChart = React.memo(
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
-    // Simplified data for mobile - memoized
     const displayData = useMemo(
       () =>
         isMobile && data.length > 10
@@ -51,7 +50,6 @@ export const BarChart = React.memo(
       [isMobile, data],
     );
 
-    // Simplified series for mobile - memoized
     const displaySeries = useMemo(
       () =>
         isMobile && series.length > 3
@@ -60,7 +58,6 @@ export const BarChart = React.memo(
       [isMobile, series],
     );
 
-    // Calculate responsive height - memoized
     const responsiveHeight = useMemo(
       () =>
         isMobile
@@ -71,7 +68,6 @@ export const BarChart = React.memo(
       [isMobile, isTablet, height],
     );
 
-    // Margin settings based on device - memoized
     const chartMargins = useMemo(
       () => ({
         top: 20,
@@ -82,10 +78,8 @@ export const BarChart = React.memo(
       [isMobile],
     );
 
-    // Bar styling based on device - memoized
     const barSize = useMemo(() => (isMobile ? 10 : 20), [isMobile]);
 
-    // Caption message for truncated data - memoized
     const truncatedDataMessage = useMemo(() => {
       if (isMobile && data.length > 10) {
         return (
@@ -97,7 +91,6 @@ export const BarChart = React.memo(
       return null;
     }, [isMobile, data.length]);
 
-    // Apply theme-aware colors to the series
     const themedSeries = useMemo(() => {
       return displaySeries.map((s, index) => ({
         ...s,
@@ -185,5 +178,4 @@ export const BarChart = React.memo(
   },
 );
 
-// Add display name for debugging
 BarChart.displayName = 'BarChart';

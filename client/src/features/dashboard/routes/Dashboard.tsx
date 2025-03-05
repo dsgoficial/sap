@@ -11,7 +11,6 @@ import { ProductionCharts } from '../components/ProductionCharts';
 import { useDashboard } from '@/hooks/useDashboard';
 
 export const Dashboard = () => {
-  // Use the custom hook to fetch dashboard data
   const { dashboardData, isLoading, isError, error } = useDashboard();
 
   // Show loading state

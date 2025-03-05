@@ -7,19 +7,19 @@ import {
   CircularProgress,
 } from '@mui/material';
 import Page from '@/components/Page/Page';
-import { useMapData, getLegendItems } from '@/hooks/useMap';
+import { useMapData } from '@/hooks/useMap';
 import MapVisualization from '../components/MapVisualization';
 import {
   useMapStore,
   selectLayers,
   selectVisibleLayers,
 } from '@/stores/mapStore';
+import { getLegendItems } from '../utils/mapStyles';
+
 
 export const Maps = () => {
-  // Use the hook for data fetching and loading states
   const { isLoading, isError, error } = useMapData();
 
-  // Use selectors for better performance
   const layers = useMapStore(selectLayers);
   const visibleLayers = useMapStore(selectVisibleLayers);
   const { toggleLayerVisibility } = useMapStore();
@@ -75,23 +75,25 @@ export const Maps = () => {
 
   return (
     <Page title="Mapas de Acompanhamento">
-      <Container maxWidth="xl" disableGutters>
+      <Container 
+        maxWidth={false} 
+        disableGutters
+        sx={{ 
+          height: 'auto',
+          px: 3,
+          overflow: 'hidden'
+        }}
+      >
         <Typography variant="h4" sx={{ mb: 3 }}>
           Mapas de Acompanhamento
         </Typography>
 
-        <Box sx={{ width: '100%' }}>
+        <Box sx={{ width: '100%', overflow: 'hidden' }}>
           <MapVisualization
-            title="Visão Geral"
             layers={layers}
             legendItems={legendItems}
             visibleLayers={visibleLayers}
             onToggleLayer={toggleLayerVisibility}
-            initialViewState={{
-              longitude: -52.956841,
-              latitude: -15.415179,
-              zoom: 3.65,
-            }}
           />
         </Box>
       </Container>

@@ -10,7 +10,6 @@ import Page from '@/components/Page/Page';
 import { usePITData, PitViewModel } from '@/hooks/usePIT';
 import { Table } from '@/components/ui/Table';
 
-// Month definitions with correct types
 const MONTHS = [
   { label: 'Jan', id: 'jan' },
   { label: 'Fev', id: 'fev' },
@@ -27,7 +26,6 @@ const MONTHS = [
 ];
 
 export const PIT = () => {
-  // Fixed type issues with data from hook
   const { data, isLoading, error } = usePITData();
 
   if (isLoading) {

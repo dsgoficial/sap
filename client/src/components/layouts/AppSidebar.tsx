@@ -73,7 +73,7 @@ const DashboardSidebar = ({
       adminOnly: false,
     },
     {
-      title: 'Grade de Acompanhamento',
+      title: 'Grade',
       path: '/grid',
       icon: <GridOnIcon />,
       adminOnly: true,

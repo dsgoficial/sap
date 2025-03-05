@@ -1,15 +1,8 @@
 // Path: features\map\components\MapVisualization.tsx
-import React, {
-  useRef,
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-} from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { styled } from '@mui/material/styles';
 import {
   Paper,
-  Typography,
   Box,
   useTheme,
   useMediaQuery,
@@ -20,6 +13,12 @@ import {
   Collapse,
   Button,
   alpha,
+  Typography,
+  Popover,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
 } from '@mui/material';
 import L from 'leaflet';
 import { MapContainer, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
@@ -30,14 +29,14 @@ import { MapLayer, LegendItem } from '@/types/map';
 import LayersIcon from '@mui/icons-material/Layers';
 import CloseIcon from '@mui/icons-material/Close';
 import InfoIcon from '@mui/icons-material/Info';
-import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import { getFeatureStyle } from '../utils/mapStyles';
+import { formatDate } from '@/utils/formatters';
 
 const MapContainerWrapper = styled(Box)(({ theme }) => ({
-  height: '70vh',
+  height: '75vh',
   position: 'relative',
   [theme.breakpoints.down('sm')]: {
-    height: '60vh',
+    height: '65vh',
   },
 }));
 
@@ -69,26 +68,6 @@ const MobileFab = styled(Fab)(({ theme }) => ({
   zIndex: 999,
   [theme.breakpoints.up('md')]: {
     display: 'none',
-  },
-}));
-
-const FullscreenButton = styled(IconButton)(({ theme }) => ({
-  position: 'absolute',
-  top: 10,
-  right: 10,
-  zIndex: 999,
-  backgroundColor:
-    theme.palette.mode === 'dark'
-      ? alpha(theme.palette.background.paper, 0.8)
-      : 'rgba(255, 255, 255, 0.8)',
-  '&:hover': {
-    backgroundColor:
-      theme.palette.mode === 'dark'
-        ? alpha(theme.palette.background.paper, 0.9)
-        : 'rgba(255, 255, 255, 0.9)',
-  },
-  [theme.breakpoints.up('md')]: {
-    top: 80,
   },
 }));
 
@@ -131,7 +110,7 @@ const LegendToggle = styled(Button)(({ theme }) => ({
 }));
 
 interface MapVisualizationProps {
-  title: string;
+  title?: string;
   layers: MapLayer[];
   legendItems: LegendItem[];
   visibleLayers: Record<string, boolean>;
@@ -143,16 +122,82 @@ interface MapVisualizationProps {
   };
 }
 
+// Função para formatar nomes de camadas
+const formatLayerName = (name: string): string => {
+  if (name.startsWith('lote_')) {
+    const lotNumber = name.split('_')[1];
+    return `Lote ${lotNumber}`;
+  }
+  return name;
+};
+
+// Formata os nomes dos campos das propriedades
+const formatFieldName = (key: string): string => {
+  switch (key) {
+    case 'mi': return 'MI';
+    case 'inom': return 'INOM';
+    case 'nome': return 'Nome';
+    case 'tipo_produto': return 'Tipo de Produto';
+    case 'denominador_escala': return 'Escala (1:)';
+    case 'f_1_preparo_data_inicio': return 'Início Preparo';
+    case 'f_1_preparo_data_fim': return 'Fim Preparo';
+    case 'f_2_extracao_data_inicio': return 'Início Extração';
+    case 'f_2_extracao_data_fim': return 'Fim Extração';
+    case 'f_3_validacao_data_inicio': return 'Início Validação';
+    case 'f_3_validacao_data_fim': return 'Fim Validação';
+    case 'f_4_disseminacao_data_inicio': return 'Início Disseminação';
+    case 'f_4_disseminacao_data_fim': return 'Fim Disseminação';
+    default: return key;
+  }
+};
+
+// Formata o valor das propriedades
+const formatPropertyValue = (key: string, value: any): string => {
+  if (value === '-' || value === null || value === undefined || value === '') {
+    return '-';
+  }
+  
+  if (key.includes('data_inicio') || key.includes('data_fim')) {
+    return formatDate(value);
+  }
+  
+  if (key === 'denominador_escala') {
+    return value.toLocaleString();
+  }
+  
+  return String(value);
+};
+
+// Filtra campos importantes para exibir no popup
+const filterImportantFields = (properties: Record<string, any>): Record<string, any> => {
+  const importantFields = [
+    'mi', 'inom', 'tipo_produto', 'denominador_escala',
+    'f_1_preparo_data_inicio', 'f_1_preparo_data_fim',
+    'f_2_extracao_data_inicio', 'f_2_extracao_data_fim',
+    'f_3_validacao_data_inicio', 'f_3_validacao_data_fim',
+    'f_4_disseminacao_data_inicio', 'f_4_disseminacao_data_fim'
+  ];
+  
+  const result: Record<string, any> = {};
+  importantFields.forEach(field => {
+    if (field in properties) {
+      result[field] = properties[field];
+    }
+  });
+  
+  return result;
+};
+
 const MapVisualization = ({
-  title,
   layers,
   legendItems,
   visibleLayers,
   onToggleLayer,
   initialViewState = {
-    longitude: -52.956841,
-    latitude: -15.415179,
-    zoom: 3.65,
+    // enquadrar o Brasil
+    longitude: -54.5,
+    latitude: -14.5,
+    zoom: 4,
   },
 }: MapVisualizationProps) => {
   const mapRef = useRef<L.Map | null>(null);
@@ -161,24 +206,41 @@ const MapVisualization = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showLegend, setShowLegend] = useState(!isMobile);
+  const [selectedFeature, setSelectedFeature] = useState<any>(null);
+  const [popupAnchorEl, setPopupAnchorEl] = useState<HTMLElement | null>(null);
+  
+  // Estado para controlar se o mapa foi inicialmente carregado
+  const [initialZoomDone, setInitialZoomDone] = useState(false);
 
-  // Fix Leaflet's default icon paths
-  useEffect(() => {
-    // Fix for the TypeScript error - using type assertion to tell TypeScript
-    // that we know what we're doing with the internal property
-    // @ts-ignore - _getIconUrl exists in the implementation but not in the type definitions
-    delete L.Icon.Default.prototype._getIconUrl;
+ // Create custom icon using inline SVG
+ useEffect(() => {
+  // Remove default icons
+  // @ts-ignore - _getIconUrl exists in the implementation but not in the type definitions
+  delete L.Icon.Default.prototype._getIconUrl;
 
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl:
-        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl:
-        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  // Create custom SVG icon for markers
+  const createSvgIcon = (color: string) => {
+    const primaryColor = color || theme.palette.primary.main;
+    
+    // Create a custom icon using SVG as data URL
+    const customIcon = L.divIcon({
+      html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36">
+              <path fill="${primaryColor}" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>`,
+      className: '',
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -36]
     });
-  }, []);
+    
+    return customIcon;
+  };
+
+  // Set the custom icon as default
+  L.Marker.prototype.options.icon = createSvgIcon(theme.palette.primary.main);
+  
+}, [theme.palette.primary.main]);
 
   // Memoized functions
   const toggleDrawer = useCallback(() => {
@@ -189,29 +251,69 @@ const MapVisualization = ({
     setShowLegend(prev => !prev);
   }, []);
 
-  // Function to toggle fullscreen - memoized
-  const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        setIsFullscreen(false);
+  // Function to fit map bounds to all GeoJSON data
+  const fitBoundsToData = useCallback(() => {
+    if (!mapRef.current || layers.length === 0) return;
+    
+    try {
+      // Create a bounds object
+      const bounds = L.latLngBounds([]);
+      
+      // Add all visible layer bounds
+      layers.forEach(layer => {
+        if (visibleLayers[layer.id] && layer.geojson && layer.geojson.features) {
+          const geoJsonLayer = L.geoJSON(layer.geojson);
+          const layerBounds = geoJsonLayer.getBounds();
+          
+          // Only extend if bounds are valid
+          if (layerBounds.isValid()) {
+            bounds.extend(layerBounds);
+          }
+        }
+      });
+      
+      // If we have valid bounds, fit the map to them
+      if (bounds.isValid()) {
+        mapRef.current.fitBounds(bounds, {
+          padding: [50, 50],
+          maxZoom: 8 // Limitar o zoom para não aproximar demais
+        });
       }
+    } catch (error) {
+      console.error("Error fitting bounds:", error);
+    }
+  }, [layers, visibleLayers]);
+
+  // Create a style function for the GeoJSON layers
+  const styleFunction = useCallback(
+    (feature: any) => {
+      return getFeatureStyle(feature, isDarkMode);
+    },
+    [isDarkMode]
+  );
+
+  // Handle click on a feature
+  const onFeatureClick = useCallback((feature: any, event: any) => {
+    if (feature?.properties) {
+      setSelectedFeature(feature.properties);
+      setPopupAnchorEl(event.originalEvent.target);
     }
   }, []);
 
-  // Style function for GeoJSON - memoized to prevent recreation on every render
-  const layerStyle = useMemo(() => {
-    return {
-      fillColor: isDarkMode ? '#5A8CBA' : '#4682B4', // Adjusted for dark mode
-      weight: 0.5,
-      opacity: 1,
-      color: isDarkMode ? '#CCCCCC' : '#050505', // Lighter border in dark mode
-      fillOpacity: isDarkMode ? 0.6 : 0.8, // Adjusted opacity for dark mode
-    };
-  }, [isDarkMode]);
+  // Handle close popup
+  const handleClosePopup = useCallback(() => {
+    setSelectedFeature(null);
+    setPopupAnchorEl(null);
+  }, []);
+
+  // Point to point event handler for each GeoJSON feature
+  const onEachFeature = useCallback((feature: any, layer: L.Layer) => {
+    layer.on({
+      click: (e) => {
+        onFeatureClick(feature, e);
+      }
+    });
+  }, [onFeatureClick]);
 
   // Memoize tile layer URL for dark/light mode
   const tileLayerUrl = useMemo(() => {
@@ -221,12 +323,6 @@ const MapVisualization = ({
       : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   }, [isDarkMode]);
 
-  // Memoize tile layer attribution
-  const tileAttribution = useMemo(() => {
-    return isDarkMode
-      ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-  }, [isDarkMode]);
 
   // Memoize center coordinates
   const center = useMemo(
@@ -237,6 +333,14 @@ const MapVisualization = ({
       ],
     [initialViewState.latitude, initialViewState.longitude],
   );
+
+  // Memoize formatted layer names
+  const formattedLayers = useMemo(() => {
+    return layers.map(layer => ({
+      id: layer.id,
+      name: formatLayerName(layer.name)
+    }));
+  }, [layers]);
 
   // Memoize drawer contents to prevent recreation on each render
   const drawerContent = useMemo(
@@ -261,7 +365,7 @@ const MapVisualization = ({
         <Divider />
         <Box sx={{ p: 2 }}>
           <LayerControl
-            layers={layers.map(l => ({ id: l.id, name: l.name }))}
+            layers={formattedLayers}
             visibility={visibleLayers}
             onToggle={onToggleLayer}
           />
@@ -275,7 +379,7 @@ const MapVisualization = ({
         </Box>
       </>
     ),
-    [layers, visibleLayers, onToggleLayer, legendItems, toggleDrawer],
+    [formattedLayers, visibleLayers, onToggleLayer, legendItems, toggleDrawer],
   );
 
   // Update map when the theme changes
@@ -288,13 +392,23 @@ const MapVisualization = ({
     }
   }, [isDarkMode]);
 
+  // Fit bounds only on initial load, not when visibility changes
+  useEffect(() => {
+    if (mapRef.current && layers.length > 0 && !initialZoomDone) {
+      // Timeout allows the GeoJSON layers to be properly loaded
+      setTimeout(() => {
+        fitBoundsToData();
+        setInitialZoomDone(true);
+      }, 500);
+    }
+  }, [fitBoundsToData, layers, initialZoomDone]);
+
   return (
     <Paper
       elevation={1}
       sx={{
         width: '100%',
-        height: '80vh',
-        overflow: 'hidden',
+        height: 'max-content',
         position: 'relative',
         bgcolor: theme.palette.background.paper,
         transition: theme.transitions.create(
@@ -305,14 +419,6 @@ const MapVisualization = ({
         ),
       }}
     >
-      <Typography
-        variant={isMobile ? 'subtitle1' : 'h6'}
-        align="center"
-        p={isMobile ? 1 : 2}
-      >
-        {title}
-      </Typography>
-
       <MapContainerWrapper>
         <MapContainer
           center={center}
@@ -320,9 +426,18 @@ const MapVisualization = ({
           style={{ height: '100%', width: '100%' }}
           zoomControl={false}
           ref={mapRef}
-          attributionControl={false} // We'll add attribution control separately for better styling
+          attributionControl={false}
+          whenReady={() => {
+            // Fit to bounds once the map is ready if not done yet
+            if (!initialZoomDone) {
+              setTimeout(() => {
+                fitBoundsToData();
+                setInitialZoomDone(true);
+              }, 500);
+            }
+          }}
         >
-          <TileLayer attribution={tileAttribution} url={tileLayerUrl} />
+          <TileLayer url={tileLayerUrl} />
 
           {/* Render each GeoJSON layer if visible */}
           {layers.map(
@@ -331,7 +446,8 @@ const MapVisualization = ({
                 <GeoJSON
                   key={layer.id}
                   data={layer.geojson}
-                  style={layerStyle}
+                  style={styleFunction}
+                  onEachFeature={onEachFeature}
                 />
               ),
           )}
@@ -354,29 +470,19 @@ const MapVisualization = ({
               color: isDarkMode ? '#ccc' : '#333',
             }}
           >
-            <div dangerouslySetInnerHTML={{ __html: tileAttribution }} />
           </div>
         </MapContainer>
 
         {/* Desktop controls */}
         <ControlsContainer>
           <LayerControl
-            layers={layers.map(l => ({ id: l.id, name: l.name }))}
+            layers={formattedLayers}
             visibility={visibleLayers}
             onToggle={onToggleLayer}
           />
         </ControlsContainer>
 
-        {/* Fullscreen button */}
-        <FullscreenButton
-          onClick={toggleFullscreen}
-          aria-label="Toggle fullscreen"
-          size="small"
-        >
-          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-        </FullscreenButton>
-
-        {/* Legend toggle button */}
+        {/* Legend toggle button for mobile */}
         {isMobile && (
           <LegendToggle
             startIcon={<InfoIcon />}
@@ -416,12 +522,75 @@ const MapVisualization = ({
               maxWidth: 300,
               borderTopLeftRadius: theme.shape.borderRadius,
               borderBottomLeftRadius: theme.shape.borderRadius,
-              bgcolor: theme.palette.background.paper, // Ensure proper background color
+              bgcolor: theme.palette.background.paper,
             },
           }}
         >
           {drawerContent}
         </Drawer>
+        
+        {/* Feature info popup */}
+        <Popover
+          open={Boolean(selectedFeature)}
+          anchorEl={popupAnchorEl}
+          onClose={handleClosePopup}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'center',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'center',
+          }}
+          PaperProps={{
+            sx: {
+              p: 2,
+              maxWidth: 400,
+              maxHeight: 400,
+              overflow: 'auto',
+              bgcolor: theme.palette.background.paper,
+            }
+          }}
+        >
+          {selectedFeature && (
+            <Box>
+              <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+                Informações da Camada
+              </Typography>
+              <Table size="small">
+                <TableBody>
+                  {Object.entries(filterImportantFields(selectedFeature)).map(([key, value]) => (
+                    <TableRow key={key}>
+                      <TableCell 
+                        component="th" 
+                        scope="row"
+                        sx={{ 
+                          fontWeight: 'bold',
+                          borderBottom: `1px solid ${theme.palette.divider}`,
+                          p: 1
+                        }}
+                      >
+                        {formatFieldName(key)}
+                      </TableCell>
+                      <TableCell 
+                        align="right"
+                        sx={{ 
+                          borderBottom: `1px solid ${theme.palette.divider}`,
+                          p: 1
+                        }}
+                      >
+                        {formatPropertyValue(key, value)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                <Button size="small" onClick={handleClosePopup}>Fechar</Button>
+              </Box>
+            </Box>
+          )}
+        </Popover>
       </MapContainerWrapper>
     </Paper>
   );

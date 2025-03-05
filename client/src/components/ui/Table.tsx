@@ -1,4 +1,3 @@
-// Path: components\ui\Table.tsx
 import {
   ReactNode,
   useState,
@@ -47,7 +46,7 @@ interface Column<T extends Record<string, any>> {
   maxWidth?: number;
   format?: (value: any, row: T) => ReactNode;
   sortable?: boolean;
-  priority?: number; // Higher number = higher priority (show on mobile)
+  priority?: number;
 }
 
 interface TableProps<T extends Record<string, any>>
@@ -73,6 +72,7 @@ interface TableProps<T extends Record<string, any>>
   rowBackgroundColor?: (row: T, index: number) => string | undefined;
   stickyHeader?: boolean;
   maxHeight?: number | string;
+  title?: string;
   localization?: {
     emptyDataMessage?: string;
     searchPlaceholder?: string;
@@ -140,6 +140,19 @@ const CardViewItem = styled(Card)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
     marginBottom: theme.spacing(1),
   },
+}));
+
+const TitleContainer = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2),
+  paddingBottom: theme.spacing(1),
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  borderTopLeftRadius: theme.shape.borderRadius,
+  borderTopRightRadius: theme.shape.borderRadius,
+  marginBottom: 0,
+  transition: theme.transitions.create(['background-color'], {
+    duration: theme.transitions.duration.standard,
+  }),
 }));
 
 // Default Portuguese localization
@@ -504,6 +517,7 @@ export function Table<T extends Record<string, any>>({
   stickyHeader = false,
   maxHeight,
   localization: customLocalization,
+  title,
   ...rest
 }: TableProps<T>) {
   const theme = useTheme();
@@ -708,6 +722,26 @@ export function Table<T extends Record<string, any>>({
     );
   }
 
+  // Render title if provided
+  const renderTitle = () => {
+    if (!title) return null;
+    
+    return (
+      <TitleContainer>
+        <Typography 
+          variant="h6" 
+          component="h2" 
+          sx={{ 
+            fontWeight: 'bold',
+            textAlign: 'center' 
+          }}
+        >
+          {title}
+        </Typography>
+      </TitleContainer>
+    );
+  };
+
   // Render empty state
   if (sortedRows.length === 0) {
     return (
@@ -721,6 +755,7 @@ export function Table<T extends Record<string, any>>({
           ),
         }}
       >
+        {renderTitle()}
         <SearchBar
           placeholder={searchPlaceholder || localization.searchPlaceholder}
           onSearch={handleSearch}
@@ -752,6 +787,7 @@ export function Table<T extends Record<string, any>>({
           ),
         }}
       >
+        {renderTitle()}
         <SearchBar
           placeholder={searchPlaceholder || localization.searchPlaceholder}
           onSearch={handleSearch}
@@ -825,6 +861,7 @@ export function Table<T extends Record<string, any>>({
         ),
       }}
     >
+      {renderTitle()}
       <SearchBar
         placeholder={searchPlaceholder || localization.searchPlaceholder}
         onSearch={handleSearch}

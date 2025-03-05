@@ -23,7 +23,6 @@ const queryClient = new QueryClient({
     mutations: {
       // Don't retry mutations by default
       retry: 0,
-      // NOTE: Removed the non-existent useErrorBoundary property
     },
   },
 });

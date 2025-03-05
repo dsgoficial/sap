@@ -8,9 +8,7 @@ import {
   standardizeError,
   createQueryKey,
 } from '@/lib/queryClient';
-// Removed unused import: import { ApiError } from '@/types/api';
 
-// Define query keys as constants
 const QUERY_KEYS = {
   CURRENT_ACTIVITY: createQueryKey('currentActivity'),
   ERROR_TYPES: createQueryKey('errorTypes'),
@@ -20,7 +18,6 @@ export const useActivities = () => {
   const queryClient = useQueryClient();
   const activityService = useActivityService();
 
-  // Get current activity
   const {
     data: currentActivityData,
     isLoading: isLoadingActivity,
@@ -46,7 +43,6 @@ export const useActivities = () => {
       // Invalidate current activity to refresh data
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_ACTIVITY });
     },
-    // Add optimistic update - assuming starting activity immediately gives a loading state
     onMutate: async () => {
       // Cancel any outgoing refetches to avoid overwriting our optimistic update
       await queryClient.cancelQueries({

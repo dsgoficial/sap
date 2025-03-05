@@ -15,7 +15,6 @@ import {
 } from '@/types/microControl';
 
 export const MicroControl = () => {
-  // Fixed type issues with data from hook
   const {
     runningActivities,
     completedActivities,
@@ -42,10 +41,6 @@ export const MicroControl = () => {
         >
           {/* Running Activities Table */}
           <Box>
-            <Typography variant="h5" sx={{ mb: 2 }}>
-              Atividades em Execução
-            </Typography>
-
             {isLoadingRunning ? (
               <Box display="flex" justifyContent="center" py={4}>
                 <CircularProgress />
@@ -61,7 +56,7 @@ export const MicroControl = () => {
               </Alert>
             ) : (
               <Table<FormattedRunningActivity>
-                title=""
+                title="Atividades em Execução"
                 columns={[
                   {
                     id: 'projeto_nome',
@@ -127,10 +122,6 @@ export const MicroControl = () => {
 
           {/* Completed Activities Table */}
           <Box>
-            <Typography variant="h5" sx={{ mb: 2 }}>
-              Últimas Atividades Finalizadas
-            </Typography>
-
             {isLoadingCompleted ? (
               <Box display="flex" justifyContent="center" py={4}>
                 <CircularProgress />
@@ -146,7 +137,7 @@ export const MicroControl = () => {
               </Alert>
             ) : (
               <Table<CompletedActivity>
-                title=""
+                title="Últimas Atividades Finalizadas"
                 columns={[
                   { id: 'projeto_nome', label: 'Projeto', align: 'left' },
                   { id: 'lote', label: 'Lote', align: 'left' },

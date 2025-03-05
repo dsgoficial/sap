@@ -30,13 +30,9 @@ const MapLegend = ({ items }: MapLegendProps) => {
               height: 16,
               backgroundColor: item.color,
               border: `${item.border ? '2px' : '1px'} solid ${
-                isDarkMode && item.border
-                  ? '#FFFFFF'
-                  : isDarkMode
-                    ? '#CCCCCC'
-                    : item.border
-                      ? '#FF0000'
-                      : '#050505'
+                item.border
+              ? '#FF0000'
+                : '#050505'
               }`,
               mr: 1,
             }}

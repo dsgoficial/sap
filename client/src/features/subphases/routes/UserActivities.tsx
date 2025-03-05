@@ -13,7 +13,6 @@ import { useUserActivities } from '@/hooks/useSubphases';
 import { TimelineVisualization } from '@/components/timeline/TimelineVisualization';
 
 export const UserActivities = () => {
-  // Removed redundant admin check - now handled by route loader
   const { data, isLoading, error } = useUserActivities();
   const theme = useTheme();
 
