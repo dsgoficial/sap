@@ -1,3 +1,4 @@
+// Path: components\ui\Table.tsx
 import {
   ReactNode,
   useState,

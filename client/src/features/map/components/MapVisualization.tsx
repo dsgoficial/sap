@@ -21,26 +21,29 @@ import {
   TableRow,
 } from '@mui/material';
 import L from 'leaflet';
-import { MapContainer, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import MapLegend from './MapLegend';
 import LayerControl from './LayerControl';
 import { MapLayer, LegendItem } from '@/types/map';
 import LayersIcon from '@mui/icons-material/Layers';
-import CloseIcon from '@mui/icons-material/Close';
 import InfoIcon from '@mui/icons-material/Info';
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import { getFeatureStyle } from '../utils/mapStyles';
 import { formatDate } from '@/utils/formatters';
 
 const MapContainerWrapper = styled(Box)(({ theme }) => ({
   height: '75vh',
   position: 'relative',
+  overflow: 'hidden', // Prevent overflow
   [theme.breakpoints.down('sm')]: {
     height: '65vh',
   },
 }));
 
-const ControlsContainer = styled(Box)(({ theme }) => ({
+const DesktopControlsPanel = styled(Box)(({ theme }) => ({
   position: 'absolute',
   top: 10,
   right: 10,
@@ -49,26 +52,14 @@ const ControlsContainer = styled(Box)(({ theme }) => ({
     theme.palette.mode === 'dark'
       ? alpha(theme.palette.background.paper, 0.9)
       : 'rgba(255, 255, 255, 0.8)',
-  padding: theme.spacing(1),
+  padding: theme.spacing(2),
   borderRadius: theme.shape.borderRadius,
   maxHeight: 'calc(100% - 30px)',
   overflowY: 'auto',
-  width: 200,
-  display: 'none', // Hide on mobile, will use drawer instead
-  [theme.breakpoints.up('md')]: {
-    display: 'block',
-  },
+  overflowX: 'hidden', // Prevent horizontal scrolling
+  width: 280, // Increased from 200px
+  maxWidth: '90%',
   boxShadow: theme.shadows[3],
-}));
-
-const MobileFab = styled(Fab)(({ theme }) => ({
-  position: 'absolute',
-  bottom: 20,
-  right: 20,
-  zIndex: 999,
-  [theme.breakpoints.up('md')]: {
-    display: 'none',
-  },
 }));
 
 const LegendBox = styled(Box)(({ theme }) => ({
@@ -90,22 +81,52 @@ const LegendBox = styled(Box)(({ theme }) => ({
   },
 }));
 
-const LegendToggle = styled(Button)(({ theme }) => ({
+const ControlButton = styled(Button)(({ theme }) => ({
   position: 'absolute',
-  bottom: 10,
-  left: 10,
   zIndex: 999,
+  color: theme.palette.getContrastText(
+    theme.palette.mode === 'dark' 
+      ? theme.palette.primary.dark 
+      : theme.palette.primary.main
+  ),
   backgroundColor:
     theme.palette.mode === 'dark'
-      ? alpha(theme.palette.background.paper, 0.8)
-      : 'rgba(255, 255, 255, 0.8)',
-  minWidth: 'auto',
-  padding: theme.spacing(0.5),
+      ? theme.palette.primary.dark
+      : theme.palette.primary.main,
+  '&:hover': {
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? theme.palette.primary.main
+        : theme.palette.primary.dark,
+  },
+  fontWeight: 'bold',
+  boxShadow: theme.shadows[2],
+}));
+
+const ZoomButton = styled(IconButton)(({ theme }) => ({
+  backgroundColor:
+    theme.palette.mode === 'dark'
+      ? alpha(theme.palette.background.paper, 0.7)
+      : 'rgba(255, 255, 255, 0.7)',
+  color: theme.palette.text.primary,
   '&:hover': {
     backgroundColor:
       theme.palette.mode === 'dark'
         ? alpha(theme.palette.background.paper, 0.9)
         : 'rgba(255, 255, 255, 0.9)',
+  },
+  margin: theme.spacing(0.5),
+}));
+
+const ZoomControls = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  bottom: 20,
+  right: 20,
+  zIndex: 999,
+  display: 'flex',
+  flexDirection: 'column',
+  [theme.breakpoints.down('sm')]: {
+    right: 10,
   },
 }));
 
@@ -122,7 +143,7 @@ interface MapVisualizationProps {
   };
 }
 
-// Função para formatar nomes de camadas
+// Función para formatar nomes de camadas
 const formatLayerName = (name: string): string => {
   if (name.startsWith('lote_')) {
     const lotNumber = name.split('_')[1];
@@ -194,7 +215,6 @@ const MapVisualization = ({
   visibleLayers,
   onToggleLayer,
   initialViewState = {
-    // enquadrar o Brasil
     longitude: -54.5,
     latitude: -14.5,
     zoom: 4,
@@ -207,40 +227,41 @@ const MapVisualization = ({
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showLegend, setShowLegend] = useState(!isMobile);
+  const [showLayers, setShowLayers] = useState(false); // New state for desktop layers panel
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
   const [popupAnchorEl, setPopupAnchorEl] = useState<HTMLElement | null>(null);
   
   // Estado para controlar se o mapa foi inicialmente carregado
   const [initialZoomDone, setInitialZoomDone] = useState(false);
 
- // Create custom icon using inline SVG
- useEffect(() => {
-  // Remove default icons
-  // @ts-ignore - _getIconUrl exists in the implementation but not in the type definitions
-  delete L.Icon.Default.prototype._getIconUrl;
+  // Create custom icon using inline SVG
+  useEffect(() => {
+    // Remove default icons
+    // @ts-ignore - _getIconUrl exists in the implementation but not in the type definitions
+    delete L.Icon.Default.prototype._getIconUrl;
 
-  // Create custom SVG icon for markers
-  const createSvgIcon = (color: string) => {
-    const primaryColor = color || theme.palette.primary.main;
-    
-    // Create a custom icon using SVG as data URL
-    const customIcon = L.divIcon({
-      html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36">
-              <path fill="${primaryColor}" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>`,
-      className: '',
-      iconSize: [36, 36],
-      iconAnchor: [18, 36],
-      popupAnchor: [0, -36]
-    });
-    
-    return customIcon;
-  };
+    // Create custom SVG icon for markers
+    const createSvgIcon = (color: string) => {
+      const primaryColor = color || theme.palette.primary.main;
+      
+      // Create a custom icon using SVG as data URL
+      const customIcon = L.divIcon({
+        html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36">
+                <path fill="${primaryColor}" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>`,
+        className: '',
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor: [0, -36]
+      });
+      
+      return customIcon;
+    };
 
-  // Set the custom icon as default
-  L.Marker.prototype.options.icon = createSvgIcon(theme.palette.primary.main);
-  
-}, [theme.palette.primary.main]);
+    // Set the custom icon as default
+    L.Marker.prototype.options.icon = createSvgIcon(theme.palette.primary.main);
+    
+  }, [theme.palette.primary.main]);
 
   // Memoized functions
   const toggleDrawer = useCallback(() => {
@@ -249,6 +270,23 @@ const MapVisualization = ({
 
   const toggleLegend = useCallback(() => {
     setShowLegend(prev => !prev);
+  }, []);
+
+  const toggleLayers = useCallback(() => {
+    setShowLayers(prev => !prev);
+  }, []);
+
+  // Zoom control functions
+  const handleZoomIn = useCallback(() => {
+    if (mapRef.current) {
+      mapRef.current.zoomIn();
+    }
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    if (mapRef.current) {
+      mapRef.current.zoomOut();
+    }
   }, []);
 
   // Function to fit map bounds to all GeoJSON data
@@ -323,7 +361,6 @@ const MapVisualization = ({
       : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   }, [isDarkMode]);
 
-
   // Memoize center coordinates
   const center = useMemo(
     () =>
@@ -343,9 +380,9 @@ const MapVisualization = ({
   }, [layers]);
 
   // Memoize drawer contents to prevent recreation on each render
-  const drawerContent = useMemo(
+  const layerControlContent = useMemo(
     () => (
-      <>
+      <Box sx={{ minWidth: isMobile ? 'auto' : 250 }}>
         <Box
           sx={{
             p: 2,
@@ -356,30 +393,23 @@ const MapVisualization = ({
         >
           <Typography variant="h6">Camadas do Mapa</Typography>
           <IconButton
-            onClick={toggleDrawer}
+            onClick={isMobile ? toggleDrawer : toggleLayers}
             aria-label="Fechar menu de camadas"
           >
             <CloseIcon />
           </IconButton>
         </Box>
         <Divider />
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: 2, maxHeight: '70vh', overflowY: 'auto', overflowX: 'hidden' }}>
           <LayerControl
             layers={formattedLayers}
             visibility={visibleLayers}
             onToggle={onToggleLayer}
           />
         </Box>
-        <Divider />
-        <Box sx={{ p: 2 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Legenda
-          </Typography>
-          <MapLegend items={legendItems} />
-        </Box>
-      </>
+      </Box>
     ),
-    [formattedLayers, visibleLayers, onToggleLayer, legendItems, toggleDrawer],
+    [formattedLayers, visibleLayers, onToggleLayer, isMobile, toggleDrawer, toggleLayers],
   );
 
   // Update map when the theme changes
@@ -417,6 +447,7 @@ const MapVisualization = ({
             duration: theme.transitions.duration.standard,
           },
         ),
+        overflow: 'hidden', // Prevent overflow
       }}
     >
       <MapContainerWrapper>
@@ -424,7 +455,7 @@ const MapVisualization = ({
           center={center}
           zoom={initialViewState.zoom}
           style={{ height: '100%', width: '100%' }}
-          zoomControl={false}
+          zoomControl={false} // Disable default zoom controls
           ref={mapRef}
           attributionControl={false}
           whenReady={() => {
@@ -452,9 +483,6 @@ const MapVisualization = ({
               ),
           )}
 
-          {/* Add Zoom Control in a better position for mobile */}
-          <ZoomControl position={isMobile ? 'bottomright' : 'topright'} />
-
           {/* Add attribution with proper styling */}
           <div
             style={{
@@ -473,25 +501,75 @@ const MapVisualization = ({
           </div>
         </MapContainer>
 
-        {/* Desktop controls */}
-        <ControlsContainer>
-          <LayerControl
-            layers={formattedLayers}
-            visibility={visibleLayers}
-            onToggle={onToggleLayer}
-          />
-        </ControlsContainer>
+        {/* Custom zoom controls */}
+        <ZoomControls>
+          <ZoomButton onClick={handleZoomIn} aria-label="Zoom in" size="small">
+            <AddIcon />
+          </ZoomButton>
+          <ZoomButton onClick={handleZoomOut} aria-label="Zoom out" size="small">
+            <RemoveIcon />
+          </ZoomButton>
+        </ZoomControls>
 
-        {/* Legend toggle button for mobile */}
+        {/* Desktop controls - Now toggleable */}
+        {!isMobile && showLayers && (
+          <DesktopControlsPanel>
+            {layerControlContent}
+          </DesktopControlsPanel>
+        )}
+
+        {/* Desktop toggle buttons */}
+        {!isMobile && (
+          <>
+            <ControlButton
+              onClick={toggleLayers}
+              startIcon={<LayersIcon />}
+              size="small"
+              variant="contained"
+              sx={{
+                top: 10,
+                right: 10,
+                py: 0.75,
+                px: 1.5,
+              }}
+            >
+              Camadas
+            </ControlButton>
+            
+            <ControlButton
+              onClick={toggleLegend}
+              startIcon={<InfoIcon />}
+              size="small"
+              variant="contained"
+              color="secondary"
+              sx={{
+                bottom: showLegend ? 'auto' : 10, // Move button up when legend is shown
+                top: showLegend ? 10 : 'auto',
+                left: 10,
+                py: 0.75,
+                px: 1.5,
+              }}
+            >
+              {showLegend ? 'Ocultar Legenda' : 'Mostrar Legenda'}
+            </ControlButton>
+          </>
+        )}
+
+        {/* Mobile toggle for legend */}
         {isMobile && (
-          <LegendToggle
+          <ControlButton
+            onClick={toggleLegend}
             startIcon={<InfoIcon />}
             size="small"
-            onClick={toggleLegend}
-            variant="outlined"
+            color="secondary"
+            sx={{
+              bottom: showLegend ? 'auto' : 10, // Move button up when legend is shown
+              top: showLegend ? 10 : 'auto',
+              left: 10,
+            }}
           >
             {showLegend ? 'Ocultar' : 'Legenda'}
-          </LegendToggle>
+          </ControlButton>
         )}
 
         {/* Legend positioned at bottom left */}
@@ -502,14 +580,22 @@ const MapVisualization = ({
         </Collapse>
 
         {/* Mobile layers button */}
-        <MobileFab
-          color="primary"
-          size="medium"
-          onClick={toggleDrawer}
-          aria-label="Show layers"
-        >
-          <LayersIcon />
-        </MobileFab>
+        {isMobile && (
+          <Fab
+            color="primary"
+            size="medium"
+            onClick={toggleDrawer}
+            aria-label="Show layers"
+            sx={{
+              position: 'absolute',
+              bottom: 20,
+              right: 70, // Move away from zoom controls
+              zIndex: 999,
+            }}
+          >
+            <LayersIcon />
+          </Fab>
+        )}
 
         {/* Mobile drawer for layer control */}
         <Drawer
@@ -526,7 +612,7 @@ const MapVisualization = ({
             },
           }}
         >
-          {drawerContent}
+          {layerControlContent}
         </Drawer>
         
         {/* Feature info popup */}

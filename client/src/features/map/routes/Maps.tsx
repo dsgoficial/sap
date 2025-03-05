@@ -16,7 +16,6 @@ import {
 } from '@/stores/mapStore';
 import { getLegendItems } from '../utils/mapStyles';
 
-
 export const Maps = () => {
   const { isLoading, isError, error } = useMapData();
 

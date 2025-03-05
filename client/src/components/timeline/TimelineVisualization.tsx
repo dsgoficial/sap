@@ -1,3 +1,4 @@
+// Path: components\timeline\TimelineVisualization.tsx
 import React from 'react';
 import {
   EnhancedTimeline,

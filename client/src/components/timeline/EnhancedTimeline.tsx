@@ -1,3 +1,4 @@
+// Path: components\timeline\EnhancedTimeline.tsx
 import React, { useRef, useEffect, useMemo, useCallback } from 'react';
 import { styled } from '@mui/material/styles';
 import { Box, Typography, Paper, useTheme, useMediaQuery } from '@mui/material';

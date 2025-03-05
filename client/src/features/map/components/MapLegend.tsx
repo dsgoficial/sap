@@ -8,7 +8,6 @@ interface MapLegendProps {
 
 const MapLegend = ({ items }: MapLegendProps) => {
   const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
 
   return (
     <Box>

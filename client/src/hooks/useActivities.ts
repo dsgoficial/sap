@@ -132,8 +132,9 @@ export const useActivities = () => {
   });
 
   // Helper functions
-  const handleStartActivity = useCallback(() => {
-    return startActivityMutation.mutateAsync();
+  const handleStartActivity = useCallback(async () => {
+    const response = await startActivityMutation.mutateAsync();
+    return response; // Return the full response to access the message
   }, [startActivityMutation]);
 
   const handleFinishActivity = useCallback(

@@ -8,6 +8,7 @@ import {
   Checkbox,
   Typography,
   useTheme,
+  Tooltip,
 } from '@mui/material';
 
 interface LayerInfo {
@@ -68,14 +69,21 @@ const LayerControl = ({ layers, visibility, onToggle }: LayerControlProps) => {
                   }}
                 />
               </ListItemIcon>
-              <ListItemText
-                primary={layer.name}
-                primaryTypographyProps={{
-                  variant: 'body2',
-                  noWrap: true,
-                  sx: { color: theme.palette.text.primary },
-                }}
-              />
+              <Tooltip title={layer.name} placement="top" arrow>
+                <ListItemText
+                  primary={layer.name}
+                  primaryTypographyProps={{
+                    variant: 'body2',
+                    noWrap: true,
+                    sx: { 
+                      color: theme.palette.text.primary,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      width: '100%',
+                    },
+                  }}
+                />
+              </Tooltip>
             </ListItemButton>
           </ListItem>
         ))}

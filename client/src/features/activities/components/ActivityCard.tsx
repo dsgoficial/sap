@@ -46,11 +46,15 @@ export const ActivityCard = () => {
 
   const handleStartActivity = async () => {
     try {
-      await startActivity();
-      enqueueSnackbar('Atividade iniciada com sucesso', { variant: 'success' });
+      const response = await startActivity();
+      // Use the message from the API response
+      enqueueSnackbar(response.message || 'Atividade iniciada com sucesso', { 
+        variant: 'success' 
+      });
       setShowStartDialog(false);
     } catch (error) {
       handleActivityError(error, 'Falha ao iniciar atividade');
+      setShowStartDialog(false);
     }
   };
 
@@ -58,23 +62,27 @@ export const ActivityCard = () => {
     if (!currentActivity?.id) return;
 
     try {
-      await finishActivity(currentActivity.id);
-      enqueueSnackbar('Atividade finalizada com sucesso', {
+      const response = await finishActivity(currentActivity.id);
+      enqueueSnackbar(response.message || 'Atividade finalizada com sucesso', {
         variant: 'success',
       });
       setShowFinishDialog(false);
     } catch (error) {
       handleActivityError(error, 'Falha ao finalizar atividade');
+      setShowFinishDialog(false);
     }
   };
 
   const handleReportError = async (errorData: ErrorReport) => {
     try {
-      await reportError(errorData);
-      enqueueSnackbar('Problema reportado com sucesso', { variant: 'success' });
+      const response = await reportError(errorData);
+      enqueueSnackbar(response.message || 'Problema reportado com sucesso', { 
+        variant: 'success' 
+      });
       setShowErrorDialog(false);
     } catch (error) {
       handleActivityError(error, 'Falha ao reportar problema');
+      setShowErrorDialog(false);
     }
   };
 
