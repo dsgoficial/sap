@@ -38,8 +38,16 @@ const createActivityService = (): ActivityService => {
           {},
         );
         return response.data;
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error starting activity:', error);
+        // Special case: treat 400 error as a success with a specific message
+        if (error.status === 400) {
+          return {
+            success: true,
+            message: 'Sem atividades disponíveis para iniciar',
+            dados: null,
+          };
+        }
         throw error;
       }
     },

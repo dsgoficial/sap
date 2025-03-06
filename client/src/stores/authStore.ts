@@ -28,13 +28,18 @@ const tokenExpiryStorage = {
   remove: () => localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY),
 };
 
-// Function to check if token is expired
+// Function to check if token is expire
 export const isTokenExpired = (): boolean => {
-  const expiry = tokenExpiryStorage.get();
-  if (!expiry) return false; // No expiry time means we don't know, assume not expired
+  try {
+    const expiry = tokenExpiryStorage.get();
+    if (!expiry) return false; // No expiry time means we don't know, assume not expired
 
-  const expiryTime = new Date(expiry);
-  return expiryTime <= new Date();
+    const expiryTime = new Date(expiry);
+    return expiryTime <= new Date();
+  } catch (error) {
+    console.error('Error checking token expiry:', error);
+    return false; // In case of any error, assume token is not expired
+  }
 };
 
 // Store user data to localStorage for legacy compatibility
@@ -160,14 +165,18 @@ export const useAuthStore = create<AuthState>()(
       // Add an onRehydrate callback to check token expiration when store loads
       onRehydrateStorage: () => state => {
         // Check token expiration on rehydration
-        if (state?.isAuthenticated && isTokenExpired()) {
-          // Clear the store if token is expired
-          clearUserDataFromLocalStorage();
-          // This will update the state after rehydration
-          setTimeout(() => {
-            const authStore = useAuthStore.getState();
-            authStore.logout();
-          }, 0);
+        try {
+          if (state?.isAuthenticated && isTokenExpired()) {
+            // Clear the store if token is expired
+            clearUserDataFromLocalStorage();
+            // This will update the state after rehydration
+            setTimeout(() => {
+              const authStore = useAuthStore.getState();
+              authStore.logout();
+            }, 0);
+          }
+        } catch (error) {
+          console.error('Error in rehydration:', error);
         }
       },
     },

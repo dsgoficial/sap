@@ -95,6 +95,8 @@ export const useLotData = () => {
 
       return result;
     },
+    refetchOnWindowFocus: false,
+    refetchInterval: 300000,
   });
 
   return {

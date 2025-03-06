@@ -6,7 +6,7 @@ export const Activity = () => {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h4" align="center" gutterBottom>
-        Sistema de Apoio à Produção
+        Atividades do Usuário
       </Typography>
 
       <Box sx={{ mt: 4 }}>

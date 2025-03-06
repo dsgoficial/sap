@@ -88,7 +88,7 @@ export const usePITData = () => {
               const lotData = projectData[projectKey][lotKey];
               const meta = lotData.meta || 0;
               const count = lotData.months.reduce(
-                (sum, value) => sum + value,
+                (sum, value) => sum + +value,
                 0,
               );
               const percent =

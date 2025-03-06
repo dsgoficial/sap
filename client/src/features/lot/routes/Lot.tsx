@@ -1,4 +1,5 @@
 // Path: features\lot\routes\Lot.tsx
+import { useMemo } from 'react';
 import {
   Container,
   Box,
@@ -10,7 +11,6 @@ import Page from '@/components/Page/Page';
 import { useLotData, LotViewModel } from '@/hooks/useLot';
 import { Table } from '@/components/ui/Table';
 
-// Month definitions with correct types
 const MONTHS = [
   { label: 'Jan', id: 'jan' },
   { label: 'Fev', id: 'fev' },
@@ -27,9 +27,30 @@ const MONTHS = [
 ];
 
 export const Lot = () => {
-  // Get data from the hook - now properly typed
   const { data, isLoading, error } = useLotData();
 
+  const columns = useMemo(
+    () => [
+      {
+        id: 'subphase',
+        label: 'Subfase',
+        align: 'left' as const,
+        sortable: true,
+        priority: 5,
+      },
+      ...MONTHS.map(m => ({
+        id: m.id,
+        label: m.label,
+        align: 'center' as const,
+        minWidth: 50,
+        maxWidth: 70,
+        priority: 3,
+      })),
+    ],
+    [],
+  );
+
+  // Loading state
   if (isLoading) {
     return (
       <Page title="Acompanhamento Lote">
@@ -47,6 +68,7 @@ export const Lot = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <Page title="Acompanhamento Lote">
@@ -71,38 +93,25 @@ export const Lot = () => {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            gap: 2,
+            gap: 3,
             width: '100%',
           }}
         >
           {data &&
             data.map((item: LotViewModel, idx: number) => (
               <Box
-                key={idx}
+                key={`${item.lot}-${idx}`}
                 sx={{
                   width: '100%',
                 }}
               >
                 <Table
                   title={item.lot}
-                  columns={[
-                    {
-                      id: 'subphase',
-                      label: 'Subfase',
-                      align: 'left',
-                      sortable: true,
-                    },
-                    ...MONTHS.map(m => ({
-                      id: m.id,
-                      label: m.label,
-                      align: 'center' as 'center',
-                      minWidth: 50,
-                      maxWidth: 70,
-                    })),
-                  ]}
+                  columns={columns}
                   rows={item.rows}
                   rowKey={row => `${item.lot}-${row.subphase}`}
                   searchPlaceholder="Buscar subfase..."
+                  stickyHeader={true}
                   localization={{
                     emptyDataMessage: 'Nenhum dado de lote disponível.',
                     searchPlaceholder: 'Buscar subfase...',
@@ -119,7 +128,7 @@ export const Lot = () => {
               </Box>
             ))}
 
-          {data && data.length === 0 && (
+          {(!data || data.length === 0) && (
             <Alert severity="info">Nenhum dado de lote disponível.</Alert>
           )}
         </Box>

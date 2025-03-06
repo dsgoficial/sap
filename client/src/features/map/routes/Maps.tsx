@@ -1,4 +1,5 @@
 // Path: features\map\routes\Maps.tsx
+import React, { useMemo, useCallback } from 'react';
 import {
   Container,
   Box,
@@ -7,27 +8,54 @@ import {
   CircularProgress,
 } from '@mui/material';
 import Page from '@/components/Page/Page';
-import { useMapData, getLegendItems } from '@/hooks/useMap';
+import { useMapData } from '@/hooks/useMap';
 import MapVisualization from '../components/MapVisualization';
 import {
   useMapStore,
   selectLayers,
   selectVisibleLayers,
 } from '@/stores/mapStore';
+import { getLegendItems } from '../utils/mapStyles';
 
 export const Maps = () => {
-  // Use the hook for data fetching and loading states
   const { isLoading, isError, error } = useMapData();
 
-  // Use selectors for better performance
   const layers = useMapStore(selectLayers);
   const visibleLayers = useMapStore(selectVisibleLayers);
   const { toggleLayerVisibility } = useMapStore();
 
+  const handleToggleLayer = useCallback(
+    (layerId: string) => {
+      toggleLayerVisibility(layerId);
+    },
+    [toggleLayerVisibility],
+  );
+
+  // Memoize legend items to prevent recreation on each render
+  const legendItems = useMemo(() => getLegendItems(), []);
+
+  // Memoize initial view state to prevent unnecessary re-renders
+  const initialViewState = useMemo(
+    () => ({
+      longitude: -54.5,
+      latitude: -14.5,
+      zoom: 4,
+    }),
+    [],
+  );
+
   if (isLoading) {
     return (
       <Page title="Mapas de Acompanhamento">
-        <Container maxWidth="xl" disableGutters>
+        <Container
+          maxWidth="xl"
+          disableGutters
+          sx={{
+            height: 'auto',
+            overflow: 'hidden',
+            px: { xs: 1, sm: 2, md: 3 },
+          }}
+        >
           <Box
             display="flex"
             justifyContent="center"
@@ -45,7 +73,13 @@ export const Maps = () => {
   if (isError) {
     return (
       <Page title="Mapas de Acompanhamento">
-        <Container maxWidth="xl" disableGutters>
+        <Container
+          maxWidth="xl"
+          disableGutters
+          sx={{
+            px: { xs: 1, sm: 2, md: 3 },
+          }}
+        >
           <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
             Erro ao carregar dados de mapas:{' '}
             {error?.message || 'Tente novamente mais tarde.'}
@@ -59,7 +93,13 @@ export const Maps = () => {
   if (!layers || layers.length === 0) {
     return (
       <Page title="Mapas de Acompanhamento">
-        <Container maxWidth="xl" disableGutters>
+        <Container
+          maxWidth="xl"
+          disableGutters
+          sx={{
+            px: { xs: 1, sm: 2, md: 3 },
+          }}
+        >
           <Typography variant="h4" sx={{ mb: 3 }}>
             Mapas de Acompanhamento
           </Typography>
@@ -71,30 +111,42 @@ export const Maps = () => {
     );
   }
 
-  const legendItems = getLegendItems();
-
   return (
     <Page title="Mapas de Acompanhamento">
-      <Container maxWidth="xl" disableGutters>
+      <Container
+        maxWidth={false}
+        disableGutters
+        sx={{
+          px: { xs: 1, sm: 2, md: 3 },
+          height: 'auto',
+          overflow: 'hidden',
+        }}
+      >
         <Typography variant="h4" sx={{ mb: 3 }}>
           Mapas de Acompanhamento
         </Typography>
 
-        <Box sx={{ width: '100%' }}>
+        <Box
+          sx={{
+            width: '100%',
+            mb: 3,
+            height: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
           <MapVisualization
-            title="Visão Geral"
             layers={layers}
             legendItems={legendItems}
             visibleLayers={visibleLayers}
-            onToggleLayer={toggleLayerVisibility}
-            initialViewState={{
-              longitude: -52.956841,
-              latitude: -15.415179,
-              zoom: 3.65,
-            }}
+            onToggleLayer={handleToggleLayer}
+            initialViewState={initialViewState}
           />
         </Box>
       </Container>
     </Page>
   );
 };
+
+export default React.memo(Maps);

@@ -9,7 +9,6 @@ import {
 } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import { UserRole } from '../types/auth';
-import { isTokenExpired } from '../stores/authStore';
 import { ErrorBoundaryRoute } from './ErrorBoundaryRoute';
 
 // Layouts
@@ -91,29 +90,53 @@ const LoadingFallback = () => (
   </Box>
 );
 
+// Safely check if token is expired - moved inline to prevent import issues
+const checkTokenExpiration = (): boolean => {
+  try {
+    const tokenExpiry = localStorage.getItem('@sap_web-Token-Expiry');
+    if (!tokenExpiry) return false;
+
+    const expiryTime = new Date(tokenExpiry);
+    return expiryTime <= new Date();
+  } catch (error) {
+    console.error('Error checking token expiry:', error);
+    return false;
+  }
+};
+
 // Auth loaders for protected routes
 const authLoader = () => {
-  const token = localStorage.getItem('@sap_web-Token');
-  const isAuthenticated = !!token && !isTokenExpired();
+  try {
+    const token = localStorage.getItem('@sap_web-Token');
+    const isAuthenticated = !!token && !checkTokenExpiration();
 
-  if (!isAuthenticated) {
-    // Redirect to login and remember the intended destination
-    const currentPath = window.location.pathname;
-    return redirect(`/login?from=${encodeURIComponent(currentPath)}`);
+    if (!isAuthenticated) {
+      // Redirect to login and remember the intended destination
+      const currentPath = window.location.pathname;
+      return redirect(`/login?from=${encodeURIComponent(currentPath)}`);
+    }
+
+    return null; // Continue to the route if authenticated
+  } catch (error) {
+    console.error('Error in auth loader:', error);
+    return redirect('/login');
   }
-
-  return null; // Continue to the route if authenticated
 };
 
 // Admin role checker
 const adminLoader = () => {
-  const role = localStorage.getItem('@sap_web-User-Authorization');
+  try {
+    const role = localStorage.getItem('@sap_web-User-Authorization');
 
-  if (role !== UserRole.ADMIN) {
+    if (role !== UserRole.ADMIN) {
+      return redirect('/unauthorized');
+    }
+
+    return null; // Continue if admin
+  } catch (error) {
+    console.error('Error in admin loader:', error);
     return redirect('/unauthorized');
   }
-
-  return null; // Continue if admin
 };
 
 // Helper for layout with scroll restoration
@@ -279,6 +302,6 @@ export default router;
 
 // Export a function to perform navigation from outside React components
 export const navigateToLogin = () => {
-  // This can be called from non-React contexts
-  window.location.href = '/login';
+  // Use the router's navigate function with replace:true to prevent back navigation to the secure page
+  router.navigate('/login', { replace: true });
 };

@@ -7,6 +7,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Label,
+  Sector,
+  TooltipProps,
 } from 'recharts';
 import { Typography, Box, Paper, useTheme, useMediaQuery } from '@mui/material';
 import { useChartColors } from './ChartThemeConfig';
@@ -25,6 +28,36 @@ interface PieChartProps {
   showLabels?: boolean;
 }
 
+// Custom tooltip component with proper dark mode handling
+const CustomTooltip = ({
+  active,
+  payload,
+}: TooltipProps<number, string> & { labelColors: string }) => {
+  if (!active || !payload || payload.length === 0) return null;
+
+  return (
+    <div
+      style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: '8px 12px',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+      }}
+    >
+      {payload.map((entry, index) => (
+        <div
+          key={`item-${index}`}
+          style={{ color: '#ffffff', margin: '2px 0' }}
+        >
+          <span style={{ display: 'inline-block', marginRight: '8px' }}>
+            {entry.name}: {entry.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const PieChart = React.memo(
   ({
     title,
@@ -37,6 +70,7 @@ export const PieChart = React.memo(
     const chartColors = useChartColors();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+    const isDarkMode = theme.palette.mode === 'dark';
 
     // Calculate responsive height - memoized
     const responsiveHeight = useMemo(
@@ -49,6 +83,13 @@ export const PieChart = React.memo(
       [isMobile, isTablet, height],
     );
 
+    // Check if a single segment takes up almost all the chart (>95%)
+    const hasDominantSegment = useMemo(() => {
+      if (data.length === 0) return false;
+      const total = data.reduce((sum, item) => sum + item.value, 0);
+      return data.some(item => item.value / total > 0.95);
+    }, [data]);
+
     // Transform data for Recharts format - memoized
     const chartData = useMemo(
       () =>
@@ -59,13 +100,18 @@ export const PieChart = React.memo(
       [data],
     );
 
-    // Custom label renderer - simplified for mobile
+    // Custom label renderer - simplified for mobile and handles 100% case
     const renderCustomizedLabel = useCallback(
       ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
         if (!showLabels) return null;
 
         // Don't show labels on mobile if too small
         if (isMobile && percent < 0.1) return null;
+
+        // If we have a dominant segment, use a centered label instead of positioned labels
+        if (hasDominantSegment && percent > 0.95) {
+          return null; // We'll use a centered <Label> component instead
+        }
 
         const RADIAN = Math.PI / 180;
         const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -87,8 +133,27 @@ export const PieChart = React.memo(
           </text>
         );
       },
-      [showLabels, isMobile],
+      [showLabels, isMobile, hasDominantSegment],
     );
+
+    // Active shape for tooltip hover
+    const renderActiveShape = (props: any) => {
+      const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } =
+        props;
+      return (
+        <g>
+          <Sector
+            cx={cx}
+            cy={cy}
+            innerRadius={innerRadius}
+            outerRadius={outerRadius + 6}
+            startAngle={startAngle}
+            endAngle={endAngle}
+            fill={fill}
+          />
+        </g>
+      );
+    };
 
     // Calculate optimal outer radius based on container size - memoized
     const outerRadius = useMemo(() => {
@@ -106,20 +171,6 @@ export const PieChart = React.memo(
           chartColors.seriesColors[index % chartColors.seriesColors.length],
       }));
     }, [data, chartColors.seriesColors]);
-
-    // Memoize tooltip and legend styles for consistent rendering
-    const tooltipStyle = useMemo(
-      () => ({
-        wrapperStyle: { fontSize: isMobile ? 10 : 12 },
-        contentStyle: {
-          padding: isMobile ? 4 : 8,
-          backgroundColor: chartColors.paper,
-          color: chartColors.textPrimary,
-          border: `1px solid ${chartColors.grid}`,
-        },
-      }),
-      [isMobile, chartColors],
-    );
 
     // Legend style with proper type values
     const legendStyle = useMemo(
@@ -140,14 +191,13 @@ export const PieChart = React.memo(
       [isMobile, chartColors],
     );
 
-    // Tooltip formatters - memoized
-    const tooltipFormatters = useMemo(
-      () => ({
-        formatter: (value: number) => [`${value}`, 'Valor'],
-        labelFormatter: (name: string) => `${name}`,
-      }),
-      [],
-    );
+    // Find the dominant segment if it exists
+    const dominantSegment = useMemo(() => {
+      if (!hasDominantSegment || data.length === 0) return null;
+
+      const total = data.reduce((sum, item) => sum + item.value, 0);
+      return data.find(item => item.value / total > 0.95);
+    }, [data, hasDominantSegment]);
 
     return (
       <Paper
@@ -177,13 +227,51 @@ export const PieChart = React.memo(
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                labelLine={showLabels && !isMobile}
-                label={renderCustomizedLabel}
+                labelLine={showLabels && !isMobile && !hasDominantSegment}
+                label={hasDominantSegment ? false : renderCustomizedLabel}
                 outerRadius={outerRadius}
+                activeShape={renderActiveShape}
+                nameKey="name"
               >
                 {chartData.map((_entry, index) => (
                   <Cell key={`cell-${index}`} fill={themedData[index].color} />
                 ))}
+
+                {/* Special centered label for dominant segment case */}
+                {hasDominantSegment && dominantSegment && (
+                  <Label
+                    position="center"
+                    content={props => {
+                      const { viewBox } = props;
+                      const { cx, cy } = viewBox as { cx: number; cy: number };
+                      return (
+                        <g>
+                          <text
+                            x={cx}
+                            y={cy - 15}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fontSize={16}
+                            fill={theme.palette.text.primary}
+                          >
+                            {dominantSegment.label}
+                          </text>
+                          <text
+                            x={cx}
+                            y={cy + 15}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fontSize={18}
+                            fontWeight="bold"
+                            fill={theme.palette.text.primary}
+                          >
+                            {`100%`}
+                          </text>
+                        </g>
+                      );
+                    }}
+                  />
+                )}
               </Pie>
               {showLegend && (
                 <Legend
@@ -197,10 +285,11 @@ export const PieChart = React.memo(
                 />
               )}
               <Tooltip
-                wrapperStyle={tooltipStyle.wrapperStyle}
-                contentStyle={tooltipStyle.contentStyle}
-                formatter={tooltipFormatters.formatter}
-                labelFormatter={tooltipFormatters.labelFormatter}
+                content={
+                  <CustomTooltip
+                    labelColors={isDarkMode ? '#ffffff' : '#000000'}
+                  />
+                }
               />
             </RechartsPie>
           </ResponsiveContainer>
@@ -210,5 +299,4 @@ export const PieChart = React.memo(
   },
 );
 
-// Add display name for debugging
 PieChart.displayName = 'PieChart';

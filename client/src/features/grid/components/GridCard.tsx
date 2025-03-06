@@ -1,13 +1,6 @@
 // Path: features\grid\components\GridCard.tsx
 import { useState, useMemo } from 'react';
-import {
-  Typography,
-  CardContent,
-  Card,
-  Box,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
+import { Typography, Card, Box, useTheme } from '@mui/material';
 import { Grid } from './Grid';
 import { GridData, GridItem } from '@/types/grid';
 import { formatDate } from '@/utils/formatters';
@@ -22,124 +15,232 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
     null,
   );
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
-  const { countTotal, progressPercentage } = useMemo(() => {
+  // Calculate progress percentage
+  const progressPercentage = useMemo(() => {
     const countTotal = grid.grade.length;
     const countVisited = grid.grade.filter(item => item.visited).length;
     const progressPercentage =
       countTotal > 0 ? ((countVisited / countTotal) * 100).toFixed(2) : '0';
-    return { countTotal, progressPercentage };
+    return progressPercentage;
   }, [grid.grade]);
 
-  // Calculate responsive grid size
-  const gridSize = useMemo(() => {
-    if (isMobile) return { width: '100%', height: 200 };
-    if (isTablet) return { width: 220, height: 220 };
-    return { width: 250, height: 250 };
-  }, [isMobile, isTablet]);
+  // Format project information
+  const projectInfo = useMemo(() => grid.projeto || '', [grid]);
+  const lotInfo = useMemo(() => grid.lote || '', [grid]);
 
-  // Format display info to prevent overflow on small screens
-  const gridInfo = useMemo(() => {
-    return [
-      formatDate(grid.data_inicio),
-      grid.usuario,
-      `${grid.projeto || '-'}-${grid.lote || '-'}`,
-      `${grid.fase || '-'}-${grid.bloco || '-'}`,
-      `${grid.subfase || '-'}-${grid.etapa || '-'}`,
-    ];
-  }, [grid]);
+  const formatTimestamp = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+      // Parse the date, handling common UTC formats that might lack a timezone indicator
+      let date;
+
+      // If the dateString already has a timezone indicator, use it as is
+      if (
+        dateString.includes('Z') ||
+        dateString.includes('+') ||
+        dateString.match(/\d-\d{2}:\d{2}$/)
+      ) {
+        date = new Date(dateString);
+      } else {
+        // If it doesn't have a timezone indicator, assume it's UTC
+        if (dateString.includes('T')) {
+          // ISO format without timezone
+          date = new Date(dateString + 'Z');
+        } else if (dateString.includes(' ') && dateString.includes(':')) {
+          // "YYYY-MM-DD HH:MM:SS" format
+          date = new Date(dateString.replace(' ', 'T') + 'Z');
+        } else {
+          // Fallback
+          date = new Date(dateString);
+        }
+      }
+
+      // Format using locale string to convert to user's timezone
+      return date.toLocaleString('pt-BR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
+  };
+
+  // Card dimensions
+  const CARD_WIDTH = 380;
+  const CARD_HEIGHT = 480;
 
   return (
     <Card
+      elevation={3}
       sx={{
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        margin: 1,
         display: 'flex',
         flexDirection: 'column',
-        gap: { xs: 1, sm: 2, md: 3 },
-        padding: { xs: '4px', sm: '5px' },
-        width: { xs: '100%', sm: 'auto' },
-        maxWidth: '100%',
+        overflow: 'hidden',
+        bgcolor: theme.palette.background.paper,
+        transition: theme.transitions.create(
+          ['background-color', 'box-shadow'],
+          {
+            duration: theme.transitions.duration.standard,
+          },
+        ),
       }}
     >
-      <CardContent
+      {/* Header section */}
+      <Box
         sx={{
-          width: '100%',
-          padding: '0px',
+          p: 1.5,
+          borderBottom: `1px solid ${theme.palette.divider}`,
           display: 'flex',
           flexDirection: 'column',
+          justifyContent: 'center',
           alignItems: 'center',
-          height: 'auto',
-          minHeight: { xs: 20, sm: 30 },
         }}
       >
-        {countTotal > 0 && (
-          <Typography variant={isMobile ? 'body2' : 'body1'}>
-            {`${progressPercentage}%`}
-          </Typography>
-        )}
-
-        <Typography variant={isMobile ? 'caption' : 'body2'} noWrap>
-          {currentMouseover && formatDate(currentMouseover.data_atualizacao)}
+        <Typography
+          variant="subtitle1"
+          align="center"
+          sx={{
+            fontWeight: 'medium',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            lineHeight: 1.3,
+          }}
+        >
+          {projectInfo}
         </Typography>
-      </CardContent>
 
-      <CardContent
+        <Typography
+          variant="subtitle2"
+          align="center"
+          sx={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            lineHeight: 1.3,
+          }}
+        >
+          {lotInfo}
+        </Typography>
+      </Box>
+
+      {/* Date display area */}
+      <Box
         sx={{
+          py: 0.5,
+          px: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          paddingBottom: '0px',
-          width: '100%',
-          minHeight: gridSize.height,
-          padding: { xs: 1, sm: 2 },
+          bgcolor: theme.palette.action.hover,
         }}
       >
-        {countTotal > 0 && (
-          <Box
-            sx={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <Grid
-              id={id.toString()}
-              data={grid}
-              onItemHover={item => setCurrentMouseover(item)}
-            />
-          </Box>
-        )}
-      </CardContent>
+        <Typography variant="caption">
+          {currentMouseover?.data_atualizacao
+            ? `Atualização: ${formatTimestamp(currentMouseover.data_atualizacao)}`
+            : 'Passe o mouse sobre as células'}
+        </Typography>
+      </Box>
 
-      <CardContent
+      {/* Grid visualization */}
+      <Box
         sx={{
-          width: '100%',
-          padding: '0px',
+          flexGrow: 1,
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 250,
+        }}
+      >
+        <Grid
+          id={id.toString()}
+          data={grid}
+          onItemHover={setCurrentMouseover}
+        />
+      </Box>
+
+      {/* Footer section */}
+      <Box
+        sx={{
+          pt: 1,
+          px: 1.5,
+          pb: 1.5,
+          borderTop: `1px solid ${theme.palette.divider}`,
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          gap: { xs: 0.5, sm: 1 },
+          gap: 0.5,
         }}
       >
-        {gridInfo.map((label, idx) => (
+        {/* Progress */}
+        <Typography
+          variant="body2"
+          align="center"
+          sx={{ fontWeight: 'medium' }}
+        >
+          {`Progresso: ${progressPercentage}%`}
+        </Typography>
+
+        {/* Operator */}
+        <Typography variant="body2" align="center" sx={{ mb: 0.5 }}>
+          {`Operador: ${grid.usuario || '-'}`}
+        </Typography>
+
+        {/* Simplified additional info with ellipsis */}
+        <Typography
+          variant="caption"
+          align="center"
+          sx={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {`${grid.fase || '-'} - ${grid.bloco || '-'}`}
+        </Typography>
+
+        <Typography
+          variant="caption"
+          align="center"
+          sx={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {`${grid.subfase || '-'} - ${grid.etapa || '-'}`}
+        </Typography>
+
+        {/* Start date */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <Typography
-            key={idx}
-            variant={isMobile ? 'caption' : 'body2'}
-            sx={{
-              textAlign: 'center',
-              maxWidth: '100%',
-              px: 1,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
+            variant="caption"
+            component="span"
+            sx={{ fontWeight: 'medium', mr: 0.5 }}
           >
-            {label}
+            Data de início:
           </Typography>
-        ))}
-      </CardContent>
+          <Typography variant="caption" component="span">
+            {formatDate(grid.data_inicio)}
+          </Typography>
+        </Box>
+      </Box>
     </Card>
   );
 };

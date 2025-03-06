@@ -15,7 +15,6 @@ import {
 } from '@/lib/queryClient';
 import { ApiResponse } from '@/types/api';
 
-// Define query keys
 const QUERY_KEYS = {
   MAP_VIEWS: createQueryKey('mapViews'),
   LOT_GEOJSON: (lotNames: string[]) =>
@@ -23,11 +22,9 @@ const QUERY_KEYS = {
 };
 
 export const useMapData = () => {
-  // Use selectors for better performance
   const layers = useMapStore(selectLayers);
   const visibleLayers = useMapStore(selectVisibleLayers);
 
-  // Get actions from the store - removed unused setInitialVisibility
   const { setLayers } = useMapStore();
 
   // Get available views
@@ -79,7 +76,7 @@ export const useMapData = () => {
           if (data?.dados?.length > 0 && data.dados[0]?.geojson) {
             newLayers.push({
               id: lotViews[index].nome,
-              name: lotViews[index].nome,
+              name: lotViews[index].lote,
               geojson: data.dados[0].geojson,
               visible: true,
             });
@@ -124,59 +121,4 @@ export const useMapData = () => {
         : null,
     isSuccess: viewsQuery.isSuccess && geoJSONQuery.isSuccess,
   };
-};
-
-// Keep this function as it's used by MapVisualization
-export const getLegendItems = (): {
-  label: string;
-  color: string;
-  border: boolean;
-}[] => {
-  return [
-    {
-      label: 'Preparo não iniciada',
-      color: 'rgb(175,141,195)', // preparo
-      border: false,
-    },
-    {
-      label: 'Preparo em execução',
-      color: 'rgb(175,141,195)', // preparo
-      border: true,
-    },
-    {
-      label: 'Extração não iniciada',
-      color: 'rgb(252,141,89)', // extracao
-      border: false,
-    },
-    {
-      label: 'Extração em execução',
-      color: 'rgb(252,141,89)', // extracao
-      border: true,
-    },
-    {
-      label: 'Validação não iniciada',
-      color: 'rgb(255,255,191)', // validacao
-      border: false,
-    },
-    {
-      label: 'Validação em execução',
-      color: 'rgb(255,255,191)', // validacao
-      border: true,
-    },
-    {
-      label: 'Disseminação não iniciada',
-      color: 'rgb(145,207,96)', // disseminacao
-      border: false,
-    },
-    {
-      label: 'Disseminação em execução',
-      color: 'rgb(145,207,96)', // disseminacao
-      border: true,
-    },
-    {
-      label: 'Concluído',
-      color: 'rgb(26,152,80)', // concluido
-      border: false,
-    },
-  ];
 };

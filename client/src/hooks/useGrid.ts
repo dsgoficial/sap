@@ -15,7 +15,6 @@ const QUERY_KEYS = {
 };
 
 export const useGridStatistics = () => {
-  // Fixed type parameters: TQueryFnData, TError, TData
   // TData is the type returned AFTER select function transforms the data
   const query = useQuery<ApiResponse<GridData[]>, unknown, GridData[]>({
     queryKey: QUERY_KEYS.GRID_STATISTICS,

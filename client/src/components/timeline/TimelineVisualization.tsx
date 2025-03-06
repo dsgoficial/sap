@@ -54,7 +54,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
         return {
           startDate,
           endDate,
-          status,
+          status, // Keep status as is - the EnhancedTimeline now handles both string and number formats
           label: `${startDateStr} - ${endDateStr}`,
         };
       },

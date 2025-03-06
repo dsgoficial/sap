@@ -8,8 +8,8 @@ import { select, scaleTime, axisTop, timeFormat, timeMonth } from 'd3';
 export interface TimelineItem {
   startDate: Date;
   endDate: Date;
-  status: string; // "1" for available, "0" for unavailable
-  label?: string; // Optional label for the tooltip
+  status: string | number;
+  label?: string;
   visited?: boolean;
 }
 
@@ -56,21 +56,33 @@ const TimelineContainer = styled(Box)(({ theme }) => ({
 }));
 
 const TimelineTooltip = styled('div')(({ theme }) => ({
-  position: 'fixed', // Changed from absolute to fixed for better positioning
+  position: 'fixed',
   background: theme.palette.background.paper,
   padding: '6px 10px',
   borderRadius: '4px',
   boxShadow: theme.shadows[1],
   pointerEvents: 'none',
   opacity: 0,
-  zIndex: 9999, // Increased z-index to ensure visibility
+  zIndex: 9999,
   fontSize: '12px',
   maxWidth: '200px',
   border: `1px solid ${theme.palette.divider}`,
   whiteSpace: 'nowrap',
-  transform: 'translate(-50%, -100%)', // Center horizontally and position above
+  transform: 'translate(-50%, -100%)',
   '& .tooltip-date-range': {
     fontWeight: 'medium',
+    marginBottom: '4px',
+  },
+  '& .tooltip-status': {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  '& .status-indicator': {
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    display: 'inline-block',
+    marginRight: '5px',
   },
   [theme.breakpoints.down('sm')]: {
     padding: '4px 8px',
@@ -101,12 +113,12 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
 
     // Constants for rendering - responsive adjustments
     const CONSTANTS = useMemo(() => {
-      const AXIS_SPACING = 10; // Space between x-axis and first row
+      const AXIS_SPACING = 10;
       const ROW_HEIGHT = isMobile ? 20 : 24;
       const ROW_PADDING = isMobile ? 8 : 12;
 
       const MARGIN = {
-        top: isMobile ? 40 : 50, // Increased top margin
+        top: isMobile ? 40 : 50,
         right: isMobile ? 10 : 20,
         bottom: isMobile ? 50 : 100,
         left:
@@ -182,16 +194,34 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
       });
     }, []);
 
+    // Memoize the bar styles to prevent recalculation
+    const barStyles = useMemo(() => {
+      return {
+        available: '#7FB77E', // Custom green
+        unavailable: '#FF5C8D', // Custom pink-red
+      };
+    }, []);
+
     // Memoize tooltip handlers to prevent recreating on each render
     const tooltipHandlers = useMemo(() => {
       return {
         show: (event: MouseEvent, d: TimelineItem) => {
           if (!tooltipRef.current) return;
 
+          const isActive = d.status === '1' || d.status === 1;
+          const statusText = isActive ? 'Ativo' : 'Inativo';
+          const statusColor = isActive
+            ? barStyles.available
+            : barStyles.unavailable;
+
           const tooltip = select(tooltipRef.current);
           tooltip.html(`
-          <div class="tooltip-date-range">${formatDate(d.startDate)} - ${formatDate(d.endDate)}</div>
-        `);
+            <div class="tooltip-date-range">${formatDate(d.startDate)} - ${formatDate(d.endDate)}</div>
+            <div class="tooltip-status">
+              <span class="status-indicator" style="background-color: ${statusColor}"></span>
+              <span>Status: ${statusText}</span>
+            </div>
+          `);
 
           tooltip
             .style('left', `${event.pageX}px`)
@@ -213,10 +243,20 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
           event.preventDefault();
           if (!tooltipRef.current) return;
 
+          const isActive = d.status === '1' || d.status === 1;
+          const statusText = isActive ? 'Ativo' : 'Inativo';
+          const statusColor = isActive
+            ? barStyles.available
+            : barStyles.unavailable;
+
           const tooltip = select(tooltipRef.current);
           tooltip.html(`
-          <div class="tooltip-date-range">${formatDate(d.startDate)} - ${formatDate(d.endDate)}</div>
-        `);
+            <div class="tooltip-date-range">${formatDate(d.startDate)} - ${formatDate(d.endDate)}</div>
+            <div class="tooltip-status">
+              <span class="status-indicator" style="background-color: ${statusColor}"></span>
+              <span>Status: ${statusText}</span>
+            </div>
+          `);
 
           const touchY = event.touches[0].pageY;
           const touchX = event.touches[0].pageX;
@@ -230,15 +270,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
           }, 2000);
         },
       };
-    }, [formatDate]);
-
-    // Memoize the bar styles to prevent recalculation
-    const barStyles = useMemo(() => {
-      return {
-        available: '#7FB77E', // Custom green
-        unavailable: '#FF5C8D', // Custom pink-red
-      };
-    }, []);
+    }, [formatDate, barStyles]);
 
     // Main render function using D3
     useEffect(() => {
@@ -342,9 +374,12 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
           .attr('y', 0)
           .attr('width', d => Math.max(x(d.endDate) - x(d.startDate), 4))
           .attr('height', ROW_HEIGHT)
-          .attr('fill', d =>
-            d.status === '1' ? barStyles.available : barStyles.unavailable,
-          )
+          .attr('fill', d => {
+            const statusValue = d.status;
+            return statusValue === '1' || statusValue === 1
+              ? barStyles.available
+              : barStyles.unavailable;
+          })
           .attr('rx', 1)
           .attr('ry', 1)
           .style('cursor', 'pointer')
@@ -467,5 +502,4 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
   },
 );
 
-// Adding display name for debugging
 EnhancedTimeline.displayName = 'EnhancedTimeline';

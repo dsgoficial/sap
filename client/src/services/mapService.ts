@@ -8,7 +8,7 @@ import { ApiResponse } from '../types/api';
 export const getViews = async () => {
   try {
     const response = await apiClient.get<ApiResponse<any>>(
-      '/api/producao/views',
+      '/api/gerencia/view_acompanhamento?em_andamento_projeto=true',
     );
     return response.data;
   } catch (error) {
@@ -23,7 +23,7 @@ export const getViews = async () => {
 export const getLotGeoJSON = async (lotName: string) => {
   try {
     const response = await apiClient.get<ApiResponse<any>>(
-      `/api/producao/views/lote/${lotName}`,
+      `/api/acompanhamento/mapa/${lotName}`,
     );
     return response.data;
   } catch (error) {

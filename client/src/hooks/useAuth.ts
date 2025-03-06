@@ -12,16 +12,13 @@ import {
 import { LoginRequest } from '../types/auth';
 import { useSnackbar } from 'notistack';
 import { standardizeError } from '@/lib/queryClient';
-// Removed unused import: import { ApiError } from '@/types/api';
 
 export const useAuth = () => {
-  // Use selectors for better performance
   const user = useAuthStore(selectUser);
   const username = useAuthStore(selectUsername);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const isAdmin = useAuthStore(selectIsAdmin);
 
-  // Get functions directly from the store
   const { login: storeLogin, logout: storeLogout, getRole } = useAuthStore();
 
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +66,6 @@ export const useAuth = () => {
   // Wrap logout function with useCallback for memoization
   const logout = useCallback(() => {
     storeLogout();
-    // Use React Router navigation
     navigate('/login', { replace: true });
     enqueueSnackbar('Logout realizado com sucesso', { variant: 'success' });
   }, [storeLogout, navigate, enqueueSnackbar]);

@@ -1,137 +1,139 @@
 // Path: features\map\components\MapVisualization.tsx
 import React, {
-  useRef,
   useState,
   useEffect,
   useMemo,
+  useRef,
   useCallback,
 } from 'react';
 import { styled } from '@mui/material/styles';
 import {
   Paper,
-  Typography,
   Box,
   useTheme,
   useMediaQuery,
-  Drawer,
   IconButton,
-  Fab,
+  Typography,
+  Drawer,
   Divider,
   Collapse,
-  Button,
   alpha,
 } from '@mui/material';
-import L from 'leaflet';
-import { MapContainer, TileLayer, GeoJSON, ZoomControl } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import Map, {
+  Layer,
+  Source,
+  NavigationControl,
+  MapRef,
+} from 'react-map-gl/maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
 import MapLegend from './MapLegend';
 import LayerControl from './LayerControl';
+import FeaturePopup from './FeaturePopup';
+import MapControls from './MapControls';
 import { MapLayer, LegendItem } from '@/types/map';
-import LayersIcon from '@mui/icons-material/Layers';
 import CloseIcon from '@mui/icons-material/Close';
-import InfoIcon from '@mui/icons-material/Info';
-import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import { getFillLayerPaint, getLineLayerPaint } from '../utils/mapStyles';
 
-const MapContainerWrapper = styled(Box)(({ theme }) => ({
-  height: '70vh',
+// Main container - important for setting overall height constraints
+const RootContainer = styled(Paper)(({ theme }) => ({
+  width: '100%',
+  height: 'auto',
+  maxHeight: '80vh', // Set a maximum height
+  display: 'flex',
+  flexDirection: 'column',
   position: 'relative',
+  overflow: 'hidden', // Prevent overflow at the root level
+  backgroundColor: theme.palette.background.paper,
+  transition: theme.transitions.create(['background-color', 'box-shadow'], {
+    duration: theme.transitions.duration.standard,
+  }),
+  borderRadius: theme.shape.borderRadius,
+}));
+
+// Outer container for map and sidebar
+const OuterContainer = styled(Box)({
+  display: 'flex',
+  width: '100%',
+  position: 'relative',
+  overflow: 'hidden',
+  flexGrow: 1, // Fill available space in parent
+});
+
+// Map container
+const MapContainer = styled(Box)(({ theme }) => ({
+  height: '70vh', // Slightly reduced from original 75vh
+  maxHeight: '70vh',
+  position: 'relative',
+  overflow: 'hidden',
+  flexGrow: 1,
   [theme.breakpoints.down('sm')]: {
     height: '60vh',
+    maxHeight: '60vh',
   },
 }));
 
-const ControlsContainer = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  top: 10,
-  right: 10,
-  zIndex: 999,
-  backgroundColor:
-    theme.palette.mode === 'dark'
-      ? alpha(theme.palette.background.paper, 0.9)
-      : 'rgba(255, 255, 255, 0.8)',
-  padding: theme.spacing(1),
-  borderRadius: theme.shape.borderRadius,
-  maxHeight: 'calc(100% - 30px)',
+// Sidebar for layer controls
+const Sidebar = styled(Box, {
+  shouldForwardProp: prop => prop !== 'open',
+})<{ open: boolean }>(({ theme, open }) => ({
+  width: open ? 280 : 0,
+  flexShrink: 0,
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.enteringScreen,
+  }),
+  display: 'flex',
+  flexDirection: 'column',
+  backgroundColor: theme.palette.background.paper,
+  borderRight: `1px solid ${theme.palette.divider}`,
+  overflow: 'hidden',
+  marginRight: open ? theme.spacing(2) : 0,
+  height: 'auto', // Changed from fixed height
+  position: 'relative',
+  [theme.breakpoints.down('sm')]: {
+    display: 'none', // Hide on mobile
+  },
+}));
+
+const SidebarHeader = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2),
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
+
+const SidebarContent = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2),
   overflowY: 'auto',
-  width: 200,
-  display: 'none', // Hide on mobile, will use drawer instead
-  [theme.breakpoints.up('md')]: {
-    display: 'block',
-  },
-  boxShadow: theme.shadows[3],
-}));
-
-const MobileFab = styled(Fab)(({ theme }) => ({
-  position: 'absolute',
-  bottom: 20,
-  right: 20,
-  zIndex: 999,
-  [theme.breakpoints.up('md')]: {
-    display: 'none',
-  },
-}));
-
-const FullscreenButton = styled(IconButton)(({ theme }) => ({
-  position: 'absolute',
-  top: 10,
-  right: 10,
-  zIndex: 999,
-  backgroundColor:
-    theme.palette.mode === 'dark'
-      ? alpha(theme.palette.background.paper, 0.8)
-      : 'rgba(255, 255, 255, 0.8)',
-  '&:hover': {
-    backgroundColor:
-      theme.palette.mode === 'dark'
-        ? alpha(theme.palette.background.paper, 0.9)
-        : 'rgba(255, 255, 255, 0.9)',
-  },
-  [theme.breakpoints.up('md')]: {
-    top: 80,
-  },
+  flexGrow: 1,
 }));
 
 const LegendBox = styled(Box)(({ theme }) => ({
   position: 'absolute',
-  bottom: 10,
+  bottom: 60, // Space for navigation controls
   left: 10,
-  zIndex: 999,
+  zIndex: 1,
   backgroundColor:
     theme.palette.mode === 'dark'
       ? alpha(theme.palette.background.paper, 0.9)
-      : 'rgba(255, 255, 255, 0.8)',
+      : alpha(theme.palette.background.paper, 0.8),
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(1),
   maxWidth: '40%',
+  maxHeight: '40%', // Limit height to prevent overflow
+  overflowY: 'auto', // Add scroll for tall legends
   boxShadow: theme.shadows[3],
   [theme.breakpoints.down('sm')]: {
     maxWidth: '80%',
-    bottom: 70, // Give space for mobile controls
-  },
-}));
-
-const LegendToggle = styled(Button)(({ theme }) => ({
-  position: 'absolute',
-  bottom: 10,
-  left: 10,
-  zIndex: 999,
-  backgroundColor:
-    theme.palette.mode === 'dark'
-      ? alpha(theme.palette.background.paper, 0.8)
-      : 'rgba(255, 255, 255, 0.8)',
-  minWidth: 'auto',
-  padding: theme.spacing(0.5),
-  '&:hover': {
-    backgroundColor:
-      theme.palette.mode === 'dark'
-        ? alpha(theme.palette.background.paper, 0.9)
-        : 'rgba(255, 255, 255, 0.9)',
+    bottom: 100, // Give more space on mobile
+    maxHeight: '30%', // Smaller on mobile
   },
 }));
 
 interface MapVisualizationProps {
-  title: string;
+  title?: string;
   layers: MapLayer[];
   legendItems: LegendItem[];
   visibleLayers: Record<string, boolean>;
@@ -143,44 +145,40 @@ interface MapVisualizationProps {
   };
 }
 
+// Format layer name
+const formatLayerName = (name: string): string => {
+  if (name.startsWith('lote_')) {
+    const lotNumber = name.split('_')[1];
+    return `Lote ${lotNumber}`;
+  }
+  return name;
+};
+
 const MapVisualization = ({
-  title,
   layers,
   legendItems,
   visibleLayers,
   onToggleLayer,
   initialViewState = {
-    longitude: -52.956841,
-    latitude: -15.415179,
-    zoom: 3.65,
+    longitude: -54.5,
+    latitude: -14.5,
+    zoom: 4,
   },
 }: MapVisualizationProps) => {
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<MapRef>(null);
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Component state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showLegend, setShowLegend] = useState(!isMobile);
+  const [selectedFeature, setSelectedFeature] = useState<any>(null);
+  const [popupAnchorEl, setPopupAnchorEl] = useState<HTMLElement | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Fix Leaflet's default icon paths
-  useEffect(() => {
-    // Fix for the TypeScript error - using type assertion to tell TypeScript
-    // that we know what we're doing with the internal property
-    // @ts-ignore - _getIconUrl exists in the implementation but not in the type definitions
-    delete L.Icon.Default.prototype._getIconUrl;
-
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl:
-        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl:
-        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    });
-  }, []);
-
-  // Memoized functions
+  // Toggle handlers
   const toggleDrawer = useCallback(() => {
     setDrawerOpen(prev => !prev);
   }, []);
@@ -189,59 +187,138 @@ const MapVisualization = ({
     setShowLegend(prev => !prev);
   }, []);
 
-  // Function to toggle fullscreen - memoized
-  const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        setIsFullscreen(false);
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen(prev => !prev);
+  }, []);
+
+  // Close popup
+  const handleClosePopup = useCallback(() => {
+    setSelectedFeature(null);
+    setPopupAnchorEl(null);
+  }, []);
+
+  // Handle click on the map
+  const handleMapClick = useCallback((event: any) => {
+    if (!mapRef.current) return;
+
+    // Get features at click point
+    const features = mapRef.current.queryRenderedFeatures(event.point);
+
+    if (features.length > 0) {
+      const feature = features[0];
+      if (feature.properties) {
+        setSelectedFeature(feature.properties);
+        setPopupAnchorEl(event.originalEvent.target);
       }
     }
   }, []);
 
-  // Style function for GeoJSON - memoized to prevent recreation on every render
-  const layerStyle = useMemo(() => {
-    return {
-      fillColor: isDarkMode ? '#5A8CBA' : '#4682B4', // Adjusted for dark mode
-      weight: 0.5,
-      opacity: 1,
-      color: isDarkMode ? '#CCCCCC' : '#050505', // Lighter border in dark mode
-      fillOpacity: isDarkMode ? 0.6 : 0.8, // Adjusted opacity for dark mode
-    };
-  }, [isDarkMode]);
+  // Fit bounds to data
+  const fitBoundsToData = useCallback(() => {
+    if (!mapRef.current || layers.length === 0 || !mapLoaded) return;
 
-  // Memoize tile layer URL for dark/light mode
-  const tileLayerUrl = useMemo(() => {
-    // Use dark tiles for dark mode, normal tiles for light mode
+    try {
+      const visibleLayerIds = Object.entries(visibleLayers)
+        .filter(([_, isVisible]) => isVisible)
+        .map(([id]) => id);
+
+      if (visibleLayerIds.length === 0) return;
+
+      // Create a combined bounds from all visible layers
+      let combinedBounds: [[number, number], [number, number]] | null = null;
+
+      visibleLayerIds.forEach(layerId => {
+        const layer = layers.find(l => l.id === layerId);
+        if (
+          !layer ||
+          !layer.geojson ||
+          !layer.geojson.features ||
+          layer.geojson.features.length === 0
+        ) {
+          return;
+        }
+
+        layer.geojson.features.forEach(feature => {
+          if (!feature.geometry) return;
+
+          // Handle different geometry types
+          if (
+            feature.geometry.type === 'Point' &&
+            feature.geometry.coordinates
+          ) {
+            const [lng, lat] = feature.geometry.coordinates;
+            if (!combinedBounds) {
+              combinedBounds = [
+                [lng, lat],
+                [lng, lat],
+              ];
+            } else {
+              combinedBounds[0][0] = Math.min(combinedBounds[0][0], lng);
+              combinedBounds[0][1] = Math.min(combinedBounds[0][1], lat);
+              combinedBounds[1][0] = Math.max(combinedBounds[1][0], lng);
+              combinedBounds[1][1] = Math.max(combinedBounds[1][1], lat);
+            }
+          }
+          // Handle other geometry types (polygons, lines, etc.)
+          else if (feature.bbox) {
+            const [minX, minY, maxX, maxY] = feature.bbox;
+            if (!combinedBounds) {
+              combinedBounds = [
+                [minX, minY],
+                [maxX, maxY],
+              ];
+            } else {
+              combinedBounds[0][0] = Math.min(combinedBounds[0][0], minX);
+              combinedBounds[0][1] = Math.min(combinedBounds[0][1], minY);
+              combinedBounds[1][0] = Math.max(combinedBounds[1][0], maxX);
+              combinedBounds[1][1] = Math.max(combinedBounds[1][1], maxY);
+            }
+          }
+        });
+      });
+
+      if (combinedBounds) {
+        mapRef.current.fitBounds(combinedBounds, {
+          padding: 50,
+          maxZoom: 8,
+        });
+      }
+    } catch (error) {
+      console.error('Error fitting bounds:', error);
+    }
+  }, [layers, visibleLayers, mapLoaded]);
+
+  // Memoize formatted layer names
+  const formattedLayers = useMemo(() => {
+    return layers.map(layer => ({
+      id: layer.id,
+      name: formatLayerName(layer.name),
+    }));
+  }, [layers]);
+
+  // Generate map style URL based on dark/light mode
+  const mapStyle = useMemo(() => {
     return isDarkMode
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+      : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
   }, [isDarkMode]);
 
-  // Memoize tile layer attribution
-  const tileAttribution = useMemo(() => {
-    return isDarkMode
-      ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-  }, [isDarkMode]);
+  // Handle map load
+  const handleMapLoad = useCallback(() => {
+    setMapLoaded(true);
+  }, []);
 
-  // Memoize center coordinates
-  const center = useMemo(
-    () =>
-      [initialViewState.latitude, initialViewState.longitude] as [
-        number,
-        number,
-      ],
-    [initialViewState.latitude, initialViewState.longitude],
-  );
+  // Effect to fit bounds when layers change or become visible
+  useEffect(() => {
+    if (mapLoaded) {
+      fitBoundsToData();
+    }
+  }, [fitBoundsToData, mapLoaded]);
 
-  // Memoize drawer contents to prevent recreation on each render
-  const drawerContent = useMemo(
+  // Mobile drawer content for layer controls
+  const mobileDrawerContent = useMemo(
     () => (
-      <>
+      <Box sx={{ minWidth: 'auto', maxWidth: 300 }}>
         <Box
           sx={{
             p: 2,
@@ -259,171 +336,141 @@ const MapVisualization = ({
           </IconButton>
         </Box>
         <Divider />
-        <Box sx={{ p: 2 }}>
-          <LayerControl
-            layers={layers.map(l => ({ id: l.id, name: l.name }))}
-            visibility={visibleLayers}
-            onToggle={onToggleLayer}
-          />
-        </Box>
-        <Divider />
-        <Box sx={{ p: 2 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Legenda
-          </Typography>
-          <MapLegend items={legendItems} />
-        </Box>
-      </>
-    ),
-    [layers, visibleLayers, onToggleLayer, legendItems, toggleDrawer],
-  );
-
-  // Update map when the theme changes
-  useEffect(() => {
-    if (mapRef.current) {
-      // Force a redraw by invalidating the map size
-      setTimeout(() => {
-        mapRef.current?.invalidateSize();
-      }, 0);
-    }
-  }, [isDarkMode]);
-
-  return (
-    <Paper
-      elevation={1}
-      sx={{
-        width: '100%',
-        height: '80vh',
-        overflow: 'hidden',
-        position: 'relative',
-        bgcolor: theme.palette.background.paper,
-        transition: theme.transitions.create(
-          ['background-color', 'box-shadow'],
-          {
-            duration: theme.transitions.duration.standard,
-          },
-        ),
-      }}
-    >
-      <Typography
-        variant={isMobile ? 'subtitle1' : 'h6'}
-        align="center"
-        p={isMobile ? 1 : 2}
-      >
-        {title}
-      </Typography>
-
-      <MapContainerWrapper>
-        <MapContainer
-          center={center}
-          zoom={initialViewState.zoom}
-          style={{ height: '100%', width: '100%' }}
-          zoomControl={false}
-          ref={mapRef}
-          attributionControl={false} // We'll add attribution control separately for better styling
-        >
-          <TileLayer attribution={tileAttribution} url={tileLayerUrl} />
-
-          {/* Render each GeoJSON layer if visible */}
-          {layers.map(
-            layer =>
-              visibleLayers[layer.id] && (
-                <GeoJSON
-                  key={layer.id}
-                  data={layer.geojson}
-                  style={layerStyle}
-                />
-              ),
-          )}
-
-          {/* Add Zoom Control in a better position for mobile */}
-          <ZoomControl position={isMobile ? 'bottomright' : 'topright'} />
-
-          {/* Add attribution with proper styling */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              right: 0,
-              zIndex: 1000,
-              fontSize: '10px',
-              padding: '1px 5px',
-              background: isDarkMode
-                ? 'rgba(0,0,0,0.5)'
-                : 'rgba(255,255,255,0.5)',
-              color: isDarkMode ? '#ccc' : '#333',
-            }}
-          >
-            <div dangerouslySetInnerHTML={{ __html: tileAttribution }} />
-          </div>
-        </MapContainer>
-
-        {/* Desktop controls */}
-        <ControlsContainer>
-          <LayerControl
-            layers={layers.map(l => ({ id: l.id, name: l.name }))}
-            visibility={visibleLayers}
-            onToggle={onToggleLayer}
-          />
-        </ControlsContainer>
-
-        {/* Fullscreen button */}
-        <FullscreenButton
-          onClick={toggleFullscreen}
-          aria-label="Toggle fullscreen"
-          size="small"
-        >
-          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-        </FullscreenButton>
-
-        {/* Legend toggle button */}
-        {isMobile && (
-          <LegendToggle
-            startIcon={<InfoIcon />}
-            size="small"
-            onClick={toggleLegend}
-            variant="outlined"
-          >
-            {showLegend ? 'Ocultar' : 'Legenda'}
-          </LegendToggle>
-        )}
-
-        {/* Legend positioned at bottom left */}
-        <Collapse in={showLegend} timeout={300}>
-          <LegendBox>
-            <MapLegend items={legendItems} />
-          </LegendBox>
-        </Collapse>
-
-        {/* Mobile layers button */}
-        <MobileFab
-          color="primary"
-          size="medium"
-          onClick={toggleDrawer}
-          aria-label="Show layers"
-        >
-          <LayersIcon />
-        </MobileFab>
-
-        {/* Mobile drawer for layer control */}
-        <Drawer
-          anchor="right"
-          open={drawerOpen && isMobile}
-          onClose={toggleDrawer}
-          PaperProps={{
-            sx: {
-              width: '80%',
-              maxWidth: 300,
-              borderTopLeftRadius: theme.shape.borderRadius,
-              borderBottomLeftRadius: theme.shape.borderRadius,
-              bgcolor: theme.palette.background.paper, // Ensure proper background color
-            },
+        <Box
+          sx={{
+            p: 2,
+            maxHeight: '70vh',
+            overflowY: 'auto',
+            overflowX: 'hidden',
           }}
         >
-          {drawerContent}
-        </Drawer>
-      </MapContainerWrapper>
-    </Paper>
+          <LayerControl
+            layers={formattedLayers}
+            visibility={visibleLayers}
+            onToggle={onToggleLayer}
+          />
+        </Box>
+      </Box>
+    ),
+    [formattedLayers, visibleLayers, onToggleLayer, toggleDrawer],
+  );
+
+  return (
+    <RootContainer elevation={1}>
+      <OuterContainer>
+        {/* Sidebar for layer controls (desktop only) */}
+        <Sidebar open={sidebarOpen}>
+          <SidebarHeader>
+            <Typography variant="h6">Camadas do Mapa</Typography>
+            <IconButton
+              onClick={toggleSidebar}
+              aria-label="Fechar painel de camadas"
+              size="small"
+            >
+              <CloseIcon />
+            </IconButton>
+          </SidebarHeader>
+          <SidebarContent>
+            <LayerControl
+              layers={formattedLayers}
+              visibility={visibleLayers}
+              onToggle={onToggleLayer}
+            />
+          </SidebarContent>
+        </Sidebar>
+
+        {/* Map container */}
+        <MapContainer>
+          <Map
+            ref={mapRef}
+            initialViewState={initialViewState}
+            style={{ width: '100%', height: '100%' }}
+            mapStyle={mapStyle}
+            onClick={handleMapClick}
+            attributionControl={false}
+            onLoad={handleMapLoad}
+            interactiveLayerIds={layers.map(layer => `${layer.id}-fill`)}
+          >
+            {/* Render map sources and layers */}
+            {layers.map(layer => {
+              const isVisible = visibleLayers[layer.id] || false;
+
+              // Generate layer ID for this source
+              const fillLayerId = `${layer.id}-fill`;
+              const lineLayerId = `${layer.id}-line`;
+
+              return (
+                <Source
+                  key={layer.id}
+                  id={layer.id}
+                  type="geojson"
+                  data={layer.geojson}
+                >
+                  {/* Fill layer with styling from mapStyles.ts */}
+                  <Layer
+                    id={fillLayerId}
+                    type="fill"
+                    paint={getFillLayerPaint(isDarkMode, isVisible)}
+                  />
+
+                  {/* Line layer with styling from mapStyles.ts */}
+                  <Layer
+                    id={lineLayerId}
+                    type="line"
+                    paint={getLineLayerPaint(isDarkMode, isVisible)}
+                  />
+                </Source>
+              );
+            })}
+
+            {/* Navigation controls */}
+            <NavigationControl position="bottom-right" />
+          </Map>
+
+          {/* Map Controls Component */}
+          <MapControls
+            onToggleLegend={toggleLegend}
+            onToggleDrawer={toggleDrawer}
+            onToggleSidebar={toggleSidebar}
+            showLegend={showLegend}
+            isMobile={isMobile}
+            sidebarOpen={sidebarOpen}
+          />
+
+          {/* Legend */}
+          <Collapse in={showLegend} timeout={300}>
+            <LegendBox>
+              <MapLegend items={legendItems} />
+            </LegendBox>
+          </Collapse>
+
+          {/* Feature Popup Component */}
+          <FeaturePopup
+            selectedFeature={selectedFeature}
+            anchorEl={popupAnchorEl}
+            onClose={handleClosePopup}
+          />
+        </MapContainer>
+      </OuterContainer>
+
+      {/* Mobile drawer for layer control */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen && isMobile}
+        onClose={toggleDrawer}
+        PaperProps={{
+          sx: {
+            width: '80%',
+            maxWidth: 300,
+            borderTopLeftRadius: theme.shape.borderRadius,
+            borderBottomLeftRadius: theme.shape.borderRadius,
+            bgcolor: theme.palette.background.paper,
+          },
+        }}
+      >
+        {mobileDrawerContent}
+      </Drawer>
+    </RootContainer>
   );
 };
 
