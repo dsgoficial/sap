@@ -53,10 +53,6 @@ export default defineConfig(({ mode }) => {
               'react-hook-form',
               '@hookform/resolvers',
               'zod'
-            ],
-            'vendor-maps': [
-              'leaflet',
-              'react-leaflet'
             ]
           }
         }
