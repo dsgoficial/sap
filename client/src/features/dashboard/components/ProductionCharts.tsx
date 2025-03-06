@@ -17,11 +17,14 @@ export const ProductionCharts = ({
 }: ProductionChartsProps) => {
   const pieData = useMemo(() => {
     if (!data) return [];
-    
+
     const completed = Math.max(0, data.summary.completedProducts);
     const running = Math.max(0, data.summary.runningProducts);
-    const notStarted = Math.max(0, data.summary.totalProducts - (completed + running));
-    
+    const notStarted = Math.max(
+      0,
+      data.summary.totalProducts - (completed + running),
+    );
+
     return [
       {
         label: 'Finalizados',
@@ -78,21 +81,24 @@ export const ProductionCharts = ({
   // Filter monthly data to only show up to current month
   const filteredMonthlyData = useMemo(() => {
     if (!data) return [];
-    
+
     const currentMonth = new Date().getMonth(); // 0-based index
     return data.monthlyData
       .filter((_, index) => index <= currentMonth)
       .map(monthData => {
-        const newMonthData: { [key: string]: string | number } = { month: monthData.month };
-        
+        const newMonthData: { [key: string]: string | number } = {
+          month: monthData.month,
+        };
+
         Object.keys(monthData).forEach(key => {
           if (key !== 'month' && key in monthData) {
-            newMonthData[key] = typeof monthData[key] === 'string' 
-              ? Number(monthData[key]) 
-              : monthData[key];
+            newMonthData[key] =
+              typeof monthData[key] === 'string'
+                ? Number(monthData[key])
+                : monthData[key];
           }
         });
-        
+
         return newMonthData;
       });
   }, [data]);

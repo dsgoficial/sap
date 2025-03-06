@@ -45,7 +45,7 @@ const createActivityService = (): ActivityService => {
           return {
             success: true,
             message: 'Sem atividades disponíveis para iniciar',
-            dados: null
+            dados: null,
           };
         }
         throw error;

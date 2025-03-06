@@ -95,7 +95,7 @@ const checkTokenExpiration = (): boolean => {
   try {
     const tokenExpiry = localStorage.getItem('@sap_web-Token-Expiry');
     if (!tokenExpiry) return false;
-    
+
     const expiryTime = new Date(tokenExpiry);
     return expiryTime <= new Date();
   } catch (error) {

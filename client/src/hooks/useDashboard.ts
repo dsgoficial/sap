@@ -28,32 +28,36 @@ const transformDashboardData = (
     (sum, item) => sum + Number(item.finalizadas),
     0,
   );
-  
+
   const runningProducts = runningData.reduce(
     (sum, item) => sum + Number(item.count),
     0,
   );
-  
+
   const adjustedRunningProducts = Math.min(
     runningProducts,
-    Math.max(0, totalProducts - completedProducts)
+    Math.max(0, totalProducts - completedProducts),
   );
-  
+
   // Calculate percentage based on properly validated values
   const progressPercentage = totalProducts
     ? (completedProducts / totalProducts) * 100
     : 0;
 
   const lotProgressData = quantityData.map(item => {
-    const completed =
-      Number(finishedData.find(f => f.lote === item.lote)?.finalizadas || 0);
-    
+    const completed = Number(
+      finishedData.find(f => f.lote === item.lote)?.finalizadas || 0,
+    );
+
     const running = Math.min(
       Number(runningData.find(r => r.lote === item.lote)?.count || 0),
-      Math.max(0, Number(item.quantidade) - completed)
+      Math.max(0, Number(item.quantidade) - completed),
     );
-    
-    const notStarted = Math.max(0, Number(item.quantidade) - (completed + running));
+
+    const notStarted = Math.max(
+      0,
+      Number(item.quantidade) - (completed + running),
+    );
 
     return {
       name: item.lote,
@@ -91,7 +95,8 @@ const transformDashboardData = (
       pitData.forEach(item => {
         if (item.month === monthNumber) {
           const lotKey = `lot_${item.lote}`;
-          dataForMonth[lotKey] = Number(dataForMonth[lotKey] || 0) + Number(item.finalizadas);
+          dataForMonth[lotKey] =
+            Number(dataForMonth[lotKey] || 0) + Number(item.finalizadas);
         }
       });
 

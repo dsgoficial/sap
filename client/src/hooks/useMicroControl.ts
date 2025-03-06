@@ -27,13 +27,17 @@ const QUERY_KEYS = {
 // Format date with timezone handling
 const formatTimestampWithTimezone = (dateString?: string): string => {
   if (!dateString) return '';
-  
+
   try {
     // Parse the date, handling common UTC formats that might lack a timezone indicator
     let date;
-    
+
     // If the dateString already has a timezone indicator, use it as is
-    if (dateString.includes('Z') || dateString.includes('+') || dateString.match(/\d-\d{2}:\d{2}$/)) {
+    if (
+      dateString.includes('Z') ||
+      dateString.includes('+') ||
+      dateString.match(/\d-\d{2}:\d{2}$/)
+    ) {
       date = new Date(dateString);
     } else {
       // If it doesn't have a timezone indicator, assume it's UTC
@@ -48,7 +52,7 @@ const formatTimestampWithTimezone = (dateString?: string): string => {
         date = new Date(dateString);
       }
     }
-    
+
     // Format using locale string to convert to user's timezone
     return date.toLocaleString('pt-BR', {
       year: 'numeric',

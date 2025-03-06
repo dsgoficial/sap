@@ -45,7 +45,10 @@ const CustomTooltip = ({
       }}
     >
       {payload.map((entry, index) => (
-        <div key={`item-${index}`} style={{ color: '#ffffff', margin: '2px 0' }}>
+        <div
+          key={`item-${index}`}
+          style={{ color: '#ffffff', margin: '2px 0' }}
+        >
           <span style={{ display: 'inline-block', marginRight: '8px' }}>
             {entry.name}: {entry.value}
           </span>
@@ -84,7 +87,7 @@ export const PieChart = React.memo(
     const hasDominantSegment = useMemo(() => {
       if (data.length === 0) return false;
       const total = data.reduce((sum, item) => sum + item.value, 0);
-      return data.some(item => (item.value / total) > 0.95);
+      return data.some(item => item.value / total > 0.95);
     }, [data]);
 
     // Transform data for Recharts format - memoized
@@ -104,7 +107,7 @@ export const PieChart = React.memo(
 
         // Don't show labels on mobile if too small
         if (isMobile && percent < 0.1) return null;
-        
+
         // If we have a dominant segment, use a centered label instead of positioned labels
         if (hasDominantSegment && percent > 0.95) {
           return null; // We'll use a centered <Label> component instead
@@ -135,7 +138,8 @@ export const PieChart = React.memo(
 
     // Active shape for tooltip hover
     const renderActiveShape = (props: any) => {
-      const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+      const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } =
+        props;
       return (
         <g>
           <Sector
@@ -190,9 +194,9 @@ export const PieChart = React.memo(
     // Find the dominant segment if it exists
     const dominantSegment = useMemo(() => {
       if (!hasDominantSegment || data.length === 0) return null;
-      
+
       const total = data.reduce((sum, item) => sum + item.value, 0);
-      return data.find(item => (item.value / total) > 0.95);
+      return data.find(item => item.value / total > 0.95);
     }, [data, hasDominantSegment]);
 
     return (
@@ -232,14 +236,14 @@ export const PieChart = React.memo(
                 {chartData.map((_entry, index) => (
                   <Cell key={`cell-${index}`} fill={themedData[index].color} />
                 ))}
-                
+
                 {/* Special centered label for dominant segment case */}
                 {hasDominantSegment && dominantSegment && (
                   <Label
                     position="center"
-                    content={(props) => {
+                    content={props => {
                       const { viewBox } = props;
-                      const { cx, cy } = viewBox as { cx: number, cy: number };
+                      const { cx, cy } = viewBox as { cx: number; cy: number };
                       return (
                         <g>
                           <text
@@ -280,8 +284,12 @@ export const PieChart = React.memo(
                   align={legendStyle.align}
                 />
               )}
-              <Tooltip 
-                content={<CustomTooltip labelColors={isDarkMode ? '#ffffff' : '#000000'} />} 
+              <Tooltip
+                content={
+                  <CustomTooltip
+                    labelColors={isDarkMode ? '#ffffff' : '#000000'}
+                  />
+                }
               />
             </RechartsPie>
           </ResponsiveContainer>

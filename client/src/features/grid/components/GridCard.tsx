@@ -1,11 +1,6 @@
 // Path: features\grid\components\GridCard.tsx
 import { useState, useMemo } from 'react';
-import {
-  Typography,
-  Card,
-  Box,
-  useTheme,
-} from '@mui/material';
+import { Typography, Card, Box, useTheme } from '@mui/material';
 import { Grid } from './Grid';
 import { GridData, GridItem } from '@/types/grid';
 import { formatDate } from '@/utils/formatters';
@@ -16,7 +11,9 @@ interface GridCardProps {
 }
 
 export const GridCard = ({ id, grid }: GridCardProps) => {
-  const [currentMouseover, setCurrentMouseover] = useState<GridItem | null>(null);
+  const [currentMouseover, setCurrentMouseover] = useState<GridItem | null>(
+    null,
+  );
   const theme = useTheme();
 
   // Calculate progress percentage
@@ -37,9 +34,13 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
     try {
       // Parse the date, handling common UTC formats that might lack a timezone indicator
       let date;
-      
+
       // If the dateString already has a timezone indicator, use it as is
-      if (dateString.includes('Z') || dateString.includes('+') || dateString.match(/\d-\d{2}:\d{2}$/)) {
+      if (
+        dateString.includes('Z') ||
+        dateString.includes('+') ||
+        dateString.match(/\d-\d{2}:\d{2}$/)
+      ) {
         date = new Date(dateString);
       } else {
         // If it doesn't have a timezone indicator, assume it's UTC
@@ -54,7 +55,7 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
           date = new Date(dateString);
         }
       }
-      
+
       // Format using locale string to convert to user's timezone
       return date.toLocaleString('pt-BR', {
         year: 'numeric',
@@ -62,7 +63,7 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        second: '2-digit',
       });
     } catch (error) {
       console.error('Error formatting date:', error);
@@ -85,15 +86,18 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
         flexDirection: 'column',
         overflow: 'hidden',
         bgcolor: theme.palette.background.paper,
-        transition: theme.transitions.create(['background-color', 'box-shadow'], {
-          duration: theme.transitions.duration.standard,
-        }),
+        transition: theme.transitions.create(
+          ['background-color', 'box-shadow'],
+          {
+            duration: theme.transitions.duration.standard,
+          },
+        ),
       }}
     >
       {/* Header section */}
-      <Box 
-        sx={{ 
-          p: 1.5, 
+      <Box
+        sx={{
+          p: 1.5,
           borderBottom: `1px solid ${theme.palette.divider}`,
           display: 'flex',
           flexDirection: 'column',
@@ -101,10 +105,10 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
           alignItems: 'center',
         }}
       >
-        <Typography 
-          variant="subtitle1" 
-          align="center" 
-          sx={{ 
+        <Typography
+          variant="subtitle1"
+          align="center"
+          sx={{
             fontWeight: 'medium',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -114,11 +118,11 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
         >
           {projectInfo}
         </Typography>
-        
-        <Typography 
-          variant="subtitle2" 
-          align="center" 
-          sx={{ 
+
+        <Typography
+          variant="subtitle2"
+          align="center"
+          sx={{
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -128,28 +132,28 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
           {lotInfo}
         </Typography>
       </Box>
-      
+
       {/* Date display area */}
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           py: 0.5,
-          px: 1, 
+          px: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: theme.palette.action.hover
+          bgcolor: theme.palette.action.hover,
         }}
       >
         <Typography variant="caption">
-          {currentMouseover?.data_atualizacao 
-            ? `Atualização: ${formatTimestamp(currentMouseover.data_atualizacao)}` 
+          {currentMouseover?.data_atualizacao
+            ? `Atualização: ${formatTimestamp(currentMouseover.data_atualizacao)}`
             : 'Passe o mouse sobre as células'}
         </Typography>
       </Box>
-      
+
       {/* Grid visualization */}
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           flexGrow: 1,
           position: 'relative',
           overflow: 'hidden',
@@ -165,10 +169,10 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
           onItemHover={setCurrentMouseover}
         />
       </Box>
-      
+
       {/* Footer section */}
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           pt: 1,
           px: 1.5,
           pb: 1.5,
@@ -179,51 +183,57 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
         }}
       >
         {/* Progress */}
-        <Typography 
+        <Typography
           variant="body2"
           align="center"
           sx={{ fontWeight: 'medium' }}
         >
           {`Progresso: ${progressPercentage}%`}
         </Typography>
-        
+
         {/* Operator */}
-        <Typography 
-          variant="body2" 
-          align="center"
-          sx={{ mb: 0.5 }}
-        >
+        <Typography variant="body2" align="center" sx={{ mb: 0.5 }}>
           {`Operador: ${grid.usuario || '-'}`}
         </Typography>
-        
+
         {/* Simplified additional info with ellipsis */}
-        <Typography 
-          variant="caption" 
+        <Typography
+          variant="caption"
           align="center"
           sx={{
             whiteSpace: 'nowrap',
             overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            textOverflow: 'ellipsis',
           }}
         >
           {`${grid.fase || '-'} - ${grid.bloco || '-'}`}
         </Typography>
-        
-        <Typography 
-          variant="caption" 
+
+        <Typography
+          variant="caption"
           align="center"
           sx={{
             whiteSpace: 'nowrap',
             overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            textOverflow: 'ellipsis',
           }}
         >
           {`${grid.subfase || '-'} - ${grid.etapa || '-'}`}
         </Typography>
-        
+
         {/* Start date */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Typography variant="caption" component="span" sx={{ fontWeight: 'medium', mr: 0.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Typography
+            variant="caption"
+            component="span"
+            sx={{ fontWeight: 'medium', mr: 0.5 }}
+          >
             Data de início:
           </Typography>
           <Typography variant="caption" component="span">

@@ -726,15 +726,15 @@ export function Table<T extends Record<string, any>>({
   // Render title if provided
   const renderTitle = () => {
     if (!title) return null;
-    
+
     return (
       <TitleContainer>
-        <Typography 
-          variant="h6" 
-          component="h2" 
-          sx={{ 
+        <Typography
+          variant="h6"
+          component="h2"
+          sx={{
             fontWeight: 'bold',
-            textAlign: 'center' 
+            textAlign: 'center',
           }}
         >
           {title}

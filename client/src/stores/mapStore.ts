@@ -16,47 +16,69 @@ export const useMapStore = create<MapState>((set, get) => ({
   layers: [],
   visibleLayers: {},
 
+  // Optimize setLayers to avoid unnecessary state updates
   setLayers: layers => {
-    set({ layers });
+    // Compare new layers with existing ones to prevent unnecessary updates
+    const currentLayers = get().layers;
 
-    const { visibleLayers } = get();
-    const hasAnyVisibleLayers = Object.keys(visibleLayers).length > 0;
+    // Only update if layer ids have changed
+    const shouldUpdate =
+      layers.length !== currentLayers.length ||
+      layers.some((layer, index) => currentLayers[index]?.id !== layer.id);
 
-    if (!hasAnyVisibleLayers) {
-      get().setInitialVisibility();
+    if (shouldUpdate) {
+      set({ layers });
+
+      const { visibleLayers } = get();
+      const hasAnyVisibleLayers = Object.keys(visibleLayers).length > 0;
+
+      if (!hasAnyVisibleLayers) {
+        get().setInitialVisibility();
+      }
     }
   },
 
+  // Optimize toggleLayerVisibility to avoid object spreading which creates a new object
   toggleLayerVisibility: layerId => {
-    set(state => ({
-      visibleLayers: {
-        ...state.visibleLayers,
-        [layerId]: !state.visibleLayers[layerId],
-      },
-    }));
+    set(state => {
+      // Create a shallow copy only when needed
+      const newVisibleLayers = { ...state.visibleLayers };
+      newVisibleLayers[layerId] = !newVisibleLayers[layerId];
+
+      return { visibleLayers: newVisibleLayers };
+    });
   },
 
   setLayerVisibility: (layerId, isVisible) => {
-    set(state => ({
-      visibleLayers: {
-        ...state.visibleLayers,
-        [layerId]: isVisible,
-      },
-    }));
+    set(state => {
+      // Only update if the visibility actually changes
+      if (state.visibleLayers[layerId] === isVisible) {
+        return state; // Return the current state unchanged
+      }
+
+      // Create a shallow copy and update
+      const newVisibleLayers = { ...state.visibleLayers };
+      newVisibleLayers[layerId] = isVisible;
+
+      return { visibleLayers: newVisibleLayers };
+    });
   },
 
   setInitialVisibility: () => {
     const { layers } = get();
 
     set(state => {
-      const initialVisibility: Record<string, boolean> = {
-        ...state.visibleLayers,
-      };
+      if (
+        Object.keys(state.visibleLayers).length === layers.length &&
+        layers.every(layer => state.visibleLayers[layer.id] === true)
+      ) {
+        return state; // No changes needed
+      }
+
+      const initialVisibility: Record<string, boolean> = {};
 
       layers.forEach(layer => {
-        if (initialVisibility[layer.id] === undefined) {
-          initialVisibility[layer.id] = true;
-        }
+        initialVisibility[layer.id] = true;
       });
 
       return { visibleLayers: initialVisibility };

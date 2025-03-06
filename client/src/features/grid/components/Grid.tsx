@@ -50,7 +50,8 @@ const ZoomControls = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'row',
   gap: '4px',
-  background: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
+  background:
+    theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
   borderRadius: '4px',
   padding: '2px',
 }));
@@ -74,11 +75,11 @@ export const Grid = ({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-  
+
   // Zoom and pan state
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  
+
   const zoomIn = () => setScale(prev => Math.min(prev * 1.2, 3));
   const zoomOut = () => setScale(prev => Math.max(prev / 1.2, 0.5));
   const resetView = () => {
@@ -102,9 +103,13 @@ export const Grid = ({
     try {
       // Parse the date, handling common UTC formats that might lack a timezone indicator
       let date;
-      
+
       // If the dateString already has a timezone indicator, use it as is
-      if (dateString.includes('Z') || dateString.includes('+') || dateString.match(/\d-\d{2}:\d{2}$/)) {
+      if (
+        dateString.includes('Z') ||
+        dateString.includes('+') ||
+        dateString.match(/\d-\d{2}:\d{2}$/)
+      ) {
         date = new Date(dateString);
       } else {
         // If it doesn't have a timezone indicator, assume it's UTC
@@ -119,7 +124,7 @@ export const Grid = ({
           date = new Date(dateString);
         }
       }
-      
+
       // Format using locale string to convert to user's timezone
       return date.toLocaleString('pt-BR', {
         year: 'numeric',
@@ -127,7 +132,7 @@ export const Grid = ({
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit'
+        second: '2-digit',
       });
     } catch (error) {
       console.error('Error formatting date:', error);
@@ -169,7 +174,7 @@ export const Grid = ({
         if (!tooltipRef.current || !d.data_atualizacao) return;
 
         onItemHover(d);
-        
+
         const tooltip = select(tooltipRef.current);
         tooltip.html(`
           <div class="tooltip-date-range">${formatTimestamp(d.data_atualizacao)}</div>
@@ -185,7 +190,7 @@ export const Grid = ({
         setTimeout(() => {
           tooltip.style('opacity', '0');
         }, 2000);
-      }
+      },
     };
   }, [onItemHover, formatTimestamp]);
 
@@ -229,38 +234,37 @@ export const Grid = ({
 
   // Calculate initial centering position
   const calculateInitialPosition = useCallback(() => {
-    if (!svgRef.current || rowSize === 0 || colSize === 0) return { x: 0, y: 0 };
-    
+    if (!svgRef.current || rowSize === 0 || colSize === 0)
+      return { x: 0, y: 0 };
+
     const containerWidth = svgRef.current.clientWidth;
     const containerHeight = svgRef.current.clientHeight;
     const gridWidth = colSize * width;
     const gridHeight = rowSize * height;
-    
+
     // Calculate position to center the grid in the container
     const x = (containerWidth - gridWidth) / 2;
     const y = (containerHeight - gridHeight) / 2;
-    
+
     return { x, y };
   }, [rowSize, colSize, width, height]);
 
   // Setup drag behavior for panning
   const setupDrag = useCallback(() => {
     if (!svgRef.current) return;
-    
+
     const svgSelection = select(svgRef.current);
-    
+
     // Define drag behavior
-    const dragHandler = drag()
-      .on('drag', (event) => {
-        setTranslate(prev => ({
-          x: prev.x + event.dx,
-          y: prev.y + event.dy
-        }));
-      });
-    
+    const dragHandler = drag().on('drag', event => {
+      setTranslate(prev => ({
+        x: prev.x + event.dx,
+        y: prev.y + event.dy,
+      }));
+    });
+
     // Apply drag to SVG element
     svgSelection.call(dragHandler as any);
-    
   }, []);
 
   // Initialize grid position when first rendered
@@ -276,13 +280,16 @@ export const Grid = ({
     // Clear previous content
     const svg = select(svgRef.current);
     svg.selectAll('*').remove();
-    
+
     // Create a group for all content with transform for zoom/pan
     const mainGroup = svg
       .attr('width', '100%')
       .attr('height', '100%')
       .append('g')
-      .attr('transform', `translate(${translate.x},${translate.y}) scale(${scale})`);
+      .attr(
+        'transform',
+        `translate(${translate.x},${translate.y}) scale(${scale})`,
+      );
 
     const gridData = createGridData();
 
@@ -320,10 +327,9 @@ export const Grid = ({
       .on('touchstart', function (event, d) {
         handlers.touch(event as TouchEvent, d);
       });
-      
+
     // Setup dragging
     setupDrag();
-    
   }, [
     data.grade,
     width,
@@ -335,32 +341,47 @@ export const Grid = ({
     createGridData,
     scale,
     translate,
-    setupDrag
+    setupDrag,
   ]);
 
   return (
     <GridContainer>
-      <svg ref={svgRef} style={{ cursor: 'grab', width: '100%', height: '100%' }} />
+      <svg
+        ref={svgRef}
+        style={{ cursor: 'grab', width: '100%', height: '100%' }}
+      />
       <GridTooltip ref={tooltipRef} />
       <ZoomControls>
-        <IconButton 
-          size="small" 
-          onClick={zoomIn} 
-          sx={{ p: 0.5, bgcolor: 'background.paper', '&:hover': { bgcolor: 'action.hover' } }}
+        <IconButton
+          size="small"
+          onClick={zoomIn}
+          sx={{
+            p: 0.5,
+            bgcolor: 'background.paper',
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
         >
           <ZoomInIcon fontSize="small" />
         </IconButton>
-        <IconButton 
-          size="small" 
-          onClick={zoomOut} 
-          sx={{ p: 0.5, bgcolor: 'background.paper', '&:hover': { bgcolor: 'action.hover' } }}
+        <IconButton
+          size="small"
+          onClick={zoomOut}
+          sx={{
+            p: 0.5,
+            bgcolor: 'background.paper',
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
         >
           <ZoomOutIcon fontSize="small" />
         </IconButton>
-        <IconButton 
-          size="small" 
-          onClick={resetView} 
-          sx={{ p: 0.5, bgcolor: 'background.paper', '&:hover': { bgcolor: 'action.hover' } }}
+        <IconButton
+          size="small"
+          onClick={resetView}
+          sx={{
+            p: 0.5,
+            bgcolor: 'background.paper',
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
         >
           <RestartAltIcon fontSize="small" />
         </IconButton>

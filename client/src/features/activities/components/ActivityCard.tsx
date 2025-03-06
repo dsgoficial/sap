@@ -48,8 +48,8 @@ export const ActivityCard = () => {
     try {
       const response = await startActivity();
       // Use the message from the API response
-      enqueueSnackbar(response.message || 'Atividade iniciada com sucesso', { 
-        variant: 'success' 
+      enqueueSnackbar(response.message || 'Atividade iniciada com sucesso', {
+        variant: 'success',
       });
       setShowStartDialog(false);
     } catch (error) {
@@ -76,8 +76,8 @@ export const ActivityCard = () => {
   const handleReportError = async (errorData: ErrorReport) => {
     try {
       const response = await reportError(errorData);
-      enqueueSnackbar(response.message || 'Problema reportado com sucesso', { 
-        variant: 'success' 
+      enqueueSnackbar(response.message || 'Problema reportado com sucesso', {
+        variant: 'success',
       });
       setShowErrorDialog(false);
     } catch (error) {

@@ -113,7 +113,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
 
     // Constants for rendering - responsive adjustments
     const CONSTANTS = useMemo(() => {
-      const AXIS_SPACING = 10; 
+      const AXIS_SPACING = 10;
       const ROW_HEIGHT = isMobile ? 20 : 24;
       const ROW_PADDING = isMobile ? 8 : 12;
 
@@ -210,7 +210,9 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
 
           const isActive = d.status === '1' || d.status === 1;
           const statusText = isActive ? 'Ativo' : 'Inativo';
-          const statusColor = isActive ? barStyles.available : barStyles.unavailable;
+          const statusColor = isActive
+            ? barStyles.available
+            : barStyles.unavailable;
 
           const tooltip = select(tooltipRef.current);
           tooltip.html(`
@@ -243,7 +245,9 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
 
           const isActive = d.status === '1' || d.status === 1;
           const statusText = isActive ? 'Ativo' : 'Inativo';
-          const statusColor = isActive ? barStyles.available : barStyles.unavailable;
+          const statusColor = isActive
+            ? barStyles.available
+            : barStyles.unavailable;
 
           const tooltip = select(tooltipRef.current);
           tooltip.html(`
@@ -372,8 +376,8 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
           .attr('height', ROW_HEIGHT)
           .attr('fill', d => {
             const statusValue = d.status;
-            return statusValue === '1' || statusValue === 1 
-              ? barStyles.available 
+            return statusValue === '1' || statusValue === 1
+              ? barStyles.available
               : barStyles.unavailable;
           })
           .attr('rx', 1)

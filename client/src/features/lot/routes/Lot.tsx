@@ -29,23 +29,26 @@ const MONTHS = [
 export const Lot = () => {
   const { data, isLoading, error } = useLotData();
 
-  const columns = useMemo(() => [
-    {
-      id: 'subphase',
-      label: 'Subfase',
-      align: 'left' as const,
-      sortable: true,
-      priority: 5,
-    },
-    ...MONTHS.map(m => ({
-      id: m.id,
-      label: m.label,
-      align: 'center' as const,
-      minWidth: 50,
-      maxWidth: 70,
-      priority: 3,
-    })),
-  ], []);
+  const columns = useMemo(
+    () => [
+      {
+        id: 'subphase',
+        label: 'Subfase',
+        align: 'left' as const,
+        sortable: true,
+        priority: 5,
+      },
+      ...MONTHS.map(m => ({
+        id: m.id,
+        label: m.label,
+        align: 'center' as const,
+        minWidth: 50,
+        maxWidth: 70,
+        priority: 3,
+      })),
+    ],
+    [],
+  );
 
   // Loading state
   if (isLoading) {
