@@ -4,6 +4,7 @@ import { PieChart } from '@/components/charts/PieChart';
 import { BarChart } from '@/components/charts/BarChart';
 import { StackedBarChart } from '@/components/charts/StackedBarChart';
 import { DashboardData } from '@/types/dashboard';
+import { useMemo } from 'react';
 
 interface ProductionChartsProps {
   data?: DashboardData;
@@ -14,28 +15,31 @@ export const ProductionCharts = ({
   data,
   isLoading,
 }: ProductionChartsProps) => {
-  // Format pie chart data
-  const pieData = data
-    ? [
-        {
-          label: 'Finalizados',
-          value: data.summary.completedProducts,
-          color: '#7A9D54',
-        },
-        {
-          label: 'Não Iniciado',
-          value:
-            data.summary.totalProducts -
-            (data.summary.completedProducts + data.summary.runningProducts),
-          color: '#F24C3D',
-        },
-        {
-          label: 'Em Execução',
-          value: data.summary.runningProducts,
-          color: '#4FC0D0',
-        },
-      ]
-    : [];
+  const pieData = useMemo(() => {
+    if (!data) return [];
+    
+    const completed = Math.max(0, data.summary.completedProducts);
+    const running = Math.max(0, data.summary.runningProducts);
+    const notStarted = Math.max(0, data.summary.totalProducts - (completed + running));
+    
+    return [
+      {
+        label: 'Finalizados',
+        value: completed,
+        color: '#7A9D54',
+      },
+      {
+        label: 'Não Iniciado',
+        value: notStarted,
+        color: '#F24C3D',
+      },
+      {
+        label: 'Em Execução',
+        value: running,
+        color: '#4FC0D0',
+      },
+    ];
+  }, [data]);
 
   // Format bar chart series
   const barSeries = [
@@ -45,7 +49,7 @@ export const ProductionCharts = ({
   ];
 
   // Format monthly series
-  const getMonthlyChartSeries = () => {
+  const monthlyChartSeries = useMemo(() => {
     if (!data || !data.monthlyData[0]) return [];
 
     // Find keys that start with lot_
@@ -69,9 +73,29 @@ export const ProductionCharts = ({
       name: key.replace('lot_', 'Lote '),
       color: colors[index % colors.length],
     }));
-  };
+  }, [data]);
 
-  const monthlyChartSeries = getMonthlyChartSeries();
+  // Filter monthly data to only show up to current month
+  const filteredMonthlyData = useMemo(() => {
+    if (!data) return [];
+    
+    const currentMonth = new Date().getMonth(); // 0-based index
+    return data.monthlyData
+      .filter((_, index) => index <= currentMonth)
+      .map(monthData => {
+        const newMonthData: { [key: string]: string | number } = { month: monthData.month };
+        
+        Object.keys(monthData).forEach(key => {
+          if (key !== 'month' && key in monthData) {
+            newMonthData[key] = typeof monthData[key] === 'string' 
+              ? Number(monthData[key]) 
+              : monthData[key];
+          }
+        });
+        
+        return newMonthData;
+      });
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -101,7 +125,7 @@ export const ProductionCharts = ({
       <Grid item xs={12} md={6}>
         <BarChart
           title="Produtos Por Mês"
-          data={data.monthlyData}
+          data={filteredMonthlyData}
           series={monthlyChartSeries}
           xAxisDataKey="month"
           height={300}

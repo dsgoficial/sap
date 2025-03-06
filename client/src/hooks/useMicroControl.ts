@@ -9,6 +9,7 @@ import {
   RunningActivity,
   CompletedActivity,
   Duration,
+  FormattedCompletedActivity,
 } from '@/types/microControl';
 import {
   createQueryKey,
@@ -21,6 +22,45 @@ import { ApiResponse } from '@/types/api';
 const QUERY_KEYS = {
   RUNNING_ACTIVITIES: createQueryKey('runningActivities'),
   COMPLETED_ACTIVITIES: createQueryKey('completedActivities'),
+};
+
+// Format date with timezone handling
+const formatTimestampWithTimezone = (dateString?: string): string => {
+  if (!dateString) return '';
+  
+  try {
+    // Parse the date, handling common UTC formats that might lack a timezone indicator
+    let date;
+    
+    // If the dateString already has a timezone indicator, use it as is
+    if (dateString.includes('Z') || dateString.includes('+') || dateString.match(/\d-\d{2}:\d{2}$/)) {
+      date = new Date(dateString);
+    } else {
+      // If it doesn't have a timezone indicator, assume it's UTC
+      if (dateString.includes('T')) {
+        // ISO format without timezone
+        date = new Date(dateString + 'Z');
+      } else if (dateString.includes(' ') && dateString.includes(':')) {
+        // "YYYY-MM-DD HH:MM:SS" format
+        date = new Date(dateString.replace(' ', 'T') + 'Z');
+      } else {
+        // Fallback
+        date = new Date(dateString);
+      }
+    }
+    
+    // Format using locale string to convert to user's timezone
+    return date.toLocaleString('pt-BR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return dateString;
+  }
 };
 
 export const useMicroControlData = () => {
@@ -37,22 +77,31 @@ export const useMicroControlData = () => {
       return data.dados.map(
         (item: RunningActivity): FormattedRunningActivity => ({
           ...item,
+          data_inicio: formatTimestampWithTimezone(item.data_inicio),
           duration: formatDuration(item.duracao),
         }),
       );
     },
   });
 
-  // Fixed the return type of select to CompletedActivity[]
+  // Fixed the return type of select to FormattedCompletedActivity[]
   const completedActivitiesQuery = useQuery<
     ApiResponse<CompletedActivity[]>,
     unknown,
-    CompletedActivity[]
+    FormattedCompletedActivity[]
   >({
     queryKey: QUERY_KEYS.COMPLETED_ACTIVITIES,
     queryFn: getLastCompletedActivities,
     staleTime: STALE_TIMES.FREQUENT_DATA, // Completed activities change frequently
-    select: data => data.dados,
+    select: data => {
+      return data.dados.map(
+        (item: CompletedActivity): FormattedCompletedActivity => ({
+          ...item,
+          data_inicio: formatTimestampWithTimezone(item.data_inicio),
+          data_fim: formatTimestampWithTimezone(item.data_fim),
+        }),
+      );
+    },
   });
 
   return {

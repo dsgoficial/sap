@@ -11,7 +11,7 @@ import { useMicroControlData } from '@/hooks/useMicroControl';
 import { Table } from '@/components/ui/Table';
 import {
   FormattedRunningActivity,
-  CompletedActivity,
+  FormattedCompletedActivity,
 } from '@/types/microControl';
 
 export const MicroControl = () => {
@@ -136,7 +136,7 @@ export const MicroControl = () => {
                 Não há atividades finalizadas recentemente.
               </Alert>
             ) : (
-              <Table<CompletedActivity>
+              <Table<FormattedCompletedActivity>
                 title="Últimas Atividades Finalizadas"
                 columns={[
                   { id: 'projeto_nome', label: 'Projeto', align: 'left' },

@@ -33,6 +33,13 @@ export interface CompletedActivity {
 }
 
 export interface FormattedRunningActivity
-  extends Omit<RunningActivity, 'duracao'> {
+  extends Omit<RunningActivity, 'duracao' | 'data_inicio'> {
   duration: string;
+  data_inicio: string;
+}
+
+export interface FormattedCompletedActivity
+  extends Omit<CompletedActivity, 'data_inicio' | 'data_fim'> {
+  data_inicio: string;
+  data_fim: string;
 }

@@ -97,11 +97,30 @@ export const Grid = ({
     return { rowSize, colSize };
   }, [data.grade]);
 
-  // Format timestamp with full date and time
   const formatTimestamp = (dateString?: string) => {
     if (!dateString) return '';
     try {
-      const date = new Date(dateString);
+      // Parse the date, handling common UTC formats that might lack a timezone indicator
+      let date;
+      
+      // If the dateString already has a timezone indicator, use it as is
+      if (dateString.includes('Z') || dateString.includes('+') || dateString.match(/\d-\d{2}:\d{2}$/)) {
+        date = new Date(dateString);
+      } else {
+        // If it doesn't have a timezone indicator, assume it's UTC
+        if (dateString.includes('T')) {
+          // ISO format without timezone
+          date = new Date(dateString + 'Z');
+        } else if (dateString.includes(' ') && dateString.includes(':')) {
+          // "YYYY-MM-DD HH:MM:SS" format
+          date = new Date(dateString.replace(' ', 'T') + 'Z');
+        } else {
+          // Fallback
+          date = new Date(dateString);
+        }
+      }
+      
+      // Format using locale string to convert to user's timezone
       return date.toLocaleString('pt-BR', {
         year: 'numeric',
         month: '2-digit',
@@ -111,6 +130,7 @@ export const Grid = ({
         second: '2-digit'
       });
     } catch (error) {
+      console.error('Error formatting date:', error);
       return dateString;
     }
   };
@@ -167,7 +187,7 @@ export const Grid = ({
         }, 2000);
       }
     };
-  }, [onItemHover]);
+  }, [onItemHover, formatTimestamp]);
 
   // Memoize cell style with theme support
   const cellStyles = useMemo(
