@@ -39,7 +39,6 @@ export default defineConfig(({ mode }) => {
             'vendor-mui': [
               '@mui/material',
               '@mui/icons-material',
-              '@mui/lab',
               '@emotion/react',
               '@emotion/styled'
             ],
