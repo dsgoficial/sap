@@ -8,7 +8,7 @@ const TOKEN_KEY = '@sap_web-Token';
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3013',
+  baseURL: import.meta.env.VITE_API_URL || '/',
   headers: {
     'Content-Type': 'application/json',
   },
