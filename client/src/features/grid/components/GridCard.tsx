@@ -1,6 +1,6 @@
 // Path: features\grid\components\GridCard.tsx
 import { useState, useMemo } from 'react';
-import { Typography, Card, Box, useTheme } from '@mui/material';
+import { Typography, Card, Box, useTheme, Alert } from '@mui/material';
 import { Grid } from './Grid';
 import { GridData, GridItem } from '@/types/grid';
 import { formatDate } from '@/utils/formatters';
@@ -18,8 +18,8 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
 
   // Calculate progress percentage
   const progressPercentage = useMemo(() => {
-    const countTotal = grid.grade.length;
-    const countVisited = grid.grade.filter(item => item.visited).length;
+    const countTotal = grid.grade?.length || 0;
+    const countVisited = grid.grade?.filter(item => item.visited)?.length || 0;
     const progressPercentage =
       countTotal > 0 ? ((countVisited / countTotal) * 100).toFixed(2) : '0';
     return progressPercentage;
@@ -74,6 +74,9 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
   // Card dimensions
   const CARD_WIDTH = 380;
   const CARD_HEIGHT = 480;
+
+  // Check if grid data is empty or undefined
+  const hasGridData = grid.grade && grid.grade.length > 0;
 
   return (
     <Card
@@ -163,11 +166,26 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
           minHeight: 250,
         }}
       >
-        <Grid
-          id={id.toString()}
-          data={grid}
-          onItemHover={setCurrentMouseover}
-        />
+        {hasGridData ? (
+          <Grid
+            id={id.toString()}
+            data={grid}
+            onItemHover={setCurrentMouseover}
+          />
+        ) : (
+          <Alert 
+            severity="info" 
+            sx={{ 
+              width: '90%', 
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: 'auto'
+            }}
+          >
+            Nenhum dado de grade disponível para esta atividade.
+          </Alert>
+        )}
       </Box>
 
       {/* Footer section */}
