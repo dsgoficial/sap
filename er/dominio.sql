@@ -153,7 +153,8 @@ INSERT INTO dominio.tipo_insumo (code, nome) VALUES
 (6, 'Serviço WMS'),
 (7, 'Serviço WFS'),
 (8, 'XYZ Tiles'),
-(9, 'Download via HTTP');
+(9, 'Download via HTTP'),
+(10, 'ArcGis MapServer');
 
 CREATE TABLE dominio.tipo_dado_producao(
 	code SMALLINT NOT NULL PRIMARY KEY,
@@ -258,5 +259,16 @@ INSERT INTO dominio.tipo_rotina (code, nome) VALUES
 (1, 'Controle de qualidade sem falso positivo'),	
 (2, 'Controle de qualidade com falso positivo'),	
 (3, 'Auxiliar');
+
+CREATE TABLE dominio.status(	
+	code SMALLINT NOT NULL PRIMARY KEY,	
+	nome VARCHAR(255) NOT NULL	
+);	
+
+INSERT INTO dominio.status (code, nome) VALUES	
+(1, 'Previsto / Em Execução'),	
+(2, 'Finalizado'),	
+(3, 'Abandonado');
+
 
 COMMIT;

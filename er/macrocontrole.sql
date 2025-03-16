@@ -11,7 +11,7 @@ CREATE TABLE macrocontrole.projeto(
 	nome VARCHAR(255) NOT NULL UNIQUE,
 	nome_abrev VARCHAR(255) NOT NULL UNIQUE,
 	descricao TEXT,
-	finalizado BOOLEAN NOT NULL DEFAULT FALSE
+	status_id SMALLINT NOT NULL REFERENCES dominio.status (code)
 );
 
 CREATE TABLE macrocontrole.linha_producao(
@@ -20,6 +20,7 @@ CREATE TABLE macrocontrole.linha_producao(
 	nome_abrev VARCHAR(255) NOT NULL UNIQUE,
 	tipo_produto_id SMALLINT NOT NULL REFERENCES dominio.tipo_produto (code),
 	descricao TEXT,
+	disponivel BOOLEAN NOT NULL DEFAULT TRUE,
 	UNIQUE(nome)
 );
 
@@ -30,7 +31,8 @@ CREATE TABLE macrocontrole.lote(
 	denominador_escala INTEGER NOT NULL,
 	linha_producao_id INTEGER NOT NULL REFERENCES macrocontrole.linha_producao (id),
 	projeto_id INTEGER NOT NULL REFERENCES macrocontrole.projeto (id),
-	descricao TEXT
+	descricao TEXT,
+	status_id SMALLINT NOT NULL REFERENCES dominio.status (code)
 );
 
 CREATE TABLE macrocontrole.produto(
@@ -272,6 +274,7 @@ CREATE TABLE macrocontrole.bloco(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	prioridade INTEGER NOT NULL,
+	status_id SMALLINT NOT NULL REFERENCES dominio.status (code),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	UNIQUE(nome, lote_id)
 );
@@ -327,7 +330,8 @@ FOR EACH ROW EXECUTE PROCEDURE macrocontrole.chk_lote_ut();
 
 CREATE TABLE macrocontrole.grupo_insumo(
 	id SERIAL NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) UNIQUE NOT NULL
+	nome VARCHAR(255) UNIQUE NOT NULL,
+	disponivel BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE macrocontrole.insumo(
@@ -650,7 +654,8 @@ CREATE TABLE macrocontrole.pit(
 	id SERIAL NOT NULL PRIMARY KEY,
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
 	meta INTEGER NOT NULL,
-	ano INTEGER NOT NULL
+	ano INTEGER NOT NULL,
+	UNIQUE(lote_id, ano)
 );
 
 CREATE TABLE macrocontrole.relatorio_alteracao(
@@ -658,5 +663,88 @@ CREATE TABLE macrocontrole.relatorio_alteracao(
 	data timestamp with time zone NOT NULL,
 	descricao TEXT NOT NULL
 );
+
+-- Trigger para verificar se um lote pode ser finalizado com base no status dos blocos
+CREATE OR REPLACE FUNCTION macrocontrole.chk_lote_status() RETURNS TRIGGER AS $$
+BEGIN
+    -- Se o lote está sendo finalizado (status_id != 1)
+    IF NEW.status_id != 1 THEN
+        -- Verifica se existem blocos em andamento
+        IF EXISTS (
+            SELECT 1
+            FROM macrocontrole.bloco
+            WHERE lote_id = NEW.id
+            AND status_id = 1
+        ) THEN
+            RAISE EXCEPTION 'Cannot finalize lot while blocks are still in progress';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_lote_status()
+    OWNER TO postgres;
+
+CREATE TRIGGER chk_lote_status_consistency
+    BEFORE INSERT OR UPDATE ON macrocontrole.lote
+    FOR EACH ROW
+    EXECUTE PROCEDURE macrocontrole.chk_lote_status();
+
+-- Trigger para verificar se um projeto pode ser finalizado com base no status dos lotes
+CREATE OR REPLACE FUNCTION macrocontrole.chk_projeto_status() RETURNS TRIGGER AS $$
+BEGIN
+    -- Se o projeto está sendo finalizado (status_id != 1)
+    IF NEW.status_id != 1 THEN
+        -- Verifica se existem lotes em andamento
+        IF EXISTS (
+            SELECT 1
+            FROM macrocontrole.lote
+            WHERE projeto_id = NEW.id
+            AND status_id = 1
+        ) THEN
+            RAISE EXCEPTION 'Cannot finalize project while lots are still in progress';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_projeto_status()
+    OWNER TO postgres;
+
+CREATE TRIGGER chk_projeto_status_consistency
+    BEFORE INSERT OR UPDATE ON macrocontrole.projeto
+    FOR EACH ROW
+    EXECUTE PROCEDURE macrocontrole.chk_projeto_status();
+
+CREATE OR REPLACE FUNCTION macrocontrole.chk_bloco_status() RETURNS TRIGGER AS $$
+BEGIN
+    -- Verifica status do lote relacionado
+    IF EXISTS (
+        SELECT 1
+        FROM macrocontrole.lote
+        WHERE id = NEW.lote_id
+        AND status_id != 1
+    ) THEN
+        -- Se o lote está finalizado, não permite blocos em execução ou alteração de status
+        IF NEW.status_id = 1 THEN
+            RAISE EXCEPTION 'Cannot create or update block in progress for finalized or abandoned lot';
+        ELSE
+            RAISE EXCEPTION 'Cannot modify block status for finalized or abandoned lot';
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+ALTER FUNCTION macrocontrole.chk_bloco_status()
+    OWNER TO postgres;
+
+CREATE TRIGGER chk_bloco_status_consistency
+    BEFORE INSERT OR UPDATE ON macrocontrole.bloco
+    FOR EACH ROW
+    EXECUTE PROCEDURE macrocontrole.chk_bloco_status();
 
 COMMIT;

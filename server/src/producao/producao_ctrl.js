@@ -374,11 +374,11 @@ const dadosProducao = async (atividadeId) => {
       dadosut.lote_id
     )
 
-    info.atividade.monitoramento = await getInfoMonitoramento(
-      t,
-      dadosut.subfase_id,
-      dadosut.lote_id
-    )
+    // info.atividade.monitoramento = await getInfoMonitoramento(
+    //   t,
+    //   dadosut.subfase_id,
+    //   dadosut.lote_id
+    // )
 
     info.atividade.insumos = await getInfoInsumos(
       t,

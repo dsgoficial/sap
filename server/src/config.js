@@ -25,8 +25,8 @@ dotenv.config({
   path: configPath
 })
 
-const VERSION = '2.2.1'
-const MIN_DATABASE_VERSION = '2.2.0'
+const VERSION = '2.2.2'
+const MIN_DATABASE_VERSION = '2.2.2'
 const MIN_MICROCONTROLE_VERSION = '1.0.0'
 
 

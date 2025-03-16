@@ -353,7 +353,7 @@ $$
   DECLARE r record;
   BEGIN
       view_txt := 'CREATE MATERIALIZED VIEW acompanhamento.bloco AS 
-      SELECT b.id, b.nome, b.prioridade, l.nome AS lote, proj.finalizado, b.geom';
+      SELECT b.id, b.nome, b.prioridade, l.nome AS lote, st_projeto.nome AS projeto_status, st_lote.nome AS lote_status, st_bloco.nome AS bloco_status, b.geom';
 
       FOR r in SELECT pf.id, pf.nome FROM macrocontrole.perfil_producao AS pf
       LOOP
@@ -390,12 +390,15 @@ $$
 
       END LOOP;
 
-      view_txt := view_txt || ' FROM (SELECT b.id, b.nome, b.lote_id, b.prioridade, ST_Collect(ut.geom) as geom 
+      view_txt := view_txt || ' FROM (SELECT b.id, b.nome, b.lote_id, b.prioridade, b.status_id, ST_Collect(ut.geom) as geom 
                                 FROM macrocontrole.bloco AS b
                                 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.bloco_id = b.id 
                                 GROUP BY b.id) AS b
                                 INNER JOIN macrocontrole.lote AS l ON l.id = b.lote_id
-                                INNER JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id';
+                                INNER JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id
+                                INNER JOIN dominio.status AS st_projeto ON proj.status_id = st_projeto.code
+                                INNER JOIN dominio.status AS st_lote ON l.status_id = st_lote.code
+                                INNER JOIN dominio.status AS st_bloco ON b.status_id = st_bloco.code';
       view_txt := view_txt || jointxt;
 
       EXECUTE view_txt;

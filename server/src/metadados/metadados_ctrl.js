@@ -228,7 +228,7 @@ controller.getResponsavelFaseProduto = async () => {
   return db.sapConn.any(
     `SELECT rfp.id, rfp.usuario_id, rfp.fase_id, rfp.produto_id,
     p.nome AS produto, p.inom, p.denominador_escala, p.tipo_produto_id, p.lote_id,
-    l.nome AS lote, l.projeto_id, proj.nome AS projeto, proj.finalizado AS projeto_finalizado,
+    l.nome AS lote, l.projeto_id, proj.nome AS projeto, proj.status_id AS projeto_status,
     tp.nome AS tipo_produto,
     u.nome, u.funcao,
     f.tipo_fase_id, tf.nome AS tipo_fase,

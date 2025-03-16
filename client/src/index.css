@@ -1,0 +1,58 @@
+/* src/index.css */
+/* Estilos globais para toda a aplicação */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f6f8;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Estilos para o componente de grid (compatibilidade com visavail) */
+div.tooltip-donut {
+  position: absolute;
+  text-align: center;
+  padding: 0.5rem;
+  background: white;
+  color: #313639;
+  border: 1px solid #313639;
+  border-radius: 8px;
+  pointer-events: none;
+  font-size: 12px;
+}

@@ -805,10 +805,10 @@ controller.getObservacao = async (atividadeId) => {
   )
 }
 
-controller.getViewsAcompanhamento = async (emAndamento, bloco) => {
+controller.getViewsAcompanhamento = async (emAndamentoProjeto, emAndamentoLote, bloco) => {
 
   let query = `
-    SELECT foo.schema, foo.nome, foo.tipo, p.finalizado, l.nome AS lote 
+    SELECT foo.schema, foo.nome, foo.tipo, l.status_id AS lote_status, p.status_id AS projeto_status, l.nome AS lote 
     FROM (
       SELECT 
         'acompanhamento' AS schema, 
@@ -840,8 +840,9 @@ controller.getViewsAcompanhamento = async (emAndamento, bloco) => {
     SELECT 
       'acompanhamento' AS schema, 
       'bloco' AS nome, 
-      'bloco' AS tipo, 
-      false AS finalizado, 
+      'bloco' AS tipo,
+      1 AS lote_status, 
+      1 AS projeto_status,
       null AS lote;
   `;
 
@@ -851,8 +852,12 @@ controller.getViewsAcompanhamento = async (emAndamento, bloco) => {
     return null
   }
 
-  if (emAndamento) {
-    views = views.filter((v) => !v.finalizado)
+  if (emAndamentoProjeto) {
+    views = views.filter((v) => v.projeto_status == 1)
+  }
+
+  if (emAndamentoLote) {
+    views = views.filter((v) => v.lote_status == 1)
   }
 
   const dados = {}
@@ -1369,21 +1374,6 @@ controller.getFilaPrioritaria = async () => {
   )
 }
 
-controller.criaFilaPrioritaria = async filaPrioritaria => {
-  return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet([
-      'atividade_id', 'usuario_id', 'prioridade'
-    ])
-
-    const query = db.pgp.helpers.insert(filaPrioritaria, cs, {
-      table: 'fila_prioritaria',
-      schema: 'macrocontrole'
-    })
-
-    await t.none(query)
-  })
-}
-
 controller.atualizaFilaPrioritaria = async filaPrioritaria => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
@@ -1442,21 +1432,6 @@ controller.getFilaPrioritariaGrupo = async () => {
     INNER JOIN macrocontrole.bloco AS bl ON bl.id = ut.bloco_id
     `
   )
-}
-
-controller.criaFilaPrioritariaGrupo = async filaPrioritariaGrupo => {
-  return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet([
-      'atividade_id', 'perfil_producao_id', 'prioridade'
-    ])
-
-    const query = db.pgp.helpers.insert(filaPrioritariaGrupo, cs, {
-      table: 'fila_prioritaria_grupo',
-      schema: 'macrocontrole'
-    })
-
-    await t.none(query)
-  })
 }
 
 controller.atualizaFilaPrioritariaGrupo = async filaPrioritariaGrupo => {

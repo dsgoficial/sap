@@ -11,6 +11,18 @@ const projetoSchema = require('./projeto_schema')
 
 const router = express.Router()
 
+
+router.get(
+  '/status',
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getStatus()
+
+    const msg = 'Valores possíveis para status retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 /**
  * @swagger
  * /api/projeto/tipo_produto:
@@ -1514,8 +1526,11 @@ router.get(
 router.get(
   '/bloco',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.statusQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getBlocos()
+    const dados = await projetoCtrl.getBlocos(req.query.status === 'execucao')
 
     const msg = 'Blocos retornados com sucesso'
 
@@ -1893,15 +1908,21 @@ router.post(
  *                   descricao:
  *                     type: string
  *                     description: Descrição do projeto
- *                   finalizado:
- *                     type: boolean
- *                     description: Indica se o projeto está finalizado
+ *                   status_id:
+ *                     type: integer
+ *                     description: Indica o id do status do projeto
+ *                   status:
+ *                     type: string
+ *                     description: Indica o status do projeto
  */
 router.get(
   '/projetos',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.statusQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getProjetos()
+    const dados = await projetoCtrl.getProjetos(req.query.status === 'execucao')
 
     const msg = 'Projetos retornados com sucesso'
 
@@ -2049,8 +2070,11 @@ router.delete(
 router.get(
   '/linha_producao',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.ativoQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getLinhasProducao()
+    const dados = await projetoCtrl.getLinhasProducao(req.query.status === 'ativo')
 
     const msg = 'Linhas de produção retornadas com sucesso'
 
@@ -2131,8 +2155,11 @@ router.get(
 router.get(
   '/subfases',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.ativoQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getSubfases()
+    const dados = await projetoCtrl.getSubfases(req.query.status === 'ativo')
 
     const msg = 'Subfases retornadas com sucesso'
 
@@ -3701,8 +3728,11 @@ router.delete(
 router.get(
   '/grupo_insumo',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.disponivelQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getGrupoInsumo()
+    const dados = await projetoCtrl.getGrupoInsumo(req.query.disponivel === 'true')
 
     const msg = 'Grupos de insumos retornados com sucesso'
 
@@ -4203,6 +4233,14 @@ router.delete(
  *       - application/json
  *     tags:
  *       - Lotes
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [execucao, finalizado]
+ *         description: Indica se deve filtrar o status do lote
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -4225,8 +4263,11 @@ router.delete(
 router.get(
   '/lote',
   verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.statusQuery
+  }),
   asyncHandler(async (req, res, next) => {
-    const dados = await projetoCtrl.getLote()
+    const dados = await projetoCtrl.getLote(req.query.status === 'execucao')
 
     const msg = 'Lotes retornados'
 
@@ -5105,6 +5146,46 @@ router.post(
     )
 
     const msg = 'Linha de produção inserida com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/linha_producao:
+ *   put:
+ *     summary: Atualiza uma ou mais linhas de produção existente
+ *     description: Atualiza os dados de uma ou mais linhas de produção.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Linha de Produção
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/linhaProducaoAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Linha de produção atualizada com sucesso
+ *       404:
+ *         description: Linha de produção não encontrada
+ */
+router.put(
+  '/linha_producao',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.linhaProducaoAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaLinhaProducao(
+      req.body.linhas_producao
+    )
+
+    const msg = 'Linha de produção atualizada com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })

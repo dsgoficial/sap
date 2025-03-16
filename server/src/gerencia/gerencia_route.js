@@ -957,10 +957,11 @@ router.get(
     query: gerenciaSchema.emAndamentoQuery
   }),
   asyncHandler(async (req, res, next) => {
-    const emAndamento = req.query.em_andamento === 'true';
-    const bloco = req.query.bloco ? parseInt(req.query.bloco, 10) : null; // Convert bloco to an integer if provided
+    const emAndamentoProjeto = req.query.em_andamento_projeto === 'true';
+    const emAndamentoLote = req.query.em_andamento_lote === 'true';
+    const bloco = req.query.bloco ? parseInt(req.query.bloco, 10) : null;1
 
-    const dados = await gerenciaCtrl.getViewsAcompanhamento(emAndamento, bloco);
+    const dados = await gerenciaCtrl.getViewsAcompanhamento(emAndamentoProjeto, emAndamentoLote, bloco);
 
     const msg = 'Views de acompanhamento retornadas com sucesso'
 
@@ -2153,7 +2154,7 @@ router.post(
     body: gerenciaSchema.filaPrioritaria
   }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaFilaPrioritaria(req.body.fila_prioritaria)
+    await gerenciaCtrl.criaFilaPrioritaria(req.body.atividade_ids, req.body.usuario_prioridade_id, req.body.prioridade)
 
     const msg = 'Entradas da fila prioritária criadas com sucesso'
 
@@ -2295,7 +2296,7 @@ router.post(
     body: gerenciaSchema.filaPrioritariaGrupo
   }),
   asyncHandler(async (req, res, next) => {
-    await gerenciaCtrl.criaFilaPrioritariaGrupo(req.body.fila_prioritaria_grupo)
+    await gerenciaCtrl.criaFilaPrioritariaGrupo(req.body.atividade_ids, req.body.perfil_producao_id, req.body.prioridade)
 
     const msg = 'Entradas da fila prioritária de grupo criadas com sucesso'
 
