@@ -322,6 +322,30 @@ dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
     return db.any(sqlview.view);
 }
 
+dt.refreshMaterializedViewFromProdutos = async (db, produtoIds) => {
+    let sqlview = await db.one(
+        `SELECT string_agg(query, ' ') AS view FROM (
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || p.lote_id AS viewname
+               FROM macrocontrole.produto AS p
+               WHERE p.id in ($<produtoIds:csv>)
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS lote
+        ) AS foo;`,
+        { produtoIds }
+    );
+
+    if (!sqlview.view) {
+        return [];
+    }
+
+    return db.any(sqlview.view);
+}
+
 dt.refreshMaterializedViewFromBlocos = async (db, blocoIds) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
@@ -357,6 +381,13 @@ dt.handleRelacionamentoUtDelete = async (db, utIds) => {
     await db.func(
         `macrocontrole.handle_relacionamento_ut_delete`,
         [utIds] 
+    );
+}
+
+dt.handleRelacionamentoProdutoDelete = async (db, produtoIds) => {
+    await db.func(
+        `macrocontrole.handle_relacionamento_produto_delete`,
+        [produtoIds] 
     );
 }
 
