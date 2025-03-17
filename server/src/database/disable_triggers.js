@@ -322,7 +322,7 @@ dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
     return db.any(sqlview.view);
 }
 
-dt.refreshMaterializedViewFromProdutos = async (db, produtoIds) => {
+dt.refreshMaterializedViewFromLotes = async (db, lotesIds) => {
     let sqlview = await db.one(
         `SELECT string_agg(query, ' ') AS view FROM (
             SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
@@ -330,13 +330,13 @@ dt.refreshMaterializedViewFromProdutos = async (db, produtoIds) => {
              SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
              FROM pg_matviews AS pgm
              INNER JOIN (
-               SELECT DISTINCT 'lote_' || p.lote_id AS viewname
-               FROM macrocontrole.produto AS p
-               WHERE p.id in ($<produtoIds:csv>)
+               SELECT DISTINCT 'lote_' || l.id AS viewname
+               FROM macrocontrole.lote AS l
+               WHERE l.id in ($<lotesIds:csv>)
              ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
             ) AS lote
         ) AS foo;`,
-        { produtoIds }
+        { lotesIds }
     );
 
     if (!sqlview.view) {

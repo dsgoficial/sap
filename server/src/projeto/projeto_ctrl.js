@@ -2028,6 +2028,7 @@ controller.criaProdutos = async (produtos, loteId) => {
 }
 
 controller.deleteProdutos = async produtoIds => {
+  let loteIds;
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.produto
@@ -2040,8 +2041,16 @@ controller.deleteProdutos = async produtoIds => {
         httpCode.BadRequest
       )
     }
+    
+    // Get lote_ids before deletion for refreshing views later
+    loteIds = await t.map(
+      `SELECT DISTINCT lote_id FROM macrocontrole.produto
+       WHERE id in ($<produtoIds:csv>)`,
+      { produtoIds },
+      a => +a.lote_id
+    );
 
-    await disableTriggers.handleRelacionamentoProdutoDelete(t, produtoIds)
+    await disableTriggers.handleRelacionamentoProdutoDelete(t, produtoIds);
 
     await t.any(
       `DELETE FROM macrocontrole.produto
@@ -2050,8 +2059,10 @@ controller.deleteProdutos = async produtoIds => {
     )
   })
   
-  // Refresh materialized views for affected lotes
-  await disableTriggers.refreshMaterializedViewFromProdutos(db.sapConn, produtoIds)
+  // Refresh materialized views for each affected lote
+  if (loteIds && loteIds.length > 0) {
+      await disableTriggers.refreshMaterializedViewFromLotes(db.sapConn, loteIds);
+  }
 }
 
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {
