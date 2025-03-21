@@ -7,6 +7,28 @@ const campoCtrl = require('./campo_ctrl')
 const campoSchema = require('./campo_schema')
 const router = express.Router()
 
+router.get(
+  '/situacao',
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getSituacao()
+
+    const msg = 'Situações retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/categoria',
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getCategorias()
+
+    const msg = 'Categorias retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 /**
  * @swagger
  * /api/campo/campos:
@@ -521,6 +543,17 @@ router.delete(
   })
 )
 
+router.get(
+  '/campos/estatisticas',
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getEstatisticasCampos()
+
+    const msg = 'Estatísticas de campos retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 /**
  * @swagger
  * /api/campo/fotos:
@@ -618,7 +651,7 @@ router.post(
   '/fotos',
   schemaValidation({ body: campoSchema.fotos }),
   asyncHandler(async (req, res, next) => {
-      await campoCtrl.criaFotos(req.body)
+      await campoCtrl.criaFotos(req.body.fotos)
 
       const msg = 'Fotos criadas com sucesso'
 
@@ -725,7 +758,7 @@ router.delete(
   '/fotos/:id',
   schemaValidation({ params: campoSchema.uuidParams }),
   asyncHandler(async (req, res, next) => {
-    await campoCtrl.deletaFotos(req.params.uuid)
+    await campoCtrl.deletaFotos(req.params.id)
 
     const msg = 'Fotos deletadas com sucesso'
 
@@ -839,5 +872,212 @@ router.delete(
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
 );
+
+router.get(
+  '/fotos/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getFotoById(req.params.uuid)
+
+    const msg = 'Foto retornada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+
+router.get(
+  '/fotos/campos/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getFotosByCampo(req.params.uuid)
+
+    const msg = 'Fotos retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.put(
+  '/fotos/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams, body: campoSchema.fotoUpdate }),
+  asyncHandler(async (req, res, next) => {
+    await campoCtrl.atualizaFoto(req.params.uuid, req.body.foto)
+
+    const msg = 'Foto atualizada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/campo/tracks:
+ *   post:
+ *     summary: Cria um novo track associado a um campo
+ *     description: Permite registrar um novo track (percurso) associado a um campo específico
+ *     tags:
+ *       - Campo
+ *     security:
+ *       - adminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Track'
+ *     responses:
+ *       200:
+ *         description: Track criado com sucesso
+ */
+router.post(
+  '/tracks',
+  schemaValidation({ body: campoSchema.track }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.criaTracker(req.body.track)
+
+    const msg = 'Track criado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/campo/tracks/{uuid}:
+ *   get:
+ *     summary: Obtém detalhes de um track específico
+ *     description: Retorna os detalhes de um track específico, identificado pelo seu ID.
+ *     tags:
+ *       - Campo
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         description: ID do track a ser consultado
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Detalhes do track retornados com sucesso
+ */
+router.get(
+  '/tracks/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getTrackById(req.params.uuid)
+
+    const msg = 'Track retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/campo/tracks/campos/{uuid}:
+ *   get:
+ *     summary: Obtém todos os tracks associados a um campo específico
+ *     description: Retorna todos os tracks associados a um campo específico, identificado pelo seu ID.
+ *     tags:
+ *       - Campo
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         description: ID do campo cujos tracks devem ser retornados
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Lista de tracks retornada com sucesso
+ */
+router.get(
+  '/tracks/campos/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getTracksByCampo(req.params.uuid)
+
+    const msg = 'Tracks retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/campo/tracks/{uuid}:
+ *   put:
+ *     summary: Atualiza um track específico
+ *     description: Atualiza as informações de um track específico, identificado pelo seu ID.
+ *     tags:
+ *       - Campo
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         description: ID do track a ser atualizado
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TrackUpdate'
+ *     responses:
+ *       200:
+ *         description: Track atualizado com sucesso
+ */
+router.put(
+  '/tracks/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams, body: campoSchema.trackUpdate }),
+  asyncHandler(async (req, res, next) => {
+    await campoCtrl.atualizaTrack(req.params.uuid, req.body.track)
+
+    const msg = 'Track atualizado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/campo/tracks/{uuid}:
+ *   delete:
+ *     summary: Deleta um track específico
+ *     description: Remove um track do sistema com base no ID fornecido
+ *     tags:
+ *       - Campo
+ *     security:
+ *       - adminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         description: ID do track a ser deletado
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Track deletado com sucesso
+ */
+router.delete(
+  '/tracks/:uuid',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    await campoCtrl.deleteTracker(req.params.uuid)
+
+    const msg = 'Track deletado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
 
 module.exports = router
