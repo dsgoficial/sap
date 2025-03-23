@@ -174,10 +174,10 @@ router.put(
 )
 
 router.delete(
-  '/fotos/:id',
+  '/fotos/:uuid',
   schemaValidation({ params: campoSchema.uuidParams }),
   asyncHandler(async (req, res, next) => {
-    await campoCtrl.deletaFotos(req.params.id)
+    await campoCtrl.deletaFotos(req.params.uuid)
 
     const msg = 'Fotos deletadas com sucesso'
 

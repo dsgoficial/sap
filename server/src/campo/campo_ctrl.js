@@ -49,7 +49,12 @@ controller.getCampos = async () => {
             SELECT COUNT(*)
             FROM controle_campo.track AS t
             WHERE t.campo_id = c.id
-        ) AS qtd_track
+        ) AS qtd_track,
+        (
+			SELECT COUNT(*)
+			FROM controle_campo.relacionamento_campo_produto AS rcp
+			WHERE rcp.campo_id = c.id
+		) AS produtos_associados
         FROM controle_campo.campo AS c
         INNER JOIN controle_campo.situacao AS s ON s.code = c.situacao_id
         GROUP BY c.id, c.nome, c.orgao, c.pit, c.descricao, c.militares, c.placas_vtr, c.inicio, 
@@ -61,61 +66,51 @@ controller.getCampos = async () => {
 // Função para obter um campo específico
 controller.getCampoById = async (campo_id) => {
     return db.sapConn.one(
-        `SELECT 
-            c.id, 
-            c.nome, 
-            c.orgao, 
-            c.pit, 
-            c.descricao, 
-            c.militares, 
-            c.placas_vtr, 
-            c.inicio, 
-            c.fim, 
-            c.situacao_id, 
-            s.nome AS situacao, 
-            c.geom,
-            (
-                SELECT json_agg(
-                    json_build_object(
-                        'id', p.id,
-                        'nome', p.nome
-                    )
-                )
-                FROM controle_campo.relacionamento_campo_produto AS rcp
-                JOIN macrocontrole.produto AS p ON p.id = rcp.produto_id
-                WHERE rcp.campo_id = c.id
-            ) AS produtos,
-            (
-                SELECT json_agg(
-                    json_build_object(
-                        'id', t.id,
-                        'chefe_vtr', t.chefe_vtr,
-                        'motorista', t.motorista,
-                        'placa_vtr', t.placa_vtr,
-                        'dia', t.dia,
-                        'inicio', t.inicio,
-                        'fim', t.fim,
-                        'geom', ST_AsGeoJSON(t.geom)::json
-                    )
-                )
-                FROM controle_campo.track AS t
-                WHERE t.campo_id = c.id
-            ) AS tracks,
-            (
-                SELECT json_agg(
-                    json_build_object(
-                        'id', i.id,
-                        'descricao', i.descricao,
-                        'data_imagem', i.data_imagem,
-                        'imagem_bin', i.imagem_bin
-                    )
-                )
-                FROM controle_campo.imagem AS i
-                WHERE i.campo_id = c.id
-            ) AS imagens
+        `SELECT c.id, c.nome, c.orgao, c.pit, c.descricao, c.militares, c.placas_vtr, c.inicio,
+        c.fim, c.situacao_id, s.nome AS situacao, ST_COLLECT(c.geom) AS geom,
+        (
+            SELECT json_agg(
+            json_build_object(
+                'id', p.id,
+                'nome', p.nome
+            )
+        )
+            FROM controle_campo.relacionamento_campo_produto AS rcp
+            JOIN macrocontrole.produto AS p ON p.id = rcp.produto_id
+            WHERE rcp.campo_id = c.id
+        ) AS produtos,
+        (
+            SELECT json_agg(
+            json_build_object(
+                'id', t.id,
+                'chefe_vtr', t.chefe_vtr,
+                'motorista', t.motorista,
+                'placa_vtr', t.placa_vtr,
+                'dia', t.dia,
+                'inicio', t.inicio,
+                'fim', t.fim
+            )
+        )
+            FROM controle_campo.track AS t
+            WHERE t.campo_id = c.id
+        ) AS tracks,
+        (
+            SELECT json_agg(
+            json_build_object(
+                'id', i.id,
+                'descricao', i.descricao,
+                'data_imagem', i.data_imagem,
+                'imagem_bin', i.imagem_bin
+            )
+        )
+            FROM controle_campo.imagem AS i
+            WHERE i.campo_id = c.id
+        ) AS imagens
         FROM controle_campo.campo AS c
         INNER JOIN controle_campo.situacao AS s ON s.code = c.situacao_id
-        WHERE c.id = $<id>`,
+        WHERE c.id = $<id>
+        GROUP BY c.id, c.nome, c.orgao, c.pit, c.descricao, c.militares, c.placas_vtr, c.inicio,
+        c.fim, c.situacao_id, s.nome`,
         { id: campo_id }
     )
 }
@@ -195,7 +190,7 @@ controller.deletaCampo = async (id) => {
     })
 }
 
-// Função para obter estatísticas dos campos
+// Função para obter estatísticas dos campos, apenas Front-End
 controller.getEstatisticasCampos = async () => {
     return db.sapConn.task(async t => {
         // Estatísticas por situação
@@ -267,7 +262,7 @@ controller.getEstatisticasCampos = async () => {
 // Função para obter todas as fotos
 controller.getFotos = async () => {
     return db.sapConn.any(
-        `SELECT id, descricao, data_imagem, imagem_bin, campo_id
+        `SELECT id, descricao, data_imagem, campo_id
         FROM controle_campo.imagem`
     )
 }
@@ -418,14 +413,8 @@ controller.atualizaTrack = async (id, track) => {
             fim: track.fim
         }
         
-        // Se a geometria foi fornecida, incluí-la na atualização
-        if (track.geom) {
-            trackAtualizado.geom = track.geom
-        }
-        
         const cs = new db.pgp.helpers.ColumnSet([
-            'id', 'chefe_vtr', 'motorista', 'placa_vtr', 'dia', 'inicio', 'fim',
-            { name: 'geom', mod: ':raw', def: null }
+            'id', 'chefe_vtr', 'motorista', 'placa_vtr', 'dia', 'inicio', 'fim'
         ])
 
         const query = db.pgp.helpers.update(trackAtualizado, cs, {
