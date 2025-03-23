@@ -59,8 +59,7 @@ models.track = Joi.object().keys({
       dia: Joi.date().required(),
       inicio: Joi.string().required(), // time sem timezone
       fim: Joi.string().required(), // time sem timezone
-      campo_id: Joi.string().uuid().required(),
-      geom: Joi.object().required() // GeoJSON
+      campo_id: Joi.string().uuid().required()
     })
     .required()
 })
@@ -78,6 +77,10 @@ models.trackUpdate = Joi.object().keys({
       geom: Joi.object() // GeoJSON
     })
     .required()
+})
+
+models.loteidParams = Joi.object().keys({
+  lote_id: Joi.number().integer().strict().required()
 })
 
 module.exports = models
