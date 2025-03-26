@@ -173,14 +173,14 @@ export const GridCard = ({ id, grid }: GridCardProps) => {
             onItemHover={setCurrentMouseover}
           />
         ) : (
-          <Alert 
-            severity="info" 
-            sx={{ 
-              width: '90%', 
+          <Alert
+            severity="info"
+            sx={{
+              width: '90%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              height: 'auto'
+              height: 'auto',
             }}
           >
             Nenhum dado de grade disponível para esta atividade.
