@@ -179,7 +179,7 @@ router.delete(
   asyncHandler(async (req, res, next) => {
     await campoCtrl.deletaFotos(req.params.uuid)
 
-    const msg = 'Fotos deletadas com sucesso'
+    const msg = 'Foto deletada com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
   })
@@ -269,12 +269,33 @@ router.delete(
   })
 )
 
+// Rotas de Tracks Ponto
+router.post(
+  '/tracks_ponto',
+  asyncHandler(async (req, res, next) => {
+    const trackIds = await campoCtrl.criaTrackerPonto(req.body)
+
+    const msg = 'Tracks de ponto inseridos com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, { ids: trackIds })
+  })
+)
+
 // Rotas de Relacionamento Produto/Campo
 router.get(
   '/produtos_campo',
   asyncHandler(async (req, res, next) => {
     const dados = await campoCtrl.getProdutosCampo()
     const msg = 'Associações entre produtos e campo retornadas com sucesso'
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/produtos_campo/:campo_id',
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getProdutosByCampoId(req.params.campo_id)
+    const msg = 'Campos Associados Retornados com sucesso'
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
@@ -287,5 +308,50 @@ router.post(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
+
+router.delete(
+  '/produtos_campo/:campo_id',
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.deletaProdutoByCampoId(req.params.campo_id)
+    const msg = 'Produtos associados a campo deletados com sucesso'
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.get(
+  '/tracks/:campo_id/tracks/mvt/:z/:x/:y', async (req, res) => {
+  try {
+      const { z, x, y, campo_id } = req.params;
+      
+      // Verificar se os parâmetros são válidos
+      if (!z || !x || !y || !campo_id) {
+          return res.status(400).json({ message: 'Parâmetros incompletos' });
+      }
+      
+      const tile = await controller.getTrackMVT(
+          parseInt(z, 10), 
+          parseInt(x, 10), 
+          parseInt(y, 10), 
+          campo_id // Mantém como UUID
+      );
+      
+      if (!tile || !tile.mvt) {
+          // Retornar um MVT vazio em vez de 404 para compatibilidade com clientes de mapa
+          res.setHeader('Content-Type', 'application/x-protobuf');
+          return res.send(Buffer.from(''));
+      }
+      
+      // Configurar os headers apropriados para MVT
+      res.setHeader('Content-Type', 'application/x-protobuf');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      
+      // Enviar o buffer do MVT
+      res.send(Buffer.from(tile.mvt, 'binary'));
+  } catch (error) {
+      console.error('Erro ao gerar MVT:', error);
+      res.status(500).json({ message: 'Erro ao processar o tile' });
+  }
+});
 
 module.exports = router

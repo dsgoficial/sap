@@ -39,7 +39,7 @@ controller.getProdutosByLot = async (lote_id) => {
 controller.getCampos = async () => {
     return db.sapConn.any(
         `SELECT c.id, c.nome, c.orgao, c.pit, c.descricao, c.militares, c.placas_vtr, c.inicio, 
-        c.fim, c.situacao_id, s.nome AS situacao, ST_COLLECT(c.geom) AS geom,
+        c.fim, c.situacao_id, s.nome AS situacao, ST_AsEWKT(c.geom) AS geom, c.categorias,
         (
             SELECT COUNT(*)
             FROM controle_campo.imagem AS img
@@ -67,7 +67,7 @@ controller.getCampos = async () => {
 controller.getCampoById = async (campo_id) => {
     return db.sapConn.one(
         `SELECT c.id, c.nome, c.orgao, c.pit, c.descricao, c.militares, c.placas_vtr, c.inicio,
-        c.fim, c.situacao_id, s.nome AS situacao, ST_COLLECT(c.geom) AS geom,
+        c.fim, c.situacao_id, s.nome AS situacao, ST_AsEWKT(c.geom) AS geom,
         (
             SELECT json_agg(
             json_build_object(
@@ -86,9 +86,7 @@ controller.getCampoById = async (campo_id) => {
                 'chefe_vtr', t.chefe_vtr,
                 'motorista', t.motorista,
                 'placa_vtr', t.placa_vtr,
-                'dia', t.dia,
-                'inicio', t.inicio,
-                'fim', t.fim
+                'dia', t.dia
             )
         )
             FROM controle_campo.track AS t
@@ -176,11 +174,7 @@ controller.atualizaCampo = async (id, campo) => {
 controller.deletaCampo = async (id) => {
     return db.sapConn.tx(async t => {
         await t.none(
-            `DELETE FROM controle_campo.imagem WHERE campo_id = $<id>`,
-            { id: id }
-        );
-        await t.none(
-            `DELETE FROM controle_campo.track WHERE campo_id = $<id>`,
+            `DELETE FROM controle_campo.relacionamento_campo_produto WHERE campo_id = $<id>`,
             { id: id }
         );
         await t.none(
@@ -262,8 +256,9 @@ controller.getEstatisticasCampos = async () => {
 // Função para obter todas as fotos
 controller.getFotos = async () => {
     return db.sapConn.any(
-        `SELECT id, descricao, data_imagem, campo_id
-        FROM controle_campo.imagem`
+        `SELECT i.id, i.descricao, i.data_imagem, i.campo_id, c.nome AS nome_campo
+        FROM controle_campo.imagem AS i
+        INNER JOIN controle_campo.campo AS c ON i.campo_id = c.id`
     )
 }
 
@@ -352,15 +347,16 @@ controller.deletaFotosByCampo = async (id) => {
 // Selecionar todos os tracks
 controller.getTracks = async () => {
     return db.sapConn.any(
-        `SELECT id, chefe_vtr, motorista, placa_vtr, dia, inicio, fim, campo_id
-        FROM controle_campo.track`
+        `SELECT t.id, t.chefe_vtr, t.motorista, t.placa_vtr, t.dia, t.campo_id, c.nome AS nome_campo
+        FROM controle_campo.track AS t
+        INNER JOIN controle_campo.campo AS c ON t.campo_id = c.id`
     )
 }
 
 // Função para obter um track específico pelo ID
 controller.getTrackById = async (id) => {
     return db.sapConn.one(
-        `SELECT id, chefe_vtr, motorista, placa_vtr, dia, inicio, fim, campo_id, ST_AsGeoJSON(geom)::json as geom
+        `SELECT id, chefe_vtr, motorista, placa_vtr, dia, campo_id, ST_AsGeoJSON(geom)::json as geom
         FROM controle_campo.track
         WHERE id = $<id>`,
         { id: id }
@@ -370,7 +366,7 @@ controller.getTrackById = async (id) => {
 // Função para onter um track por campo
 controller.getTracksByCampo = async (campo_id) => {
     return db.sapConn.any(
-        `SELECT id, chefe_vtr, motorista, placa_vtr, dia, inicio, fim, ST_AsGeoJSON(geom)::json as geom
+        `SELECT id, chefe_vtr, motorista, placa_vtr, dia
         FROM controle_campo.track
         WHERE campo_id = $<campo_id>`,
         { campo_id: campo_id }
@@ -380,11 +376,11 @@ controller.getTracksByCampo = async (campo_id) => {
 // Função para criar um track
 controller.criaTracker = async (track) => {
     return db.sapConn.tx(async t => {
-        await t.one(
+        const result = await t.one(
             `INSERT INTO controle_campo.track
-            (chefe_vtr, motorista, placa_vtr, dia, inicio, fim, campo_id)
+            (chefe_vtr, motorista, placa_vtr, dia, campo_id)
             VALUES
-            ($<chefe_vtr>, $<motorista>, $<placa_vtr>, $<dia>, $<inicio>, $<fim>, $<campo_id>)
+            ($<chefe_vtr>, $<motorista>, $<placa_vtr>, $<dia>, $<campo_id>)
             RETURNING id
             `,
             {
@@ -392,12 +388,11 @@ controller.criaTracker = async (track) => {
                 motorista: track.motorista,
                 placa_vtr: track.placa_vtr,
                 dia: track.dia,
-                inicio: track.inicio,
-                fim: track.fim,
                 campo_id: track.campo_id
             }
-        )
-    })
+        );
+        return result.id;  // Retorna explicitamente o ID gerado
+    });
 }
 
 // Função para atualizar um track
@@ -408,13 +403,11 @@ controller.atualizaTrack = async (id, track) => {
             chefe_vtr: track.chefe_vtr,
             motorista: track.motorista,
             placa_vtr: track.placa_vtr,
-            dia: track.dia,
-            inicio: track.inicio,
-            fim: track.fim
+            dia: track.dia
         }
         
         const cs = new db.pgp.helpers.ColumnSet([
-            'id', 'chefe_vtr', 'motorista', 'placa_vtr', 'dia', 'inicio', 'fim'
+            'id', 'chefe_vtr', 'motorista', 'placa_vtr', 'dia'
         ])
 
         const query = db.pgp.helpers.update(trackAtualizado, cs, {
@@ -430,21 +423,82 @@ controller.atualizaTrack = async (id, track) => {
 controller.deleteTracker = async (id) => {
     return db.sapConn.tx(async t => {
         await t.none(
+            `DELETE FROM controle_campo.track_p WHERE track_id = $<id>`,
+            { id: id }
+        )
+        await t.none(
             `DELETE FROM controle_campo.track WHERE id = $<id>`,
             { id: id }
         )
     })
 }
 
+// Funções de Controle para Tracker Ponto
+// Função para criar um track ponto
+controller.criaTrackerPonto = async (tracks) => {
+    let trackIds = []
+    await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+        const cs = new db.pgp.helpers.ColumnSet([
+          'id',
+          'track_id',
+          'x_ll',
+          'y_ll',
+          'track_id_garmin',
+          'track_segment',
+          'track_segment_point_index',
+          'elevation',
+          'creation_time',
+          { name: 'geom', mod: ':raw' },
+          { name: 'data_importacao', init: () => new Date() }
+        ])
+    
+        // Formatação da geometria para cada track ponto
+        tracks.forEach(p => {
+          if (!p.x_ll || !p.y_ll) {
+            throw new AppError(
+              'Coordenadas x_ll e y_ll são obrigatórias',
+              httpCode.BadRequest
+            )
+          }
+          
+          // Conversão das coordenadas para geometria de ponto
+          p.geom = `ST_SetSRID(ST_MakePoint(${p.x_ll}, ${p.y_ll}), 4326)`
+        })
+    
+        const query = db.pgp.helpers.insert(tracks, cs, {
+          table: 'track_p',
+          schema: 'controle_campo'
+        }) + ' RETURNING id'
+    
+        trackIds = await t.map(query, undefined, a => a.id)
+      })
+
+      await db.sapConn.none('REFRESH MATERIALIZED VIEW controle_campo.track_l');
+      
+      return trackIds
+    }
+
 // Funções de Controle Relaciomaneto Produto x Campo
 // Função para obter todos os produtos de um campo
-controller.getProdutosCampo = async (campo_id) => {
+controller.getProdutosCampo = async () => {
     return db.sapConn.any(
         `SELECT p.id, p.nome as produto_nome, c.id, c.nome, l.nome as nome_lote
         FROM controle_campo.relacionamento_campo_produto AS rcp
         INNER JOIN controle_campo.campo AS c ON c.id = rcp.campo_id
         INNER JOIN macrocontrole.produto AS p ON p.id = rcp.produto_id
 		INNER JOIN macrocontrole.lote as l ON l.id = p.lote_id`
+    )
+}
+
+controller.getProdutosByCampoId = async (campo_id) => {
+    return db.sapConn.any(
+        `SELECT p.id, p.nome as produto_nome, c.id, c.nome, l.nome as nome_lote
+        FROM controle_campo.relacionamento_campo_produto AS rcp
+        INNER JOIN controle_campo.campo AS c ON c.id = rcp.campo_id
+        INNER JOIN macrocontrole.produto AS p ON p.id = rcp.produto_id
+		INNER JOIN macrocontrole.lote as l ON l.id = p.lote_id
+        WHERE c.id = $<campo_id>`,
+        { campo_id: campo_id }
     )
 }
 
@@ -465,5 +519,51 @@ controller.criaProdutosCampo = async (associacoes) => {
       return { ids }
     });
 }
+
+controller.deletaProdutoByCampoId = async (campo_id) => {
+    return db.sapConn.tx(async t => {
+        await t.none(
+            `DELETE FROM controle_campo.relacionamento_campo_produto WHERE campo_id = $<campo_id>`,
+            { campo_id: campo_id }
+        )
+    })
+}
+
+controller.getTrackMVT = async (z, x, y, campo_id) => {
+    return db.sapConn.oneOrNone(
+        `WITH
+        bounds AS (
+            SELECT ST_TileEnvelope($<z>, $<x>, $<y>) AS geom
+        ),
+        campo_tracks AS (
+            SELECT tl.id, tl.track_id, tl.track_id_garmin, 
+                tl.min_t, tl.max_t, tl.geom
+            FROM controle_campo.track_l AS tl
+            INNER JOIN controle_campo.track AS t ON tl.track_id = t.id
+            WHERE t.campo_id = $<campo_id>
+            AND tl.geom && (SELECT geom FROM bounds)
+        )
+        SELECT ST_AsMVT(tile, 'track_layer', 4096, 'geom') AS mvt
+        FROM (
+            SELECT id, track_id, track_id_garmin,
+                to_char(min_t, 'YYYY-MM-DD HH24:MI:SS') as min_time,
+                to_char(max_t, 'YYYY-MM-DD HH24:MI:SS') as max_time,
+                ST_AsMVTGeom(
+                    geom,
+                    (SELECT geom FROM bounds),
+                    4096,
+                    256,
+                    true
+                ) AS geom
+            FROM campo_tracks
+        ) AS tile`,
+        { 
+            z: z, 
+            x: x, 
+            y: y,
+            campo_id: campo_id
+        }
+    );
+};
 
 module.exports = controller

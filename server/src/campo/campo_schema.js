@@ -57,8 +57,6 @@ models.track = Joi.object().keys({
       motorista: Joi.string().required(),
       placa_vtr: Joi.string().required(),
       dia: Joi.date().required(),
-      inicio: Joi.string().required(), // time sem timezone
-      fim: Joi.string().required(), // time sem timezone
       campo_id: Joi.string().uuid().required()
     })
     .required()
@@ -72,8 +70,6 @@ models.trackUpdate = Joi.object().keys({
       motorista: Joi.string(),
       placa_vtr: Joi.string(),
       dia: Joi.date(),
-      inicio: Joi.string(), // time sem timezone
-      fim: Joi.string(), // time sem timezone
       geom: Joi.object() // GeoJSON
     })
     .required()

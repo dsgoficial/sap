@@ -20,6 +20,7 @@ CREATE TYPE controle_campo.categoria_campo AS ENUM (
     'Imagens Panorâmicas em 360º',
     'Pontos de Controle',
     'Capacitação em Geoinformação'
+    'Ortoimagens de Drone'
 );
 
 CREATE TABLE controle_campo.campo
@@ -61,8 +62,6 @@ CREATE TABLE controle_campo.track
     motorista VARCHAR(255) NOT NULL,
     placa_vtr VARCHAR(255) NOT NULL,
     dia date NOT NULL,
-    inicio time without time zone NOT NULL,
-    fim time without time zone NOT NULL,
     campo_id uuid NOT NULL REFERENCES controle_campo.campo (id)
 );
 
