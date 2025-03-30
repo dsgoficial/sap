@@ -23,7 +23,7 @@ dt.disableAllTriggersInTransaction = async (db, operationCallback) => {
 dt.reCreateSubfaseMaterializedViewFromFases = async (db, loteId, faseIds) => {
     let sqlview = await db.one(
         `
-        SELECT string_agg(query, ' ') AS fix FROM (
+        SELECT string_agg(query, ' ') AS view FROM (
           SELECT DISTINCT 'DROP MATERIALIZED VIEW IF EXISTS acompanhamento.lote_' || $<loteId> || '_subfase_'|| s.id || 
                 ';DELETE FROM public.layer_styles WHERE f_table_schema = ''acompanhamento'' AND f_table_name = (''lote_' || $<loteId> || '_subfase_' || s.id || ''') AND stylename = ''acompanhamento_subfase'';' ||
                 'SELECT acompanhamento.cria_view_acompanhamento_subfase(' || s.id || ', ' || $<loteId> || ');' AS query
@@ -33,7 +33,11 @@ dt.reCreateSubfaseMaterializedViewFromFases = async (db, loteId, faseIds) => {
         { loteId, faseIds }
     );
 
-    return db.any(sqlview.fix);
+    if (!sqlview.view) {
+        return [];
+    }
+
+    return db.any(sqlview.view);
 }
 
 dt.refreshMaterializedViewFromUTs = async (db, utIds) => {
@@ -82,6 +86,10 @@ dt.refreshMaterializedViewFromUTs = async (db, utIds) => {
         ) AS foo;`,
         { utIds }
     );
+
+    if (!sqlview.view) {
+        return [];
+    }
 
     return db.any(sqlview.view);
 }
@@ -135,6 +143,10 @@ dt.refreshMaterializedViewFromAtivs = async (db, ativIds) => {
         ) AS foo;`,
         { ativIds }
     );
+
+    if (!sqlview.view) {
+        return [];
+    }
 
     return db.any(sqlview.view);
 }
@@ -190,6 +202,10 @@ dt.refreshMaterializedViewFromSubfases = async (db, loteId, subfaseIds) => {
         { loteId, subfaseIds }
     );
 
+    if (!sqlview.view) {
+        return [];
+    }
+
     return db.any(sqlview.view);
 }
 
@@ -244,6 +260,10 @@ dt.refreshMaterializedViewFromLote = async (db, loteId) => {
         { loteId }
     );
 
+    if (!sqlview.view) {
+        return [];
+    }
+
     return db.any(sqlview.view);
 }
 
@@ -271,6 +291,10 @@ dt.refreshMaterializedViewFromLoteNoSubfase = async (db, loteId) => {
         { loteId }
     );
 
+    if (!sqlview.view) {
+        return [];
+    }
+
     return db.any(sqlview.view);
 }
 
@@ -290,6 +314,34 @@ dt.refreshMaterializedViewFromLoteOnlyLote = async (db, loteId) => {
         ) AS foo;`,
         { loteId }
     );
+
+    if (!sqlview.view) {
+        return [];
+    }
+
+    return db.any(sqlview.view);
+}
+
+dt.refreshMaterializedViewFromLotes = async (db, lotesIds) => {
+    let sqlview = await db.one(
+        `SELECT string_agg(query, ' ') AS view FROM (
+            SELECT DISTINCT 'REFRESH MATERIALIZED VIEW CONCURRENTLY ' || nome_view || ';' AS query
+            FROM (
+             SELECT pgm.schemaname || '.' || pgm.matviewname AS nome_view
+             FROM pg_matviews AS pgm
+             INNER JOIN (
+               SELECT DISTINCT 'lote_' || l.id AS viewname
+               FROM macrocontrole.lote AS l
+               WHERE l.id in ($<lotesIds:csv>)
+             ) AS x ON pgm.matviewname = x.viewname AND pgm.schemaname = 'acompanhamento'
+            ) AS lote
+        ) AS foo;`,
+        { lotesIds }
+    );
+
+    if (!sqlview.view) {
+        return [];
+    }
 
     return db.any(sqlview.view);
 }
@@ -311,6 +363,10 @@ dt.refreshMaterializedViewFromBlocos = async (db, blocoIds) => {
         { blocoIds }
     );
 
+    if (!sqlview.view) {
+        return [];
+    }
+
     return db.any(sqlview.view);
 }
 
@@ -325,6 +381,13 @@ dt.handleRelacionamentoUtDelete = async (db, utIds) => {
     await db.func(
         `macrocontrole.handle_relacionamento_ut_delete`,
         [utIds] 
+    );
+}
+
+dt.handleRelacionamentoProdutoDelete = async (db, produtoIds) => {
+    await db.func(
+        `macrocontrole.handle_relacionamento_produto_delete`,
+        [produtoIds] 
     );
 }
 

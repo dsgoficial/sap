@@ -2028,7 +2028,8 @@ controller.criaProdutos = async (produtos, loteId) => {
 }
 
 controller.deleteProdutos = async produtoIds => {
-  return db.sapConn.task(async t => {
+  let loteIds;
+  await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const exists = await t.any(
       `SELECT id FROM macrocontrole.produto
       WHERE id in ($<produtoIds:csv>)`,
@@ -2040,25 +2041,28 @@ controller.deleteProdutos = async produtoIds => {
         httpCode.BadRequest
       )
     }
+    
+    // Get lote_ids before deletion for refreshing views later
+    loteIds = await t.map(
+      `SELECT DISTINCT lote_id FROM macrocontrole.produto
+       WHERE id in ($<produtoIds:csv>)`,
+      { produtoIds },
+      a => +a.lote_id
+    );
 
-    const existsAssociation = await t.any(
-      `SELECT p_id FROM macrocontrole.relacionamento_produto 
-      WHERE p_id in ($<produtoIds:csv>)`,
-      { produtoIds }
-    )
-    if (existsAssociation && existsAssociation.length > 0) {
-      throw new AppError(
-        'O lote possui produtos associados',
-        httpCode.BadRequest
-      )
-    }
+    await disableTriggers.handleRelacionamentoProdutoDelete(t, produtoIds);
 
-    return t.any(
+    await t.any(
       `DELETE FROM macrocontrole.produto
       WHERE id in ($<produtoIds:csv>)`,
       { produtoIds }
     )
   })
+  
+  // Refresh materialized views for each affected lote
+  if (loteIds && loteIds.length > 0) {
+      await disableTriggers.refreshMaterializedViewFromLotes(db.sapConn, loteIds);
+  }
 }
 
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {
