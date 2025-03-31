@@ -66,6 +66,11 @@ const Maps = lazy(() =>
     default: module.Maps,
   })),
 );
+const FieldActivities = lazy(() =>
+  import('../features/fieldActivities/routes/FieldActivities').then(module => ({
+    default: module.FieldActivities,
+  })),
+);
 const Unauthorized = lazy(() =>
   import('./Unauthorized').then(module => ({
     default: module.Unauthorized,
@@ -265,6 +270,14 @@ const routes: RouteObject[] = [
           </Suspense>
         ),
         loader: adminLoader,
+      },
+      {
+        path: 'field-activities',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <FieldActivities />
+          </Suspense>
+        ),
       },
     ],
   },
