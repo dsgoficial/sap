@@ -54,6 +54,16 @@ router.get(
 )
 
 router.get(
+  '/campos-geojson',
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getCamposGeoJson()
+
+    const msg = 'Campos retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+router.get(
   '/campos/:uuid',
   schemaValidation({ params: campoSchema.uuidParams }),
   asyncHandler(async (req, res, next) => {
@@ -67,6 +77,7 @@ router.get(
 
 router.post(
   '/campos',
+  verifyAdmin,
   schemaValidation({ body: campoSchema.campo }),
   asyncHandler(async (req, res, next) => {
     const dados = await campoCtrl.criaCampo(req.body.campo)
@@ -79,6 +90,7 @@ router.post(
 
 router.put(
   '/campos/:uuid',
+  verifyAdmin,
   schemaValidation({ params: campoSchema.uuidParams, body: campoSchema.campo }),
   asyncHandler(async (req, res, next) => {
     const dados = await campoCtrl.atualizaCampo(req.params.uuid, req.body.campo)
@@ -91,6 +103,7 @@ router.put(
 
 router.delete(
   '/campos/:uuid',
+  verifyAdmin,
   schemaValidation({ params: campoSchema.uuidParams }),
   asyncHandler(async (req, res, next) => {
     await campoCtrl.deletaCampo(req.params.uuid)
@@ -151,6 +164,7 @@ router.get(
 
 router.post(
   '/fotos',
+  verifyAdmin,
   schemaValidation({ body: campoSchema.fotos }),
   asyncHandler(async (req, res, next) => {
       await campoCtrl.criaFotos(req.body.fotos)
@@ -163,6 +177,7 @@ router.post(
 
 router.put(
   '/fotos/:uuid',
+  verifyAdmin,
   schemaValidation({ params: campoSchema.uuidParams, body: campoSchema.fotoUpdate }),
   asyncHandler(async (req, res, next) => {
     await campoCtrl.atualizaFoto(req.params.uuid, req.body.foto)
@@ -175,6 +190,7 @@ router.put(
 
 router.delete(
   '/fotos/:uuid',
+  verifyAdmin,
   schemaValidation({ params: campoSchema.uuidParams }),
   asyncHandler(async (req, res, next) => {
     await campoCtrl.deletaFotos(req.params.uuid)
@@ -187,6 +203,7 @@ router.delete(
 
 router.delete(
   '/fotos/:campo_id',
+  verifyAdmin,
   schemaValidation({ params: campoSchema.uuidParams }),
   asyncHandler(async (req, res, next) => {
     await campoCtrl.deletaFotosByCampo(req.params.uuid)
@@ -235,6 +252,7 @@ router.get(
 
 router.post(
   '/tracks',
+  verifyAdmin,
   schemaValidation({ body: campoSchema.track }),
   asyncHandler(async (req, res, next) => {
     const dados = await campoCtrl.criaTracker(req.body.track)
@@ -247,6 +265,7 @@ router.post(
 
 router.put(
   '/tracks/:uuid',
+  verifyAdmin,
   schemaValidation({ params: campoSchema.uuidParams, body: campoSchema.trackUpdate }),
   asyncHandler(async (req, res, next) => {
     await campoCtrl.atualizaTrack(req.params.uuid, req.body.track)
@@ -259,6 +278,7 @@ router.put(
 
 router.delete(
   '/tracks/:uuid',
+  verifyAdmin,
   schemaValidation({ params: campoSchema.uuidParams }),
   asyncHandler(async (req, res, next) => {
     await campoCtrl.deleteTracker(req.params.uuid)
@@ -272,6 +292,7 @@ router.delete(
 // Rotas de Tracks Ponto
 router.post(
   '/tracks_ponto',
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const trackIds = await campoCtrl.criaTrackerPonto(req.body)
 
@@ -302,6 +323,7 @@ router.get(
 
 router.post(
   '/produtos_campo',
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await campoCtrl.criaProdutosCampo(req.body.associacoes)
     const msg = 'Associações entre produtos e campo criadas com sucesso'
@@ -311,6 +333,7 @@ router.post(
 
 router.delete(
   '/produtos_campo/:campo_id',
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await campoCtrl.deletaProdutoByCampoId(req.params.campo_id)
     const msg = 'Produtos associados a campo deletados com sucesso'
@@ -319,20 +342,22 @@ router.delete(
 )
 
 router.get(
-  '/tracks/:campo_id/tracks/mvt/:z/:x/:y', async (req, res) => {
+  '/tracks/:campo_id/tracks/mvt/:z/:x/:y.mvt', async (req, res) => {
   try {
       const { z, x, y, campo_id } = req.params;
+      const { trackId } = req.query; // Obtém o trackId do query parameter
       
       // Verificar se os parâmetros são válidos
       if (!z || !x || !y || !campo_id) {
           return res.status(400).json({ message: 'Parâmetros incompletos' });
       }
       
-      const tile = await controller.getTrackMVT(
+      const tile = await campoCtrl.getTrackMVT(
           parseInt(z, 10), 
           parseInt(x, 10), 
           parseInt(y, 10), 
-          campo_id // Mantém como UUID
+          campo_id,
+          trackId // Passa o trackId para o controller (pode ser undefined)
       );
       
       if (!tile || !tile.mvt) {

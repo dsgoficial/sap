@@ -63,6 +63,34 @@ controller.getCampos = async () => {
     )
 }
 
+// Retornar campos como GeoJSON
+controller.getCamposGeoJson = async () => {
+    return db.sapConn.any(`
+        SELECT json_build_object(
+            'type', 'FeatureCollection',
+            'features', json_agg(
+                json_build_object(
+                    'type', 'Feature',
+                    'geometry', ST_AsGeoJSON(c.geom)::json,
+                    'properties', json_build_object(
+                        'id', c.id,
+                        'nome', c.nome,
+                        'descricao', c.descricao,
+                        'situacao', s.nome,
+                        'inicio', c.inicio,
+                        'fim', c.fim
+                    )
+                )
+            )
+        ) AS geojson
+        FROM controle_campo.campo AS c
+        INNER JOIN controle_campo.situacao AS s ON s.code = c.situacao_id
+        WHERE c.geom IS NOT NULL
+    `).then(result => {
+        return result[0].geojson;
+    });
+}
+
 // Função para obter um campo específico
 controller.getCampoById = async (campo_id) => {
     return db.sapConn.one(
@@ -504,21 +532,38 @@ controller.getProdutosByCampoId = async (campo_id) => {
 
 // Função para criar um relacionamento entre produtos e campos
 controller.criaProdutosCampo = async (associacoes) => {
-    return db.sapConn.tx(async t => {
-      const cs = new db.pgp.helpers.ColumnSet([
-        'campo_id',
-        'produto_id'
-      ])
-  
-      const query = db.pgp.helpers.insert(associacoes, cs, {
-        table: 'relacionamento_campo_produto',
-        schema: 'controle_campo'
-      }) + ' RETURNING id'
-  
-      const ids = await t.map(query, undefined, a => a.id)
-      return { ids }
-    });
-}
+    try {
+      return await db.sapConn.tx(async t => {
+        const cs = new db.pgp.helpers.ColumnSet([
+          'campo_id',
+          'produto_id'
+        ])
+      
+        const query = db.pgp.helpers.insert(associacoes, cs, {
+          table: 'relacionamento_campo_produto',
+          schema: 'controle_campo'
+        }) + ' RETURNING id'
+      
+        const ids = await t.map(query, undefined, a => a.id)
+        return { ids }
+      });
+    } catch (error) {
+      // Código de erro para violação de restrição única no PostgreSQL é '23505'
+      if (error.code === '23505') {
+        // Extrair os valores do par duplicado (opcional)
+        const match = error.detail.match(/\(campo_id, produto_id\)=\((.+)\)/);
+        const duplicateValues = match ? match[1] : '';
+        
+        throw {
+          message: 'Um ou mais produtos selecionados já estão associados a este campo.',
+          detail: `Não foi possível criar associações duplicadas ${duplicateValues ? `para ${duplicateValues}` : ''}.`,
+          code: 'DUPLICATE_ASSOCIATION'
+        };
+      }
+      // Repassar outros erros
+      throw error;
+    }
+  }
 
 controller.deletaProdutoByCampoId = async (campo_id) => {
     return db.sapConn.tx(async t => {
@@ -529,9 +574,9 @@ controller.deletaProdutoByCampoId = async (campo_id) => {
     })
 }
 
-controller.getTrackMVT = async (z, x, y, campo_id) => {
-    return db.sapConn.oneOrNone(
-        `WITH
+controller.getTrackMVT = async (z, x, y, campo_id, track_id) => {
+    // Query base
+    let query = `WITH
         bounds AS (
             SELECT ST_TileEnvelope($<z>, $<x>, $<y>) AS geom
         ),
@@ -540,7 +585,15 @@ controller.getTrackMVT = async (z, x, y, campo_id) => {
                 tl.min_t, tl.max_t, tl.geom
             FROM controle_campo.track_l AS tl
             INNER JOIN controle_campo.track AS t ON tl.track_id = t.id
-            WHERE t.campo_id = $<campo_id>
+            WHERE t.campo_id = $<campo_id>`;
+    
+    // Adicionar filtro de track_id se especificado
+    if (track_id) {
+        query += ` AND tl.track_id = $<track_id>`;
+    }
+    
+    // Completar a query
+    query += `
             AND tl.geom && (SELECT geom FROM bounds)
         )
         SELECT ST_AsMVT(tile, 'track_layer', 4096, 'geom') AS mvt
@@ -556,14 +609,22 @@ controller.getTrackMVT = async (z, x, y, campo_id) => {
                     true
                 ) AS geom
             FROM campo_tracks
-        ) AS tile`,
-        { 
-            z: z, 
-            x: x, 
-            y: y,
-            campo_id: campo_id
-        }
-    );
+        ) AS tile`;
+    
+    // Parâmetros para a query
+    const params = { 
+        z: z, 
+        x: x, 
+        y: y,
+        campo_id: campo_id
+    };
+    
+    // Adicionar track_id aos parâmetros se especificado
+    if (track_id) {
+        params.track_id = track_id;
+    }
+    
+    return db.sapConn.oneOrNone(query, params);
 };
 
 module.exports = controller
