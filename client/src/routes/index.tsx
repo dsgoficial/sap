@@ -10,6 +10,7 @@ import {
 import { CircularProgress, Box } from '@mui/material';
 import { UserRole } from '../types/auth';
 import { ErrorBoundaryRoute } from './ErrorBoundaryRoute';
+import { isTokenExpired } from '../stores/authStore';
 
 // Layouts
 const DashboardLayout = lazy(() => import('@/components/layouts/AppLayout'));
@@ -90,25 +91,11 @@ const LoadingFallback = () => (
   </Box>
 );
 
-// Safely check if token is expired - moved inline to prevent import issues
-const checkTokenExpiration = (): boolean => {
-  try {
-    const tokenExpiry = localStorage.getItem('@sap_web-Token-Expiry');
-    if (!tokenExpiry) return false;
-
-    const expiryTime = new Date(tokenExpiry);
-    return expiryTime <= new Date();
-  } catch (error) {
-    console.error('Error checking token expiry:', error);
-    return false;
-  }
-};
-
 // Auth loaders for protected routes
 const authLoader = () => {
   try {
     const token = localStorage.getItem('@sap_web-Token');
-    const isAuthenticated = !!token && !checkTokenExpiration();
+    const isAuthenticated = !!token && !isTokenExpired();
 
     if (!isAuthenticated) {
       // Redirect to login and remember the intended destination

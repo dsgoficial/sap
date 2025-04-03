@@ -24,7 +24,7 @@ import TableChartIcon from '@mui/icons-material/TableChart';
 import MapIcon from '@mui/icons-material/Map';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useAuthStore } from '@/stores/authStore';
+import { useIsAdmin } from '@/stores/authStore';
 import { useThemeMode } from '@/contexts/ThemeContext';
 
 interface DashboardSidebarProps {
@@ -51,7 +51,7 @@ const DashboardSidebar = ({
   drawerWidth = 280,
 }: DashboardSidebarProps) => {
   const { pathname } = useLocation();
-  const { isAdmin } = useAuthStore();
+  const isAdmin = useIsAdmin();
   const theme = useTheme();
   const { isDarkMode } = useThemeMode();
 

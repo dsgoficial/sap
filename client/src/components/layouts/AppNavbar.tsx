@@ -22,7 +22,7 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import { useAuthStore, selectUsername } from '@/stores/authStore';
+import { useUsername, useAuthActions } from '@/stores/authStore';
 import { AuthStatus } from '@/features/auth/components/AuthStatus';
 import { useThemeMode } from '@/contexts/ThemeContext';
 
@@ -97,8 +97,8 @@ const ThemeToggleSwitch = styled(Switch)(({ theme }) => ({
 const DashboardNavbar = ({ onOpenSidebar }: DashboardNavbarProps) => {
   const navigate = useNavigate();
   // Use the username selector for optimized renders
-  const username = useAuthStore(selectUsername);
-  const logout = useAuthStore(state => state.logout);
+  const username = useUsername();
+  const { logout } = useAuthActions();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));

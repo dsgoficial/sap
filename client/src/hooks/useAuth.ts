@@ -3,23 +3,22 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import {
-  useAuthStore,
-  selectIsAuthenticated,
-  selectIsAdmin,
-  selectUser,
-  selectUsername,
+  useIsAuthenticated,
+  useIsAdmin,
+  useUser,
+  useUsername,
+  useAuthActions,
 } from '../stores/authStore';
 import { LoginRequest } from '../types/auth';
 import { useSnackbar } from 'notistack';
 import { standardizeError } from '@/lib/queryClient';
 
 export const useAuth = () => {
-  const user = useAuthStore(selectUser);
-  const username = useAuthStore(selectUsername);
-  const isAuthenticated = useAuthStore(selectIsAuthenticated);
-  const isAdmin = useAuthStore(selectIsAdmin);
-
-  const { login: storeLogin, logout: storeLogout, getRole } = useAuthStore();
+  const user = useUser();
+  const username = useUsername();
+  const isAuthenticated = useIsAuthenticated();
+  const isAdmin = useIsAdmin();
+  const { login: storeLogin, logout: storeLogout, getRole } = useAuthActions();
 
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();

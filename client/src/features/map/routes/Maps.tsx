@@ -10,19 +10,15 @@ import {
 import Page from '@/components/Page/Page';
 import { useMapData } from '@/hooks/useMap';
 import MapVisualization from '../components/MapVisualization';
-import {
-  useMapStore,
-  selectLayers,
-  selectVisibleLayers,
-} from '@/stores/mapStore';
+import { useLayers, useVisibleLayers, useMapActions } from '@/stores/mapStore';
 import { getLegendItems } from '../utils/mapStyles';
 
 export const Maps = () => {
   const { isLoading, isError, error } = useMapData();
 
-  const layers = useMapStore(selectLayers);
-  const visibleLayers = useMapStore(selectVisibleLayers);
-  const { toggleLayerVisibility } = useMapStore();
+  const layers = useLayers();
+  const visibleLayers = useVisibleLayers();
+  const { toggleLayerVisibility } = useMapActions();
 
   const handleToggleLayer = useCallback(
     (layerId: string) => {

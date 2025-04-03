@@ -2,11 +2,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getViews, getLotGeoJSON } from '@/services/mapService';
-import {
-  useMapStore,
-  selectLayers,
-  selectVisibleLayers,
-} from '@/stores/mapStore';
+import { useLayers, useVisibleLayers, useMapActions } from '@/stores/mapStore';
 import { MapLayer } from '@/types/map';
 import {
   createQueryKey,
@@ -22,10 +18,9 @@ const QUERY_KEYS = {
 };
 
 export const useMapData = () => {
-  const layers = useMapStore(selectLayers);
-  const visibleLayers = useMapStore(selectVisibleLayers);
-
-  const { setLayers } = useMapStore();
+  const layers = useLayers();
+  const visibleLayers = useVisibleLayers();
+  const { setLayers } = useMapActions();
 
   // Get available views
   const viewsQuery = useQuery<ApiResponse<any>, unknown, ApiResponse<any>>({

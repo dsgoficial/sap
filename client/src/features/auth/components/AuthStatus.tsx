@@ -1,11 +1,7 @@
 // Path: features\auth\components\AuthStatus.tsx
 import { useMemo } from 'react';
 import { Box, Chip, styled } from '@mui/material';
-import {
-  useAuthStore,
-  selectIsAuthenticated,
-  selectUser,
-} from '@/stores/authStore';
+import { useIsAuthenticated, useUser } from '@/stores/authStore';
 
 interface AuthStatusProps {
   showRole?: boolean;
@@ -25,9 +21,9 @@ export const AuthStatus = ({
   showRole = true,
   vertical = false,
 }: AuthStatusProps) => {
-  // Use selectors for better performance
-  const isAuthenticated = useAuthStore(selectIsAuthenticated);
-  const user = useAuthStore(selectUser);
+  // Use custom hooks for better performance
+  const isAuthenticated = useIsAuthenticated();
+  const user = useUser();
 
   const roleColor = useMemo(() => {
     if (!user?.role) return 'default';

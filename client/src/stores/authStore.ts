@@ -28,7 +28,7 @@ const tokenExpiryStorage = {
   remove: () => localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY),
 };
 
-// Function to check if token is expire
+// Function to check if token is expired
 export const isTokenExpired = (): boolean => {
   try {
     const expiry = tokenExpiryStorage.get();
@@ -72,85 +72,88 @@ const clearUserDataFromLocalStorage = (): void => {
   localStorage.removeItem(STORAGE_KEYS.USER_NAME);
 };
 
-// Define the AuthState interface
+// Define state type
 interface AuthState {
-  // State
   user: User | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+}
 
-  // Actions
+// Define actions type
+interface AuthActions {
   login: (credentials: LoginRequest) => Promise<boolean>;
   setUser: (loginResponse: LoginResponse) => void;
   logout: () => void;
   getRole: () => UserRole | null;
 }
 
-// Create the AuthStore with Zustand
-export const useAuthStore = create<AuthState>()(
+// Create store with separated state and actions
+const useAuthStoreBase = create<AuthState & { actions: AuthActions }>()(
   persist(
     (set, get) => ({
-      // Initial state
+      // State
       user: null,
       isAuthenticated: false,
       isAdmin: false,
 
       // Actions
-      login: async (credentials: LoginRequest) => {
-        try {
-          const response = await loginApi(credentials);
+      actions: {
+        login: async (credentials: LoginRequest) => {
+          try {
+            const response = await loginApi(credentials);
 
-          if (response.success) {
-            get().setUser({
-              ...response.dados,
-              username: credentials.usuario,
-            });
-            return true;
+            if (response.success) {
+              get().actions.setUser({
+                ...response.dados,
+                username: credentials.usuario,
+              });
+              return true;
+            }
+            return false;
+          } catch (error) {
+            console.error('Login error:', error);
+            return false;
           }
-          return false;
-        } catch (error) {
-          console.error('Login error:', error);
-          return false;
-        }
+        },
+
+        setUser: (loginResponse: LoginResponse) => {
+          const role = loginResponse.administrador
+            ? UserRole.ADMIN
+            : UserRole.USER;
+
+          // Create user data object
+          const userData = {
+            uuid: loginResponse.uuid,
+            role,
+            token: loginResponse.token,
+            username: loginResponse.username,
+          };
+
+          // Save to localStorage for legacy compatibility
+          saveUserDataToLocalStorage(userData);
+
+          // Update Zustand state
+          set({
+            user: userData,
+            isAuthenticated: true,
+            isAdmin: role === UserRole.ADMIN,
+          });
+        },
+
+        logout: () => {
+          // Clear localStorage
+          clearUserDataFromLocalStorage();
+
+          // Reset Zustand state
+          set({
+            user: null,
+            isAuthenticated: false,
+            isAdmin: false,
+          });
+        },
+
+        getRole: () => get().user?.role || null,
       },
-
-      setUser: (loginResponse: LoginResponse) => {
-        const role = loginResponse.administrador
-          ? UserRole.ADMIN
-          : UserRole.USER;
-
-        // Create user data object
-        const userData = {
-          uuid: loginResponse.uuid,
-          role,
-          token: loginResponse.token,
-          username: loginResponse.username,
-        };
-
-        // Save to localStorage for legacy compatibility
-        saveUserDataToLocalStorage(userData);
-
-        // Update Zustand state
-        set({
-          user: userData,
-          isAuthenticated: true,
-          isAdmin: role === UserRole.ADMIN,
-        });
-      },
-
-      logout: () => {
-        // Clear localStorage
-        clearUserDataFromLocalStorage();
-
-        // Reset Zustand state
-        set({
-          user: null,
-          isAuthenticated: false,
-          isAdmin: false,
-        });
-      },
-
-      getRole: () => get().user?.role || null,
     }),
     {
       name: 'auth-storage',
@@ -171,8 +174,8 @@ export const useAuthStore = create<AuthState>()(
             clearUserDataFromLocalStorage();
             // This will update the state after rehydration
             setTimeout(() => {
-              const authStore = useAuthStore.getState();
-              authStore.logout();
+              const actions = useAuthActions();
+              actions.logout();
             }, 0);
           }
         } catch (error) {
@@ -183,20 +186,23 @@ export const useAuthStore = create<AuthState>()(
   ),
 );
 
-// Selectors for performance optimization
-export const selectIsAuthenticated = (state: AuthState) =>
-  state.isAuthenticated;
-export const selectIsAdmin = (state: AuthState) => state.isAdmin;
-export const selectUser = (state: AuthState) => state.user;
-export const selectUsername = (state: AuthState) => state.user?.username;
+// Custom hooks for selectors (atomic selectors)
+export const useIsAuthenticated = () =>
+  useAuthStoreBase(state => state.isAuthenticated);
+export const useIsAdmin = () => useAuthStoreBase(state => state.isAdmin);
+export const useUser = () => useAuthStoreBase(state => state.user);
+export const useUsername = () =>
+  useAuthStoreBase(state => state.user?.username);
+export const useAuthActions = () => useAuthStoreBase(state => state.actions);
 
 // Use consistent navigation approach for auth-related redirects
 export const logoutAndRedirect = () => {
   // Get the logout function from the store
-  const logout = useAuthStore.getState().logout;
+  const { logout } = useAuthActions();
 
   // Logout the user
   logout();
 
+  // Redirect to login page
   navigateToLogin();
 };
