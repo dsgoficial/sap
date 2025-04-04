@@ -1,4 +1,4 @@
-// Path: types/fieldActivities.ts
+// Path: types\fieldActivities.ts
 /**
  * Campo (Field) entity
  */
@@ -46,7 +46,7 @@ export interface Track {
   max_t?: string;
   data?: any; // Track data
   chefe_vtr?: string; // Chefe da viatura
-  motorista?: string; // Motorista 
+  motorista?: string; // Motorista
   placa_vtr?: string; // Placa da viatura
   dia?: string;
 }
@@ -71,7 +71,8 @@ export interface Categoria {
 /**
  * GeoJSON response for map
  */
-export interface CamposGeoJSONResponse extends GeoJSON.FeatureCollection<GeoJSON.Geometry, Campo> {
+export interface CamposGeoJSONResponse
+  extends GeoJSON.FeatureCollection<GeoJSON.Geometry, Campo> {
   // Garantir que seja compatível com GeoJSON.FeatureCollection exato
   type: 'FeatureCollection';
 }

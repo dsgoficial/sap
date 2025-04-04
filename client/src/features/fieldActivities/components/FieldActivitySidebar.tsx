@@ -21,17 +21,18 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoIcon from '@mui/icons-material/Photo';
 import SummarizeIcon from '@mui/icons-material/Summarize';
-import { 
-  useFotosByCampo, 
+import {
+  useFotosByCampo,
   useTracksByCampo,
   useFieldActivities,
-  useCampoById
+  useCampoById,
 } from '@/hooks/useFieldActivities';
-import { 
-  selectSelectedCampoId, 
-  selectSelectedTab, 
-  selectShowSidebar, 
-  useFieldActivitiesStore 
+import {
+  useSelectedCampoId,
+  useSelectedTab,
+  useShowSidebar,
+  useFieldActivitiesActions,
+  useFieldActivitiesStore,
 } from '@/stores/fieldActivitiesStore';
 import { formatDate } from '@/utils/formatters';
 
@@ -54,11 +55,7 @@ function TabPanel(props: TabPanelProps) {
       {...other}
       style={{ height: '100%', overflow: 'auto' }}
     >
-      {value === index && (
-        <Box sx={{ p: 2 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
     </div>
   );
 }
@@ -69,7 +66,7 @@ interface ImageDisplayProps {
 }
 
 const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
-  const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   const theme = useTheme();
@@ -78,10 +75,10 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
     const loadImage = async () => {
       setLoading(true);
       setError(false);
-      
+
       try {
         if (!foto.imagem_bin) {
-          setImageUrl("/placeholder-image.jpg");
+          setImageUrl('/placeholder-image.jpg');
           setLoading(false);
           return;
         }
@@ -91,23 +88,24 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
           // Handle different data formats
           if (typeof imageBin === 'string') {
             // Already a string (possibly base64)
-            return imageBin.startsWith('data:') 
-              ? imageBin 
+            return imageBin.startsWith('data:')
+              ? imageBin
               : `data:image/jpeg;base64,${imageBin}`;
-          }
-          else if (Array.isArray(imageBin)) {
+          } else if (Array.isArray(imageBin)) {
             // Array of bytes - convert to base64
             const bytes = new Uint8Array(imageBin);
             const blob = new Blob([bytes], { type: 'image/jpeg' });
             return URL.createObjectURL(blob);
-          }
-          else if (imageBin && imageBin.type === 'Buffer' && Array.isArray(imageBin.data)) {
+          } else if (
+            imageBin &&
+            imageBin.type === 'Buffer' &&
+            Array.isArray(imageBin.data)
+          ) {
             // Buffer object serialized as JSON
             const bytes = new Uint8Array(imageBin.data);
             const blob = new Blob([bytes], { type: 'image/jpeg' });
             return URL.createObjectURL(blob);
-          }
-          else if (imageBin && typeof imageBin === 'object') {
+          } else if (imageBin && typeof imageBin === 'object') {
             // Object with indices - convert to array
             try {
               const bytes = new Uint8Array(Object.values(imageBin));
@@ -117,7 +115,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
               throw new Error('Could not convert object to image data');
             }
           }
-          
+
           throw new Error('Unsupported image format');
         };
 
@@ -126,14 +124,14 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
       } catch (err) {
         console.error('Error processing image:', err);
         setError(true);
-        setImageUrl("/placeholder-image.jpg");
+        setImageUrl('/placeholder-image.jpg');
       } finally {
         setLoading(false);
       }
     };
 
     loadImage();
-    
+
     // Cleanup URL objects to prevent memory leaks
     return () => {
       if (imageUrl && imageUrl.startsWith('blob:')) {
@@ -144,13 +142,13 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
 
   if (loading) {
     return (
-      <Box 
-        sx={{ 
-          height: 140, 
-          display: 'flex', 
-          alignItems: 'center', 
+      <Box
+        sx={{
+          height: 140,
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: theme.palette.action.hover
+          bgcolor: theme.palette.action.hover,
         }}
       >
         <CircularProgress size={30} />
@@ -160,14 +158,14 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
 
   if (error) {
     return (
-      <Box 
-        sx={{ 
-          height: 140, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
+      <Box
+        sx={{
+          height: 140,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: theme.palette.action.hover
+          bgcolor: theme.palette.action.hover,
         }}
       >
         <Typography color="error" variant="body2" gutterBottom>
@@ -182,7 +180,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
       component="img"
       height="140"
       image={imageUrl}
-      alt={foto.descricao || "Foto da atividade"}
+      alt={foto.descricao || 'Foto da atividade'}
       sx={{ cursor: 'pointer' }}
       onClick={() => window.open(imageUrl, '_blank')}
     />
@@ -210,12 +208,12 @@ const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
   }
 
   return (
-    <Paper 
+    <Paper
       elevation={1}
-      sx={{ 
-        p: 2, 
+      sx={{
+        p: 2,
         mb: 3,
-        borderRadius: 2
+        borderRadius: 2,
       }}
     >
       <Typography variant="h6" gutterBottom>
@@ -228,24 +226,32 @@ const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
             <Typography variant="body2" color="text.secondary">
               Descrição:
             </Typography>
-            <Typography variant="body1">
-              {campo.descricao}
-            </Typography>
+            <Typography variant="body1">{campo.descricao}</Typography>
           </Box>
         )}
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
           <Typography variant="body2" color="text.secondary">
             Situação:
           </Typography>
-          <Chip 
-            label={campo.situacao || 'Não especificada'} 
+          <Chip
+            label={campo.situacao || 'Não especificada'}
             size="small"
             color={
-              campo.situacao === 'Finalizado' ? 'success' :
-              campo.situacao === 'Em Execução' ? 'primary' :
-              campo.situacao === 'Previsto' ? 'info' :
-              'default'
+              campo.situacao === 'Finalizado'
+                ? 'success'
+                : campo.situacao === 'Em Execução'
+                  ? 'primary'
+                  : campo.situacao === 'Previsto'
+                    ? 'info'
+                    : 'default'
             }
           />
         </Box>
@@ -255,9 +261,7 @@ const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
             <Typography variant="body2" color="text.secondary">
               Órgão:
             </Typography>
-            <Typography variant="body1">
-              {campo.orgao}
-            </Typography>
+            <Typography variant="body1">{campo.orgao}</Typography>
           </Box>
         )}
 
@@ -266,9 +270,7 @@ const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
             <Typography variant="body2" color="text.secondary">
               PIT:
             </Typography>
-            <Typography variant="body1">
-              {campo.pit}
-            </Typography>
+            <Typography variant="body1">{campo.pit}</Typography>
           </Box>
         )}
 
@@ -281,7 +283,7 @@ const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
               {campo.inicio ? formatDate(campo.inicio) : 'Não definida'}
             </Typography>
           </Box>
-          
+
           <Box>
             <Typography variant="body2" color="text.secondary" align="right">
               Data Fim:
@@ -297,10 +299,10 @@ const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
 };
 
 // Tracks list component
-const TracksList: React.FC<{ 
-  campoId: string, 
-  selectedTracks: string[],
-  onToggleTrack: (trackId: string) => void 
+const TracksList: React.FC<{
+  campoId: string;
+  selectedTracks: string[];
+  onToggleTrack: (trackId: string) => void;
 }> = ({ campoId, selectedTracks, onToggleTrack }) => {
   const theme = useTheme();
   const { data: tracks, isLoading } = useTracksByCampo(campoId);
@@ -312,11 +314,11 @@ const TracksList: React.FC<{
 
   // Format date function
   const formatTrackDate = (dateString?: string) => {
-    if (!dateString) return "Não especificada";
+    if (!dateString) return 'Não especificada';
     try {
       return new Date(dateString).toLocaleDateString('pt-BR');
     } catch (e) {
-      return dateString || "Não especificada";
+      return dateString || 'Não especificada';
     }
   };
 
@@ -341,22 +343,24 @@ const TracksList: React.FC<{
       <Typography variant="h6" gutterBottom>
         Tracks Disponíveis
       </Typography>
-      
-      {tracks.map((track) => (
-        <Paper 
-          key={track.id} 
-          elevation={1} 
-          sx={{ 
-            p: 2, 
+
+      {tracks.map(track => (
+        <Paper
+          key={track.id}
+          elevation={1}
+          sx={{
+            p: 2,
             mb: 2,
-            bgcolor: isTrackSelected(track.id) ? 
-              theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.16)' : 'rgba(33, 101, 209, 0.08)' 
+            bgcolor: isTrackSelected(track.id)
+              ? theme.palette.mode === 'dark'
+                ? 'rgba(144, 202, 249, 0.16)'
+                : 'rgba(33, 101, 209, 0.08)'
               : undefined,
-            borderRadius: 1
+            borderRadius: 1,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Checkbox 
+            <Checkbox
               checked={isTrackSelected(track.id)}
               onChange={() => onToggleTrack(track.id)}
               color="primary"
@@ -370,29 +374,29 @@ const TracksList: React.FC<{
                     Chefe da Viatura
                   </Typography>
                   <Typography variant="body2" fontWeight="medium">
-                    {track.chefe_vtr || "Não especificado"}
+                    {track.chefe_vtr || 'Não especificado'}
                   </Typography>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6}>
                   <Typography variant="caption" color="text.secondary">
                     Motorista
                   </Typography>
                   <Typography variant="body2" fontWeight="medium">
-                    {track.motorista || "Não especificado"}
+                    {track.motorista || 'Não especificado'}
                   </Typography>
                 </Grid>
-                
+
                 {/* Track data row 2 */}
                 <Grid item xs={12} sm={6}>
                   <Typography variant="caption" color="text.secondary">
                     Placa da Viatura
                   </Typography>
                   <Typography variant="body2" fontWeight="medium">
-                    {track.placa_vtr || "Não especificada"}
+                    {track.placa_vtr || 'Não especificada'}
                   </Typography>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6}>
                   <Typography variant="caption" color="text.secondary">
                     Data
@@ -432,16 +436,20 @@ const PhotosGrid: React.FC<{ campoId: string }> = ({ campoId }) => {
 
   return (
     <Grid container spacing={2}>
-      {fotos.map((foto) => (
+      {fotos.map(foto => (
         <Grid item xs={12} sm={6} key={foto.id}>
           <Card>
             <ImageDisplay foto={foto} />
             <CardContent>
               <Typography variant="body2" color="text.secondary">
-                {foto.descricao || "Sem descrição"}
+                {foto.descricao || 'Sem descrição'}
               </Typography>
-              <Typography variant="caption" color="text.secondary" display="block">
-                {foto.data_imagem ? formatDate(foto.data_imagem) : ""}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
+                {foto.data_imagem ? formatDate(foto.data_imagem) : ''}
               </Typography>
             </CardContent>
           </Card>
@@ -455,25 +463,28 @@ const PhotosGrid: React.FC<{ campoId: string }> = ({ campoId }) => {
 const FieldActivitySidebar: React.FC = () => {
   const theme = useTheme();
   const { handleCloseSidebar, toggleSelectedTrack } = useFieldActivities();
-  
-  // Get state from store
-  const campoId = useFieldActivitiesStore(selectSelectedCampoId);
-  const selectedTab = useFieldActivitiesStore(selectSelectedTab);
-  const showSidebar = useFieldActivitiesStore(selectShowSidebar);
+
+  // Get state from store using atomic selectors
+  const campoId = useSelectedCampoId();
+  const selectedTab = useSelectedTab();
+  const showSidebar = useShowSidebar();
   const selectedTracks = useFieldActivitiesStore(state => state.selectedTracks);
   const campoNome = useFieldActivitiesStore(state => state.selectedCampoNome);
-  
+
+  // Get actions from store
+  const { setSelectedTab } = useFieldActivitiesActions();
+
   // Convert tab name to index
   const tabValue = useMemo(() => {
     // Modificado: 'fotos' agora está na segunda aba (índice 1)
     return selectedTab === 'fotos' ? 1 : 0;
   }, [selectedTab]);
-  
+
   // Tab change handler
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     // Modificado: índice 0 agora é 'resumo', índice 1 é 'fotos'
     const tabName = newValue === 1 ? 'fotos' : 'resumo';
-    useFieldActivitiesStore.getState().setSelectedTab(tabName);
+    setSelectedTab(tabName);
   };
 
   return (
@@ -486,23 +497,27 @@ const FieldActivitySidebar: React.FC = () => {
           width: { xs: '85%', sm: 400 },
           maxWidth: '100%',
           height: '100%',
-        }
+        },
       }}
     >
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        height: '100%', 
-        overflow: 'hidden' 
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          overflow: 'hidden',
+        }}
+      >
         {/* Header */}
-        <Box sx={{ 
-          p: 2, 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          borderBottom: `1px solid ${theme.palette.divider}`
-        }}>
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: `1px solid ${theme.palette.divider}`,
+          }}
+        >
           <Typography variant="h6" noWrap>
             {campoNome || 'Detalhes da Atividade'}
           </Typography>
@@ -510,29 +525,25 @@ const FieldActivitySidebar: React.FC = () => {
             <CloseIcon />
           </IconButton>
         </Box>
-        
+
         {/* Tabs - Modificado: renomeado para "Resumo" e "Fotos" */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            variant="fullWidth"
-          >
-            <Tab 
-              icon={<SummarizeIcon />} 
-              label="Resumo" 
+          <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth">
+            <Tab
+              icon={<SummarizeIcon />}
+              label="Resumo"
               id="tab-0"
               aria-controls="tabpanel-0"
             />
-            <Tab 
-              icon={<PhotoIcon />} 
-              label="Fotos" 
+            <Tab
+              icon={<PhotoIcon />}
+              label="Fotos"
               id="tab-1"
-              aria-controls="tabpanel-1" 
+              aria-controls="tabpanel-1"
             />
           </Tabs>
         </Box>
-        
+
         {/* Tab content */}
         <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
           {/* Summary tab (formerly Tracks tab) */}
@@ -540,10 +551,10 @@ const FieldActivitySidebar: React.FC = () => {
             {campoId ? (
               <>
                 <FieldSummary campoId={campoId} />
-                <TracksList 
-                  campoId={campoId} 
-                  selectedTracks={selectedTracks} 
-                  onToggleTrack={toggleSelectedTrack} 
+                <TracksList
+                  campoId={campoId}
+                  selectedTracks={selectedTracks}
+                  onToggleTrack={toggleSelectedTrack}
                 />
               </>
             ) : (
@@ -552,7 +563,7 @@ const FieldActivitySidebar: React.FC = () => {
               </Typography>
             )}
           </TabPanel>
-          
+
           {/* Photos tab */}
           <TabPanel value={tabValue} index={1}>
             {campoId ? (

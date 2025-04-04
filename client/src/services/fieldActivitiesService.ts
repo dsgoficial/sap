@@ -1,4 +1,4 @@
-// Path: services/fieldActivitiesService.ts
+// Path: services\fieldActivitiesService.ts
 import apiClient from '../lib/axios';
 import {
   CamposResponse,
@@ -33,9 +33,13 @@ export const getCampos = async (): Promise<ApiResponse<Campo[]>> => {
 /**
  * Get a specific campo by ID
  */
-export const getCampoById = async (campoId: string): Promise<ApiResponse<Campo>> => {
+export const getCampoById = async (
+  campoId: string,
+): Promise<ApiResponse<Campo>> => {
   try {
-    const response = await apiClient.get<ApiResponse<Campo>>(`/api/campo/campos/${campoId}`);
+    const response = await apiClient.get<ApiResponse<Campo>>(
+      `/api/campo/campos/${campoId}`,
+    );
     return response.data;
   } catch (error) {
     console.error(`Error fetching campo with ID ${campoId}:`, error);
@@ -63,7 +67,9 @@ export const getFotos = async (): Promise<ApiResponse<Foto[]>> => {
 /**
  * Get fotos by campo ID
  */
-export const getFotosByCampo = async (campoId: string): Promise<ApiResponse<Foto[]>> => {
+export const getFotosByCampo = async (
+  campoId: string,
+): Promise<ApiResponse<Foto[]>> => {
   if (!campoId) {
     return {
       dados: [],
@@ -73,7 +79,9 @@ export const getFotosByCampo = async (campoId: string): Promise<ApiResponse<Foto
   }
 
   try {
-    const response = await apiClient.get<FotosResponse>(`/api/campo/fotos/campos/${campoId}`);
+    const response = await apiClient.get<FotosResponse>(
+      `/api/campo/fotos/campos/${campoId}`,
+    );
     return {
       dados: response.data.dados || [],
       success: response.data.success,
@@ -105,7 +113,9 @@ export const getTracks = async (): Promise<ApiResponse<Track[]>> => {
 /**
  * Get tracks by campo ID
  */
-export const getTracksByCampo = async (campoId: string): Promise<ApiResponse<Track[]>> => {
+export const getTracksByCampo = async (
+  campoId: string,
+): Promise<ApiResponse<Track[]>> => {
   if (!campoId) {
     return {
       dados: [],
@@ -115,7 +125,9 @@ export const getTracksByCampo = async (campoId: string): Promise<ApiResponse<Tra
   }
 
   try {
-    const response = await apiClient.get<TracksResponse>(`/api/campo/tracks/campos/${campoId}`);
+    const response = await apiClient.get<TracksResponse>(
+      `/api/campo/tracks/campos/${campoId}`,
+    );
     return {
       dados: response.data.dados || [],
       success: response.data.success,
@@ -130,9 +142,13 @@ export const getTracksByCampo = async (campoId: string): Promise<ApiResponse<Tra
 /**
  * Get all situações (statuses)
  */
-export const getSituacoes = async (): Promise<ApiResponse<SituacoesResponse>> => {
+export const getSituacoes = async (): Promise<
+  ApiResponse<SituacoesResponse>
+> => {
   try {
-    const response = await apiClient.get<SituacoesResponse>('/api/campo/situacao');
+    const response = await apiClient.get<SituacoesResponse>(
+      '/api/campo/situacao',
+    );
     return {
       dados: response.data,
       success: response.data.success,
@@ -147,9 +163,13 @@ export const getSituacoes = async (): Promise<ApiResponse<SituacoesResponse>> =>
 /**
  * Get all categorias
  */
-export const getCategorias = async (): Promise<ApiResponse<CategoriasResponse>> => {
+export const getCategorias = async (): Promise<
+  ApiResponse<CategoriasResponse>
+> => {
   try {
-    const response = await apiClient.get<CategoriasResponse>('/api/campo/categoria');
+    const response = await apiClient.get<CategoriasResponse>(
+      '/api/campo/categoria',
+    );
     return {
       dados: response.data,
       success: response.data.success,
@@ -164,9 +184,13 @@ export const getCategorias = async (): Promise<ApiResponse<CategoriasResponse>> 
 /**
  * Get GeoJSON for all campos
  */
-export const getCamposGeoJSON = async (): Promise<ApiResponse<CamposGeoJSONApiResponse>> => {
+export const getCamposGeoJSON = async (): Promise<
+  ApiResponse<CamposGeoJSONApiResponse>
+> => {
   try {
-    const response = await apiClient.get<CamposGeoJSONApiResponse>('/api/campo/campos-geojson');
+    const response = await apiClient.get<CamposGeoJSONApiResponse>(
+      '/api/campo/campos-geojson',
+    );
     return {
       dados: response.data,
       success: response.data.success,

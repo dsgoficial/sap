@@ -125,7 +125,7 @@ const DashboardSidebar = ({
       title: 'Campos',
       path: '/field-activities',
       icon: <LandscapeIcon />,
-      adminOnly: false,  // false significa que qualquer usuário pode acessar
+      adminOnly: false, // false significa que qualquer usuário pode acessar
     },
   ];
 

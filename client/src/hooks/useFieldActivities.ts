@@ -1,4 +1,4 @@
-// Path: hooks/useFieldActivities.ts
+// Path: hooks\useFieldActivities.ts
 import { useQuery } from '@tanstack/react-query';
 import {
   getCampos,
@@ -12,9 +12,9 @@ import {
   getCamposGeoJSON,
 } from '../services/fieldActivitiesService';
 import {
-  useFieldActivitiesStore,
-  selectSelectedCampoId,
-  selectSelectedTracks,
+  useSelectedCampoId,
+  useSelectedTracks,
+  useFieldActivitiesActions,
 } from '../stores/fieldActivitiesStore';
 import {
   createQueryKey,
@@ -38,8 +38,9 @@ const QUERY_KEYS = {
 
 // Main hook for field activities
 export const useFieldActivities = () => {
-  const selectedCampoId = useFieldActivitiesStore(selectSelectedCampoId);
-  const selectedTracks = useFieldActivitiesStore(selectSelectedTracks);
+  // Use the new atomic selector hooks
+  const selectedCampoId = useSelectedCampoId();
+  const selectedTracks = useSelectedTracks();
   const {
     setGeoJsonData,
     setSelectedCampo,
@@ -47,7 +48,7 @@ export const useFieldActivities = () => {
     setShowSidebar,
     toggleSelectedTrack,
     setSelectedTracks,
-  } = useFieldActivitiesStore();
+  } = useFieldActivitiesActions();
 
   // Query for GeoJSON data
   const geoJsonQuery = useQuery({
@@ -59,7 +60,7 @@ export const useFieldActivities = () => {
       if (geoJsonData && typeof geoJsonData === 'object') {
         return {
           ...geoJsonData,
-          type: 'FeatureCollection' as const
+          type: 'FeatureCollection' as const,
         };
       }
       return null;
@@ -78,10 +79,10 @@ export const useFieldActivities = () => {
   const handleSelectCampo = (campoId: string) => {
     // Find campo name from GeoJSON data
     const feature = geoJsonQuery.data?.features.find(
-      (f) => f.properties.id === campoId
+      f => f.properties.id === campoId,
     );
     const campoNome = feature?.properties.nome || null;
-    
+
     setSelectedCampo(campoId, campoNome);
   };
 
@@ -90,7 +91,6 @@ export const useFieldActivities = () => {
     setSelectedTab('fotos');
     setShowSidebar(true);
   };
-
 
   const handleCloseSidebar = () => {
     setShowSidebar(false);
@@ -101,13 +101,13 @@ export const useFieldActivities = () => {
     geoJsonData: geoJsonQuery.data,
     selectedCampoId,
     selectedTracks,
-    
+
     // Loading states
     isLoadingGeoJson: geoJsonQuery.isLoading,
-    
+
     // Error states
     error: geoJsonQuery.error ? standardizeError(geoJsonQuery.error) : null,
-    
+
     // Actions
     handleSelectCampo,
     handleViewFotos,

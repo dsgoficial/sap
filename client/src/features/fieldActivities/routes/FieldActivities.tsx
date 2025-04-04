@@ -15,17 +15,17 @@ export const FieldActivities: React.FC = () => {
         <Typography variant="h4" gutterBottom component="div">
           Atividades de Campo
         </Typography>
-        
+
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             Erro ao carregar dados: {error.message}
           </Alert>
         )}
-        
+
         <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
           <CampoMap />
         </Paper>
-        
+
         {/* Sidebar component rendered outside Paper to allow proper drawer behavior */}
         <FieldActivitySidebar />
       </Box>

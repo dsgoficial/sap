@@ -200,18 +200,35 @@ const MapVisualization = ({
   // Handle click on the map
   const handleMapClick = useCallback((event: any) => {
     if (!mapRef.current) return;
-
-    // Get features at click point
-    const features = mapRef.current.queryRenderedFeatures(event.point);
-
+  
+    // Obter IDs de camadas que devem ser consultadas (apenas camadas visíveis)
+    const layerIds = layers
+      .filter(layer => visibleLayers[layer.id])
+      .map(layer => `${layer.id}-fill`);
+  
+    // Se não houver camadas visíveis, simplesmente ignoramos o clique
+    if (layerIds.length === 0) {
+      // Se clicou e não havia camadas visíveis, fecha qualquer popup aberto
+      handleClosePopup();
+      return;
+    }
+  
+    // Get features at click point, mas apenas de camadas específicas e visíveis
+    const features = mapRef.current.queryRenderedFeatures(event.point, {
+      layers: layerIds
+    });
+  
     if (features.length > 0) {
       const feature = features[0];
       if (feature.properties) {
         setSelectedFeature(feature.properties);
         setPopupAnchorEl(event.originalEvent.target);
       }
+    } else {
+      // Se clicou fora de uma feição, fecha o popup
+      handleClosePopup();
     }
-  }, []);
+  }, [layers, visibleLayers, handleClosePopup]);
 
   // Fit bounds to data
   const fitBoundsToData = useCallback(() => {
