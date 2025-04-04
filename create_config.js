@@ -212,6 +212,7 @@ const createDatabase = async (
     await t.none(readSqlFile('./er/macrocontrole.sql'))
     await t.none(readSqlFile('./er/metadado.sql'))
     await t.none(readSqlFile('./er/acompanhamento.sql'))
+    await t.none(readSqlFile('./er/campo.sql'))
     await givePermission({ dbUser, connection: t })
     await insertAdminUser(authUserData, t)
   })

@@ -16,6 +16,7 @@ const { metadadosRoute } = require('./metadados')
 const { usuarioRoute } = require('./usuario')
 const { perigoRoute } = require('./perigo')
 const { rhRoute } = require('./rh')
+const { campoRoute } = require('./campo')
 
 const router = express.Router()
 
@@ -81,5 +82,7 @@ router.use('/usuarios', usuarioRoute)
 router.use('/perigo', perigoRoute)
 
 router.use('/rh', rhRoute)
+
+router.use('/campo', campoRoute)
 
 module.exports = router
