@@ -19,7 +19,7 @@ CREATE TYPE controle_campo.categoria_campo AS ENUM (
     'Modelos 3D',
     'Imagens Panorâmicas em 360º',
     'Pontos de Controle',
-    'Capacitação em Geoinformação'
+    'Capacitação em Geoinformação',
     'Ortoimagens de Drone'
 );
 
@@ -43,7 +43,7 @@ CREATE TABLE controle_campo.relacionamento_campo_produto
 (
     id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
     campo_id uuid NOT NULL REFERENCES controle_campo.campo (id),
-    produto_id SERIAL NOT NULL REFERENCES macrocontrole.produto (id)
+    produto_id SERIAL NOT NULL REFERENCES macrocontrole.produto (id),
     UNIQUE (campo_id, produto_id)
 );
 
