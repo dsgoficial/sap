@@ -1,4 +1,5 @@
 // Path: hooks\useMicroControl.ts
+import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getRunningActivities,
@@ -17,6 +18,9 @@ import {
   standardizeError,
 } from '@/lib/queryClient';
 import { ApiResponse } from '@/types/api';
+import axios, { CancelTokenSource } from 'axios';
+import { createCancelToken } from '@/utils/apiErrorHandler';
+import { formatTimestampWithTimezone } from '@/utils/dateFormatters';
 
 // Define query keys
 const QUERY_KEYS = {
@@ -24,50 +28,49 @@ const QUERY_KEYS = {
   COMPLETED_ACTIVITIES: createQueryKey('completedActivities'),
 };
 
-// Format date with timezone handling
-const formatTimestampWithTimezone = (dateString?: string): string => {
-  if (!dateString) return '';
+/**
+ * Formata a duração de uma atividade
+ * @param duracao Objeto de duração com dias, horas, minutos e segundos
+ * @returns String formatada com a duração
+ */
+const formatDuration = (duracao: Duration | undefined): string => {
+  if (!duracao) return '';
 
-  try {
-    // Parse the date, handling common UTC formats that might lack a timezone indicator
-    let date;
+  const parts = [];
 
-    // If the dateString already has a timezone indicator, use it as is
-    if (
-      dateString.includes('Z') ||
-      dateString.includes('+') ||
-      dateString.match(/\d-\d{2}:\d{2}$/)
-    ) {
-      date = new Date(dateString);
-    } else {
-      // If it doesn't have a timezone indicator, assume it's UTC
-      if (dateString.includes('T')) {
-        // ISO format without timezone
-        date = new Date(dateString + 'Z');
-      } else if (dateString.includes(' ') && dateString.includes(':')) {
-        // "YYYY-MM-DD HH:MM:SS" format
-        date = new Date(dateString.replace(' ', 'T') + 'Z');
-      } else {
-        // Fallback
-        date = new Date(dateString);
-      }
-    }
+  if (duracao.days !== undefined) parts.push(`Dias: ${duracao.days}`);
+  if (duracao.hours !== undefined) parts.push(`Horas: ${duracao.hours}`);
+  if (duracao.minutes !== undefined) parts.push(`Minutos: ${duracao.minutes}`);
+  if (duracao.seconds !== undefined) parts.push(`Segundos: ${duracao.seconds}`);
 
-    // Format using locale string to convert to user's timezone
-    return date.toLocaleString('pt-BR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return dateString;
-  }
+  return parts.join(', ');
 };
 
 export const useMicroControlData = () => {
+  // Referências para tokens de cancelamento
+  const runningActivitiesCancelTokenRef = useRef<CancelTokenSource | null>(
+    null,
+  );
+  const completedActivitiesCancelTokenRef = useRef<CancelTokenSource | null>(
+    null,
+  );
+
+  // Criar novos tokens de cancelamento quando o componente for montado
+  useEffect(() => {
+    runningActivitiesCancelTokenRef.current = createCancelToken();
+    completedActivitiesCancelTokenRef.current = createCancelToken();
+
+    // Cleanup - cancelar requisições pendentes quando o componente for desmontado
+    return () => {
+      if (runningActivitiesCancelTokenRef.current) {
+        runningActivitiesCancelTokenRef.current.cancel('Component unmounted');
+      }
+      if (completedActivitiesCancelTokenRef.current) {
+        completedActivitiesCancelTokenRef.current.cancel('Component unmounted');
+      }
+    };
+  }, []);
+
   // Fixed the return type of select to FormattedRunningActivity[]
   const runningActivitiesQuery = useQuery<
     ApiResponse<RunningActivity[]>,
@@ -75,7 +78,10 @@ export const useMicroControlData = () => {
     FormattedRunningActivity[]
   >({
     queryKey: QUERY_KEYS.RUNNING_ACTIVITIES,
-    queryFn: getRunningActivities,
+    queryFn: () =>
+      getRunningActivities(
+        runningActivitiesCancelTokenRef.current || undefined,
+      ),
     staleTime: STALE_TIMES.FREQUENT_DATA, // Running activities change frequently
     select: data => {
       return data.dados.map(
@@ -86,6 +92,11 @@ export const useMicroControlData = () => {
         }),
       );
     },
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for um erro de cancelamento
+      if (axios.isCancel(error)) return false;
+      return failureCount < 3;
+    },
   });
 
   // Fixed the return type of select to FormattedCompletedActivity[]
@@ -95,7 +106,10 @@ export const useMicroControlData = () => {
     FormattedCompletedActivity[]
   >({
     queryKey: QUERY_KEYS.COMPLETED_ACTIVITIES,
-    queryFn: getLastCompletedActivities,
+    queryFn: () =>
+      getLastCompletedActivities(
+        completedActivitiesCancelTokenRef.current || undefined,
+      ),
     staleTime: STALE_TIMES.FREQUENT_DATA, // Completed activities change frequently
     select: data => {
       return data.dados.map(
@@ -105,6 +119,11 @@ export const useMicroControlData = () => {
           data_fim: formatTimestampWithTimezone(item.data_fim),
         }),
       );
+    },
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for um erro de cancelamento
+      if (axios.isCancel(error)) return false;
+      return failureCount < 3;
     },
   });
 
@@ -130,17 +149,4 @@ export const useMicroControlData = () => {
     refetchRunning: runningActivitiesQuery.refetch,
     refetchCompleted: completedActivitiesQuery.refetch,
   };
-};
-
-const formatDuration = (duracao: Duration | undefined): string => {
-  if (!duracao) return '';
-
-  const parts = [];
-
-  if (duracao.days !== undefined) parts.push(`Dias: ${duracao.days}`);
-  if (duracao.hours !== undefined) parts.push(`Horas: ${duracao.hours}`);
-  if (duracao.minutes !== undefined) parts.push(`Minutos: ${duracao.minutes}`);
-  if (duracao.seconds !== undefined) parts.push(`Segundos: ${duracao.seconds}`);
-
-  return parts.join(', ');
 };

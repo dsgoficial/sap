@@ -32,17 +32,30 @@ apiClient.interceptors.request.use(
 // Response interceptor to handle errors
 apiClient.interceptors.response.use(
   response => response,
-  (error: AxiosError) => {
-    const apiError: ApiError = {
-      message: error.message || 'An unexpected error occurred',
-      status: error.response?.status,
-    };
+  (error: unknown) => {
+    // Se for um erro de cancelamento, apenas propaga
+    if (axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
+
+    // Cast para AxiosError para trabalhar com a tipagem correta
+    const axiosError = error as AxiosError;
 
     // Handle 401 and 403 errors (unauthorized/forbidden)
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if (
+      axiosError.response?.status === 401 ||
+      axiosError.response?.status === 403
+    ) {
       // Use the centralized logout and redirect function
       logoutAndRedirect();
     }
+
+    // Criar um erro padronizado
+    const apiError: ApiError = {
+      message: axiosError.message || 'Ocorreu um erro inesperado',
+      status: axiosError.response?.status,
+      data: axiosError.response?.data,
+    };
 
     return Promise.reject(apiError);
   },

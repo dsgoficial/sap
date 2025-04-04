@@ -1,5 +1,5 @@
 // Path: hooks\useMap.ts
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getViews, getLotGeoJSON } from '@/services/mapService';
 import { useLayers, useVisibleLayers, useMapActions } from '@/stores/mapStore';
@@ -10,6 +10,8 @@ import {
   standardizeError,
 } from '@/lib/queryClient';
 import { ApiResponse } from '@/types/api';
+import axios, { CancelTokenSource } from 'axios';
+import { createCancelToken } from '@/utils/apiErrorHandler';
 
 const QUERY_KEYS = {
   MAP_VIEWS: createQueryKey('mapViews'),
@@ -22,11 +24,35 @@ export const useMapData = () => {
   const visibleLayers = useVisibleLayers();
   const { setLayers } = useMapActions();
 
+  // Referências para tokens de cancelamento
+  const viewsCancelTokenRef = useRef<CancelTokenSource | null>(null);
+  const geoJSONCancelTokenRef = useRef<CancelTokenSource | null>(null);
+
+  // Criar novos tokens de cancelamento quando o componente for montado
+  useEffect(() => {
+    viewsCancelTokenRef.current = createCancelToken();
+    geoJSONCancelTokenRef.current = createCancelToken();
+
+    // Cleanup - cancelar requisições pendentes quando o componente for desmontado
+    return () => {
+      if (viewsCancelTokenRef.current) {
+        viewsCancelTokenRef.current.cancel('Component unmounted');
+      }
+      if (geoJSONCancelTokenRef.current) {
+        geoJSONCancelTokenRef.current.cancel('Component unmounted');
+      }
+    };
+  }, []);
+
   // Get available views
   const viewsQuery = useQuery<ApiResponse<any>, unknown, ApiResponse<any>>({
     queryKey: QUERY_KEYS.MAP_VIEWS,
-    queryFn: getViews,
-    retry: 2,
+    queryFn: () => getViews(viewsCancelTokenRef.current || undefined),
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for um erro de cancelamento
+      if (axios.isCancel(error)) return false;
+      return failureCount < 2;
+    },
     staleTime: STALE_TIMES.REFERENCE_DATA, // Views don't change frequently
   });
 
@@ -53,12 +79,15 @@ export const useMapData = () => {
       if (lotViews.length === 0) return [];
 
       // Use Promise.allSettled to handle individual failures gracefully
-      const promises = lotViews.map((view: any) =>
-        getLotGeoJSON(view.nome).catch(error => {
+      const promises = lotViews.map((view: any) => {
+        const cancelToken = geoJSONCancelTokenRef.current || undefined;
+        return getLotGeoJSON(view.nome, cancelToken).catch(error => {
+          if (axios.isCancel(error)) throw error; // Propagar erros de cancelamento
+
           console.error(`Error fetching GeoJSON for ${view.nome}:`, error);
           return { dados: [] }; // Return empty data on error
-        }),
-      );
+        });
+      });
 
       const results = await Promise.allSettled(promises);
 
@@ -82,7 +111,11 @@ export const useMapData = () => {
       return newLayers;
     },
     enabled: lotViews.length > 0,
-    retry: 1,
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for um erro de cancelamento
+      if (axios.isCancel(error)) return false;
+      return failureCount < 1;
+    },
     staleTime: STALE_TIMES.REFERENCE_DATA, // GeoJSON data doesn't change frequently
   });
 

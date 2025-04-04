@@ -8,6 +8,9 @@ import {
 } from '@/lib/queryClient';
 import { PitItem } from '@/types/pit';
 import { ApiResponse } from '@/types/api';
+import { useEffect, useRef, useCallback } from 'react';
+import { createCancelToken } from '@/utils/apiErrorHandler';
+import axios from 'axios';
 
 // Define query keys
 const QUERY_KEYS = {
@@ -20,7 +23,7 @@ export interface PitViewModel {
   rows: Record<string, string | number>[];
 }
 
-// Month mapping
+// Month mapping - constants outside the component for better performance
 const MONTHS = [
   { label: 'Jan', id: 'jan' },
   { label: 'Fev', id: 'fev' },
@@ -37,12 +40,19 @@ const MONTHS = [
 ];
 
 export const usePITData = () => {
-  // Fixed the TData type to match what select returns
-  const query = useQuery<ApiResponse<PitItem[]>, unknown, PitViewModel[]>({
-    queryKey: QUERY_KEYS.PIT_DATA,
-    queryFn: getPIT,
-    staleTime: STALE_TIMES.FREQUENT_DATA, // PIT data changes frequently
-    select: data => {
+  // Token de cancelamento para requisição
+  const cancelTokenRef = useRef(createCancelToken());
+
+  // Limpeza quando componente desmontar
+  useEffect(() => {
+    return () => {
+      cancelTokenRef.current.cancel('Component unmounted');
+    };
+  }, []);
+
+  // Função de transformação memoizada
+  const transformPitData = useCallback(
+    (data: ApiResponse<PitItem[]>): PitViewModel[] => {
       // Transform data for table display
       const projectData: Record<
         string,
@@ -113,6 +123,20 @@ export const usePITData = () => {
       );
 
       return result;
+    },
+    [],
+  );
+
+  // Query com nova API
+  const query = useQuery<ApiResponse<PitItem[]>, unknown, PitViewModel[]>({
+    queryKey: QUERY_KEYS.PIT_DATA,
+    queryFn: () => getPIT(cancelTokenRef.current),
+    staleTime: STALE_TIMES.FREQUENT_DATA,
+    select: transformPitData,
+    retry: (failureCount, error) => {
+      // Não tentar novamente requisições canceladas
+      if (axios.isCancel(error)) return false;
+      return failureCount < 2;
     },
   });
 

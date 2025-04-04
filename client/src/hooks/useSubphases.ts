@@ -1,5 +1,5 @@
 // Path: hooks\useSubphases.ts
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getActivitySubphase,
@@ -13,6 +13,8 @@ import {
   standardizeError,
 } from '@/lib/queryClient';
 import { ApiResponse } from '@/types/api';
+import { createCancelToken } from '@/utils/apiErrorHandler';
+import axios from 'axios';
 
 const QUERY_KEYS = {
   ACTIVITY_SUBPHASE: createQueryKey('activitySubphase'),
@@ -21,29 +23,25 @@ const QUERY_KEYS = {
 };
 
 export const useActivitySubphase = () => {
-  const [graphs, setGraphs] = useState<TimelineGroup[]>([]);
+  // Token de cancelamento para requisição
+  const cancelTokenRef = useRef(createCancelToken());
 
-  const query = useQuery<
-    ApiResponse<SubphaseData[]>,
-    unknown,
-    ApiResponse<SubphaseData[]>
-  >({
-    queryKey: QUERY_KEYS.ACTIVITY_SUBPHASE,
-    queryFn: getActivitySubphase,
-    staleTime: STALE_TIMES.FREQUENT_DATA, // Activity subphase data changes frequently
-  });
-
-  // Transform the data exactly like the original implementation
+  // Limpeza quando componente desmontar
   useEffect(() => {
-    if (!query.data?.dados) return;
+    return () => {
+      cancelTokenRef.current.cancel('Component unmounted');
+    };
+  }, []);
 
-    const transformData = () => {
+  // Função de transformação memoizada
+  const transformSubphaseData = useCallback(
+    (data: ApiResponse<SubphaseData[]>): TimelineGroup[] => {
       const graphsData: TimelineGroup[] = [];
       let lastLotName: string | null = null;
       let lastLot: TimelineGroup | null = null;
       let count = 0;
 
-      for (let [i, lot] of query.data.dados.entries()) {
+      for (let [i, lot] of data.dados.entries()) {
         if (!lastLot || lastLotName !== lot.lote) {
           if (lastLot) graphsData.push(lastLot);
 
@@ -88,19 +86,33 @@ export const useActivitySubphase = () => {
           }),
         });
 
-        if (query.data.dados.length - 1 === i) {
+        if (data.dados.length - 1 === i) {
           if (lastLot) graphsData.push(lastLot);
         }
       }
 
-      setGraphs(graphsData);
-    };
+      return graphsData;
+    },
+    [],
+  );
 
-    transformData();
-  }, [query.data]);
+  // Consulta usando o seletor para transformação
+  const query = useQuery<ApiResponse<SubphaseData[]>, unknown, TimelineGroup[]>(
+    {
+      queryKey: QUERY_KEYS.ACTIVITY_SUBPHASE,
+      queryFn: () => getActivitySubphase(cancelTokenRef.current),
+      staleTime: STALE_TIMES.FREQUENT_DATA,
+      select: transformSubphaseData,
+      retry: (failureCount, error) => {
+        // Não tentar novamente requisições canceladas
+        if (axios.isCancel(error)) return false;
+        return failureCount < 2;
+      },
+    },
+  );
 
   return {
-    data: graphs,
+    data: query.data,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error ? standardizeError(query.error) : null,
@@ -117,11 +129,19 @@ interface SituationData {
 }
 
 export const useSubphaseSituation = () => {
-  const query = useQuery<ApiResponse<SituationData[]>, unknown, ChartGroup[]>({
-    queryKey: QUERY_KEYS.SUBPHASES_SITUATION,
-    queryFn: getSubphasesSituation,
-    staleTime: STALE_TIMES.FREQUENT_DATA, // Subphase situation data changes frequently
-    select: data => {
+  // Token de cancelamento para requisição
+  const cancelTokenRef = useRef(createCancelToken());
+
+  // Limpeza quando componente desmontar
+  useEffect(() => {
+    return () => {
+      cancelTokenRef.current.cancel('Component unmounted');
+    };
+  }, []);
+
+  // Função de transformação memoizada
+  const transformSituationData = useCallback(
+    (data: ApiResponse<SituationData[]>): ChartGroup[] => {
       // Transform data for visualization
       const groupedData: Record<
         string,
@@ -158,6 +178,20 @@ export const useSubphaseSituation = () => {
 
       return chartGroups;
     },
+    [],
+  );
+
+  // Query com seletor para transformação
+  const query = useQuery<ApiResponse<SituationData[]>, unknown, ChartGroup[]>({
+    queryKey: QUERY_KEYS.SUBPHASES_SITUATION,
+    queryFn: () => getSubphasesSituation(cancelTokenRef.current),
+    staleTime: STALE_TIMES.FREQUENT_DATA,
+    select: transformSituationData,
+    retry: (failureCount, error) => {
+      // Não tentar novamente requisições canceladas
+      if (axios.isCancel(error)) return false;
+      return failureCount < 2;
+    },
   });
 
   return {
@@ -176,24 +210,20 @@ interface UserActivityData {
 }
 
 export const useUserActivities = () => {
-  const [graphs, setGraphs] = useState<TimelineGroup[]>([]);
+  // Token de cancelamento para requisição
+  const cancelTokenRef = useRef(createCancelToken());
 
-  const query = useQuery<
-    ApiResponse<UserActivityData[]>,
-    unknown,
-    ApiResponse<UserActivityData[]>
-  >({
-    queryKey: QUERY_KEYS.USER_ACTIVITIES,
-    queryFn: getUserActivities,
-    staleTime: STALE_TIMES.FREQUENT_DATA, // User activities data changes frequently
-  });
-
-  // Transform the data exactly like the original implementation
+  // Limpeza quando componente desmontar
   useEffect(() => {
-    if (!query.data?.dados) return;
+    return () => {
+      cancelTokenRef.current.cancel('Component unmounted');
+    };
+  }, []);
 
-    const transformData = () => {
-      const graphsData: TimelineGroup[] = [
+  // Função de transformação memoizada
+  const transformUserActivitiesData = useCallback(
+    (data: ApiResponse<UserActivityData[]>): TimelineGroup[] => {
+      return [
         {
           idContainer: `user_bar_container-0`,
           idBar: `user_bar_div-0`,
@@ -217,7 +247,7 @@ export const useUserActivities = () => {
               enabled: true,
             },
           },
-          dataset: query.data.dados.map((item: UserActivityData) => {
+          dataset: data.dados.map((item: UserActivityData) => {
             return {
               measure: item.usuario,
               data: item.data.map((dataItem: [string, string, string]) => {
@@ -228,15 +258,29 @@ export const useUserActivities = () => {
           }),
         },
       ];
+    },
+    [],
+  );
 
-      setGraphs(graphsData);
-    };
-
-    transformData();
-  }, [query.data]);
+  // Query com seletor para transformação
+  const query = useQuery<
+    ApiResponse<UserActivityData[]>,
+    unknown,
+    TimelineGroup[]
+  >({
+    queryKey: QUERY_KEYS.USER_ACTIVITIES,
+    queryFn: () => getUserActivities(cancelTokenRef.current),
+    staleTime: STALE_TIMES.FREQUENT_DATA,
+    select: transformUserActivitiesData,
+    retry: (failureCount, error) => {
+      // Não tentar novamente requisições canceladas
+      if (axios.isCancel(error)) return false;
+      return failureCount < 2;
+    },
+  });
 
   return {
-    data: graphs,
+    data: query.data,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error ? standardizeError(query.error) : null,

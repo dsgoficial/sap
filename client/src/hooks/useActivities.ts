@@ -1,13 +1,21 @@
 // Path: hooks\useActivities.ts
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ErrorReport } from '../types/activity';
-import { useActivityService } from '@/services/activityService';
+import {
+  getCurrentActivity,
+  getErrorTypes,
+  startActivity,
+  finishActivity,
+  reportError,
+} from '@/services/activityService';
 import {
   STALE_TIMES,
   standardizeError,
   createQueryKey,
 } from '@/lib/queryClient';
+import axios, { CancelTokenSource } from 'axios';
+import { createCancelToken } from '@/utils/apiErrorHandler';
 
 const QUERY_KEYS = {
   CURRENT_ACTIVITY: createQueryKey('currentActivity'),
@@ -16,8 +24,27 @@ const QUERY_KEYS = {
 
 export const useActivities = () => {
   const queryClient = useQueryClient();
-  const activityService = useActivityService();
+  // Referências para tokens de cancelamento
+  const currentActivityCancelTokenRef = useRef<CancelTokenSource | null>(null);
+  const errorTypesCancelTokenRef = useRef<CancelTokenSource | null>(null);
 
+  // Criar novos tokens de cancelamento
+  useEffect(() => {
+    currentActivityCancelTokenRef.current = createCancelToken();
+    errorTypesCancelTokenRef.current = createCancelToken();
+
+    // Cleanup - cancelar requisições pendentes quando o componente for desmontado
+    return () => {
+      if (currentActivityCancelTokenRef.current) {
+        currentActivityCancelTokenRef.current.cancel('Component unmounted');
+      }
+      if (errorTypesCancelTokenRef.current) {
+        errorTypesCancelTokenRef.current.cancel('Component unmounted');
+      }
+    };
+  }, []);
+
+  // Query para atividade atual
   const {
     data: currentActivityData,
     isLoading: isLoadingActivity,
@@ -25,20 +52,36 @@ export const useActivities = () => {
     refetch: refetchActivity,
   } = useQuery({
     queryKey: QUERY_KEYS.CURRENT_ACTIVITY,
-    queryFn: activityService.getCurrentActivity,
+    queryFn: () =>
+      getCurrentActivity(currentActivityCancelTokenRef.current || undefined),
     staleTime: STALE_TIMES.FREQUENT_DATA, // Activity data changes frequently
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for um erro de cancelamento
+      if (axios.isCancel(error)) return false;
+      return failureCount < 3;
+    },
   });
 
-  // Get error types
+  // Query para tipos de erro
   const { data: errorTypesData } = useQuery({
     queryKey: QUERY_KEYS.ERROR_TYPES,
-    queryFn: activityService.getErrorTypes,
+    queryFn: () => getErrorTypes(errorTypesCancelTokenRef.current || undefined),
     staleTime: STALE_TIMES.REFERENCE_DATA, // Error types rarely change
+    retry: (failureCount, error) => {
+      // Não tentar novamente se for um erro de cancelamento
+      if (axios.isCancel(error)) return false;
+      return failureCount < 3;
+    },
   });
 
-  // Start activity mutation
-  const startActivityMutation = useMutation({
-    mutationFn: activityService.startActivity,
+  // Mutation para iniciar atividade - corrigindo para receber void
+  const startActivityMutation = useMutation<
+    any,
+    unknown,
+    void,
+    { previousData: any }
+  >({
+    mutationFn: () => startActivity(),
     onSuccess: () => {
       // Invalidate current activity to refresh data
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_ACTIVITY });
@@ -84,9 +127,9 @@ export const useActivities = () => {
     },
   });
 
-  // Finish activity mutation
+  // Mutation para finalizar atividade
   const finishActivityMutation = useMutation({
-    mutationFn: activityService.finishActivity,
+    mutationFn: finishActivity,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_ACTIVITY });
     },
@@ -125,14 +168,15 @@ export const useActivities = () => {
     },
   });
 
-  // Report error mutation
+  // Mutation para reportar erro
   const reportErrorMutation = useMutation({
-    mutationFn: activityService.reportError,
+    mutationFn: reportError,
     // No need to invalidate since reporting an error doesn't change the current activity
   });
 
   // Helper functions
   const handleStartActivity = useCallback(async () => {
+    // Chama o método mutateAsync sem argumentos, corrigido para estar de acordo com a tipagem
     const response = await startActivityMutation.mutateAsync();
     return response; // Return the full response to access the message
   }, [startActivityMutation]);

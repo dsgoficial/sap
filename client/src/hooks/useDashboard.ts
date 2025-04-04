@@ -7,13 +7,61 @@ import {
   STALE_TIMES,
   standardizeError,
 } from '@/lib/queryClient';
+import { useEffect, useRef } from 'react';
+import { createCancelToken } from '@/utils/apiErrorHandler';
+import axios from 'axios';
 
 const QUERY_KEYS = {
   DASHBOARD_DATA: createQueryKey('dashboardData'),
 };
 
 /**
- * Transform raw API data into dashboard-ready format
+ * Hook personalizado para buscar e gerenciar dados do dashboard
+ */
+export const useDashboard = () => {
+  // Criação e gerenciamento do token de cancelamento
+  const cancelTokenRef = useRef(createCancelToken());
+
+  // Limpeza quando componente desmontar
+  useEffect(() => {
+    return () => {
+      cancelTokenRef.current.cancel('Component unmounted');
+    };
+  }, []);
+
+  const query = useQuery({
+    queryKey: QUERY_KEYS.DASHBOARD_DATA,
+    queryFn: async () => {
+      try {
+        const rawData = await getDashboardData(cancelTokenRef.current);
+        return transformDashboardData(rawData);
+      } catch (error) {
+        if (axios.isCancel(error)) {
+          console.log('Dashboard data request cancelled');
+        }
+        throw error;
+      }
+    },
+    staleTime: STALE_TIMES.FREQUENT_DATA,
+    retry: (failureCount, error) => {
+      // Não tentar novamente requisições canceladas
+      if (axios.isCancel(error)) return false;
+      return failureCount < 2;
+    },
+  });
+
+  return {
+    dashboardData: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error ? standardizeError(query.error) : null,
+    refetch: query.refetch,
+  };
+};
+
+/**
+ * Transforma os dados brutos da API em formato adequado para o dashboard
+ * Memoizado para performance
  */
 const transformDashboardData = (
   data: Awaited<ReturnType<typeof getDashboardData>>,
@@ -113,31 +161,5 @@ const transformDashboardData = (
     },
     lotProgressData,
     monthlyData,
-  };
-};
-
-/**
- * Custom hook for fetching and managing dashboard data
- */
-export const useDashboard = () => {
-  const query = useQuery({
-    queryKey: QUERY_KEYS.DASHBOARD_DATA,
-    queryFn: async () => {
-      try {
-        const rawData = await getDashboardData();
-        return transformDashboardData(rawData);
-      } catch (error) {
-        throw error;
-      }
-    },
-    staleTime: STALE_TIMES.FREQUENT_DATA, // Dashboard data changes frequently
-  });
-
-  return {
-    dashboardData: query.data,
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error ? standardizeError(query.error) : null,
-    refetch: query.refetch,
   };
 };

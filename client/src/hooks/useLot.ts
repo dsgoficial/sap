@@ -8,6 +8,9 @@ import {
 } from '@/lib/queryClient';
 import { LotSubphaseData } from '@/types/lot';
 import { ApiResponse } from '@/types/api';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { createCancelToken } from '@/utils/apiErrorHandler';
+import axios from 'axios';
 
 // Define query keys
 const QUERY_KEYS = {
@@ -20,7 +23,7 @@ export interface LotViewModel {
   rows: Record<string, string | number>[];
 }
 
-// Month mapping
+// Month mapping - memoizado para evitar recriação a cada render
 const MONTHS = [
   { label: 'Jan', id: 'jan' },
   { label: 'Fev', id: 'fev' },
@@ -37,16 +40,22 @@ const MONTHS = [
 ];
 
 export const useLotData = () => {
-  // Fixed the TData type to match what select returns
-  const query = useQuery<
-    ApiResponse<LotSubphaseData[]>,
-    unknown,
-    LotViewModel[]
-  >({
-    queryKey: QUERY_KEYS.LOT_DATA,
-    queryFn: getLots,
-    staleTime: STALE_TIMES.FREQUENT_DATA, // Lot data changes frequently
-    select: data => {
+  // Token de cancelamento para requisição
+  const cancelTokenRef = useRef(createCancelToken());
+
+  // Limpeza quando componente desmontar
+  useEffect(() => {
+    return () => {
+      cancelTokenRef.current.cancel('Component unmounted');
+    };
+  }, []);
+
+  // Memoize o mês atual para estabilidade
+  const currentMonthIdx = useMemo(() => new Date().getMonth(), []);
+
+  // Função de transformação memoizada
+  const transformLotData = useCallback(
+    (data: ApiResponse<LotSubphaseData[]>): LotViewModel[] => {
       // Transform data for table display
       const tableData: Record<string, Record<string, number[]>> = {};
 
@@ -66,9 +75,6 @@ export const useLotData = () => {
             element.count;
         }
       });
-
-      // Current month to determine which values to display
-      const currentMonthIdx = new Date().getMonth();
 
       // Transform to final format
       const result: LotViewModel[] = Object.keys(tableData).map(lotKey => {
@@ -95,8 +101,26 @@ export const useLotData = () => {
 
       return result;
     },
+    [currentMonthIdx],
+  );
+
+  // Query com seletor para transformação
+  const query = useQuery<
+    ApiResponse<LotSubphaseData[]>,
+    unknown,
+    LotViewModel[]
+  >({
+    queryKey: QUERY_KEYS.LOT_DATA,
+    queryFn: () => getLots(cancelTokenRef.current),
+    staleTime: STALE_TIMES.FREQUENT_DATA,
+    select: transformLotData,
     refetchOnWindowFocus: false,
     refetchInterval: 300000,
+    retry: (failureCount, error) => {
+      // Não tentar novamente requisições canceladas
+      if (axios.isCancel(error)) return false;
+      return failureCount < 2;
+    },
   });
 
   return {

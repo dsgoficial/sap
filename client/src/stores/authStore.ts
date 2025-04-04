@@ -121,18 +121,21 @@ const useAuthStoreBase = create<AuthState & { actions: AuthActions }>()(
             ? UserRole.ADMIN
             : UserRole.USER;
 
-          // Create user data object
+          // Recuperar nome de usuário do localStorage se não estiver na resposta
+          const storedUsername = localStorage.getItem('@sap_web-User-username');
+
+          // Criar objeto de usuário com dados
           const userData = {
             uuid: loginResponse.uuid,
             role,
             token: loginResponse.token,
-            username: loginResponse.username,
+            username: storedUsername || '', // Usar nome armazenado ou string vazia
           };
 
-          // Save to localStorage for legacy compatibility
+          // Salvar para localStorage para compatibilidade legada
           saveUserDataToLocalStorage(userData);
 
-          // Update Zustand state
+          // Atualizar estado Zustand
           set({
             user: userData,
             isAuthenticated: true,
