@@ -9,7 +9,7 @@ import DashboardNavbar from './AppNavbar';
 // Constants
 const APP_BAR_MOBILE = 64;
 const APP_BAR_DESKTOP = 92;
-const DRAWER_WIDTH = 280;
+const DRAWER_WIDTH = 310;
 
 // Styled components
 const RootStyle = styled(Box)(({ theme: _theme }) => ({

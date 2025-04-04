@@ -25,6 +25,7 @@ import MapIcon from '@mui/icons-material/Map';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useIsAdmin } from '@/stores/authStore';
+import LandscapeIcon from '@mui/icons-material/Landscape';
 import { useThemeMode } from '@/contexts/ThemeContext';
 
 interface DashboardSidebarProps {
@@ -119,6 +120,12 @@ const DashboardSidebar = ({
       path: '/maps',
       icon: <MapIcon />,
       adminOnly: true,
+    },
+    {
+      title: 'Campos',
+      path: '/field-activities',
+      icon: <LandscapeIcon />,
+      adminOnly: false,  // false significa que qualquer usuário pode acessar
     },
   ];
 
