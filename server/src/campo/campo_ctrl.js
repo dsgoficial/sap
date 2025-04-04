@@ -71,14 +71,15 @@ controller.getCamposGeoJson = async () => {
             'features', json_agg(
                 json_build_object(
                     'type', 'Feature',
-                    'geometry', ST_AsGeoJSON(c.geom)::json,
+                    'geometry', ST_AsGeoJSON(ST_PointOnSurface(c.geom))::json,
                     'properties', json_build_object(
                         'id', c.id,
                         'nome', c.nome,
                         'descricao', c.descricao,
                         'situacao', s.nome,
                         'inicio', c.inicio,
-                        'fim', c.fim
+                        'fim', c.fim,
+                        'pit', c.pit
                     )
                 )
             )
@@ -464,8 +465,19 @@ controller.deleteTracker = async (id) => {
 // Funções de Controle para Tracker Ponto
 // Função para criar um track ponto
 controller.criaTrackerPonto = async (tracks) => {
+    tracks.forEach(p => {
+        if (!p.x_ll || !p.y_ll) {
+          throw new AppError(
+            'Coordenadas x_ll e y_ll são obrigatórias',
+            httpCode.BadRequest
+          )
+        }
+        p.geom = `ST_SetSRID(ST_MakePoint(${p.x_ll}, ${p.y_ll}), 4326)`
+      })
+
     let trackIds = []
-    await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
+
+    await db.sapConn.tx(async t => {
         const cs = new db.pgp.helpers.ColumnSet([
           'id',
           'track_id',
@@ -479,30 +491,17 @@ controller.criaTrackerPonto = async (tracks) => {
           { name: 'geom', mod: ':raw' },
           { name: 'data_importacao', init: () => new Date() }
         ])
-    
-        // Formatação da geometria para cada track ponto
-        tracks.forEach(p => {
-          if (!p.x_ll || !p.y_ll) {
-            throw new AppError(
-              'Coordenadas x_ll e y_ll são obrigatórias',
-              httpCode.BadRequest
-            )
-          }
-          
-          // Conversão das coordenadas para geometria de ponto
-          p.geom = `ST_SetSRID(ST_MakePoint(${p.x_ll}, ${p.y_ll}), 4326)`
-        })
-    
+
         const query = db.pgp.helpers.insert(tracks, cs, {
           table: 'track_p',
           schema: 'controle_campo'
         }) + ' RETURNING id'
-    
+
         trackIds = await t.map(query, undefined, a => a.id)
+        
+        await t.none('REFRESH MATERIALIZED VIEW controle_campo.track_l')
       })
 
-      await db.sapConn.none('REFRESH MATERIALIZED VIEW controle_campo.track_l');
-      
       return trackIds
     }
 
@@ -574,9 +573,8 @@ controller.deletaProdutoByCampoId = async (campo_id) => {
     })
 }
 
-controller.getTrackMVT = async (z, x, y, campo_id, track_id) => {
-    // Query base
-    let query = `WITH
+controller.getTrackMVT = async (z, x, y, track_id) => {
+    const query = `WITH
         bounds AS (
             SELECT ST_TileEnvelope($<z>, $<x>, $<y>) AS geom
         ),
@@ -584,17 +582,8 @@ controller.getTrackMVT = async (z, x, y, campo_id, track_id) => {
             SELECT tl.id, tl.track_id, tl.track_id_garmin, 
                 tl.min_t, tl.max_t, tl.geom
             FROM controle_campo.track_l AS tl
-            INNER JOIN controle_campo.track AS t ON tl.track_id = t.id
-            WHERE t.campo_id = $<campo_id>`;
-    
-    // Adicionar filtro de track_id se especificado
-    if (track_id) {
-        query += ` AND tl.track_id = $<track_id>`;
-    }
-    
-    // Completar a query
-    query += `
-            AND tl.geom && (SELECT geom FROM bounds)
+            WHERE tl.track_id = $<track_id>
+            AND ST_Transform(tl.geom, 3857) && (SELECT geom FROM bounds)
         )
         SELECT ST_AsMVT(tile, 'track_layer', 4096, 'geom') AS mvt
         FROM (
@@ -602,7 +591,7 @@ controller.getTrackMVT = async (z, x, y, campo_id, track_id) => {
                 to_char(min_t, 'YYYY-MM-DD HH24:MI:SS') as min_time,
                 to_char(max_t, 'YYYY-MM-DD HH24:MI:SS') as max_time,
                 ST_AsMVTGeom(
-                    geom,
+                    ST_Transform(geom, 3857),
                     (SELECT geom FROM bounds),
                     4096,
                     256,
@@ -616,13 +605,8 @@ controller.getTrackMVT = async (z, x, y, campo_id, track_id) => {
         z: z, 
         x: x, 
         y: y,
-        campo_id: campo_id
+        track_id: track_id
     };
-    
-    // Adicionar track_id aos parâmetros se especificado
-    if (track_id) {
-        params.track_id = track_id;
-    }
     
     return db.sapConn.oneOrNone(query, params);
 };

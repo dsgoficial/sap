@@ -342,13 +342,12 @@ router.delete(
 )
 
 router.get(
-  '/tracks/:campo_id/tracks/mvt/:z/:x/:y.mvt', async (req, res) => {
+  '/tracks/:track_id/:z/:x/:y.mvt', async (req, res) => {
   try {
-      const { z, x, y, campo_id } = req.params;
-      const { trackId } = req.query; // Obtém o trackId do query parameter
+      const { z, x, y, track_id } = req.params;
       
       // Verificar se os parâmetros são válidos
-      if (!z || !x || !y || !campo_id) {
+      if (!z || !x || !y || !track_id) {
           return res.status(400).json({ message: 'Parâmetros incompletos' });
       }
       
@@ -356,8 +355,7 @@ router.get(
           parseInt(z, 10), 
           parseInt(x, 10), 
           parseInt(y, 10), 
-          campo_id,
-          trackId // Passa o trackId para o controller (pode ser undefined)
+          track_id // Passa o trackId para o controller (pode ser undefined)
       );
       
       if (!tile || !tile.mvt) {
