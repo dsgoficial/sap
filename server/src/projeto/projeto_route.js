@@ -667,7 +667,7 @@ router.post(
       req.usuarioId
     )
 
-    const msg = 'Regras gravados com sucesso'
+    const msg = 'Regras gravadas com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.Created)
   })
