@@ -129,7 +129,10 @@ export const useActivities = () => {
 
   // Mutation para finalizar atividade
   const finishActivityMutation = useMutation({
-    mutationFn: finishActivity,
+    mutationFn: async (activityId: string) => {
+    const cancelToken = createCancelToken();
+    return finishActivity(activityId, cancelToken);
+  },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_ACTIVITY });
     },
@@ -170,9 +173,12 @@ export const useActivities = () => {
 
   // Mutation para reportar erro
   const reportErrorMutation = useMutation({
-    mutationFn: reportError,
-    // No need to invalidate since reporting an error doesn't change the current activity
-  });
+  mutationFn: async (errorData: ErrorReport) => {
+    const cancelToken = createCancelToken();
+    return reportError(errorData, cancelToken);
+  },
+  // No need to invalidate since reporting an error doesn't change the current activity
+});
 
   // Helper functions
   const handleStartActivity = useCallback(async () => {
