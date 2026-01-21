@@ -667,6 +667,40 @@ controller.atividadeUsuario = async () => {
 
 }
 
+
+controller.resumoUsuario = async () => {
+  return db.sapConn.any(`
+  SELECT
+    u.nome_guerra AS nome_usuario,
+    tpg.nome_abrev AS nome_abrev,
+  CASE
+      WHEN atv.usuario_id IS NULL THEN 'Ocioso'
+      ELSE 'Em Atividade'
+    END AS status_usuario,
+    COALESCE(sf.nome, 'N/A') AS nome_subfase,
+    COALESCE(l.nome, 'N/A') AS nome_lote,
+	  COALESCE(b.nome, 'N/A') AS nome_bloco
+  FROM
+    dgeo.usuario AS u
+  INNER JOIN
+    dominio.tipo_posto_grad AS tpg ON u.tipo_posto_grad_id = tpg.code
+  LEFT JOIN
+    macrocontrole.atividade AS atv ON atv.usuario_id = u.id AND atv.tipo_situacao_id IN (2, 3)
+  LEFT JOIN
+    macrocontrole.unidade_trabalho AS ut ON atv.unidade_trabalho_id = ut.id
+  LEFT JOIN
+    macrocontrole.subfase AS sf ON ut.subfase_id = sf.id
+  LEFT JOIN
+	  macrocontrole.lote AS l ON ut.lote_id = l.id
+  LEFT JOIN
+	  macrocontrole.bloco AS b ON ut.bloco_id = b.id
+  WHERE
+    u.ativo = 'true'
+  ORDER BY
+    tpg.code DESC;
+    `)
+}
+
 controller.situacaoSubfase = async () => {
   return await db.sapConn.any(
     `
