@@ -100,17 +100,33 @@ const LoadingFallback = () => (
 const authLoader = () => {
   try {
     const token = localStorage.getItem('@sap_web-Token');
-    const isAuthenticated = !!token && !isTokenExpired();
 
-    if (!isAuthenticated) {
+    // Se não há token ou está expirado, limpa dados e redireciona
+    if (!token || isTokenExpired()) {
+      // Limpar dados potencialmente corrompidos/expirados
+      const keysToRemove = [
+        '@sap_web-Token',
+        '@sap_web-Token-Expiry',
+        '@sap_web-User-Authorization',
+        '@sap_web-User-uuid',
+        '@sap_web-User-username',
+        'auth-storage', // Zustand persist key
+      ];
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
       // Redirect to login and remember the intended destination
       const currentPath = window.location.pathname;
-      return redirect(`/login?from=${encodeURIComponent(currentPath)}`);
+      if (currentPath !== '/' && currentPath !== '/login') {
+        return redirect(`/login?from=${encodeURIComponent(currentPath)}`);
+      }
+      return redirect('/login');
     }
 
     return null; // Continue to the route if authenticated
   } catch (error) {
     console.error('Error in auth loader:', error);
+    // Em caso de erro, limpar tudo e redirecionar
+    localStorage.removeItem('auth-storage');
     return redirect('/login');
   }
 };

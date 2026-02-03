@@ -31,14 +31,23 @@ const tokenExpiryStorage = {
 // Function to check if token is expired
 export const isTokenExpired = (): boolean => {
   try {
+    const token = tokenStorage.get();
     const expiry = tokenExpiryStorage.get();
-    if (!expiry) return false; // No expiry time means we don't know, assume not expired
+
+    // Se não há token, considera como expirado (força re-login)
+    if (!token) return true;
+
+    // Se não há data de expiração mas há token, considera expirado por segurança
+    if (!expiry) return true;
 
     const expiryTime = new Date(expiry);
+    // Verifica se a data é válida
+    if (isNaN(expiryTime.getTime())) return true;
+
     return expiryTime <= new Date();
   } catch (error) {
     console.error('Error checking token expiry:', error);
-    return false; // In case of any error, assume token is not expired
+    return true; // Em caso de erro, assume expirado por segurança
   }
 };
 
@@ -175,14 +184,26 @@ const useAuthStoreBase = create<AuthState & { actions: AuthActions }>()(
           if (state?.isAuthenticated && isTokenExpired()) {
             // Clear the store if token is expired
             clearUserDataFromLocalStorage();
-            // This will update the state after rehydration
+            // Resetar estado diretamente sem usar hooks
             setTimeout(() => {
-              const actions = useAuthActions();
-              actions.logout();
+              useAuthStoreBase.setState({
+                user: null,
+                isAuthenticated: false,
+                isAdmin: false,
+              });
             }, 0);
           }
         } catch (error) {
           console.error('Error in rehydration:', error);
+          // Em caso de erro na rehidratação, limpar tudo por segurança
+          clearUserDataFromLocalStorage();
+          setTimeout(() => {
+            useAuthStoreBase.setState({
+              user: null,
+              isAuthenticated: false,
+              isAdmin: false,
+            });
+          }, 0);
         }
       },
     },
@@ -199,12 +220,18 @@ export const useUsername = () =>
 export const useAuthActions = () => useAuthStoreBase(state => state.actions);
 
 // Use consistent navigation approach for auth-related redirects
+// NOTA: Esta função pode ser chamada fora de componentes React,
+// por isso acessa o store diretamente em vez de usar hooks
 export const logoutAndRedirect = () => {
-  // Get the logout function from the store
-  const { logout } = useAuthActions();
+  // Limpar localStorage diretamente
+  clearUserDataFromLocalStorage();
 
-  // Logout the user
-  logout();
+  // Resetar estado Zustand diretamente via getState/setState
+  useAuthStoreBase.setState({
+    user: null,
+    isAuthenticated: false,
+    isAdmin: false,
+  });
 
   // Redirect to login page
   navigateToLogin();
