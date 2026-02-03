@@ -785,6 +785,17 @@ router.get(
   })
 )
 
+router.get(
+  '/resumo_usuario',
+  asyncHandler(async (req, res, next) => {
+    const dados = await acompanhamentoCtrl.resumoUsuario()
+
+    const msg = 'Dados de resumo retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 /**
  * @swagger
  * /api/acompanhamento/situacao_subfase:

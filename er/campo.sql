@@ -85,7 +85,7 @@ CREATE INDEX track_p_geom_idx ON controle_campo.track_p USING gist (geom);
 
 CREATE MATERIALIZED VIEW controle_campo.track_l
 AS
- SELECT row_number() OVER () AS id,
+ SELECT 
     p.track_id,
     p.track_id_garmin,
     min(p.creation_time) AS min_t,
@@ -96,5 +96,8 @@ AS
 WITH DATA;
 
 CREATE INDEX track_l_geom_idx ON controle_campo.track_l USING gist (geom);
+
+CREATE UNIQUE INDEX track_l_unique_idx ON controle_campo.track_l (track_id, track_id_garmin);
+
 
 COMMIT;

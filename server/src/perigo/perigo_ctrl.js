@@ -211,6 +211,24 @@ controller.deleteProdutosSemUT = async () => {
   });
 };
 
+controller.deleteUTSemAtividade = async () => {
+  return db.sapConn.tx(async t => {
+    const deletedUT = await t.any(
+      `DELETE FROM macrocontrole.unidade_trabalho
+      WHERE id IN (
+        SELECT ut.id
+        FROM macrocontrole.unidade_trabalho AS ut
+        LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+        WHERE a.unidade_trabalho_id IS NULL
+      )
+      RETURNING id`
+    );
+    
+    return deletedUT;
+  });
+};
+
+
 controller.deleteLoteSemProduto = async () => {
   const deletedLotes = await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
     const lotesToDelete = await t.any(

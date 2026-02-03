@@ -459,6 +459,9 @@ controller.deleteTracker = async (id) => {
             `DELETE FROM controle_campo.track WHERE id = $<id>`,
             { id: id }
         )
+        await t.none(
+            `REFRESH MATERIALIZED VIEW controle_campo.track_l`
+        )
     })
 }
 

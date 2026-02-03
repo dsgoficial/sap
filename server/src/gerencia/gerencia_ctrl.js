@@ -180,6 +180,12 @@ controller.deletaPerfilProducao = async perfilProducaoId => {
       )
     }
 
+    await t.any(
+      `DELETE FROM macrocontrole.perfil_producao_etapa
+      WHERE perfil_producao_id in ($<perfilProducaoId:csv>)`,
+      { perfilProducaoId }
+    )
+
     return t.any(
       `DELETE FROM macrocontrole.perfil_producao
       WHERE id in ($<perfilProducaoId:csv>)`,

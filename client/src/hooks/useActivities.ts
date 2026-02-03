@@ -15,7 +15,8 @@ import {
   standardizeError,
   createQueryKey,
 } from '@/lib/queryClient';
-import axios, { CancelTokenSource } from 'axios';
+import axios from 'axios';
+import type { CancelTokenSource } from 'axios';
 import { createCancelToken } from '@/utils/apiErrorHandler';
 
 const QUERY_KEYS = {
@@ -75,12 +76,12 @@ export const useActivities = () => {
     },
   });
 
-  // Mutation para iniciar atividade - corrigindo para receber void
+  // Mutation para iniciar atividade
   const startActivityMutation = useMutation<
-    any,
-    unknown,
+    ApiResponse<unknown>,
+    Error,
     void,
-    { previousData: any }
+    { previousData: unknown }
   >({
     mutationFn: () => startActivity(),
     onSuccess: () => {
@@ -130,10 +131,10 @@ export const useActivities = () => {
 
   // Mutation para finalizar atividade
   const finishActivityMutation = useMutation<
-    ApiResponse<any>,
+    ApiResponse<unknown>,
     Error,
     string,
-    { previousData: any; activityId: string }
+    { previousData: unknown; activityId: string }
   >({
     mutationFn: (activityId: string) => finishActivity(activityId),
     onSuccess: () => {
@@ -175,7 +176,7 @@ export const useActivities = () => {
   });
 
   // Mutation para reportar erro
-  const reportErrorMutation = useMutation<ApiResponse<any>, Error, ErrorReport>({
+  const reportErrorMutation = useMutation<ApiResponse<unknown>, Error, ErrorReport>({
     mutationFn: (errorData: ErrorReport) => reportError(errorData),
     // No need to invalidate since reporting an error doesn't change the current activity
   });

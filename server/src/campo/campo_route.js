@@ -342,39 +342,35 @@ router.delete(
 )
 
 router.get(
-  '/tracks/:track_id/:z/:x/:y.mvt', async (req, res) => {
-  try {
-      const { z, x, y, track_id } = req.params;
-      
-      // Verificar se os parâmetros são válidos
-      if (!z || !x || !y || !track_id) {
-          return res.status(400).json({ message: 'Parâmetros incompletos' });
-      }
-      
-      const tile = await campoCtrl.getTrackMVT(
-          parseInt(z, 10), 
-          parseInt(x, 10), 
-          parseInt(y, 10), 
-          track_id // Passa o trackId para o controller (pode ser undefined)
-      );
-      
-      if (!tile || !tile.mvt) {
-          // Retornar um MVT vazio em vez de 404 para compatibilidade com clientes de mapa
-          res.setHeader('Content-Type', 'application/x-protobuf');
-          return res.send(Buffer.from(''));
-      }
-      
-      // Configurar os headers apropriados para MVT
-      res.setHeader('Content-Type', 'application/x-protobuf');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Cache-Control', 'public, max-age=3600');
-      
-      // Enviar o buffer do MVT
-      res.send(Buffer.from(tile.mvt, 'binary'));
-  } catch (error) {
-      console.error('Erro ao gerar MVT:', error);
-      res.status(500).json({ message: 'Erro ao processar o tile' });
-  }
-});
+  '/tracks/:track_id/:z/:x/:y.mvt', 
+  asyncHandler(async (req, res, next) => {
+    const { z, x, y, track_id } = req.params;
+    
+    // Verificar se os parâmetros são válidos
+    if (!z || !x || !y || !track_id) {
+        return res.status(400).json({ message: 'Parâmetros incompletos' });
+    }
+    
+    const tile = await campoCtrl.getTrackMVT(
+        parseInt(z, 10), 
+        parseInt(x, 10), 
+        parseInt(y, 10), 
+        track_id // Passa o trackId para o controller (pode ser undefined)
+    );
+    
+    if (!tile || !tile.mvt) {
+        // Retornar um MVT vazio em vez de 404 para compatibilidade com clientes de mapa
+        res.setHeader('Content-Type', 'application/x-protobuf');
+        return res.send(Buffer.from(''));
+    }
+    
+    // Configurar os headers apropriados para MVT
+    res.setHeader('Content-Type', 'application/x-protobuf');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    
+    // Enviar o buffer do MVT
+    res.send(Buffer.from(tile.mvt, 'binary'));
+  }));
 
 module.exports = router
