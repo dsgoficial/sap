@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ErrorReport } from '../types/activity';
+import { ApiResponse } from '../types/api';
 import {
   getCurrentActivity,
   getErrorTypes,
@@ -128,8 +129,13 @@ export const useActivities = () => {
   });
 
   // Mutation para finalizar atividade
-  const finishActivityMutation = useMutation({
-    mutationFn: finishActivity,
+  const finishActivityMutation = useMutation<
+    ApiResponse<any>,
+    Error,
+    string,
+    { previousData: any; activityId: string }
+  >({
+    mutationFn: (activityId: string) => finishActivity(activityId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_ACTIVITY });
     },
@@ -169,8 +175,8 @@ export const useActivities = () => {
   });
 
   // Mutation para reportar erro
-  const reportErrorMutation = useMutation({
-    mutationFn: reportError,
+  const reportErrorMutation = useMutation<ApiResponse<any>, Error, ErrorReport>({
+    mutationFn: (errorData: ErrorReport) => reportError(errorData),
     // No need to invalidate since reporting an error doesn't change the current activity
   });
 

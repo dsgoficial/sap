@@ -19,8 +19,8 @@ CREATE TYPE controle_campo.categoria_campo AS ENUM (
     'Modelos 3D',
     'Imagens Panorâmicas em 360º',
     'Pontos de Controle',
-    'Capacitação em Geoinformação'
-    'Ortoimagens de Drone',
+    'Capacitação em Geoinformação',
+    'Ortoimagens de Drone'
 );
 
 CREATE TABLE controle_campo.campo

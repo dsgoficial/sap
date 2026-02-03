@@ -34,26 +34,39 @@ export default defineConfig(({ mode }) => {
       outDir: 'build',
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vendor-core': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-mui': [
-              '@mui/material',
-              '@mui/icons-material',
-              '@emotion/react',
-              '@emotion/styled'
-            ],
-            'vendor-data': [
-              '@tanstack/react-query',
-              'axios',
-              'zustand',
-              'd3',
-              'recharts'
-            ],
-            'vendor-form': [
-              'react-hook-form',
-              '@hookform/resolvers',
-              'zod'
-            ]
+          manualChunks(id) {
+            // Evita dependências circulares usando função ao invés de objeto estático
+            if (id.includes('node_modules')) {
+              // MUI e Emotion juntos (MUI depende de Emotion)
+              if (id.includes('@mui') || id.includes('@emotion')) {
+                return 'vendor-mui';
+              }
+              // Charts - separado (recharts + d3)
+              if (id.includes('recharts') || id.includes('d3')) {
+                return 'vendor-charts';
+              }
+              // Data fetching e state
+              if (id.includes('@tanstack') || id.includes('axios') || id.includes('zustand')) {
+                return 'vendor-data';
+              }
+              // Forms
+              if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
+                return 'vendor-form';
+              }
+              // MapLibre separado (é muito grande)
+              if (id.includes('maplibre')) {
+                return 'vendor-maplibre';
+              }
+              // Core React e demais dependências básicas
+              if (
+                id.includes('/react/') ||
+                id.includes('react-dom') ||
+                id.includes('react-router') ||
+                id.includes('scheduler')
+              ) {
+                return 'vendor-core';
+              }
+            }
           }
         }
       },
