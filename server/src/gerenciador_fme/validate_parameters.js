@@ -1,8 +1,6 @@
 'use strict'
 
-const axios = require('axios')
-
-const { AppError, httpCode } = require('../utils')
+const { AppError, httpCode, httpClient } = require('../utils')
 
 const { db } = require('../database')
 
@@ -35,7 +33,7 @@ const getRotinas = async servidorId => {
   }
   try {
     const serverurl = `${serverInfo.servidor}:${serverInfo.porta}/api/rotinas`
-    const response = await axios.get(serverurl)
+    const response = await httpClient.get(serverurl)
     if (!response ||
       response.status !== 200 ||
       !('data' in response) ||

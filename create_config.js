@@ -8,7 +8,7 @@ colors.enable()
 const path = require('path')
 const promise = require('bluebird')
 const crypto = require('crypto')
-const axios = require('axios')
+const httpClient = require('./http_client')
 
 const pgp = require('pg-promise')({
   promiseLib: promise
@@ -31,7 +31,7 @@ const verifyAuthServer = async authServer => {
     throw new Error('Servidor deve iniciar com http:// ou https://')
   }
   try {
-    const response = await axios.get(`${authServer}/api`)
+    const response = await httpClient.get(`${authServer}/api`)
     const wrongServer =
       !response ||
       response.status !== 200 ||
@@ -57,7 +57,7 @@ const getAuthUserData = async (servidor, token, uuid) => {
         Authorization: `Bearer ${token}`
       }
     }
-    const response = await axios.get(server, config)
+    const response = await httpClient.get(server, config)
 
     if (
       !('status' in response) ||
@@ -77,7 +77,7 @@ const verifyLoginAuthServer = async (servidor, usuario, senha) => {
   const server = `${servidor}/api/login`
 
   try {
-    const response = await axios.post(server, {
+    const response = await httpClient.post(server, {
       usuario,
       senha,
       aplicacao: 'sap'

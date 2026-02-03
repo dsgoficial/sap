@@ -1,14 +1,12 @@
 'use strict'
 
-const axios = require('axios')
-
-const { AppError } = require('../utils')
+const { AppError, httpClient } = require('../utils')
 
 const { AUTH_SERVER } = require('../config')
 
 const verifyAuthServer = async () => {
   try {
-    const response = await axios.get(`${AUTH_SERVER}/api`)
+    const response = await httpClient.get(`${AUTH_SERVER}/api`)
     const test =
       !response ||
       response.status !== 200 ||

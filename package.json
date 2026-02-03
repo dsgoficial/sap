@@ -30,7 +30,8 @@
     "url": "https://github.com/1cgeo/sap/issues"
   },
   "dependencies": {
-    "axios": "^0.27.2",
+    "axios": "^1.7.9",
+    "https-proxy-agent": "^7.0.6",
     "bcryptjs": "^2.4.3",
     "bluebird": "^3.7.2",
     "colors": "^1.4.0",
