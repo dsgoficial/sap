@@ -6,6 +6,7 @@ const {
   httpCode
 } = require('./utils')
 
+const { VERSION } = require('./config')
 const { loginRoute } = require('./login')
 const { producaoRoute } = require('./producao')
 const { microcontroleRoute } = require('./microcontrole')
@@ -57,6 +58,7 @@ router.get('/', (req, res, next) => {
     'Sistema de Apoio a produção operacional',
     httpCode.OK,
     {
+      sap_version: VERSION,
       database_version: databaseVersion.nome,
       microcontrole_version: microcontroleDatabaseVersion.nome
     }
