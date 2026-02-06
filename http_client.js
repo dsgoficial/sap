@@ -15,22 +15,21 @@ const { HttpsProxyAgent } = require('https-proxy-agent')
  * @returns {import('axios').AxiosInstance} Instância do axios configurada
  */
 const createHttpClient = (options = {}) => {
-  const proxyUrl = process.env.HTTPS_PROXY ||
-                   process.env.https_proxy ||
-                   process.env.HTTP_PROXY ||
-                   process.env.http_proxy
+  const proxyUrl =
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy ||
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy
 
   const config = {
-    timeout: 30000, // 30 segundos de timeout padrão
+    timeout: 30000,
     ...options
   }
 
-  // Se há proxy configurado, adiciona o agente
   if (proxyUrl) {
     const httpsAgent = new HttpsProxyAgent(proxyUrl)
     config.httpsAgent = httpsAgent
     config.httpAgent = httpsAgent
-    // Desabilita o proxy nativo do axios para usar o agente
     config.proxy = false
   }
 
@@ -43,8 +42,49 @@ const createHttpClient = (options = {}) => {
  */
 const httpClient = createHttpClient()
 
+const isBrowser = typeof window !== 'undefined' && window && window.location
+
+const tryParseUrl = (value) => {
+  try {
+    return new URL(value)
+  } catch {
+    return null
+  }
+}
+
+const isLocalhostHost = (host) => {
+  const h = String(host || '').toLowerCase()
+  return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0'
+}
+
 /**
- * Verifica se uma URL deve ignorar o proxy baseado em NO_PROXY
+ * Normaliza URLs absolutas incorretas (ex.: http://localhost:3013/api/...)
+ * para a mesma origem do navegador, preservando path/query/hash.
+ * Se a URL for relativa, retorna como está.
+ * Se não for ambiente browser, retorna como está.
+ *
+ * @param {string} url
+ * @returns {string}
+ */
+const normalizeClientUrl = (url) => {
+  if (!isBrowser) return url
+
+  const parsed = tryParseUrl(url)
+  if (!parsed) return url
+
+  if (isLocalhostHost(parsed.hostname)) {
+    const origem = window.location.origin
+    return `${origem}${parsed.pathname}${parsed.search}${parsed.hash}`
+  }
+
+  return url
+}
+
+/**
+ * Verifica se uma URL deve ignorar o proxy baseado em NO_PROXY.
+ * Importante: em ambiente browser, "localhost/127.0.0.1" NUNCA deve ser considerado
+ * bypass seguro, porque "localhost" aponta para a máquina do usuário, não para o servidor.
+ *
  * @param {string} url - URL a ser verificada
  * @returns {boolean} true se deve ignorar o proxy
  */
@@ -52,22 +92,26 @@ const shouldBypassProxy = (url) => {
   const noProxy = process.env.NO_PROXY || process.env.no_proxy
   if (!noProxy) return false
 
-  try {
-    const urlObj = new URL(url)
-    const hostname = urlObj.hostname
-    const noProxyList = noProxy.split(',').map(h => h.trim().toLowerCase())
+  const urlObj = tryParseUrl(url)
+  if (!urlObj) return false
 
-    return noProxyList.some(pattern => {
-      if (pattern === '*') return true
-      if (pattern.startsWith('.')) {
-        // Wildcard domain (e.g., .example.com)
-        return hostname.endsWith(pattern) || hostname === pattern.slice(1)
-      }
-      return hostname === pattern || hostname.endsWith('.' + pattern)
-    })
-  } catch {
+  if (isBrowser && isLocalhostHost(urlObj.hostname)) {
     return false
   }
+
+  const hostname = String(urlObj.hostname || '').toLowerCase()
+  const noProxyList = noProxy
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean)
+
+  return noProxyList.some((pattern) => {
+    if (pattern === '*') return true
+    if (pattern.startsWith('.')) {
+      return hostname.endsWith(pattern) || hostname === pattern.slice(1)
+    }
+    return hostname === pattern || hostname.endsWith('.' + pattern)
+  })
 }
 
 /**
@@ -77,10 +121,13 @@ const shouldBypassProxy = (url) => {
  * @returns {Promise} Promise com a resposta
  */
 const get = async (url, config = {}) => {
-  if (shouldBypassProxy(url)) {
-    return axios.get(url, { timeout: 30000, ...config })
+  const normalizedUrl = normalizeClientUrl(url)
+
+  if (shouldBypassProxy(normalizedUrl)) {
+    return axios.get(normalizedUrl, { timeout: 30000, ...config })
   }
-  return httpClient.get(url, config)
+
+  return httpClient.get(normalizedUrl, config)
 }
 
 /**
@@ -91,10 +138,13 @@ const get = async (url, config = {}) => {
  * @returns {Promise} Promise com a resposta
  */
 const post = async (url, data, config = {}) => {
-  if (shouldBypassProxy(url)) {
-    return axios.post(url, data, { timeout: 30000, ...config })
+  const normalizedUrl = normalizeClientUrl(url)
+
+  if (shouldBypassProxy(normalizedUrl)) {
+    return axios.post(normalizedUrl, data, { timeout: 30000, ...config })
   }
-  return httpClient.post(url, data, config)
+
+  return httpClient.post(normalizedUrl, data, config)
 }
 
 module.exports = {
@@ -102,5 +152,6 @@ module.exports = {
   createHttpClient,
   get,
   post,
-  shouldBypassProxy
+  shouldBypassProxy,
+  normalizeClientUrl
 }

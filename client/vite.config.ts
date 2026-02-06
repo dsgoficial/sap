@@ -21,10 +21,12 @@ export default defineConfig(({ mode }) => {
       viteCompression()
     ],
     server: {
+      host: true,
       port: 3000,
       proxy: {
         '/api': {
-          target: env.VITE_API_URL || 'http://localhost:3013',
+          // Somente desenvolvimento: encaminha /api para o backend.
+          target: env.VITE_PROXY_TARGET || 'http://localhost:3013',
           changeOrigin: true,
           secure: false
         }

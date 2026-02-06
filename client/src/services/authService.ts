@@ -19,7 +19,9 @@ export const login = async (
 ): Promise<ApiResponse<LoginResponse>> => {
   try {
     const response = await apiClient.post<ApiResponse<LoginResponse>>(
-      '/api/login',
+      // baseURL do apiClient já é "/api".
+      // Manter somente o path do endpoint evita duplicação "/api/api".
+      '/login',
       {
         usuario: credentials.usuario,
         senha: credentials.senha,
