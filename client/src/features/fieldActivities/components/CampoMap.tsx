@@ -335,7 +335,7 @@ const CampoMap = ({ className }: CampoMapProps) => {
           {/* MVT sources for each selected track */}
           {showTracks &&
             selectedTracks.map((trackId, index) => {
-              const mvtUrl = `${window.location.origin}/api/campo/tracks/${trackId}/{z}/{x}/{y}.mvt`;
+              const mvtUrl = `${window.location.origin}/campo/tracks/${trackId}/{z}/{x}/{y}.mvt`;
 
               return (
                 <Source

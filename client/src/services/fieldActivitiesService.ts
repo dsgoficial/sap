@@ -18,7 +18,7 @@ import { ApiResponse } from '../types/api';
  */
 export const getCampos = async (): Promise<ApiResponse<Campo[]>> => {
   try {
-    const response = await apiClient.get<CamposResponse>('/api/campo/campos');
+    const response = await apiClient.get<CamposResponse>('/campo/campos');
     return {
       dados: response.data.dados || [],
       success: response.data.success,
@@ -38,7 +38,7 @@ export const getCampoById = async (
 ): Promise<ApiResponse<Campo>> => {
   try {
     const response = await apiClient.get<ApiResponse<Campo>>(
-      `/api/campo/campos/${campoId}`,
+      `/campo/campos/${campoId}`,
     );
     return response.data;
   } catch (error) {
@@ -52,7 +52,7 @@ export const getCampoById = async (
  */
 export const getFotos = async (): Promise<ApiResponse<Foto[]>> => {
   try {
-    const response = await apiClient.get<FotosResponse>('/api/campo/fotos');
+    const response = await apiClient.get<FotosResponse>('/campo/fotos');
     return {
       dados: response.data.dados || [],
       success: response.data.success,
@@ -80,7 +80,7 @@ export const getFotosByCampo = async (
 
   try {
     const response = await apiClient.get<FotosResponse>(
-      `/api/campo/fotos/campos/${campoId}`,
+      `/campo/fotos/campos/${campoId}`,
     );
     return {
       dados: response.data.dados || [],
@@ -98,7 +98,7 @@ export const getFotosByCampo = async (
  */
 export const getTracks = async (): Promise<ApiResponse<Track[]>> => {
   try {
-    const response = await apiClient.get<TracksResponse>('/api/campo/tracks');
+    const response = await apiClient.get<TracksResponse>('/campo/tracks');
     return {
       dados: response.data.dados || [],
       success: response.data.success,
@@ -126,7 +126,7 @@ export const getTracksByCampo = async (
 
   try {
     const response = await apiClient.get<TracksResponse>(
-      `/api/campo/tracks/campos/${campoId}`,
+      `/campo/tracks/campos/${campoId}`,
     );
     return {
       dados: response.data.dados || [],
@@ -147,7 +147,7 @@ export const getSituacoes = async (): Promise<
 > => {
   try {
     const response = await apiClient.get<SituacoesResponse>(
-      '/api/campo/situacao',
+      '/campo/situacao',
     );
     return {
       dados: response.data,
@@ -168,7 +168,7 @@ export const getCategorias = async (): Promise<
 > => {
   try {
     const response = await apiClient.get<CategoriasResponse>(
-      '/api/campo/categoria',
+      '/campo/categoria',
     );
     return {
       dados: response.data,
@@ -189,7 +189,7 @@ export const getCamposGeoJSON = async (): Promise<
 > => {
   try {
     const response = await apiClient.get<CamposGeoJSONApiResponse>(
-      '/api/campo/campos-geojson',
+      '/campo/campos-geojson',
     );
     return {
       dados: response.data,

@@ -15,7 +15,7 @@ export const getLots = async (
   try {
     const year = new Date().getFullYear();
     const response = await apiClient.get<ApiResponse<LotSubphaseData[]>>(
-      `/api/acompanhamento/pit/subfase/${year}`,
+      `/acompanhamento/pit/subfase/${year}`,
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;

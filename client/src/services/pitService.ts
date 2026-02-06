@@ -15,7 +15,7 @@ export const getPIT = async (
   try {
     const year = new Date().getFullYear();
     const response = await apiClient.get<ApiResponse<PitItem[]>>(
-      `/api/acompanhamento/pit/${year}`,
+      `/acompanhamento/pit/${year}`,
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;

@@ -14,7 +14,7 @@ export const getActivitySubphase = async (
 ): Promise<ApiResponse<SubphaseData[]>> => {
   try {
     const response = await apiClient.get<ApiResponse<SubphaseData[]>>(
-      '/api/acompanhamento/atividade_subfase',
+      '/acompanhamento/atividade_subfase',
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;
@@ -41,7 +41,7 @@ export const getSubphasesSituation = async (
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await apiClient.get<ApiResponse<any>>(
-      '/api/acompanhamento/situacao_subfase',
+      '/acompanhamento/situacao_subfase',
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;
@@ -68,7 +68,7 @@ export const getUserActivities = async (
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await apiClient.get<ApiResponse<any>>(
-      '/api/acompanhamento/atividade_usuario',
+      '/acompanhamento/atividade_usuario',
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;

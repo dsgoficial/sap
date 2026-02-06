@@ -14,7 +14,7 @@ export const getStatisticsGrid = async (
 ): Promise<ApiResponse<GridData[]>> => {
   try {
     const response = await apiClient.get<ApiResponse<GridData[]>>(
-      '/api/acompanhamento/grade_acompanhamento/',
+      '/acompanhamento/grade_acompanhamento/',
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;

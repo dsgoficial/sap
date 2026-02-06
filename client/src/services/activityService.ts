@@ -20,7 +20,7 @@ export const getCurrentActivity = async (
 ): Promise<ApiResponse<CurrentActivityResponse>> => {
   try {
     const response = await apiClient.get<ApiResponse<CurrentActivityResponse>>(
-      '/api/distribuicao/verifica',
+      '/distribuicao/verifica',
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;
@@ -47,7 +47,7 @@ export const startActivity = async (
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await apiClient.post<ApiResponse<any>>(
-      '/api/distribuicao/inicia',
+      '/distribuicao/inicia',
       {},
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
@@ -82,7 +82,7 @@ export const finishActivity = async (
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await apiClient.post<ApiResponse<any>>(
-      '/api/distribuicao/finaliza',
+      '/distribuicao/finaliza',
       {
         atividade_id: activityId,
         sem_correcao: false,
@@ -110,7 +110,7 @@ export const reportError = async (
 ): Promise<ApiResponse<any>> => {
   try {
     const response = await apiClient.post<ApiResponse<any>>(
-      '/api/distribuicao/problema_atividade',
+      '/distribuicao/problema_atividade',
       errorData,
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
@@ -129,7 +129,7 @@ export const getErrorTypes = async (
 ): Promise<ApiResponse<ErrorType[]>> => {
   try {
     const response = await apiClient.get<ApiResponse<ErrorType[]>>(
-      '/api/distribuicao/tipo_problema',
+      '/distribuicao/tipo_problema',
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;
