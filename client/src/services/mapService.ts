@@ -13,7 +13,7 @@ export const getViews = async (
 ) => {
   try {
     const response = await apiClient.get<ApiResponse<any>>(
-      '/api/gerencia/view_acompanhamento?em_andamento_projeto=true',
+      '/gerencia/view_acompanhamento?em_andamento_projeto=true',
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;
@@ -42,7 +42,7 @@ export const getLotGeoJSON = async (
 ) => {
   try {
     const response = await apiClient.get<ApiResponse<any>>(
-      `/api/acompanhamento/mapa/${lotName}`,
+      `/acompanhamento/mapa/${lotName}`,
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;

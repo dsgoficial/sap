@@ -24,19 +24,19 @@ export const getDashboardData = async (
     const [quantityResponse, finishedResponse, runningResponse, pitResponse] =
       await Promise.all([
         apiClient.get<ApiResponse<DashboardQuantityItem[]>>(
-          `/api/acompanhamento/dashboard/quantidade/${year}`,
+          `/acompanhamento/dashboard/quantidade/${year}`,
           config,
         ),
         apiClient.get<ApiResponse<DashboardFinishedItem[]>>(
-          `/api/acompanhamento/dashboard/finalizadas/${year}`,
+          `/acompanhamento/dashboard/finalizadas/${year}`,
           config,
         ),
         apiClient.get<ApiResponse<DashboardRunningItem[]>>(
-          `/api/acompanhamento/dashboard/execucao`,
+          `/acompanhamento/dashboard/execucao`,
           config,
         ),
         apiClient.get<ApiResponse<PitItem[]>>(
-          `/api/acompanhamento/pit/${year}`,
+          `/acompanhamento/pit/${year}`,
           config,
         ),
       ]);

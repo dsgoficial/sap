@@ -19,7 +19,8 @@ export const login = async (
 ): Promise<ApiResponse<LoginResponse>> => {
   try {
     const response = await apiClient.post<ApiResponse<LoginResponse>>(
-      '/api/login',
+      // baseURL do apiClient já é "/api".
+      '/login',
       {
         usuario: credentials.usuario,
         senha: credentials.senha,

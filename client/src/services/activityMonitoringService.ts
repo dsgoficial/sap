@@ -14,7 +14,7 @@ export const getRunningActivities = async (
 ): Promise<ApiResponse<RunningActivity[]>> => {
   try {
     const response = await apiClient.get<ApiResponse<RunningActivity[]>>(
-      '/api/acompanhamento/atividades_em_execucao',
+      '/acompanhamento/atividades_em_execucao',
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;
@@ -41,7 +41,7 @@ export const getLastCompletedActivities = async (
 ): Promise<ApiResponse<CompletedActivity[]>> => {
   try {
     const response = await apiClient.get<ApiResponse<CompletedActivity[]>>(
-      '/api/acompanhamento/ultimas_atividades_finalizadas',
+      '/acompanhamento/ultimas_atividades_finalizadas',
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;
