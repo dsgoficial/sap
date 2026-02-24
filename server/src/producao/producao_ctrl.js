@@ -562,12 +562,12 @@ controller.finaliza = async (
     if (alterarFluxo) {
       await t.none(
         `
-        INSERT INTO macrocontrole.alteracao_fluxo(atividade_id, descricao, geom)
-        SELECT a.id, $<alterarFluxo> AS descricao, ut.geom FROM macrocontrole.atividade AS a
+        INSERT INTO macrocontrole.alteracao_fluxo(atividade_id, usuario_id, descricao, geom)
+        SELECT a.id, $<usuarioId> as usuario_id, $<alterarFluxo> AS descricao, ut.geom FROM macrocontrole.atividade AS a
         INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
         WHERE a.id = $<atividadeId>
         `,
-        { atividadeId, alterarFluxo }
+        { atividadeId, usuarioId, alterarFluxo }
       )
       await t.none(
         `
