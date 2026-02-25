@@ -675,7 +675,8 @@ controller.resumoUsuario = async () => {
     tpg.nome_abrev AS nome_abrev,
   CASE
       WHEN atv.usuario_id IS NULL THEN 'Ocioso'
-      ELSE 'Em Atividade'
+      WHEN atv.tipo_situacao_id = 2 THEN 'Em Atividade'
+      WHEN atv.tipo_situacao_id = 3 THEN 'Atividade Pausada'
     END AS status_usuario,
     COALESCE(sf.nome, 'N/A') AS nome_subfase,
     COALESCE(l.nome, 'N/A') AS nome_lote,
