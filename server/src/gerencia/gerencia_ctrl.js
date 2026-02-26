@@ -1345,7 +1345,7 @@ controller.getAlteracaoFluxo = async () => {
 controller.atualizaAlteracaoFluxo = async alteracaoFluxo => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
-      'id', 'atividade_id', 'descricao', 'data', 'resolvido', 'geom'
+      'id', 'atividade_id', 'descricao', { name: 'data', cast: 'timestamptz' }, 'resolvido', 'geom'
     ])
 
     const query =

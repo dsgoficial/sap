@@ -2010,7 +2010,6 @@ router.put(
  */
 router.get(
   '/alteracao_fluxo',
-  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAlteracaoFluxo()
 
