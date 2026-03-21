@@ -1,15 +1,20 @@
-'use strict'
+"use strict";
 
-const express = require('express')
+const express = require("express");
 
-const { schemaValidation, asyncHandler, asyncHandlerWithQueue, httpCode } = require('../utils')
+const {
+  schemaValidation,
+  asyncHandler,
+  asyncHandlerWithQueue,
+  httpCode,
+} = require("../utils");
 
-const { verifyLogin } = require('../login')
+const { verifyLogin } = require("../login");
 
-const producaoCtrl = require('./producao_ctrl')
-const producaoSchema = require('./producao_schema')
+const producaoCtrl = require("./producao_ctrl");
+const producaoSchema = require("./producao_schema");
 
-const router = express.Router()
+const router = express.Router();
 
 /**
  * @swagger
@@ -41,15 +46,15 @@ const router = express.Router()
  *                       description: Caminho do plugin
  */
 router.get(
-  '/plugin_path',
+  "/plugin_path",
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.getPluginPath()
+    const dados = await producaoCtrl.getPluginPath();
 
-    const msg = 'Path plugin retornado com sucesso'
+    const msg = "Path plugin retornado com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  }),
+);
 
 /**
  * @swagger
@@ -93,7 +98,7 @@ router.get(
  *                   type: string
  */
 router.post(
-  '/finaliza',
+  "/finaliza",
   verifyLogin,
   schemaValidation({ body: producaoSchema.finaliza }),
   asyncHandlerWithQueue(async (req, res, next) => {
@@ -103,14 +108,15 @@ router.post(
       req.body.sem_correcao,
       req.body.alterar_fluxo,
       req.body.info_edicao,
-      req.body.observacao_proxima_atividade
-    )
+      req.body.observacao_proxima_atividade,
+      req.body.observacao_atividade,
+    );
 
-    const msg = 'Atividade finalizada com sucesso'
+    const msg = "Atividade finalizada com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  }),
+);
 
 /**
  * @swagger
@@ -141,17 +147,17 @@ router.post(
  *                   description: Dados da atividade em execução (se houver)
  */
 router.get(
-  '/verifica',
+  "/verifica",
   verifyLogin,
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.verifica(req.usuarioId)
+    const dados = await producaoCtrl.verifica(req.usuarioId);
     const msg = dados
-      ? 'Atividade em execução retornada'
-      : 'Sem atividade em execução'
+      ? "Atividade em execução retornada"
+      : "Sem atividade em execução";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  }),
+);
 
 /**
  * @swagger
@@ -193,20 +199,20 @@ router.get(
  *                   type: string
  */
 router.post(
-  '/inicia',
+  "/inicia",
   verifyLogin,
   asyncHandlerWithQueue(async (req, res, next) => {
-    const dados = await producaoCtrl.inicia(req.usuarioId)
+    const dados = await producaoCtrl.inicia(req.usuarioId);
 
     const msg = dados
-      ? 'Atividade iniciada'
-      : 'Sem atividades disponíveis para iniciar'
+      ? "Atividade iniciada"
+      : "Sem atividades disponíveis para iniciar";
 
-    const code = dados ? httpCode.Created : httpCode.BadRequest
+    const code = dados ? httpCode.Created : httpCode.BadRequest;
 
-    return res.sendJsonAndLog(true, msg, code, dados)
-  })
-)
+    return res.sendJsonAndLog(true, msg, code, dados);
+  }),
+);
 
 /**
  * @swagger
@@ -239,7 +245,7 @@ router.post(
  *                   type: string
  */
 router.post(
-  '/problema_atividade',
+  "/problema_atividade",
   verifyLogin,
   schemaValidation({ body: producaoSchema.problemaAtividade }),
   asyncHandlerWithQueue(async (req, res, next) => {
@@ -248,13 +254,13 @@ router.post(
       req.body.tipo_problema_id,
       req.body.descricao,
       req.body.polygon_ewkt,
-      req.usuarioId
-    )
-    const msg = 'Problema de atividade reportado com sucesso'
+      req.usuarioId,
+    );
+    const msg = "Problema de atividade reportado com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  }),
+);
 
 /**
  * @swagger
@@ -287,19 +293,16 @@ router.post(
  *                   type: string
  */
 router.post(
-  '/finalizacao_incorreta',
+  "/finalizacao_incorreta",
   verifyLogin,
   schemaValidation({ body: producaoSchema.finalizacaoIncorreta }),
   asyncHandler(async (req, res, next) => {
-    await producaoCtrl.finalizacaoIncorreta(
-      req.body.descricao,
-      req.usuarioId
-    )
-    const msg = 'Problema de finalização incorreta reportado com sucesso'
+    await producaoCtrl.finalizacaoIncorreta(req.body.descricao, req.usuarioId);
+    const msg = "Problema de finalização incorreta reportado com sucesso";
 
-    return res.sendJsonAndLog(true, msg, httpCode.Created)
-  })
-)
+    return res.sendJsonAndLog(true, msg, httpCode.Created);
+  }),
+);
 
 /**
  * @swagger
@@ -331,15 +334,15 @@ router.post(
  *                     description: Descrição do tipo de problema
  */
 router.get(
-  '/tipo_problema',
+  "/tipo_problema",
   verifyLogin,
   asyncHandler(async (req, res, next) => {
-    const dados = await producaoCtrl.getTipoProblema()
+    const dados = await producaoCtrl.getTipoProblema();
 
-    const msg = 'Tipos de problema retornado'
+    const msg = "Tipos de problema retornado";
 
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  }),
+);
 
-module.exports = router
+module.exports = router;
