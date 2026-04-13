@@ -4103,6 +4103,166 @@ router.post(
 /**
  * @swagger
  * /api/projeto/insumo:
+ *   get:
+ *     summary: Retorna os insumos
+ *     description: Retorna a lista de insumos cadastrados. Pode ser filtrado por grupo de insumo ou tipo de insumo.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Insumos
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: grupo_insumo_id
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Filtra insumos por grupo de insumo
+ *       - in: query
+ *         name: tipo_insumo_id
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Filtra insumos por tipo de insumo
+ *     responses:
+ *       200:
+ *         description: Insumos retornados com sucesso
+ */
+router.get(
+  '/insumo',
+  verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.insumoQuery
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getInsumos(
+      req.query.grupo_insumo_id ? +req.query.grupo_insumo_id : null,
+      req.query.tipo_insumo_id ? +req.query.tipo_insumo_id : null
+    )
+
+    const msg = 'Insumos retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho/insumos:
+ *   get:
+ *     summary: Retorna os insumos de uma unidade de trabalho
+ *     description: Retorna todos os insumos associados a uma unidade de trabalho específica.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: unidade_trabalho_id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID da unidade de trabalho
+ *     responses:
+ *       200:
+ *         description: Insumos da unidade de trabalho retornados com sucesso
+ */
+router.get(
+  '/unidade_trabalho/insumos',
+  schemaValidation({
+    query: projetoSchema.unidadeTrabalhoInsumoQuery
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getInsumosUnidadeTrabalho(
+      +req.query.unidade_trabalho_id
+    )
+
+    const msg = 'Insumos da unidade de trabalho retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/insumo:
+ *   put:
+ *     summary: Atualiza insumos
+ *     description: Atualiza as informações de insumos existentes no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Insumos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/insumoAtualizacao'
+ *     responses:
+ *       201:
+ *         description: Insumos atualizados com sucesso
+ */
+router.put(
+  '/insumo',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.insumoAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaInsumos(req.body.insumos)
+
+    const msg = 'Insumos atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/insumo:
+ *   delete:
+ *     summary: Deleta insumos
+ *     description: Remove insumos do sistema com base nos IDs fornecidos. O insumo não pode estar associado a unidades de trabalho.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Insumos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/insumoIds'
+ *     responses:
+ *       200:
+ *         description: Insumos deletados com sucesso
+ */
+router.delete(
+  '/insumo',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.insumoIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaInsumos(req.body.insumo_ids)
+
+    const msg = 'Insumos deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/insumo:
  *   post:
  *     summary: Cria novos insumos
  *     description: Insere novos insumos no sistema com base nos parâmetros fornecidos.

@@ -1953,6 +1953,124 @@ controller.copiarUnidadeTrabalho = async (
   await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, newUnidadeTrabalhoIds);
 }
 
+controller.getInsumos = async (grupoInsumoId, tipoInsumoId) => {
+  let whereClause = 'WHERE true'
+  const params = {}
+
+  if (grupoInsumoId) {
+    whereClause += ' AND i.grupo_insumo_id = $<grupoInsumoId>'
+    params.grupoInsumoId = grupoInsumoId
+  }
+  if (tipoInsumoId) {
+    whereClause += ' AND i.tipo_insumo_id = $<tipoInsumoId>'
+    params.tipoInsumoId = tipoInsumoId
+  }
+
+  return db.sapConn.any(
+    `SELECT i.id, i.nome, i.caminho, i.epsg,
+            i.tipo_insumo_id, ti.nome AS tipo_insumo,
+            i.grupo_insumo_id, gi.nome AS grupo_insumo,
+            ST_AsEWKT(i.geom) AS geom
+     FROM macrocontrole.insumo AS i
+     INNER JOIN dominio.tipo_insumo AS ti ON ti.code = i.tipo_insumo_id
+     INNER JOIN macrocontrole.grupo_insumo AS gi ON gi.id = i.grupo_insumo_id
+     ${whereClause}
+     ORDER BY gi.nome, i.nome`,
+    params
+  )
+}
+
+controller.getInsumosUnidadeTrabalho = async unidadeTrabalhoId => {
+  return db.sapConn.any(
+    `SELECT iut.id AS associacao_id, iut.caminho_padrao,
+            ut.id AS unidade_trabalho_id, ut.nome AS unidade_trabalho,
+            i.id AS insumo_id, i.nome, i.caminho, i.epsg,
+            i.tipo_insumo_id, ti.nome AS tipo_insumo,
+            i.grupo_insumo_id, gi.nome AS grupo_insumo
+     FROM macrocontrole.insumo_unidade_trabalho AS iut
+     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = iut.unidade_trabalho_id
+     INNER JOIN macrocontrole.insumo AS i ON i.id = iut.insumo_id
+     INNER JOIN dominio.tipo_insumo AS ti ON ti.code = i.tipo_insumo_id
+     INNER JOIN macrocontrole.grupo_insumo AS gi ON gi.id = i.grupo_insumo_id
+     WHERE iut.unidade_trabalho_id = $<unidadeTrabalhoId>
+     ORDER BY gi.nome, i.nome`,
+    { unidadeTrabalhoId }
+  )
+}
+
+controller.atualizaInsumos = async insumos => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'caminho',
+      'epsg',
+      'tipo_insumo_id',
+      'grupo_insumo_id',
+      { name: 'geom', mod: ':raw' }
+    ])
+
+    insumos.forEach(p => {
+      if (p.geom) {
+        if (p.geom.toLowerCase().includes('multipolygon')) {
+          throw new AppError(
+            'Geometria deve ser POLYGON',
+            httpCode.BadRequest
+          )
+        }
+        p.geom = `st_geomfromewkt('${p.geom}')`
+      } else {
+        p.geom = 'NULL'
+      }
+    })
+
+    const query =
+      db.pgp.helpers.update(
+        insumos,
+        cs,
+        { table: 'insumo', schema: 'macrocontrole' },
+        { tableAlias: 'X', valueAlias: 'Y' }
+      ) + 'WHERE Y.id = X.id'
+
+    await t.none(query)
+  })
+}
+
+controller.deletaInsumos = async insumoIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.insumo
+      WHERE id in ($<insumoIds:csv>)`,
+      { insumoIds }
+    )
+    if (exists && exists.length < insumoIds.length) {
+      throw new AppError(
+        'Um dos ids informados não corresponde a um insumo',
+        httpCode.BadRequest
+      )
+    }
+
+    const associado = await t.oneOrNone(
+      `SELECT id FROM macrocontrole.insumo_unidade_trabalho
+      WHERE insumo_id in ($<insumoIds:csv>)
+      LIMIT 1`,
+      { insumoIds }
+    )
+    if (associado) {
+      throw new AppError(
+        'Um dos insumos está associado a unidades de trabalho',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.insumo
+      WHERE id in ($<insumoIds:csv>)`,
+      { insumoIds }
+    )
+  })
+}
+
 controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
 
   const cs = new db.pgp.helpers.ColumnSet([
