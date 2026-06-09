@@ -4,7 +4,7 @@ const express = require('express')
 
 const { schemaValidation, asyncHandler, httpCode } = require('../utils')
 
-const { verifyAdmin } = require('../login')
+const { verifyAdmin, verifyLogin } = require('../login')
 
 const rhCtrl = require('./rh_ctrl')
 const rhSchema = require('./rh_schema')
@@ -13,6 +13,7 @@ const router = express.Router()
 
 router.get(
   '/tipo_perda_rh',
+  verifyLogin,
   asyncHandler(async (req, res, next) => {
     const dados = await rhCtrl.getTipoPerdaHr()
 
@@ -39,6 +40,10 @@ router.get(
 
 router.get(
   '/atividades_por_periodo/:dataInicio/:dataFim',
+  verifyAdmin,
+  schemaValidation({
+    params: rhSchema.getAtividadesPorPeriodoParams
+  }),
   asyncHandler(async (req, res, next) => {
     const { dataInicio, dataFim} = req.params;
     const dados = await rhCtrl.getAtividadesPorPeriodo(dataInicio, dataFim);
@@ -63,6 +68,10 @@ router.get(
 
 router.get(
   '/lote_stats/:dataInicio/:dataFim',
+  verifyAdmin,
+  schemaValidation({
+    params: rhSchema.getAtividadesPorPeriodoParams
+  }),
   asyncHandler(async (req, res, next) => {
     const { dataInicio, dataFim } = req.params;
     const dados = await rhCtrl.getAllLoteStatsByDate(dataInicio, dataFim);
@@ -73,6 +82,10 @@ router.get(
 
 router.get(
   '/bloco_stats/:dataInicio/:dataFim',
+  verifyAdmin,
+  schemaValidation({
+    params: rhSchema.getAtividadesPorPeriodoParams
+  }),
   asyncHandler(async (req, res, next) => {
     const { dataInicio, dataFim } = req.params;
     const dados = await rhCtrl.getAllBlocksStatsByDate(dataInicio, dataFim);
