@@ -50,6 +50,20 @@ router.get(
   })
 )
 
+// edita os dados de contato das organizacoes (produtor/distribuidor do XML de metadados)
+router.put(
+  '/organizacao',
+  verifyAdmin,
+  schemaValidation({ body: metadadosSchema.organizacao }),
+  asyncHandler(async (req, res, next) => {
+    await metadadosCtrl.atualizaOrganizacao(req.body.organizacoes)
+
+    const msg = 'Organizações atualizadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
 router.get(
   '/especificacao',
   asyncHandler(async (req, res, next) => {
@@ -320,7 +334,7 @@ router.delete(
   '/creditos_qpt',
   verifyAdmin,
   schemaValidation({
-    body: metadadosCtrl.creditosQptIds
+    body: metadadosSchema.creditosQptIds
   }),
   asyncHandler(async (req, res, next) => {
     await metadadosCtrl.deleteCreditosQpt(req.body.creditos_qpt_ids)
@@ -335,7 +349,7 @@ router.post(
   '/creditos_qpt',
   verifyAdmin,
   schemaValidation({
-    body: metadadosCtrl.creditosQpt
+    body: metadadosSchema.creditosQpt
   }),
   asyncHandler(async (req, res, next) => {
     await metadadosCtrl.criaCreditosQpt(req.body.creditos_qpt)
@@ -350,7 +364,7 @@ router.put(
   '/creditos_qpt',
   verifyAdmin,
   schemaValidation({
-    body: metadadosCtrl.creditosQptAtualizacao
+    body: metadadosSchema.creditosQptAtualizacao
   }),
   asyncHandler(async (req, res, next) => {
     await metadadosCtrl.atualizaCreditosQpt(req.body.creditos_qpt)
@@ -589,5 +603,115 @@ router.put(
   })
 )
 
+router.get(
+  '/sensor_carta_ortoimagem',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.getSensorCartaOrtoimagem()
+
+    const msg = 'Sensores da carta ortoimagem retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/sensor_carta_ortoimagem',
+  verifyAdmin,
+  schemaValidation({ body: metadadosSchema.sensorCartaOrtoimagem }),
+  asyncHandler(async (req, res, next) => {
+    await metadadosCtrl.criaSensorCartaOrtoimagem(req.body.sensor_carta_ortoimagem)
+
+    const msg = 'Sensores da carta ortoimagem criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+router.put(
+  '/sensor_carta_ortoimagem',
+  verifyAdmin,
+  schemaValidation({ body: metadadosSchema.sensorCartaOrtoimagemAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await metadadosCtrl.atualizaSensorCartaOrtoimagem(req.body.sensor_carta_ortoimagem)
+
+    const msg = 'Sensores da carta ortoimagem atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+router.delete(
+  '/sensor_carta_ortoimagem',
+  verifyAdmin,
+  schemaValidation({ body: metadadosSchema.sensorCartaOrtoimagemIds }),
+  asyncHandler(async (req, res, next) => {
+    await metadadosCtrl.deleteSensorCartaOrtoimagem(req.body.sensor_carta_ortoimagem_ids)
+
+    const msg = 'Sensores da carta ortoimagem deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+// Geracao do JSON de edicao de um lote inteiro (consumida pelo SAP Gerente).
+router.get(
+  '/json_edicao/lote/:loteId',
+  verifyAdmin,
+  schemaValidation({ params: metadadosSchema.loteIdParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.gerarJsonEdicaoLote(req.params.loteId)
+
+    const msg = 'JSON de edição do lote gerado'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+// Rota PUBLICA: JSON de edicao de um unico produto pelo uuid.
+// Sem verifyAdmin de proposito: a skill criar-json-edicao busca o JSON pronto
+// direto do SAP e apenas valida. Atencao: o JSON expoe servidor/porta/nome do
+// banco de edicao (sem credenciais).
+router.get(
+  '/json_edicao/produto/:uuid',
+  schemaValidation({ params: metadadosSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.gerarJsonEdicaoProduto(req.params.uuid)
+
+    const msg = 'JSON de edição gerado'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+// Metadados XML (Perfil MGB / ISO 19115-19139) de um lote inteiro (carta + vetor
+// por folha). Consumida pelo SAP Gerente.
+router.get(
+  '/xml/lote/:loteId',
+  verifyAdmin,
+  schemaValidation({ params: metadadosSchema.loteIdParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.gerarMetadadoXmlLote(req.params.loteId)
+
+    const msg = 'Metadados XML do lote gerados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+// Rota PUBLICA: XML de metadados de um produto pelo uuid. O tipo (carta topo/orto ou
+// vetor) sai do tipo_produto; o CDGV vetorial e um produto separado, com uuid proprio.
+// Consumida pela skill criar-metadados-xml, que busca o XML pronto e so valida.
+router.get(
+  '/xml/produto/:uuid',
+  schemaValidation({ params: metadadosSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await metadadosCtrl.gerarMetadadoXmlProduto(req.params.uuid)
+
+    const msg = 'Metadados XML gerados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
 
 module.exports = router

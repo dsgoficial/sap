@@ -15,13 +15,15 @@ INSERT INTO metadado.tipo_palavra_chave (code, nome) VALUES
 (4, 'temporal'),
 (5, 'toponimica');
 
--- Associa palavra chave a um produto. O produto pode ter multiplas palavras chaves de diferentes tipos.
+-- Associa palavra chave a um produto OU a um lote (conjunto homogeneo de folhas).
+-- Exatamente um de (produto_id, lote_id) deve estar preenchido (ver CHECK).
 CREATE TABLE metadado.palavra_chave_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
- 	tipo_palavra_chave_id SMALLINT NOT NULL REFERENCES metadado.tipo_palavra_chave (code),
- 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
-	UNIQUE(nome,produto_id)
+	tipo_palavra_chave_id SMALLINT NOT NULL REFERENCES metadado.tipo_palavra_chave (code),
+	produto_id INTEGER REFERENCES macrocontrole.produto (id),
+	lote_id INTEGER REFERENCES macrocontrole.lote (id),
+	CONSTRAINT palavra_chave_produto_xor_lote CHECK ((produto_id IS NOT NULL AND lote_id IS NULL) OR (produto_id IS NULL AND lote_id IS NOT NULL))
 );
 
 -- MD_ClassificationCode
@@ -78,15 +80,19 @@ INSERT INTO metadado.especificacao (code, nome) VALUES
 
 CREATE TABLE metadado.organizacao(
 	code SMALLINT NOT NULL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL
+	nome VARCHAR(255) NOT NULL,
+	sigla VARCHAR(255),
+	endereco VARCHAR(255),
+	telefone VARCHAR(255),
+	site VARCHAR(255)
 );
 
-INSERT INTO metadado.organizacao (code, nome) VALUES
-(1, '1º Centro de Geoinformação'),
-(2, '2º Centro de Geoinformação'),
-(3, '3º Centro de Geoinformação'),
-(4, '4º Centro de Geoinformação'),
-(5, '5º Centro de Geoinformação');
+INSERT INTO metadado.organizacao (code, nome, sigla, endereco, telefone, site) VALUES
+(1, '1º Centro de Geoinformação', '1º CGEO', 'Rua Cleveland, nº 250 Morro Menino de Deus - CEP:90.850-240 - Porto Alegre - RS', '(51)3232-0749', 'http://www.1cgeo.eb.mil.br/'),
+(2, '2º Centro de Geoinformação', '2º CGEO', 'EPCT DF 001 - Km 4,5 Setor Habitacional Taquari - CEP:71.559-901 - Brasília - DF', '(61)3415-3853', 'http://www.2cgeo.eb.mil.br/'),
+(3, '3º Centro de Geoinformação', '3º CGEO', 'Avenida Doutor Joaquim Nabuco, 1687 - CEP:53.240-650 - Olinda - PE', '(81)3439-3033', 'https://3cgeo.eb.mil.br/'),
+(4, '4º Centro de Geoinformação', '4º CGEO', 'Avenida Marechal Bittencourt, 97 Santo Antônio - CEP:69.029-160 - Manaus - AM', '(92)3625-1461', 'https://4cgeo.eb.mil.br/'),
+(5, '5º Centro de Geoinformação', '5º CGEO', 'Rua Major Daemon, 81 Centro - CEP:20.081-190 - Rio de Janeiro - RJ', '(21)2223-2177', 'http://www.5cgeo.eb.mil.br/');
 
 CREATE TABLE metadado.usuario(
   id SERIAL NOT NULL PRIMARY KEY,
@@ -96,17 +102,22 @@ CREATE TABLE metadado.usuario(
   organizacao_id INTEGER NOT NULL REFERENCES metadado.organizacao (code)
 );
 
+-- Responsavel por uma fase, por produto OU por lote.
 CREATE TABLE metadado.responsavel_fase_produto(
   id SERIAL NOT NULL PRIMARY KEY,
   usuario_id INTEGER NOT NULL REFERENCES metadado.usuario (id),
   fase_id INTEGER NOT NULL REFERENCES macrocontrole.fase (id),
-  produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
+  produto_id INTEGER REFERENCES macrocontrole.produto (id),
+  lote_id INTEGER REFERENCES macrocontrole.lote (id),
+  CONSTRAINT responsavel_fase_produto_xor_lote CHECK ((produto_id IS NOT NULL AND lote_id IS NULL) OR (produto_id IS NULL AND lote_id IS NOT NULL))
 );
 
 
 CREATE TABLE metadado.informacoes_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+	produto_id INTEGER REFERENCES macrocontrole.produto (id),
+	lote_id INTEGER REFERENCES macrocontrole.lote (id),
+	CONSTRAINT informacoes_produto_xor_lote CHECK ((produto_id IS NOT NULL AND lote_id IS NULL) OR (produto_id IS NULL AND lote_id IS NOT NULL)),
 	resumo TEXT,
 	proposito TEXT,
 	creditos TEXT,
@@ -132,24 +143,48 @@ CREATE TABLE metadado.creditos_qpt(
 
 CREATE TABLE metadado.informacoes_edicao(
 	id SERIAL NOT NULL PRIMARY KEY,
- 	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+	produto_id INTEGER REFERENCES macrocontrole.produto (id),
+	lote_id INTEGER REFERENCES macrocontrole.lote (id),
+	CONSTRAINT informacoes_edicao_xor_lote CHECK ((produto_id IS NOT NULL AND lote_id IS NULL) OR (produto_id IS NULL AND lote_id IS NOT NULL)),
 	pec_planimetrico VARCHAR(255) NOT NULL,
-    pec_altimetrico VARCHAR(255) NOT NULL,
-    origem_dados_altimetricos VARCHAR(255) NOT NULL,
-    territorio_internacional BOOLEAN NOT NULL,
-    acesso_restrito BOOLEAN NOT NULL,
-    carta_militar BOOLEAN NOT NULL,
+	pec_altimetrico VARCHAR(255) NOT NULL,
+	origem_dados_altimetricos VARCHAR(255) NOT NULL,
+	territorio_internacional BOOLEAN NOT NULL,
+	acesso_restrito BOOLEAN NOT NULL,
+	carta_militar BOOLEAN NOT NULL,
 	data_criacao VARCHAR(255) NOT NULL,
 	creditos_id SMALLINT NOT NULL REFERENCES metadado.creditos_qpt (id),
 	epsg_mde VARCHAR(255) NOT NULL,
 	caminho_mde VARCHAR(255) NOT NULL,
 	dados_terceiro text ARRAY,
-	quadro_fases JSON NOT NULL
+	quadro_fases JSON NOT NULL,
+	tipo_produto VARCHAR(255),
+	versao_produto VARCHAR(255),
+	licenca_produto VARCHAR(255),
+	observacoes text ARRAY,
+	dpi INTEGER NOT NULL DEFAULT 300
+);
+
+-- Sensores da carta ortoimagem (alimenta o array "sensores" do JSON de edicao).
+-- A carta topografica nao usa esta tabela.
+CREATE TABLE metadado.sensor_carta_ortoimagem(
+	id SERIAL NOT NULL PRIMARY KEY,
+	produto_id INTEGER REFERENCES macrocontrole.produto (id),
+	lote_id INTEGER REFERENCES macrocontrole.lote (id),
+	CONSTRAINT sensor_carta_ortoimagem_xor_lote CHECK ((produto_id IS NOT NULL AND lote_id IS NULL) OR (produto_id IS NULL AND lote_id IS NOT NULL)),
+	tipo VARCHAR(255) NOT NULL,
+	plataforma VARCHAR(255) NOT NULL,
+	nome VARCHAR(255) NOT NULL,
+	resolucao VARCHAR(255) NOT NULL,
+	bandas VARCHAR(255) NOT NULL,
+	nivel_produto VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE metadado.imagens_carta_ortoimagem(
 	id SERIAL NOT NULL PRIMARY KEY,
-    produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
+	produto_id INTEGER REFERENCES macrocontrole.produto (id),
+	lote_id INTEGER REFERENCES macrocontrole.lote (id),
+	CONSTRAINT imagens_carta_ortoimagem_xor_lote CHECK ((produto_id IS NOT NULL AND lote_id IS NULL) OR (produto_id IS NULL AND lote_id IS NOT NULL)),
 	caminho_imagem VARCHAR(255) NOT NULL,
 	caminho_estilo VARCHAR(255),
 	epsg VARCHAR(255) NOT NULL
@@ -157,7 +192,7 @@ CREATE TABLE metadado.imagens_carta_ortoimagem(
 
 CREATE TABLE metadado.classes_complementares_orto(
 	id SERIAL NOT NULL PRIMARY KEY,
-  	nome VARCHAR(255) NOT NULL,
+	nome VARCHAR(255) NOT NULL,
 	classes text ARRAY NOT NULL
 );
 
@@ -175,18 +210,26 @@ VALUES ('Padrão DSG', ARRAY [
 	'elemnat_ilha_a',
 	'llp_aglomerado_rural_p',
 	'llp_area_pub_militar_a',
-	'llp_terra_indigena_a',
-	'llp_unidade_conservacao_a',
 	'infra_elemento_energia_p',
 	'infra_elemento_energia_l',
 	'infra_elemento_energia_a',
-	'constr_extracao_mineral'
+	'constr_extracao_mineral_p',
+	'constr_extracao_mineral_a',
+	'llp_nome_local_p',
+	'infra_elemento_infraestrutura_p',
+	'infra_elemento_infraestrutura_l',
+	'infra_elemento_infraestrutura_a',
+	'elemnat_elemento_hidrografico_p',
+	'elemnat_elemento_hidrografico_l',
+	'elemnat_elemento_hidrografico_a'
 ]);
 
 CREATE TABLE metadado.perfil_classes_complementares_orto(
 	id SERIAL NOT NULL PRIMARY KEY,
-    produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id),
-	classes_complementares_orto_id INTEGER NOT NULL REFERENCES metadado.classes_complementares_orto (id)
+	produto_id INTEGER REFERENCES macrocontrole.produto (id),
+	lote_id INTEGER REFERENCES macrocontrole.lote (id),
+	classes_complementares_orto_id INTEGER NOT NULL REFERENCES metadado.classes_complementares_orto (id),
+	CONSTRAINT perfil_classes_complementares_orto_xor_lote CHECK ((produto_id IS NOT NULL AND lote_id IS NULL) OR (produto_id IS NULL AND lote_id IS NOT NULL))
 );
 
 COMMIT;

@@ -1,6 +1,9 @@
 'use strict'
 
-//  const nunjucks = require('nunjucks')
+// Geracao de XML de metadados por substituicao de texto nos templates MGB
+// (nao usa motor de template: os placeholders sao escalares).
+const fs = require('fs')
+const path = require('path')
 
 const { db } = require('../database')
 
@@ -15,7 +18,23 @@ controller.getTipoPalavraChave = async () => {
 
 controller.getOrganizacao = async () => {
   return db.sapConn
-    .any('SELECT code, nome FROM metadado.organizacao')
+    .any('SELECT code, nome, sigla, endereco, telefone, site FROM metadado.organizacao ORDER BY code')
+}
+
+// edita os dados de contato do orgao (nome/sigla/endereco/telefone/site), usados no XML de
+// metadados como produtor/distribuidor. Permite a qualquer CGEO definir o seu orgao.
+controller.atualizaOrganizacao = async organizacoes => {
+  return db.sapConn.tx(async t => {
+    const queries = organizacoes.map(o =>
+      t.none(
+        `UPDATE metadado.organizacao
+        SET nome = $<nome>, sigla = $<sigla>, endereco = $<endereco>, telefone = $<telefone>, site = $<site>
+        WHERE code = $<code>`,
+        o
+      )
+    )
+    await t.batch(queries)
+  })
 }
 
 controller.getEspecificacao = async () => {
@@ -115,7 +134,7 @@ controller.deletaUsuarios = async usuariosIds => {
 
 controller.getInformacoesProduto = async () => {
   return db.sapConn.any(
-    `SELECT ip.id, ip.produto_id, ip.resumo, ip.proposito, ip.creditos, ip.informacoes_complementares,
+    `SELECT ip.id, ip.produto_id, ip.lote_id, ip.resumo, ip.proposito, ip.creditos, ip.informacoes_complementares,
     ip.declaracao_linhagem, ip.projeto_bdgex, ip.limitacao_acesso_id, cr1.nome AS limitacao_acesso,
     ip.limitacao_uso_id, cr2.nome AS limitacao_uso, ip.restricao_uso_id, cr3.nome AS restricao_uso,
     ip.grau_sigilo_id, cc.nome AS grau_sigilo, ip.organizacao_responsavel_id, o1.nome AS organizacao_responsavel,
@@ -139,7 +158,7 @@ controller.gravaInformacoesProduto = async informacoes => {
   return db.sapConn.tx(async t => {
 
     const cs = new db.pgp.helpers.ColumnSet([
-      'produto_id',
+      { name: 'produto_id', def: null }, { name: 'lote_id', def: null },
       'resumo',
       'proposito',
       'creditos',
@@ -170,7 +189,7 @@ controller.atualizaInformacoesProduto = async informacoes => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
-      'produto_id',
+      { name: 'produto_id', def: null }, { name: 'lote_id', def: null },
       'resumo',
       'proposito',
       'creditos',
@@ -226,22 +245,22 @@ controller.deletaInformacoesProduto = async informacoesIds => {
 
 controller.getResponsavelFaseProduto = async () => {
   return db.sapConn.any(
-    `SELECT rfp.id, rfp.usuario_id, rfp.fase_id, rfp.produto_id,
-    p.nome AS produto, p.inom, p.denominador_escala, p.tipo_produto_id, p.lote_id,
+    `SELECT rfp.id, rfp.usuario_id, rfp.fase_id, rfp.produto_id, rfp.lote_id,
+    p.nome AS produto, p.inom, p.denominador_escala, p.tipo_produto_id,
     l.nome AS lote, l.projeto_id, proj.nome AS projeto, proj.status_id AS projeto_status,
     tp.nome AS tipo_produto,
     u.nome, u.funcao,
     f.tipo_fase_id, tf.nome AS tipo_fase,
-    f.linha_producao_id, lp.nome AS AS linha_producao
+    f.linha_producao_id, lp.nome AS linha_producao
     FROM metadado.responsavel_fase_produto AS rfp
-    INNER JOIN macrocontrole.produto AS p ON p.id = rfp.produto_id
+    LEFT JOIN macrocontrole.produto AS p ON p.id = rfp.produto_id
     INNER JOIN metadado.usuario AS u ON u.id = rfp.usuario_id
     INNER JOIN macrocontrole.fase AS f ON f.id = rfp.fase_id
     INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
     INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
-    INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id
-    INNER JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id
-    INNER JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id
+    LEFT JOIN macrocontrole.lote AS l ON l.id = p.lote_id
+    LEFT JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id
+    LEFT JOIN dominio.tipo_produto AS tp ON tp.code = p.tipo_produto_id
     `
   )
 }
@@ -252,7 +271,8 @@ controller.gravaResponsavelFaseProduto = async responsavelFaseProduto => {
     const cs = new db.pgp.helpers.ColumnSet([
       'usuario_id',
       'fase_id',
-      'produto_id'
+      { name: 'produto_id', def: null },
+      { name: 'lote_id', def: null }
     ])
 
     const query = db.pgp.helpers.insert(responsavelFaseProduto, cs, {
@@ -270,7 +290,8 @@ controller.atualizaResponsavelFaseProduto = async responsavelFaseProduto => {
       'id',
       'usuario_id',
       'fase_id',
-      'produto_id'
+      { name: 'produto_id', def: null },
+      { name: 'lote_id', def: null }
     ])
 
     const query =
@@ -296,7 +317,7 @@ controller.deletaResponsavelFaseProduto = async responsavelFaseProdutoIds => {
     )
     if (exists && exists.length < responsavelFaseProdutoIds.length) {
       throw new AppError(
-        'O id informado não corresponde a um metadado de usuário',
+        'O id informado não corresponde a um responsável de fase do produto',
         httpCode.BadRequest
       )
     }
@@ -311,7 +332,7 @@ controller.deletaResponsavelFaseProduto = async responsavelFaseProdutoIds => {
 
 controller.getPalavraChaveProduto = async () => {
   return db.sapConn.any(
-    `SELECT pcp.nome, pcp.tipo_palavra_chave_id, tpk.nome AS tipo_palavra_chave, pcp.produto_id
+    `SELECT pcp.id, pcp.nome, pcp.tipo_palavra_chave_id, tpk.nome AS tipo_palavra_chave, pcp.produto_id, pcp.lote_id
     FROM metadado.palavra_chave_produto AS pcp
     INNER JOIN metadado.tipo_palavra_chave AS tpk ON tpk.code = pcp.tipo_palavra_chave_id`
   )
@@ -322,7 +343,8 @@ controller.criaPalavraChaveProduto = async palavrasChaveProduto => {
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
       'tipo_palavra_chave_id',
-      'produto_id'
+      { name: 'produto_id', def: null },
+      { name: 'lote_id', def: null }
     ])
 
     const query = db.pgp.helpers.insert(palavrasChaveProduto, cs, {
@@ -340,7 +362,8 @@ controller.atualizaPalavraChaveProduto = async palavrasChaveProduto => {
       'id',
       'nome',
       'tipo_palavra_chave_id',
-      'produto_id'
+      { name: 'produto_id', def: null },
+      { name: 'lote_id', def: null }
     ])
 
     const query =
@@ -444,24 +467,30 @@ controller.deleteCreditosQpt = async creditosQptIds => {
 
 controller.getInformacoesEdicao = async () => {
   return db.sapConn.any(
-    `SELECT ie.pec_planimetrico, ie.pec_altimetrico, ie.origem_dados_altimetricos, ie.territorio_internacional,
+    `SELECT ie.id, ie.pec_planimetrico, ie.pec_altimetrico, ie.origem_dados_altimetricos, ie.territorio_internacional,
     ie.acesso_restrito, ie.carta_militar, ie.data_criacao, ie.epsg_mde, ie.caminho_mde, ie.dados_terceiro,
-    ie.quadro_fases, ie.creditos_id, cq.nome AS nome_creditos_qpt, cq.qpt AS creditos_qpt,
-    ie.produto_id, p.nome, p.mi, p.inom, p.denominador_escala, p.edicao
+    ie.quadro_fases, ie.tipo_produto, ie.versao_produto, ie.licenca_produto, ie.observacoes, ie.dpi,
+    ie.creditos_id, cq.nome AS nome_creditos_qpt, cq.qpt AS creditos_qpt,
+    ie.produto_id, ie.lote_id, p.nome, p.mi, p.inom, p.denominador_escala, p.edicao
     FROM metadado.informacoes_edicao AS ie
     INNER JOIN metadado.creditos_qpt AS cq ON cq.id = ie.creditos_id
-    INNER JOIN macrocontrole.produto AS p ON p.id = ie.produto_id`
+    LEFT JOIN macrocontrole.produto AS p ON p.id = ie.produto_id`
   )
 }
 
 controller.criaInformacoesEdicao = async informacoesEdicao => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
-      'produto_id', 'pec_planimetrico', 'pec_altimetrico', 
+      { name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'pec_planimetrico', 'pec_altimetrico', 
       'origem_dados_altimetricos', 'territorio_internacional', 
       'acesso_restrito', 'carta_militar', 'data_criacao', 
       'creditos_id', 'epsg_mde', 'caminho_mde', 'dados_terceiro',
-      'quadro_fases'
+      'quadro_fases',
+      { name: 'tipo_produto', def: null },
+      { name: 'versao_produto', def: null },
+      { name: 'licenca_produto', def: null },
+      { name: 'observacoes', def: null },
+      { name: 'dpi', def: 300, init: col => (col.value == null ? 300 : col.value) }
     ])
 
     const query = db.pgp.helpers.insert(informacoesEdicao, cs, {
@@ -476,11 +505,16 @@ controller.criaInformacoesEdicao = async informacoesEdicao => {
 controller.atualizaInformacoesEdicao = async informacoesEdicao => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
-      'id', 'produto_id', 'pec_planimetrico', 'pec_altimetrico', 
+      'id', { name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'pec_planimetrico', 'pec_altimetrico', 
       'origem_dados_altimetricos', 'territorio_internacional', 
       'acesso_restrito', 'carta_militar', 'data_criacao', 
       'creditos_id', 'epsg_mde', 'caminho_mde', 'dados_terceiro',
-      'quadro_fases'
+      'quadro_fases',
+      { name: 'tipo_produto', def: null },
+      { name: 'versao_produto', def: null },
+      { name: 'licenca_produto', def: null },
+      { name: 'observacoes', def: null },
+      { name: 'dpi', def: 300, init: col => (col.value == null ? 300 : col.value) }
     ])
 
     const query =
@@ -523,17 +557,17 @@ controller.deleteInformacoesEdicao = async informacoesEdicaoIds => {
 
 controller.getImagensCartaOrtoimagem = async () => {
   return db.sapConn.any(
-    `SELECT ico.produto_id, ico.caminho_imagem, ico.caminho_estilo, ico.epsg,
-    ico.produto_id, p.nome, p.mi, p.inom, p.denominador_escala, p.edicao
+    `SELECT ico.id, ico.produto_id, ico.lote_id, ico.caminho_imagem, ico.caminho_estilo, ico.epsg,
+    p.nome, p.mi, p.inom, p.denominador_escala, p.edicao
     FROM metadado.imagens_carta_ortoimagem AS ico
-    INNER JOIN macrocontrole.produto AS p ON p.id = ico.produto_id`
+    LEFT JOIN macrocontrole.produto AS p ON p.id = ico.produto_id`
   )
 }
 
 controller.criaImagensCartaOrtoimagem = async imagensCartaOrtoimagem => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
-      'produto_id', 'caminho_imagem', 'caminho_estilo', 'epsg'
+      { name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'caminho_imagem', 'caminho_estilo', 'epsg'
     ])
 
     const query = db.pgp.helpers.insert(imagensCartaOrtoimagem, cs, {
@@ -548,7 +582,7 @@ controller.criaImagensCartaOrtoimagem = async imagensCartaOrtoimagem => {
 controller.atualizaImagensCartaOrtoimagem = async imagensCartaOrtoimagem => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
-      'id', 'produto_id', 'caminho_imagem', 'caminho_estilo', 'epsg'
+      'id', { name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'caminho_imagem', 'caminho_estilo', 'epsg'
     ])
 
     const query =
@@ -652,17 +686,18 @@ controller.deleteClassesComplementaresOrto = async classesComplementaresOrtoIds 
 
 controller.getPerfilClassesComplementaresOrto = async () => {
   return db.sapConn.any(
-    `SELECT pcco.id, pcco.produto_id, p.nome, p.mi, p.inom, p.denominador_escala, p.edicao,
-    pcco.classes_complementares_orto_id, pcco.nome, pcco.classes
+    `SELECT pcco.id, pcco.produto_id, pcco.lote_id, pcco.classes_complementares_orto_id,
+    cco.nome, cco.classes,
+    p.nome AS produto, p.mi, p.inom, p.denominador_escala, p.edicao
     FROM metadado.perfil_classes_complementares_orto AS pcco
-    INNER JOIN macrocontrole.produto AS p ON p.id = pcco.produto_id
-    INNER JOIN macrocontrole.classes_complementares_orto AS cco ON cco.id = pcco.classes_complementares_orto_id`
+    INNER JOIN metadado.classes_complementares_orto AS cco ON cco.id = pcco.classes_complementares_orto_id
+    LEFT JOIN macrocontrole.produto AS p ON p.id = pcco.produto_id`
   )
 }
 
 controller.criaPerfilClassesComplementaresOrto = async perfilClassesComplementaresOrto => {
   return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet(['produto_id', 'classes_complementares_orto_id'])
+    const cs = new db.pgp.helpers.ColumnSet([{ name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'classes_complementares_orto_id'])
 
     const query = db.pgp.helpers.insert(perfilClassesComplementaresOrto, cs, {
       table: 'perfil_classes_complementares_orto',
@@ -675,7 +710,7 @@ controller.criaPerfilClassesComplementaresOrto = async perfilClassesComplementar
 
 controller.atualizaPerfilClassesComplementaresOrto = async perfilClassesComplementaresOrto => {
   return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet(['id', 'produto_id', 'classes_complementares_orto_id'])
+    const cs = new db.pgp.helpers.ColumnSet(['id', { name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'classes_complementares_orto_id'])
 
     const query =
       db.pgp.helpers.update(
@@ -715,96 +750,676 @@ controller.deletePerfilClassesComplementaresOrto = async perfilClassesComplement
   })
 }
 
-/*
-const xmlTemplate = {}
+// ----------------------------------------------------------------------------
+// Sensores da carta ortoimagem (array "sensores" do JSON de edicao)
+// ----------------------------------------------------------------------------
 
-xmlTemplate['1'] = 'template_carta_topo_vetorial.xml'
-xmlTemplate['2'] = 'template_carta_topo_matricial.xml'
-xmlTemplate['3'] = 'template_carta_ortoimagem.xml'
-xmlTemplate['4'] = 'template_ortoimagem.xml'
-xmlTemplate['5'] = 'template_mds.xml'
-xmlTemplate['6'] = 'template_mdt.xml'
-xmlTemplate['7'] = 'template_carta_tematica.xml'
+controller.getSensorCartaOrtoimagem = async () => {
+  return db.sapConn.any(
+    `SELECT sco.id, sco.produto_id, sco.lote_id, sco.tipo, sco.plataforma, sco.nome,
+    sco.resolucao, sco.bandas, sco.nivel_produto,
+    p.nome AS produto_nome, p.mi, p.inom, p.denominador_escala, p.edicao
+    FROM metadado.sensor_carta_ortoimagem AS sco
+    LEFT JOIN macrocontrole.produto AS p ON p.id = sco.produto_id`
+  )
+}
 
-controller.getMetadado = async uuid => {
+controller.criaSensorCartaOrtoimagem = async sensores => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      { name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'tipo', 'plataforma', 'nome', 'resolucao', 'bandas', 'nivel_produto'
+    ])
+    const query = db.pgp.helpers.insert(sensores, cs, {
+      table: 'sensor_carta_ortoimagem',
+      schema: 'metadado'
+    })
+    await t.none(query)
+  })
+}
+
+controller.atualizaSensorCartaOrtoimagem = async sensores => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', { name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'tipo', 'plataforma', 'nome', 'resolucao', 'bandas', 'nivel_produto'
+    ])
+    const query =
+      db.pgp.helpers.update(
+        sensores,
+        cs,
+        { table: 'sensor_carta_ortoimagem', schema: 'metadado' },
+        { tableAlias: 'X', valueAlias: 'Y' }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deleteSensorCartaOrtoimagem = async sensorIds => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM metadado.sensor_carta_ortoimagem
+      WHERE id in ($<sensorIds:csv>)`,
+      { sensorIds }
+    )
+    if (exists && exists.length < sensorIds.length) {
+      throw new AppError(
+        'O id informado não corresponde a um sensor de carta ortoimagem',
+        httpCode.BadRequest
+      )
+    }
+    return t.any(
+      `DELETE FROM metadado.sensor_carta_ortoimagem
+      WHERE id in ($<sensorIds:csv>)`,
+      { sensorIds }
+    )
+  })
+}
+
+// ----------------------------------------------------------------------------
+// Geracao do JSON de edicao da carta (consumido pelo plugin Ferramentas de Edicao)
+// ----------------------------------------------------------------------------
+
+// dominio.tipo_produto (code) -> nome do tipo_produto que o plugin espera.
+const TIPO_PRODUTO_PLUGIN = {
+  2: 'Carta Topográfica',   // T34-700 (legado)
+  3: 'Carta Ortoimagem',
+  12: 'Carta Topográfica',  // ET-RDG
+  19: 'Carta Ortoimagem OM'
+}
+
+const TIPOS_ORTO = [3, 4, 19, 22]
+
+// Template de XML de metadados por tipo_produto. Cada produto gera UM XML, pelo seu tipo:
+// carta topografica -> topo; carta ortoimagem -> orto; CDGV vetorial -> vetor.
+// (O CDGV e um produto separado, com uuid proprio; nao se deriva da carta.)
+const XML_KIND_POR_TIPO = {
+  2: 'topo', 12: 'topo',
+  3: 'orto', 19: 'orto',
+  1: 'vetor', 7: 'vetor', 8: 'vetor', 20: 'vetor', 22: 'vetor', 23: 'vetor'
+}
+
+const resolveTipoVersao = (infoEdicao, produto) => {
+  const ehOrto = TIPOS_ORTO.includes(produto.tipo_produto_id)
+  const ehOM = produto.tipo_produto_id === 19
+  let tipo = infoEdicao.tipo_produto
+  if (!tipo) {
+    // sem tipo_produto explicito: deriva do mapa. Se o tipo_produto_id nao estiver
+    // mapeado, deixa indefinido de proposito (o validador acusa) em vez de cair
+    // num default 'Carta Topográfica' silenciosamente errado.
+    const base = TIPO_PRODUTO_PLUGIN[produto.tipo_produto_id]
+    if (base) {
+      tipo = (infoEdicao.carta_militar && !ehOM)
+        ? (ehOrto ? 'Carta Ortoimagem Militar' : 'Carta Topográfica Militar')
+        : base
+    }
+  }
+  let versao = infoEdicao.versao_produto
+  if (!versao) versao = ehOM ? '1.0' : (ehOrto ? '3.0' : '2.0')
+  return { tipo, versao, ehOrto, ehOM }
+}
+
+// Regra de contaminacao de licenca (regra do chefe): FABDEM/FathomDEM (nao
+// comercial) OBRIGA CC-BY-NC-SA, mesmo que um valor comercial tenha sido gravado
+// por engano em licenca_produto. Fora isso, respeita o valor explicito ou default.
+const resolveLicenca = infoEdicao => {
+  const origem = infoEdicao.origem_dados_altimetricos || ''
+  if (/FABDEM|FathomDEM/i.test(origem)) return 'CC-BY-NC-SA 4.0'
+  return infoEdicao.licenca_produto || 'CC-BY-SA 4.0'
+}
+
+const LICENCAS_VALIDAS = ['CC-BY-SA 4.0', 'CC-BY-NC-SA 4.0']
+const TIPOS_VALIDOS = [
+  'Carta Topográfica', 'Carta Ortoimagem', 'Carta Ortoimagem OM',
+  'Carta Topográfica Militar', 'Carta Ortoimagem Militar'
+]
+
+// Porta de QA: mesmas obrigatorias que o plugin (config/jsonStructure.py) confere.
+const validarJsonEdicao = json => {
+  const erros = []
+  if (!json.tipo_produto || !TIPOS_VALIDOS.includes(json.tipo_produto)) {
+    erros.push('tipo_produto ausente ou fora dos valores aceitos pelo plugin')
+  }
+  if (!json.versao_produto) erros.push('versao_produto ausente')
+  if (!json.nome) erros.push('nome ausente')
+  if (!json.inom && !json.center) erros.push('inom (ou center, na carta nao-SCN) ausente')
+  if (json.licenca_produto && !LICENCAS_VALIDAS.includes(json.licenca_produto)) {
+    erros.push('licenca_produto fora dos valores aceitos (CC-BY-SA 4.0 / CC-BY-NC-SA 4.0)')
+  }
+  if (!json.banco || !json.banco.servidor || !json.banco.porta || !json.banco.nome) {
+    erros.push('banco de edicao (servidor/porta/nome) nao resolvido a partir das UTs da fase de Edicao')
+  }
+  const mde = json.mde_diagrama_elevacao || {}
+  if (!mde.caminho_mde || !mde.epsg) erros.push('mde_diagrama_elevacao (caminho_mde/epsg) incompleto')
+  if (mde.caminho_mde && /\s/.test(mde.caminho_mde)) erros.push('caminho_mde contem espaco (a exportacao falha)')
+  if (!Array.isArray(json.fases) || json.fases.length === 0) erros.push('fases ausente (quadro_fases)')
+  const it = json.info_tecnica || {}
+  for (const k of ['data_criacao', 'pec_planimetrico', 'pec_altimetrico', 'datum_vertical', 'origem_dados_altimetricos']) {
+    if (!it[k]) erros.push(`info_tecnica.${k} ausente`)
+  }
+  if (!Array.isArray(it.dados_terceiros)) erros.push('info_tecnica.dados_terceiros ausente')
+  const ehOrto = /Ortoimagem/.test(json.tipo_produto) && !/OM/.test(json.tipo_produto)
+  if (ehOrto) {
+    if (!Array.isArray(json.imagens) || !json.imagens.length) erros.push('imagens ausente (carta ortoimagem)')
+    if (!Array.isArray(json.sensores) || !json.sensores.length) erros.push('sensores ausente (carta ortoimagem)')
+  }
+  return erros
+}
+
+// Resolve servidor/porta/nome do banco de Edicao a partir das UTs do produto.
+// configuracao_producao tem o formato servidor:porta/nome (igual ao temporary_login.js).
+const resolveBancoEdicao = async (t, produtoId) => {
+  const row = await t.oneOrNone(
+    `SELECT dp.configuracao_producao
+    FROM macrocontrole.produto AS p
+    INNER JOIN macrocontrole.unidade_trabalho AS ut
+      ON ut.lote_id = p.lote_id AND ut.geom && p.geom AND st_relate(ut.geom, p.geom, '2********')
+    INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
+    INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+    INNER JOIN macrocontrole.dado_producao AS dp ON dp.id = ut.dado_producao_id
+    WHERE p.id = $1 AND f.tipo_fase_id = 4 AND dp.tipo_dado_producao_id IN (2,3)
+      AND dp.configuracao_producao IS NOT NULL
+    LIMIT 1`,
+    [produtoId]
+  )
+  if (!row || !row.configuracao_producao) return null
+  // formato esperado: servidor:porta/nome. Parse defensivo: se vier malformado,
+  // devolve null (o validador acusa "banco nao resolvido") em vez de estourar.
+  const m = /^([^:]+):(\d+)\/(.+)$/.exec(row.configuracao_producao)
+  if (!m) return null
+  // porta como STRING, como nos JSON de producao (ex.: "5434")
+  return { servidor: m[1], porta: m[2], nome: m[3] }
+}
+
+// Busca metadado preferindo o nivel PRODUTO (excecao) e caindo para o nivel LOTE
+// (conjunto homogeneo de folhas, sempre presente em produto.lote_id).
+// sqlPorColuna(coluna) devolve a SQL com `WHERE ... <coluna> = $1`.
+const fetchUmComFallback = async (t, sqlPorColuna, produtoId, loteId) => {
+  let row = await t.oneOrNone(sqlPorColuna('produto_id'), [produtoId])
+  if (!row && loteId != null) row = await t.oneOrNone(sqlPorColuna('lote_id'), [loteId])
+  return row
+}
+
+// Semantica do override por produto nas LISTAS (sensores/imagens/classes): o
+// nivel produto SOMA/substitui o do lote quando tem ao menos uma linha. Lista
+// vazia no produto = "nao configurado" e herda o lote (NAO ha como dizer
+// "explicitamente nenhum" por produto - aceitavel: o caso comum e herdar do lote).
+const fetchListaComFallback = async (t, sqlPorColuna, produtoId, loteId) => {
+  let rows = await t.any(sqlPorColuna('produto_id'), [produtoId])
+  if ((!rows || !rows.length) && loteId != null) rows = await t.any(sqlPorColuna('lote_id'), [loteId])
+  return rows || []
+}
+
+// Monta (e valida) o JSON de edicao de um unico produto/folha.
+const montaJsonEdicao = async (t, produto) => {
+  if (produto.tipo_produto_id === 19) {
+    throw new AppError(
+      'Carta Ortoimagem OM tem schema proprio e nao exporta headless: gere pelo plugin, nao pelo SAP',
+      httpCode.BadRequest
+    )
+  }
+
+  const loteId = produto.lote_id
+
+  const infoEdicao = await fetchUmComFallback(
+    t,
+    col => `SELECT pec_planimetrico, pec_altimetrico, origem_dados_altimetricos,
+    territorio_internacional, acesso_restrito, carta_militar, data_criacao,
+    epsg_mde, caminho_mde, dados_terceiro, quadro_fases,
+    tipo_produto, versao_produto, licenca_produto, observacoes, dpi
+    FROM metadado.informacoes_edicao WHERE ${col} = $1`,
+    produto.id, loteId
+  )
+  if (!infoEdicao) {
+    throw new AppError(
+      'Produto/lote sem metadado.informacoes_edicao cadastrado (preencha pelo SAP Gerente, por lote ou por produto)',
+      httpCode.BadRequest
+    )
+  }
+
+  const infoProduto = await fetchUmComFallback(
+    t,
+    col => `SELECT dv.nome AS datum_vertical, e.nome AS especificacao
+    FROM metadado.informacoes_produto AS ip
+    LEFT JOIN metadado.datum_vertical AS dv ON dv.code = ip.datum_vertical_id
+    LEFT JOIN metadado.especificacao AS e ON e.code = ip.especificacao_id
+    WHERE ip.${col} = $1`,
+    produto.id, loteId
+  )
+
+  const banco = await resolveBancoEdicao(t, produto.id)
+  const { tipo, versao, ehOrto, ehOM } = resolveTipoVersao(infoEdicao, produto)
+
+  // quadro_fases e JSON livre; aceitamos o array direto ou {fases:[...]}.
+  let fases = infoEdicao.quadro_fases
+  if (fases && !Array.isArray(fases) && Array.isArray(fases.fases)) fases = fases.fases
+
+  const json = {
+    tipo_produto: tipo,
+    versao_produto: versao,
+    nome: produto.nome || produto.mi || produto.inom,
+    edicao_produto: produto.edicao || '1-DSG',
+    acesso_restrito: !!infoEdicao.acesso_restrito,
+    dpi: infoEdicao.dpi || 300,
+    mde_diagrama_elevacao: {
+      caminho_mde: infoEdicao.caminho_mde,
+      epsg: infoEdicao.epsg_mde
+    },
+    fases: fases || [],
+    banco: banco || {},
+    info_tecnica: {
+      data_criacao: infoEdicao.data_criacao,
+      pec_planimetrico: infoEdicao.pec_planimetrico,
+      pec_altimetrico: infoEdicao.pec_altimetrico,
+      datum_vertical: infoProduto ? infoProduto.datum_vertical : null,
+      origem_dados_altimetricos: infoEdicao.origem_dados_altimetricos,
+      dados_terceiros: infoEdicao.dados_terceiro || []
+    }
+  }
+
+  if (produto.inom) {
+    json.inom = produto.inom
+  } else if (produto.latitude_centro != null && produto.longitude_centro != null) {
+    json.center = { latitude: produto.latitude_centro, longitude: produto.longitude_centro }
+    json.escala = produto.denominador_escala
+  }
+
+  if (infoEdicao.territorio_internacional) json.territorio_internacional = true
+  if (infoProduto && infoProduto.especificacao) json.info_tecnica.especificacao_representacao = infoProduto.especificacao
+  if (Array.isArray(infoEdicao.observacoes) && infoEdicao.observacoes.length) {
+    json.info_tecnica.observacoes = infoEdicao.observacoes
+  }
+
+  // Licenca sempre registrada (regra do chefe). Em carta militar o rodape de
+  // direitos e fixo e nao mostra o selo, mas o valor fica gravado e e aceito pelo
+  // plugin como opcional (caso Rivera).
+  json.licenca_produto = resolveLicenca(infoEdicao)
+
+  if (ehOrto && !ehOM) {
+    const imagens = await fetchListaComFallback(
+      t,
+      col => `SELECT caminho_imagem, caminho_estilo, epsg
+      FROM metadado.imagens_carta_ortoimagem WHERE ${col} = $1`,
+      produto.id, loteId
+    )
+    json.imagens = imagens.map(i => {
+      const img = { caminho_imagem: i.caminho_imagem, epsg: i.epsg }
+      if (i.caminho_estilo) img.caminho_estilo = i.caminho_estilo
+      return img
+    })
+
+    const sensores = await fetchListaComFallback(
+      t,
+      col => `SELECT tipo, plataforma, nome, resolucao, bandas, nivel_produto
+      FROM metadado.sensor_carta_ortoimagem WHERE ${col} = $1`,
+      produto.id, loteId
+    )
+    json.sensores = sensores
+
+    const classes = await fetchListaComFallback(
+      t,
+      col => `SELECT cco.classes
+      FROM metadado.perfil_classes_complementares_orto AS pcco
+      INNER JOIN metadado.classes_complementares_orto AS cco ON cco.id = pcco.classes_complementares_orto_id
+      WHERE pcco.${col} = $1`,
+      produto.id, loteId
+    )
+    const classesComplementares = classes.flatMap(c => c.classes || [])
+    if (classesComplementares.length) json.classes_complementares = classesComplementares
+  }
+
+  const erros = validarJsonEdicao(json)
+  return { json, erros }
+}
+
+const SELECT_PRODUTO = `SELECT id, uuid, nome, mi, inom, denominador_escala, edicao,
+  latitude_centro, longitude_centro, tipo_produto_id, lote_id`
+
+// JSON de edicao de um unico produto (pelo uuid). Usado pela rota publica.
+controller.gerarJsonEdicaoProduto = async uuid => {
   return db.sapConn.task(async t => {
     const produto = await t.oneOrNone(
-      `SELECT p.nome, p.mi, p.inom, p.escala, p.geometry, lp.tipo_produto_id,
-      proj.nome AS projeto, ip.resumo, ip.proposito, ip.creditos, ip.informacoes_complementares,
-      ip.limitacao_acesso_id, ip.restricao_uso_id, ip.grau_sigilo_id, ip.organizacao_responsavel_id,
-      ip.organizacao_distribuicao_id, ip.datum_vertical_id, ip.especificacao_id, ip.declaracao_linhagem
-      FROM macrocontrole.produto AS p
-      INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id
-      INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = p.linha_producao_id
-      INNER JOIN macrocontrole.projeto AS proj ON l.projeto_id = proj.id
-      INNER JOIN metadado.informacoes_produto AS ip ON ip.lote_id = l.id
-      WHERE p.uuid = $1`,
+      `${SELECT_PRODUTO} FROM macrocontrole.produto WHERE uuid = $1`,
       [uuid]
     )
     if (!produto) {
-      throw new AppError(
-        'Erro ao retornar metadados. Produto não encontrado',
-        httpCode.BadRequest
-      )
+      throw new AppError('Produto não encontrado', httpCode.BadRequest)
     }
-
-    const producao = await t.any(
-      `SELECT ut.fase_id,
-      (CASE WHEN min(ut.unidade_trabalho_id) IS NOT NULL min(ut.data_inicio) ELSE '-' END) AS data_inicio,
-      (CASE WHEN min(ut.unidade_trabalho_id) IS NOT NULL (CASE WHEN count(*) - count(ut.data_fim) = 0 THEN max(ut.data_fim) ELSE NULL END) ELSE '-' END) AS data_fim
-      FROM macrocontrole.produto AS p
-      LEFT JOIN 
-      (
-        SELECT s.fase_id, ut.geom, min(a.data_inicio) as data_inicio,
-        (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
-        FROM macrocontrole.unidade_trabalho AS ut
-        INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
-        INNER JOIN
-        (select unidade_trabalho_id, data_inicio, data_fim from macrocontrole.atividade where tipo_situacao_id IN (1,2,3,4)) AS a
-        ON a.unidade_trabalho_id = ut.id
-        GROUP BY ut.id, s.fase_id
-      ) AS ut
-      ON st_relate(ut.geom, p.geom, ''T********'')
-      WHERE p.uuid = $1 GROUP BY p.id, ut.fase_id;
-      `,
-      [uuid]
-    )
-
-    const finalizado = producao.every(v => {
-      return v.data_fim
-    })
-    if (!finalizado) {
-      throw new AppError(
-        'Erro ao retornar metadados. Produto não está finalizado',
-        httpCode.BadRequest
-      )
-    }
-
-    const palavrasChave = await db.sapConn.any(
-      `SELECT pc.nome AS palavra_chave, tpc.nome AS tipo_palavra_chave
-      FROM metadado.palavra_chave AS pc
-      INNER JOIN metadado.tipo_palavra_chave_id AS tpc ON tpc.code = pc.tipo_palavra_chave_id
-      INNER JOIN macrocontrole.produto AS p ON p.id = pc.produto_id
-      WHERE p.uuid = $1`,
-      [uuid]
-    )
-
-    const template = xmlTemplate[produto.tipo_produto_id]
-
-    const dados = produto
-    const d = new Date()
-    dados.data_metadado = d.toISOString().split('T')[0]
-    dados.palavras_chave = palavrasChave
-
-    // responsavel metadado
-    // documento linhagem
-    // insumo interno
-    // informacoes de producao nivel fase
-    // responsavel cada fase
-    // metodologias
-
-    return template.render(dados)
+    return montaJsonEdicao(t, produto)
   })
 }
-*/
+
+// JSON de edicao de todas as folhas de um lote. Usado pelo SAP Gerente.
+controller.gerarJsonEdicaoLote = async loteId => {
+  return db.sapConn.task(async t => {
+    const produtos = await t.any(
+      `${SELECT_PRODUTO} FROM macrocontrole.produto WHERE lote_id = $1 ORDER BY inom, mi, nome`,
+      [loteId]
+    )
+    const resultado = []
+    for (const produto of produtos) {
+      const item = {
+        uuid: produto.uuid,
+        inom: produto.inom,
+        mi: produto.mi,
+        nome: produto.nome
+      }
+      try {
+        const { json, erros } = await montaJsonEdicao(t, produto)
+        item.json = json
+        item.erros = erros
+      } catch (e) {
+        item.json = null
+        item.erros = [e.message]
+      }
+      resultado.push(item)
+    }
+    return resultado
+  })
+}
+
+// ----------------------------------------------------------------------------
+// Geracao do XML de metadados (Perfil MGB / ISO 19115-19139)
+// Mesmo padrao do JSON de edicao: monta do banco, com fallback lote->produto.
+// Reusa os templates MGB validados (server/src/metadados/xml_templates) por
+// SUBSTITUICAO de texto (sem motor de template).
+// ----------------------------------------------------------------------------
+
+const XML_TEMPLATE = {
+  topo: 'metadados-topo.xml',
+  orto: 'metadados-orto.xml',
+  vetor: 'metadados-vetor.xml'
+}
+
+const EQUIDISTANCIA_POR_ESCALA = { 25000: '10', 50000: '20', 100000: '50', 250000: '100' }
+
+// rationale (descricao do passo de linhagem) por Fase do SAP (dominio.tipo_fase).
+// Textos extraidos dos XML de producao; fase sem texto cai no proprio nome.
+const RATIONALE_FASE = {
+  'Processamento Digital de Imagens': 'Processamento Digital de Imagem - Consiste na manipulação numérica de dados contidos em imagens digitais (realce de imagens, manipulação de brilho e contraste, redimensionamento da imagens, aplicação de filtros diversos, etc.).',
+  'Extração': 'Digitalizacao Tela Mono - Processo, também, conhecido como Restituição Monoscópica, que consiste em adquirir a geometria de feições do terreno a partir de um imagens orientadas.',
+  'Validação': 'Controle de qualidade direto interno, que tem por finalidade realizar de forma automatizada uma inspeção completa da consistência lógica de um conjunto de dados geoespaciais vetoriais e realizar a correção dos erros verificados.',
+  'Edição': 'Consiste na aplicação das representações cartograficas segundo a ET-RDG'
+}
+
+// templates lidos do disco uma vez e reusados (sao 3 e nao mudam em runtime)
+const XML_TEMPLATE_CACHE = {}
+const carregarTemplateXml = nome => {
+  if (!XML_TEMPLATE_CACHE[nome]) {
+    XML_TEMPLATE_CACHE[nome] = fs.readFileSync(path.join(__dirname, 'xml_templates', nome), 'utf8')
+  }
+  return XML_TEMPLATE_CACHE[nome]
+}
+
+const escapeXml = s =>
+  String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+const fmtEscala = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+
+// aceita Date (timestamp do pg) ou DD/MM/AAAA; devolve YYYY-MM-DD (gco:Date).
+// Usa os componentes de data LOCAIS (nao toISOString, que e UTC e rolaria o dia
+// para atividades concluidas a noite no fuso BRT).
+const pad2 = n => String(n).padStart(2, '0')
+const isoData = v => {
+  if (!v) return ''
+  if (v instanceof Date) return `${v.getFullYear()}-${pad2(v.getMonth() + 1)}-${pad2(v.getDate())}`
+  const m = String(v).match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`
+  return String(v).slice(0, 10)
+}
+
+// Monta (e valida) o XML de metadados de UM produto. O template sai do tipo_produto:
+// carta topografica -> topo; carta ortoimagem -> orto; CDGV vetorial -> vetor.
+// (O CDGV e um produto separado, com uuid proprio; cada produto gera um XML.)
+const montaMetadadoXml = async (t, produto) => {
+  const kind = XML_KIND_POR_TIPO[produto.tipo_produto_id]
+  if (!kind) {
+    throw new AppError(
+      `tipo_produto ${produto.tipo_produto_id} sem template de metadados (nao e carta nem CDGV vetorial)`,
+      httpCode.BadRequest
+    )
+  }
+  const templateNome = XML_TEMPLATE[kind]
+
+  const loteId = produto.lote_id
+
+  const infoProduto = await fetchUmComFallback(
+    t,
+    col => `SELECT ip.projeto_bdgex, dv.nome AS datum_vertical, e.nome AS especificacao,
+    u.nome AS responsavel, cc.nome AS classificacao,
+    org.nome AS org_nome, org.site AS org_site, org.endereco AS org_endereco, org.telefone AS org_telefone
+    FROM metadado.informacoes_produto AS ip
+    LEFT JOIN metadado.datum_vertical AS dv ON dv.code = ip.datum_vertical_id
+    LEFT JOIN metadado.especificacao AS e ON e.code = ip.especificacao_id
+    LEFT JOIN metadado.usuario AS u ON u.id = ip.responsavel_produto_id
+    LEFT JOIN metadado.codigo_classificacao AS cc ON cc.code = ip.grau_sigilo_id
+    LEFT JOIN metadado.organizacao AS org ON org.code = ip.organizacao_responsavel_id
+    WHERE ip.${col} = $1`,
+    produto.id, loteId
+  )
+
+  const infoEdicao = await fetchUmComFallback(
+    t,
+    col => `SELECT data_criacao FROM metadado.informacoes_edicao WHERE ${col} = $1`,
+    produto.id, loteId
+  )
+
+  // data de edicao real = maior data_fim das atividades finalizadas do produto
+  const dataEdicaoRow = await t.oneOrNone(
+    `SELECT max(a.data_fim) AS data_edicao
+    FROM macrocontrole.produto AS p
+    INNER JOIN macrocontrole.unidade_trabalho AS ut
+      ON ut.lote_id = p.lote_id AND ut.geom && p.geom AND st_relate(ut.geom, p.geom, '2********')
+    INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.tipo_situacao_id = 4
+    WHERE p.id = $1`,
+    [produto.id]
+  )
+
+  const hoje = new Date().toISOString().slice(0, 10)
+  const escala = produto.denominador_escala
+  const valores = {
+    INOM: produto.inom || '',
+    MI: produto.mi || '',
+    NOME: produto.nome || produto.mi || produto.inom || '',
+    UUID: produto.uuid,
+    CHEFE_DGEO: (infoProduto && infoProduto.responsavel) || '',
+    ORGAO_NOME: (infoProduto && infoProduto.org_nome) || '',
+    ORGAO_SITE: (infoProduto && infoProduto.org_site) || '',
+    ORGAO_ENDERECO: (infoProduto && infoProduto.org_endereco) || '',
+    ORGAO_TELEFONE: (infoProduto && infoProduto.org_telefone) || '',
+    ESCALA: String(escala),
+    ESCALA_FMT: fmtEscala(escala),
+    EQUIDISTANCIA: EQUIDISTANCIA_POR_ESCALA[escala] || '',
+    PROJETO: (infoProduto && infoProduto.projeto_bdgex) || '',
+    DATUM_VERTICAL: (infoProduto && infoProduto.datum_vertical) || '',
+    EDICAO: produto.edicao || '1ª Edição',
+    DATA_METADADOS: hoje,
+    DATA_CRIACAO: infoEdicao && infoEdicao.data_criacao ? isoData(infoEdicao.data_criacao) : hoje,
+    DATA_EDICAO: dataEdicaoRow && dataEdicaoRow.data_edicao ? isoData(dataEdicaoRow.data_edicao) : hoje,
+    CLASSIFICACAO: (infoProduto && infoProduto.classificacao) || 'ostensivo'
+  }
+
+  let xml = carregarTemplateXml(templateNome)
+  for (const k of Object.keys(valores)) {
+    xml = xml.split(`{{${k}}}`).join(escapeXml(valores[k]))
+  }
+
+  // Linhagem: um processStep por FASE do produto (as fases sao definidas no SAP),
+  // com a data real = max(data_fim) das atividades finalizadas daquela fase.
+  // Fragmento XML injetado CRU (nao escapar).
+  const fasesRows = await t.any(
+    `SELECT tf.nome AS fase, max(a.data_fim) AS fim
+    FROM macrocontrole.produto AS p
+    INNER JOIN macrocontrole.unidade_trabalho AS ut
+      ON ut.lote_id = p.lote_id AND ut.geom && p.geom AND st_relate(ut.geom, p.geom, '2********')
+    INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
+    INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+    INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
+    INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id AND a.tipo_situacao_id = 4
+    WHERE p.id = $1
+    GROUP BY tf.nome, f.ordem
+    ORDER BY f.ordem`,
+    [produto.id]
+  )
+  const chefeXml = escapeXml(valores.CHEFE_DGEO)
+  const orgNomeXml = escapeXml(valores.ORGAO_NOME)
+  const orgSiteXml = escapeXml(valores.ORGAO_SITE)
+  const linhagemProcesso = fasesRows.map(fr => {
+    const data = fr.fim ? isoData(fr.fim) : hoje
+    return [
+      '<gmd:processStep>',
+      '\t\t\t\t\t\t<gmd:LI_ProcessStep>',
+      '\t\t\t\t\t\t\t<gmd:description>',
+      `\t\t\t\t\t\t\t\t<gco:CharacterString>${escapeXml(fr.fase)}</gco:CharacterString>`,
+      '\t\t\t\t\t\t\t</gmd:description>',
+      '\t\t\t\t\t\t\t<gmd:rationale>',
+      `\t\t\t\t\t\t\t\t<gco:CharacterString>${escapeXml(RATIONALE_FASE[fr.fase] || fr.fase)}</gco:CharacterString>`,
+      '\t\t\t\t\t\t\t</gmd:rationale>',
+      '\t\t\t\t\t\t\t<gmd:dateTime>',
+      `\t\t\t\t\t\t\t\t<gco:Date>${data}</gco:Date>`,
+      '\t\t\t\t\t\t\t</gmd:dateTime>',
+      '\t\t\t\t\t\t\t<gmd:processor>',
+      '\t\t\t\t\t\t\t\t<gmd:CI_ResponsibleParty>',
+      '\t\t\t\t\t\t\t\t\t<gmd:individualName>',
+      `\t\t\t\t\t\t\t\t\t\t<gco:CharacterString>${chefeXml}</gco:CharacterString>`,
+      '\t\t\t\t\t\t\t\t\t</gmd:individualName>',
+      '\t\t\t\t\t\t\t\t\t<gmd:organisationName>',
+      `\t\t\t\t\t\t\t\t\t\t<gco:CharacterString>${orgNomeXml}</gco:CharacterString>`,
+      '\t\t\t\t\t\t\t\t\t</gmd:organisationName>',
+      '\t\t\t\t\t\t\t\t\t<gmd:positionName>',
+      '\t\t\t\t\t\t\t\t\t\t<gco:CharacterString>Chefe DGEO</gco:CharacterString>',
+      '\t\t\t\t\t\t\t\t\t</gmd:positionName>',
+      '\t\t\t\t\t\t\t\t\t<gmd:contactInfo>',
+      '\t\t\t\t\t\t\t\t\t\t<gmd:CI_Contact>',
+      '\t\t\t\t\t\t\t\t\t\t\t<gmd:onlineResource>',
+      '\t\t\t\t\t\t\t\t\t\t\t\t<gmd:CI_OnlineResource>',
+      '\t\t\t\t\t\t\t\t\t\t\t\t\t<gmd:linkage>',
+      `\t\t\t\t\t\t\t\t\t\t\t\t\t\t<gco:CharacterString>${orgSiteXml}</gco:CharacterString>`,
+      '\t\t\t\t\t\t\t\t\t\t\t\t\t</gmd:linkage>',
+      '\t\t\t\t\t\t\t\t\t\t\t\t</gmd:CI_OnlineResource>',
+      '\t\t\t\t\t\t\t\t\t\t\t</gmd:onlineResource>',
+      '\t\t\t\t\t\t\t\t\t\t</gmd:CI_Contact>',
+      '\t\t\t\t\t\t\t\t\t</gmd:contactInfo>',
+      '\t\t\t\t\t\t\t\t\t<gmd:role>',
+      '\t\t\t\t\t\t\t\t\t\t<gco:CharacterString>contatoDoProcesso</gco:CharacterString>',
+      '\t\t\t\t\t\t\t\t\t</gmd:role>',
+      '\t\t\t\t\t\t\t\t</gmd:CI_ResponsibleParty>',
+      '\t\t\t\t\t\t\t</gmd:processor>',
+      '\t\t\t\t\t\t</gmd:LI_ProcessStep>',
+      '\t\t\t\t\t</gmd:processStep>'
+    ].join('\n')
+  }).join('\n\t\t\t\t\t')
+  xml = xml.split('{{LINHAGEM_PROCESSO}}').join(linhagemProcesso)
+
+  // Palavras-chave (MD_Keywords): agrupadas por tipo, de metadado.palavra_chave_produto
+  // (produto sobrescreve lote). Sem palavra cadastrada, cai no toponimo (o nome do produto).
+  const palavrasRows = await fetchListaComFallback(
+    t,
+    col => `SELECT pcp.nome, tpk.nome AS tipo
+      FROM metadado.palavra_chave_produto AS pcp
+      INNER JOIN metadado.tipo_palavra_chave AS tpk ON tpk.code = pcp.tipo_palavra_chave_id
+      WHERE pcp.${col} = $1`,
+    produto.id, loteId
+  )
+  const blocoKeywords = (kws, tipoKw) => [
+    '<gmd:descriptiveKeywords>',
+    '\t\t\t\t<gmd:MD_Keywords>',
+    kws.map(nome => [
+      '\t\t\t\t\t<gmd:keyword>',
+      `\t\t\t\t\t\t<gco:CharacterString>${escapeXml(nome)}</gco:CharacterString>`,
+      '\t\t\t\t\t</gmd:keyword>'
+    ].join('\n')).join('\n'),
+    '\t\t\t\t\t<gmd:type>',
+    `\t\t\t\t\t\t<gco:CharacterString>${escapeXml(tipoKw)}</gco:CharacterString>`,
+    '\t\t\t\t\t</gmd:type>',
+    '\t\t\t\t</gmd:MD_Keywords>',
+    '\t\t\t</gmd:descriptiveKeywords>'
+  ].join('\n')
+  let palavrasChave
+  if (!palavrasRows.length) {
+    palavrasChave = blocoKeywords([valores.NOME], 'toponimica')
+  } else {
+    const porTipo = {}
+    for (const pc of palavrasRows) {
+      if (!porTipo[pc.tipo]) porTipo[pc.tipo] = []
+      porTipo[pc.tipo].push(pc.nome)
+    }
+    palavrasChave = Object.keys(porTipo)
+      .map(tipoKw => blocoKeywords(porTipo[tipoKw], tipoKw))
+      .join('\n\t\t\t')
+  }
+  xml = xml.split('{{PALAVRAS_CHAVE}}').join(palavrasChave)
+
+  // preenche os bounding box vazios a partir da geometria do produto (EPSG 4326)
+  const bbox = [
+    ['westBoundLongitude', produto.bbox_w],
+    ['eastBoundLongitude', produto.bbox_e],
+    ['southBoundLatitude', produto.bbox_s],
+    ['northBoundLatitude', produto.bbox_n]
+  ]
+  for (const [tag, val] of bbox) {
+    if (val == null) continue
+    const re = new RegExp(`(<gmd:${tag}>\\s*<gco:Decimal>)(</gco:Decimal>)`, 'g')
+    xml = xml.replace(re, `$1${val}$2`)
+  }
+
+  const erros = []
+  if (!valores.UUID) erros.push('fileIdentifier (uuid) vazio')
+  if (!infoProduto) erros.push('produto/lote sem metadado.informacoes_produto (preencha pelo SAP Gerente)')
+  // escala fora de EQUIDISTANCIA_POR_ESCALA -> elemento de distancia da curva vazio
+  if (/<gmd:distance>\s*<gco:Decimal>\s*<\/gco:Decimal>\s*<\/gmd:distance>/.test(xml)) {
+    erros.push(`equidistancia nao mapeada para a escala ${escala}: o campo de distancia da curva ficou vazio (preencher manualmente)`)
+  }
+  const restantes = xml.match(/\{\{[A-Z_]+\}\}/g)
+  if (restantes) erros.push('placeholders nao preenchidos: ' + Array.from(new Set(restantes)).join(', '))
+  if (!valores.ORGAO_NOME) erros.push('organizacao responsavel nao definida (informacoes_produto.organizacao_responsavel_id)')
+  return { xml, erros, kind }
+}
+
+const SELECT_PRODUTO_XML = `SELECT id, uuid, nome, mi, inom, denominador_escala, edicao,
+  tipo_produto_id, lote_id,
+  ST_XMin(geom) AS bbox_w, ST_XMax(geom) AS bbox_e, ST_YMin(geom) AS bbox_s, ST_YMax(geom) AS bbox_n`
+
+// XML de metadados de um produto (pelo uuid). O template (carta topo/orto ou vetor) sai do
+// tipo_produto; o fileIdentifier e o proprio produto.uuid. Rota publica.
+controller.gerarMetadadoXmlProduto = async uuid => {
+  return db.sapConn.task(async t => {
+    const produto = await t.oneOrNone(
+      `${SELECT_PRODUTO_XML} FROM macrocontrole.produto WHERE uuid = $1`,
+      [uuid]
+    )
+    if (!produto) {
+      throw new AppError('Produto não encontrado', httpCode.BadRequest)
+    }
+    const r = await montaMetadadoXml(t, produto)
+    return { ...r, uuid: produto.uuid, inom: produto.inom, mi: produto.mi, nome: produto.nome }
+  })
+}
+
+// XML de metadados de cada produto do lote (uma carta OU um vetor por produto, pelo
+// tipo_produto; o CDGV vetorial e um produto separado com uuid proprio). SAP Gerente.
+controller.gerarMetadadoXmlLote = async loteId => {
+  return db.sapConn.task(async t => {
+    const produtos = await t.any(
+      `${SELECT_PRODUTO_XML} FROM macrocontrole.produto WHERE lote_id = $1 ORDER BY inom, mi, nome`,
+      [loteId]
+    )
+    const resultado = []
+    for (const produto of produtos) {
+      if (!XML_KIND_POR_TIPO[produto.tipo_produto_id]) continue // pula o que nao e carta nem CDGV
+      const item = { uuid: produto.uuid, inom: produto.inom, mi: produto.mi, nome: produto.nome }
+      try {
+        const r = await montaMetadadoXml(t, produto)
+        item.kind = r.kind
+        item.xml = r.xml
+        item.erros = r.erros
+      } catch (e) {
+        item.kind = XML_KIND_POR_TIPO[produto.tipo_produto_id] || null
+        item.xml = null
+        item.erros = [e.message]
+      }
+      resultado.push(item)
+    }
+    return resultado
+  })
+}
+
 module.exports = controller
