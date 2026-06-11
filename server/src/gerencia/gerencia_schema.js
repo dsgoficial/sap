@@ -8,6 +8,10 @@ models.idParams = Joi.object().keys({
   id: Joi.number().integer().required()
 })
 
+models.getProducaoDetalhadaParams = Joi.object().keys({
+  ano: Joi.number().integer().required()
+})
+
 models.proximaQuery = Joi.object().keys({
   proxima: Joi.string().valid('true', 'false')
 })

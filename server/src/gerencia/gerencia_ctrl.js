@@ -1276,6 +1276,33 @@ controller.getPit = async () => {
   )
 }
 
+controller.getProducaoDetalhada = async ano => {
+  return db.sapConn.any(
+    `SELECT
+      pit.meta,
+      tpro.nome AS tipo_produto,
+      pro.mi,
+      pro.denominador_escala,
+      proj.nome AS projeto,
+      l.nome AS lote,
+      (
+        SELECT string_agg(DISTINCT b.nome, ', ' ORDER BY b.nome)
+        FROM macrocontrole.relacionamento_produto AS rp
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = rp.ut_id
+        INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
+        WHERE rp.p_id = pro.id
+      ) AS bloco
+    FROM macrocontrole.pit AS pit
+    INNER JOIN macrocontrole.lote AS l ON l.id = pit.lote_id
+    INNER JOIN macrocontrole.projeto AS proj ON proj.id = l.projeto_id
+    INNER JOIN macrocontrole.produto AS pro ON pro.lote_id = l.id
+    INNER JOIN dominio.tipo_produto AS tpro ON tpro.code = pro.tipo_produto_id
+    WHERE pit.ano = $<ano>
+    ORDER BY proj.nome, l.nome, pro.mi`,
+    { ano }
+  )
+}
+
 controller.criaPit = async pit => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet(['lote_id', 'meta', 'ano'])

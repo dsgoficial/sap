@@ -1875,6 +1875,38 @@ router.get(
 
 /**
  * @swagger
+ * /api/gerencia/pit/producao_detalhada/{ano}:
+ *   get:
+ *     summary: Retorna a produção detalhada (uma linha por produto/MI) dos lotes com PIT no ano informado
+ *     security:
+ *       - bearerAuth: []
+ *     tags:
+ *       - PIT
+ *     parameters:
+ *       - in: path
+ *         name: ano
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Produção detalhada retornada com sucesso
+ */
+router.get(
+  '/pit/producao_detalhada/:ano',
+  verifyAdmin,
+  schemaValidation({ params: gerenciaSchema.getProducaoDetalhadaParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await gerenciaCtrl.getProducaoDetalhada(req.params.ano)
+
+    const msg = 'Produção detalhada retornada com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
  * /api/gerencia/pit:
  *   delete:
  *     summary: Deleta PITs existentes
