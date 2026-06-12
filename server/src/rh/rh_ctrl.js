@@ -71,6 +71,15 @@ controller.getAllLoteStatsByDate = async (dataInicio, dataFim) => {
     COUNT(CASE WHEN a.tipo_situacao_id = 4
                AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
                THEN 1 END) AS exec_no_periodo,
+    COUNT(CASE WHEN a.tipo_situacao_id = 4
+               AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
+               THEN 1 END) * 1.0 / NULLIF(COUNT(*), 0) AS percent_periodo,
+    COUNT(CASE WHEN a.tipo_situacao_id = 4
+               AND a.data_fim <= $<dataFim>::timestamptz
+               THEN 1 END) AS exec_acumulado,
+    COUNT(CASE WHEN a.tipo_situacao_id = 4
+               AND a.data_fim <= $<dataFim>::timestamptz
+               THEN 1 END) * 1.0 / NULLIF(COUNT(*), 0) AS percent_acumulado,
     AVG(EXTRACT(EPOCH FROM (a.data_fim - a.data_inicio))) / 3600 AS tempo_medio_horas,
     STDDEV(EXTRACT(EPOCH FROM (a.data_fim - a.data_inicio))) / 3600 AS desvio_padrao_tempo
 FROM macrocontrole.atividade AS a
