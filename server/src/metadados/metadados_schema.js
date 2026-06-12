@@ -171,9 +171,8 @@ models.palavraChaveProduto = Joi.object().keys({
       Joi.object().keys({
         nome: Joi.string().required(),
         tipo_palavra_chave_id: Joi.number().integer().strict().required(),
-        produto_id: Joi.number().integer().strict(),
-        lote_id: Joi.number().integer().strict()
-      }).xor('produto_id', 'lote_id')
+        produto_id: Joi.number().integer().strict().required()
+      })
     )
     .required()
     .min(1)
@@ -186,9 +185,8 @@ models.palavraChaveProdutoAtualizacao = Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         nome: Joi.string().required(),
         tipo_palavra_chave_id: Joi.number().integer().strict().required(),
-        produto_id: Joi.number().integer().strict(),
-        lote_id: Joi.number().integer().strict()
-      }).xor('produto_id', 'lote_id')
+        produto_id: Joi.number().integer().strict().required()
+      })
     )
     .required()
     .min(1)

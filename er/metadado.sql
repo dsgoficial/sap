@@ -15,15 +15,13 @@ INSERT INTO metadado.tipo_palavra_chave (code, nome) VALUES
 (4, 'temporal'),
 (5, 'toponimica');
 
--- Associa palavra chave a um produto OU a um lote (conjunto homogeneo de folhas).
--- Exatamente um de (produto_id, lote_id) deve estar preenchido (ver CHECK).
+-- Palavra-chave do produto. Keyword e EXCLUSIVAMENTE nivel produto (nao tem nivel
+-- lote): toponimia e descricao sao por folha. O nome do produto entra como toponimo.
 CREATE TABLE metadado.palavra_chave_produto(
 	id SERIAL NOT NULL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
 	tipo_palavra_chave_id SMALLINT NOT NULL REFERENCES metadado.tipo_palavra_chave (code),
-	produto_id INTEGER REFERENCES macrocontrole.produto (id),
-	lote_id INTEGER REFERENCES macrocontrole.lote (id),
-	CONSTRAINT palavra_chave_produto_xor_lote CHECK ((produto_id IS NOT NULL AND lote_id IS NULL) OR (produto_id IS NULL AND lote_id IS NOT NULL))
+	produto_id INTEGER NOT NULL REFERENCES macrocontrole.produto (id)
 );
 
 -- MD_ClassificationCode

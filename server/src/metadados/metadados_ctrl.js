@@ -332,7 +332,7 @@ controller.deletaResponsavelFaseProduto = async responsavelFaseProdutoIds => {
 
 controller.getPalavraChaveProduto = async () => {
   return db.sapConn.any(
-    `SELECT pcp.id, pcp.nome, pcp.tipo_palavra_chave_id, tpk.nome AS tipo_palavra_chave, pcp.produto_id, pcp.lote_id
+    `SELECT pcp.id, pcp.nome, pcp.tipo_palavra_chave_id, tpk.nome AS tipo_palavra_chave, pcp.produto_id
     FROM metadado.palavra_chave_produto AS pcp
     INNER JOIN metadado.tipo_palavra_chave AS tpk ON tpk.code = pcp.tipo_palavra_chave_id`
   )
@@ -343,8 +343,7 @@ controller.criaPalavraChaveProduto = async palavrasChaveProduto => {
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
       'tipo_palavra_chave_id',
-      { name: 'produto_id', def: null },
-      { name: 'lote_id', def: null }
+      'produto_id'
     ])
 
     const query = db.pgp.helpers.insert(palavrasChaveProduto, cs, {
@@ -362,8 +361,7 @@ controller.atualizaPalavraChaveProduto = async palavrasChaveProduto => {
       'id',
       'nome',
       'tipo_palavra_chave_id',
-      { name: 'produto_id', def: null },
-      { name: 'lote_id', def: null }
+      'produto_id'
     ])
 
     const query =
@@ -1309,15 +1307,15 @@ const montaMetadadoXml = async (t, produto) => {
   }).join('\n\t\t\t\t\t')
   xml = xml.split('{{LINHAGEM_PROCESSO}}').join(linhagemProcesso)
 
-  // Palavras-chave (MD_Keywords): agrupadas por tipo, de metadado.palavra_chave_produto
-  // (produto sobrescreve lote). Sem palavra cadastrada, cai no toponimo (o nome do produto).
-  const palavrasRows = await fetchListaComFallback(
-    t,
-    col => `SELECT pcp.nome, tpk.nome AS tipo
+  // Palavras-chave (MD_Keywords): agrupadas por tipo, de metadado.palavra_chave_produto.
+  // Keyword e EXCLUSIVAMENTE nivel produto (nao tem nivel lote): toponimia e descricao
+  // sao por folha. A escolha e MANUAL: nao ha toponimia automatica.
+  const palavrasRows = await t.any(
+    `SELECT pcp.nome, tpk.nome AS tipo
       FROM metadado.palavra_chave_produto AS pcp
       INNER JOIN metadado.tipo_palavra_chave AS tpk ON tpk.code = pcp.tipo_palavra_chave_id
-      WHERE pcp.${col} = $1`,
-    produto.id, loteId
+      WHERE pcp.produto_id = $1`,
+    [produto.id]
   )
   const blocoKeywords = (kws, tipoKw) => [
     '<gmd:descriptiveKeywords>',
@@ -1333,19 +1331,16 @@ const montaMetadadoXml = async (t, produto) => {
     '\t\t\t\t</gmd:MD_Keywords>',
     '\t\t\t</gmd:descriptiveKeywords>'
   ].join('\n')
-  let palavrasChave
-  if (!palavrasRows.length) {
-    palavrasChave = blocoKeywords([valores.NOME], 'toponimica')
-  } else {
-    const porTipo = {}
-    for (const pc of palavrasRows) {
-      if (!porTipo[pc.tipo]) porTipo[pc.tipo] = []
-      porTipo[pc.tipo].push(pc.nome)
-    }
-    palavrasChave = Object.keys(porTipo)
-      .map(tipoKw => blocoKeywords(porTipo[tipoKw], tipoKw))
-      .join('\n\t\t\t')
+  // Palavras-chave exatamente como cadastradas (escolha manual): sem toponimia
+  // automatica. Produto sem palavra-chave cadastrada sai sem descriptiveKeywords.
+  const porTipo = {}
+  for (const pc of palavrasRows) {
+    if (!porTipo[pc.tipo]) porTipo[pc.tipo] = []
+    porTipo[pc.tipo].push(pc.nome)
   }
+  const palavrasChave = Object.keys(porTipo)
+    .map(tipoKw => blocoKeywords(porTipo[tipoKw], tipoKw))
+    .join('\n\t\t\t')
   xml = xml.split('{{PALAVRAS_CHAVE}}').join(palavrasChave)
 
   // preenche os bounding box vazios a partir da geometria do produto (EPSG 4326)
