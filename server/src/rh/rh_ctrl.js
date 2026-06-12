@@ -23,9 +23,10 @@ controller.getDiasLogadosUsuario = async usuarioId => {
 
 controller.getAtividadesPorPeriodo = async (dataInicio, dataFim) => {
   return db.sapConn.any(
-    `SELECT  
-      u.nome AS nome_usuario, 
-      STRING_AGG(DISTINCT b.nome, ', ') AS nome_bloco,
+    `SELECT
+      u.id AS usuario_id,
+      u.nome AS nome_usuario,
+      b.nome AS nome_bloco,
       COUNT(DISTINCT ut.id) AS qtd_ut
       FROM macrocontrole.atividade a
       JOIN dgeo.usuario u ON a.usuario_id = u.id
@@ -33,8 +34,8 @@ controller.getAtividadesPorPeriodo = async (dataInicio, dataFim) => {
       JOIN macrocontrole.bloco b ON ut.bloco_id = b.id
     WHERE a.tipo_situacao_id = 4
       AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
-    GROUP BY u.nome
-    ORDER BY u.nome;`,
+    GROUP BY u.id, u.nome, b.nome
+    ORDER BY u.nome, b.nome;`,
     { dataInicio: `${dataInicio} 00:00:00`, dataFim: `${dataFim} 23:59:59` }
   );
 };
@@ -75,7 +76,7 @@ controller.getAllLoteStatsByDate = async (dataInicio, dataFim) => {
 FROM macrocontrole.atividade AS a
 INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
 INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-WHERE l.status_id = 1
+WHERE l.status_id IN (1, 2)
 AND a.tipo_situacao_id BETWEEN 1 AND 5
 GROUP BY l.id, l.nome
 HAVING COUNT(CASE WHEN a.tipo_situacao_id = 4

@@ -840,7 +840,8 @@ router.post(
   asyncHandler(async (req, res, next) => {
     await gerenciaCtrl.avancaAtividade(
       req.body.atividade_ids,
-      req.body.concluida
+      req.body.concluida,
+      req.usuarioId
     )
 
     const msg = 'Atividade avançou para próxima etapa com sucesso'

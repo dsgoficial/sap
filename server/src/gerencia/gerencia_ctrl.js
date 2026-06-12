@@ -626,7 +626,7 @@ controller.voltaAtividade = async (atividadeIds, manterUsuarios) => {
   await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, atividadeIds)
 }
 
-controller.avancaAtividade = async (atividadeIds, concluida) => {
+controller.avancaAtividade = async (atividadeIds, concluida, usuarioId) => {
   const comparisonOperator = concluida ? '<=' : '<'
 
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
@@ -683,7 +683,7 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
     await t.none(
       `
         UPDATE macrocontrole.atividade
-        SET tipo_situacao_id = 4, data_inicio = COALESCE(data_inicio, $<dataFim>), data_fim = COALESCE(data_fim, $<dataFim>)
+        SET tipo_situacao_id = 4, data_inicio = COALESCE(data_inicio, $<dataFim>), data_fim = COALESCE(data_fim, $<dataFim>), usuario_id = COALESCE(usuario_id, $<usuarioId>)
         WHERE id IN (
           SELECT a_ant.id
           FROM macrocontrole.atividade AS a
@@ -693,7 +693,7 @@ controller.avancaAtividade = async (atividadeIds, concluida) => {
           WHERE a.id in ($<atividadeIds:csv>) AND e_ant.ordem $<comparisonOperator:raw> e.ordem AND a_ant.tipo_situacao_id IN (1)
         )
         `,
-      { atividadeIds, comparisonOperator, dataFim }
+      { atividadeIds, comparisonOperator, dataFim, usuarioId }
     )
 
   })
