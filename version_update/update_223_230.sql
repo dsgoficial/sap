@@ -98,6 +98,10 @@ UPDATE metadado.organizacao SET sigla = '4º CGEO', endereco = 'Avenida Marechal
 UPDATE metadado.organizacao SET sigla = '5º CGEO', endereco = 'Rua Major Daemon, 81 Centro - CEP:20.081-190 - Rio de Janeiro - RJ', telefone = '(21)2223-2177', site = 'http://www.5cgeo.eb.mil.br/' WHERE code = 5 AND site IS NULL;
 UPDATE metadado.organizacao SET sigla = code || 'º CGEO' WHERE sigla IS NULL;
 
+-- novo tipo de insumo ArcGis MapServer (idempotente p/ bancos ja existentes)
+INSERT INTO dominio.tipo_insumo (code, nome) VALUES (10, 'ArcGis MapServer')
+ON CONFLICT (code) DO NOTHING;
+
 UPDATE public.versao
 SET nome = '2.3.0' WHERE code = 1;
 
