@@ -12,6 +12,7 @@ const swaggerJSDoc = require('swagger-jsdoc')
 const noCache = require('nocache')
 
 const appRoutes = require('../routes')
+const { verifyAdmin } = require('../login')
 const swaggerOptions = require('./swagger_options')
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions)
@@ -35,7 +36,6 @@ app.use(hpp()) // protection against parameter polution
 // CORS middleware
 app.use(cors())
 
-// Helmet Protection
 app.use(noCache())
 
 const limiter = rateLimit({
@@ -91,7 +91,7 @@ app.use('/api', appRoutes)
  *                   type: string
  *                   description: Descrição do erro ocorrido
  */
-app.use('/logs', (req, res) => {
+app.get('/logs', verifyAdmin, (req, res) => {
   const logDir = path.join(__dirname, '..', '..', 'logs/combined.log')
   const daysToShow = 3
   const cutofftimestamp = new Date(Date.now() - daysToShow * 24 * 60 * 60 * 1000);
@@ -124,6 +124,17 @@ app.use('/logs', (req, res) => {
  *         description: Interface Swagger UI carregada com sucesso
  */
 app.use('/api/api_docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+
+// 404 explícito para rotas /api inexistentes — sem isto o catch-all do SPA
+// devolve index.html (200) para qualquer GET /api/* não casado.
+app.use('/api', (req, res, next) => {
+  return next(
+    new AppError(
+      `URL não encontrada para o método ${req.method}`,
+      httpCode.NotFound
+    )
+  )
+})
 
 app.use(express.static(path.join(__dirname, "..", "build")));
 

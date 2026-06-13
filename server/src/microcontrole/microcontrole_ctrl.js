@@ -2,6 +2,10 @@
 
 const { db } = require('../database')
 
+// AppError/httpCode eram usados em deletePerfilMonitoramento sem import
+// (ReferenceError → 500 em vez de 400 na validação).
+const { AppError, httpCode } = require('../utils')
+
 const controller = {}
 
 controller.getTipoMonitoramento = async () => {

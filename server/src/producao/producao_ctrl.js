@@ -623,7 +623,7 @@ controller.finaliza = async (
     },
   );
   //nonblocking call
-  disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ);
+  await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ);
 };
 
 controller.inicia = async (usuarioId) => {
@@ -676,7 +676,7 @@ controller.inicia = async (usuarioId) => {
     },
   );
   //nonblocking call
-  disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ);
+  await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ);
 
   return controller.getDadosAtividade(prioridade, usuarioId, true);
 };
@@ -757,7 +757,7 @@ controller.problemaAtividade = async (
   );
 
   //nonblocking call
-  disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ);
+  await disableTriggers.refreshMaterializedViewFromAtivs(db.sapConn, ativ);
 };
 
 controller.getTipoProblema = async () => {

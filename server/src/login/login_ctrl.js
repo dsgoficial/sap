@@ -87,7 +87,9 @@ const signJWT = (data, secret) => {
       },
       (err, token) => {
         if (err) {
-          reject(new AppError('Erro durante a assinatura do token', null, err))
+          return reject(
+            new AppError('Erro durante a assinatura do token', null, err)
+          )
         }
         resolve(token)
       }

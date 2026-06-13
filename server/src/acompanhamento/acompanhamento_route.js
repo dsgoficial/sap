@@ -4,12 +4,17 @@ const express = require('express')
 
 const { schemaValidation, asyncHandler, httpCode } = require('../utils')
 
-const { verifyAdmin } = require('../login')
+const { verifyLogin, verifyAdmin } = require('../login')
 
 const acompanhamentoSchema = require('./acompanhamento_schema')
 const acompanhamentoCtrl = require('./acompanhamento_ctrl')
 
 const router = express.Router()
+
+// Todas as rotas de acompanhamento exigem usuário autenticado (B2). Endpoints
+// gerenciais recebem verifyAdmin adicional abaixo; o web consome o restante
+// (dashboard/pit/grade/mapa) como usuário comum, então NÃO leva verifyAdmin.
+router.use(verifyLogin)
 
 const archiver = require('archiver')
 
@@ -124,54 +129,6 @@ router.get(
 
 /**
  * @swagger
- * /api/acompanhamento/usuarios_sem_atividade:
- *   get:
- *     summary: Obtém a lista de usuários sem atividade
- *     description: Retorna uma lista de usuários que não possuem atividades registradas.
- *     produces:
- *       - application/json
- *     tags:
- *       - acompanhamento
- *     responses:
- *       200:
- *         description: Lista de usuários sem atividade retornada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   description: Indica se a requisição ocorreu com sucesso
- *                 message:
- *                   type: string
- *                   description: Descrição do resultado da requisição
- *                 dados:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       usuario_id:
- *                         type: integer
- *                         description: ID do usuário
- *                       usuario:
- *                         type: string
- *                         description: Nome do usuário
- */
-router.get(
-  '/usuarios_sem_atividade',
-  asyncHandler(async (req, res, next) => {
-    const dados = await acompanhamentoCtrl.usuariosSemAtividade(
-    )
-
-    const msg = 'Usuários sem atividade retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-/**
- * @swagger
  * /api/acompanhamento/ultimos_login:
  *   get:
  *     summary: Obtém os últimos logins
@@ -212,107 +169,12 @@ router.get(
  */
 router.get(
   '/ultimos_login',
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await acompanhamentoCtrl.ultimosLogin(
     )
 
     const msg = 'Últimos logins retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-/**
- * @swagger
- * /api/acompanhamento/usuarios_logados_hoje:
- *   get:
- *     summary: Obtém a lista de usuários logados hoje
- *     description: Retorna uma lista de usuários que realizaram login no sistema hoje.
- *     produces:
- *       - application/json
- *     tags:
- *       - acompanhamento
- *     responses:
- *       200:
- *         description: Lista de usuários logados hoje retornada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   description: Indica se a requisição ocorreu com sucesso
- *                 message:
- *                   type: string
- *                   description: Descrição do resultado da requisição
- *                 dados:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       usuario_id:
- *                         type: integer
- *                         description: ID do usuário
- *                       usuario:
- *                         type: string
- *                         description: Nome do usuário
- */
-router.get(
-  '/usuarios_logados_hoje',
-  asyncHandler(async (req, res, next) => {
-    const dados = await acompanhamentoCtrl.usuariosLogadosHoje(
-    )
-
-    const msg = 'Usuários logados hoje retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-/**
- * @swagger
- * /api/acompanhamento/usuarios_nao_logados_hoje:
- *   get:
- *     summary: Obtém a lista de usuários que não logaram hoje
- *     description: Retorna uma lista de usuários que não realizaram login no sistema hoje.
- *     produces:
- *       - application/json
- *     tags:
- *       - acompanhamento
- *     responses:
- *       200:
- *         description: Lista de usuários não logados hoje retornada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   description: Indica se a requisição ocorreu com sucesso
- *                 message:
- *                   type: string
- *                   description: Descrição do resultado da requisição
- *                 dados:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       usuario_id:
- *                         type: integer
- *                         description: ID do usuário
- *                       usuario:
- *                         type: string
- *                         description: Nome do usuário
- */
-router.get(
-  '/usuarios_nao_logados_hoje',
-  asyncHandler(async (req, res, next) => {
-    const dados = await acompanhamentoCtrl.usuariosNaoLogadosHoje(
-    )
-
-    const msg = 'Usuários não logados hoje retornados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
@@ -606,6 +468,7 @@ router.get(
  */
 router.get(
   '/usuarios_sem_perfil',
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await acompanhamentoCtrl.usuariosSemPerfil(
     )
@@ -1000,6 +863,7 @@ router.get(
  */
 router.get(
   '/dados_site_acompanhamento',
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await acompanhamentoCtrl.getDadosSiteAcompanhamento()
 

@@ -32,7 +32,9 @@ const getRotinas = async servidorId => {
     )
   }
   try {
-    const serverurl = `${serverInfo.servidor}:${serverInfo.porta}/api/rotinas`
+    // M8: a query só seleciona `url`; antes usava serverInfo.servidor/.porta
+    // (inexistentes) → 'undefined:undefined/...' → getRotinas sempre falhava.
+    const serverurl = `${serverInfo.url}/api/rotinas`
     const response = await httpClient.get(serverurl)
     if (!response ||
       response.status !== 200 ||

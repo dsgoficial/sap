@@ -16,13 +16,13 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
     throw new AppError('Falta informação de usuário')
   }
 
-  const {
-    administrador
-  } = await db.sapConn.oneOrNone(
+  // null-check: oneOrNone pode retornar null (usuário inexistente/inativo) —
+  // destructuring direto estouraria TypeError (500) em vez de 403.
+  const usuario = await db.sapConn.oneOrNone(
     'SELECT administrador FROM dgeo.usuario WHERE id = $<usuarioId> and ativo IS TRUE',
     { usuarioId: decoded.id }
   )
-  if (!administrador) {
+  if (!usuario || !usuario.administrador) {
     throw new AppError(
       'Usuário necessita ser um administrador',
       httpCode.Forbidden

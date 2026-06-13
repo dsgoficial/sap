@@ -1088,7 +1088,9 @@ router.post(
       req.body.servidor,
       req.body.porta,
       req.body.banco,
-      req.body_usuario_id
+      // M4: era req.body_usuario_id (sempre undefined) → revogava ninguém e
+      // ainda assim respondia "sucesso". O id agora chega ao controller.
+      req.body.usuario_id
     )
 
     const msg = 'Permissões do usuário no banco revogadas com sucesso'
@@ -2043,6 +2045,7 @@ router.put(
  */
 router.get(
   '/alteracao_fluxo',
+  verifyAdmin,
   asyncHandler(async (req, res, next) => {
     const dados = await gerenciaCtrl.getAlteracaoFluxo()
 

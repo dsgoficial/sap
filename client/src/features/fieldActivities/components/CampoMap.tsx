@@ -352,9 +352,12 @@ const CampoMap = ({ className }: CampoMapProps) => {
           {showTracks &&
             selectedTracks.map((trackId, index) => {
               // Inclui o prefixo /api (mesmo baseURL do backend) e encoda o id.
+              // O tile MVT é buscado pelo MapLibre SEM header de auth, então o
+              // token vai na query string (o backend aceita via ?token=).
+              const token = localStorage.getItem('@sap_web-Token') || '';
               const mvtUrl = `${window.location.origin}/api/campo/tracks/${encodeURIComponent(
                 trackId,
-              )}/{z}/{x}/{y}.mvt`;
+              )}/{z}/{x}/{y}.mvt?token=${encodeURIComponent(token)}`;
 
               return (
                 <Source

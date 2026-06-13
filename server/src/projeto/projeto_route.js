@@ -4,12 +4,17 @@ const express = require('express')
 
 const { schemaValidation, asyncHandler, httpCode } = require('../utils')
 
-const { verifyAdmin } = require('../login')
+const { verifyLogin, verifyAdmin } = require('../login')
 
 const projetoCtrl = require('./projeto_ctrl')
 const projetoSchema = require('./projeto_schema')
 
 const router = express.Router()
+
+// Todas as rotas de projeto exigem autenticação (cobre as antigas rotas
+// públicas /status e /tipo_*). Só o SAP_Gerente (admin, com token) consome
+// /projeto/*; rotas administrativas mantêm verifyAdmin adicional.
+router.use(verifyLogin)
 
 
 router.get(

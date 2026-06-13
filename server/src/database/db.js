@@ -34,7 +34,8 @@ db.createConn = async (user, password, host, port, database, handle = true) => {
       })
       .catch(e => {
         if (!handle) {
-          throw new Error()
+          // Preserva a causa real do PostgreSQL (antes era um Error vazio).
+          throw e
         }
         errorHandler.critical(e)
       })

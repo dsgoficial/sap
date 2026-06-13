@@ -475,7 +475,11 @@ controller.criaTrackerPonto = async (tracks) => {
             httpCode.BadRequest
           )
         }
-        p.geom = `ST_SetSRID(ST_MakePoint(${p.x_ll}, ${p.y_ll}), 4326)`
+        // B3: coordenadas escapadas via pgp.as.format (antes interpoladas cruas).
+        p.geom = db.pgp.as.format(
+          'ST_SetSRID(ST_MakePoint($1, $2), 4326)',
+          [p.x_ll, p.y_ll]
+        )
       })
 
     let trackIds = []

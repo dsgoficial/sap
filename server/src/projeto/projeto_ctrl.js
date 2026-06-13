@@ -180,10 +180,22 @@ controller.getEstilos = async () => {
 
 controller.gravaEstilos = async (estilos, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
-    const query_test = db.pgp.as.format(`SELECT 1 FROM dgeo.layer_styles AS v WHERE (v.f_table_schema, v.f_table_name, v.grupo_estilo_id) IN ($1:raw)`,
-      db.pgp.as.format(estilos.map(r => `('${r.f_table_schema}', '${r.f_table_name}', ${r.grupo_estilo_id})`).join()));
+    // M2: valores escapados via pgp.as.format (antes eram interpolados crus).
+    const valoresIn = estilos
+      .map(r =>
+        db.pgp.as.format('($1, $2, $3)', [
+          r.f_table_schema,
+          r.f_table_name,
+          r.grupo_estilo_id
+        ])
+      )
+      .join(',')
+    const query_test = db.pgp.as.format(
+      `SELECT 1 FROM dgeo.layer_styles AS v WHERE (v.f_table_schema, v.f_table_name, v.grupo_estilo_id) IN ($1:raw)`,
+      [valoresIn]
+    );
 
     const exists = await t.any(query_test);
 
@@ -217,7 +229,7 @@ controller.gravaEstilos = async (estilos, usuarioId) => {
 
 controller.atualizaEstilos = async (estilos, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
@@ -276,7 +288,7 @@ controller.getRegras = async () => {
 }
 
 controller.gravaRegras = async (layerRules, usuarioId) => {
-  const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+  const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
@@ -295,7 +307,7 @@ controller.gravaRegras = async (layerRules, usuarioId) => {
 }
 
 controller.atualizaRegras = async (layerRules, usuarioId) => {
-  const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+  const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
@@ -361,7 +373,7 @@ controller.getModelos = async () => {
 
 controller.gravaModelos = async (modelos, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
@@ -382,7 +394,7 @@ controller.gravaModelos = async (modelos, usuarioId) => {
 
 controller.atualizaModelos = async (modelos, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
@@ -449,7 +461,7 @@ controller.getMenus = async () => {
 
 controller.gravaMenus = async (menus, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
@@ -469,7 +481,7 @@ controller.gravaMenus = async (menus, usuarioId) => {
 
 controller.atualizaMenus = async (menus, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
@@ -1224,7 +1236,7 @@ controller.atualizaPerfilFME = async perfilFME => { // FIXME retornar mensagem d
       WHERE id in ($<perfilFMEIds:csv>)`,
       { perfilFMEIds: perfilFME.map(c => c.id) }
     )
-    if (!exists && exists.length < perfilFME.length) {
+    if (exists.length <perfilFME.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil fme',
         httpCode.BadRequest
@@ -1310,7 +1322,7 @@ controller.deletePerfilRequisitoFinalizacao = async perfilRequisitosIds => {
       WHERE id in ($<perfilRequisitosIds:csv>)`,
       { perfilRequisitosIds }
     )
-    if (!exists && exists.length < perfilRequisitosIds.length) {
+    if (exists.length <perfilRequisitosIds.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil requisito finalização',
         httpCode.BadRequest
@@ -1379,7 +1391,7 @@ controller.deletePerfilMenu = async perfilMenuIds => {
       WHERE id in ($<perfilMenuIds:csv>)`,
       { perfilMenuIds }
     )
-    if (!exists && exists.length < perfilMenuIds.length) {
+    if (exists.length <perfilMenuIds.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil menu',
         httpCode.BadRequest
@@ -1400,7 +1412,7 @@ controller.atualizaPerfilMenu = async perfilMenu => {//FIXME
       WHERE id in ($<perfilMenuIds:csv>)`,
       { perfilMenuIds: perfilMenu.map(c => c.id) }
     )
-    if (!exists && exists.length < perfilMenu.length) {
+    if (exists.length <perfilMenu.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil menu QGIS',
         httpCode.BadRequest
@@ -1461,7 +1473,7 @@ controller.deletePerfilModelo = async perfilModeloIds => {
       WHERE id in ($<perfilModeloIds:csv>)`,
       { perfilModeloIds }
     )
-    if (!exists && exists.length < perfilModeloIds.length) {
+    if (exists.length <perfilModeloIds.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil modelo QGIS',
         httpCode.BadRequest
@@ -1482,7 +1494,7 @@ controller.atualizaPerfilModelo = async perfilModelo => { // FIXME REFATORAR
       WHERE id in ($<perfilModeloIds:csv>)`,
       { perfilModeloIds: perfilModelo.map(c => c.id) }
     )
-    if (!exists && exists.length < perfilModelo.length) {
+    if (exists.length <perfilModelo.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil modelo QGIS',
         httpCode.BadRequest
@@ -1547,7 +1559,7 @@ controller.deletePerfilRegras = async perfilRegrasIds => {
       WHERE id in ($<perfilRegrasIds:csv>)`,
       { perfilRegrasIds }
     )
-    if (!exists && exists.length < perfilRegrasIds.length) {
+    if (exists.length <perfilRegrasIds.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil de regras',
         httpCode.BadRequest
@@ -1568,7 +1580,7 @@ controller.atualizaPerfilRegras = async perfilRegras => { // FIXME REFATORAR
       WHERE id in ($<perfilRegrasIds:csv>)`,
       { perfilRegrasIds: perfilRegras.map(c => c.id) }
     )
-    if (!exists && exists.length < perfilRegras.length) {
+    if (exists.length <perfilRegras.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil de regras',
         httpCode.BadRequest
@@ -1625,7 +1637,7 @@ controller.deletePerfilEstilos = async perfilEstilosIds => {
       WHERE id in ($<perfilEstilosIds:csv>)`,
       { perfilEstilosIds }
     )
-    if (!exists && exists.length < perfilEstilosIds.length) {
+    if (exists.length <perfilEstilosIds.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil de estilos',
         httpCode.BadRequest
@@ -1646,7 +1658,7 @@ controller.atualizaPerfilEstilos = async perfilEstilos => {//FIXME
       WHERE id in ($<perfilEstilosIds:csv>)`,
       { perfilEstilosIds: perfilEstilos.map(c => c.id) }
     )
-    if (!exists && exists.length < perfilEstilos.length) {
+    if (exists.length <perfilEstilos.length) {
       throw new AppError(
         'Os ids informados não correspondem a um perfil de estilos',
         httpCode.BadRequest
@@ -2018,7 +2030,7 @@ controller.atualizaInsumos = async insumos => {
             httpCode.BadRequest
           )
         }
-        p.geom = `st_geomfromewkt('${p.geom}')`
+        p.geom = db.pgp.as.format('ST_GeomFromEWKT($1)', [p.geom])
       } else {
         p.geom = 'NULL'
       }
@@ -2089,7 +2101,7 @@ controller.criaInsumos = async (insumos, tipo_insumo, grupo_insumo) => {
         httpCode.BadRequest
       )
     }
-    p.geom = `st_geomfromewkt('${p.geom}')`
+    p.geom = db.pgp.as.format('ST_GeomFromEWKT($1)', [p.geom])
   })
 
 
@@ -2131,7 +2143,7 @@ controller.criaProdutos = async (produtos, loteId) => {
           httpCode.BadRequest
         )
       }
-      p.geom = `st_geomfromewkt('${p.geom}')`
+      p.geom = db.pgp.as.format('ST_GeomFromEWKT($1)', [p.geom])
     })
 
     const query = db.pgp.helpers.insert(produtos, cs, {
@@ -2202,7 +2214,7 @@ controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) =>
     ])
 
     unidadesTrabalho.forEach(p => {
-      p.geom = `st_geomfromewkt('${p.geom}')`
+      p.geom = db.pgp.as.format('ST_GeomFromEWKT($1)', [p.geom])
     })
 
     const unidadesTrabalhoTotal = []
@@ -3024,7 +3036,7 @@ controller.getAlias = async () => {
 
 controller.criaAlias = async (alias, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
@@ -3044,7 +3056,7 @@ controller.criaAlias = async (alias, usuarioId) => {
 
 controller.atualizaAlias = async (alias, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
@@ -3243,7 +3255,7 @@ controller.getTemas = async () => {
 
 controller.gravaTemas = async (temas, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
@@ -3263,7 +3275,7 @@ controller.gravaTemas = async (temas, usuarioId) => {
 
 controller.atualizaTemas = async (temas, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
@@ -4003,7 +4015,7 @@ controller.getWorkflows = async () => {
 
 controller.gravaWorkflows = async (workflows, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'nome',
@@ -4024,7 +4036,7 @@ controller.gravaWorkflows = async (workflows, usuarioId) => {
 
 controller.atualizaWorkflows = async (workflows, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',

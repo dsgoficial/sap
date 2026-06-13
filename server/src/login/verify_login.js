@@ -8,8 +8,9 @@ const validateToken = require('./validate_token')
 
 // middleware para verificar o JWT
 const verifyLogin = asyncHandler(async (req, res, next) => {
-  // verifica o header authorization para pegar o token
-  const token = req.headers.authorization
+  // Token via header authorization; fallback para query string `token` —
+  // necessário para tiles MVT (MapLibre busca tiles sem header de auth).
+  const token = req.headers.authorization || req.query.token
 
   const decoded = await validateToken(token)
 
@@ -27,7 +28,9 @@ const verifyLogin = asyncHandler(async (req, res, next) => {
     'SELECT ativo FROM dgeo.usuario WHERE uuid = $<usuarioUuid>',
     { usuarioUuid: decoded.uuid }
   )
-  if (!response.ativo) {
+  // null-check: usuário removido/inexistente com token ainda válido não deve
+  // estourar TypeError (500) — negamos o acesso de forma limpa.
+  if (!response || !response.ativo) {
     throw new AppError('Usuário não está ativo', httpCode.Forbidden)
   }
 

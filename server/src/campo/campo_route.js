@@ -7,6 +7,11 @@ const campoCtrl = require('./campo_ctrl')
 const campoSchema = require('./campo_schema')
 const router = express.Router()
 
+// H4: todas as rotas de campo exigem autenticação (expõem fotos, tracks de
+// deslocamento de equipes e dados de militares). O tile MVT (busca sem header
+// pelo MapLibre) é coberto pelo fallback de token via query em verifyLogin.
+router.use(verifyLogin)
+
 // Rotas genéricas
 router.get(
   '/situacao',

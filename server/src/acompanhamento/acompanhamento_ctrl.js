@@ -10,7 +10,7 @@ const controller = {}
 
 
 controller.getInfoSubfaseLote = async (subfaseId, loteId) => {//Verificar
-  const atividades = db.sapConn.any(
+  const atividades = await db.sapConn.any(
     `SELECT a.etapa_id, e.ordem AS etapa_ordem, te.nome AS etapa_nome, a.tipo_situacao_id, a.data_inicio, a.data_fim
     FROM macrocontrole.atividade AS a
     INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
@@ -36,13 +36,13 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {//Verificar
       estatisticas[a.etapa_id].atividades_finalizadas_semana_anterior = 0
     }
 
-    if (a.tipo_situacao === 2) {
+    if (a.tipo_situacao_id ===2) {
       estatisticas[a.etapa_id].atividades_em_execucao += 1
     }
-    if (a.tipo_situacao === 3) {
+    if (a.tipo_situacao_id ===3) {
       estatisticas[a.etapa_id].atividades_pausadas += 1
     }
-    if (a.tipo_situacao === 1) {
+    if (a.tipo_situacao_id ===1) {
       estatisticas[a.etapa_id].atividades_restantes += 1
     }
     const dataFim = format(a.data_fim, 'dd.MM.yyyy')
@@ -51,19 +51,19 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {//Verificar
     const semana = format(new Date(), 'I.yyyy')
     const semanaAnterior = subWeeks(new Date(), 1)
 
-    if (a.tipo_situacao === 4) {
-      estatisticas[a.etapa_id].atividades_finalizada += 1
+    if (a.tipo_situacao_id === 4) {
+      estatisticas[a.etapa_id].atividades_finalizadas += 1
     }
 
-    if (a.tipo_situacao === 4 && dataFim === hoje) {
+    if (a.tipo_situacao_id ===4 && dataFim === hoje) {
       estatisticas[a.etapa_id].atividades_finalizadas_hoje += 1
     }
 
-    if (a.tipo_situacao === 4 && semanaFim === semana) {
+    if (a.tipo_situacao_id ===4 && semanaFim === semana) {
       estatisticas[a.etapa_id].atividades_finalizadas_semana += 1
     }
 
-    if (a.tipo_situacao === 4 && semanaFim === semanaAnterior) {
+    if (a.tipo_situacao_id ===4 && semanaFim === semanaAnterior) {
       estatisticas[a.etapa_id].atividades_finalizadas_semana_anterior += 1
     }
   })
@@ -72,7 +72,7 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {//Verificar
 }
 
 controller.getInfoLote = async loteId => {//Verificar
-  const atividades = db.sapConn.any(
+  const atividades = await db.sapConn.any(
     `SELECT p.id, s.fase_id, f.ordem AS fase_ordem, tf.nome AS fase_nome, min(a.data_inicio) as data_inicio, 
     (CASE WHEN count(*) - count(a.data_fim) = 0 THEN max(a.data_fim) ELSE NULL END) AS data_fim
     FROM macrocontrole.produto AS p
@@ -80,7 +80,7 @@ controller.getInfoLote = async loteId => {//Verificar
     INNER JOIN macrocontrole.subfase AS s ON ut.subfase_id = s.id
     INNER JOIN macrocontrole.fase AS f on f.id = s.fase_id
     INNER JOIN dominio.tipo_fase AS tf on tf.code = f.tipo_fase_id
-    INNER JOIN macrocontrole.atividade ON a.unidade_trabalho_id = ut.id
+    INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
     WHERE p.lote_id = $<loteId> AND a.tipo_situacao_id != 5
     GROUP BY p.id, s.fase_id, f.ordem, tf.nome
     ORDER BY f.ordem
