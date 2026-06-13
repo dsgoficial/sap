@@ -45,3 +45,23 @@ describe('Authz — rotas de campo (H4)', () => {
     expect([401, 403]).not.toContain(comToken.status)
   })
 })
+
+// Shadowing de rotas Express: /campos/estatisticas e /fotos/campos/:uuid eram
+// inalcançáveis (capturadas por /campos/:uuid e /fotos/:uuid). Agora respondem.
+describe('Roteamento de campo — rotas antes inalcançáveis', () => {
+  it('GET /campos/estatisticas resolve (não cai na validação de uuid → 400)', async () => {
+    const res = await request(app)
+      .get('/api/campo/campos/estatisticas')
+      .set('authorization', makeToken())
+    expect(res.status).not.toBe(400)
+    expect([401, 403]).not.toContain(res.status)
+  })
+
+  it('DELETE /fotos/campos/:uuid é alcançável (path distinto de /fotos/:uuid)', async () => {
+    const res = await request(app)
+      .delete('/api/campo/fotos/campos/3fa85f64-5717-4562-b3fc-2c963f66afa6')
+      .set('authorization', makeToken())
+    expect(res.status).not.toBe(404)
+    expect([401, 403]).not.toContain(res.status)
+  })
+})

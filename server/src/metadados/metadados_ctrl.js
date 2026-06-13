@@ -1417,4 +1417,15 @@ controller.gerarMetadadoXmlLote = async loteId => {
   })
 }
 
+// Exposto só para testes unitários da lógica pura (escape XML, formatação de
+// data/escala, regra de licença, derivação de tipo/versão e o portão de QA).
+controller._helpers = {
+  escapeXml,
+  fmtEscala,
+  isoData,
+  resolveLicenca,
+  resolveTipoVersao,
+  validarJsonEdicao
+}
+
 module.exports = controller

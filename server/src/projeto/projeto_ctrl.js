@@ -1004,7 +1004,7 @@ controller.getAllSubfases = async () => {
   return db.sapConn.any(
     `SELECT lp.id AS linha_producao_id, lp.nome AS linha_producao, lp.nome_abrev AS linha_producao_nome_abrev,
     f.id AS fase_id, tf.nome AS fase, f.ordem AS ordem_fase,
-    sf.id AS subfase_id, sf.nome AS subfase,
+    sf.id AS subfase_id, sf.nome AS subfase
     FROM macrocontrole.linha_producao AS lp
     INNER JOIN macrocontrole.fase AS f ON f.linha_producao_id = lp.id
     INNER JOIN dominio.tipo_fase AS tf ON tf.code = f.tipo_fase_id
@@ -3565,7 +3565,7 @@ controller.insereLinhaProducao = async linha_producao => {
         subfaseMap[subfase.nome] = subfaseInserted.id;
       }
 
-      for (const preReq of fase.pre_requisito_subfase) {
+      for (const preReq of (fase.pre_requisito_subfase || [])) {
         const anteriorId = subfaseMap[preReq.subfase_anterior];
         const posteriorId = subfaseMap[preReq.subfase_posterior];
         await t.none(
@@ -3575,7 +3575,7 @@ controller.insereLinhaProducao = async linha_producao => {
       }
     }
 
-    for (const prop of linha_producao.propriedades_camadas) {
+    for (const prop of (linha_producao.propriedades_camadas || [])) {
       let camadaId;
       const camadaQuery = await t.oneOrNone(`SELECT id FROM macrocontrole.camada WHERE nome = $1 and schema = $2`, [prop.camada, prop.schema]);
       if (!camadaQuery) {
@@ -3599,7 +3599,7 @@ controller.getPerfilConfiguracaoQgis = async () => {
   return db.sapConn.any(
     `SELECT pcg.tipo_configuracao_id, tc.nome AS tipo_configuracao, pcg.parametros, pcg.subfase_id, pcg.lote_id
     FROM macrocontrole.perfil_configuracao_qgis AS pcg
-    INNER JOIN dominio.tipo_configuracao AS tc ON tc.code = pa.tipo_configuracao_id`
+    INNER JOIN dominio.tipo_configuracao AS tc ON tc.code = pcg.tipo_configuracao_id`
   )
 }
 

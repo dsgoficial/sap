@@ -118,7 +118,9 @@ controller.login = async (usuario, senha, aplicacao, plugins, qgis) => {
     throw new AppError('Usuário ou senha inválida', httpCode.BadRequest)
   }
 
-  if (aplicacao === 'sap_fp') {
+  // O schema exige plugins+qgis para sap_fp E sap_fg; o gate de versão deve
+  // valer para os dois (antes só sap_fp era checado e sap_fg passava direto).
+  if (aplicacao === 'sap_fp' || aplicacao === 'sap_fg') {
     await verificaQGIS(qgis)
 
     await verificaPlugins(plugins)
@@ -131,5 +133,8 @@ controller.login = async (usuario, senha, aplicacao, plugins, qgis) => {
 
   return { token, administrador, uuid }
 }
+
+// Exposto só para testes unitários do gate de versão (QGIS/plugins).
+controller._helpers = { verificaQGIS, verificaPlugins }
 
 module.exports = controller

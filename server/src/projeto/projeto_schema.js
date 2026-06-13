@@ -830,7 +830,9 @@ models.insumos = Joi.object().keys({
         nome: Joi.string().required(),
         caminho: Joi.string().required(),
         epsg: Joi.string().required().allow(''),
-        geom: Joi.string().required().allow('')
+        // geom NÃO pode ser '' : criaInsumos sempre faz ST_GeomFromEWKT(geom),
+        // e ST_GeomFromEWKT('') estoura no banco. Rejeita na validação (400).
+        geom: Joi.string().required()
       })
     )
     .required()

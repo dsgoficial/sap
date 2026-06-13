@@ -45,26 +45,32 @@ controller.getInfoSubfaseLote = async (subfaseId, loteId) => {//Verificar
     if (a.tipo_situacao_id ===1) {
       estatisticas[a.etapa_id].atividades_restantes += 1
     }
-    const dataFim = format(a.data_fim, 'dd.MM.yyyy')
-    const hoje = format(new Date(), 'dd.MM.yyyy')
-    const semanaFim = format(a.data_fim, 'I.yyyy')
-    const semana = format(new Date(), 'I.yyyy')
-    const semanaAnterior = subWeeks(new Date(), 1)
-
+    // Métricas de finalização só se aplicam à situação 4 (finalizada), a única
+    // com data_fim preenchido. Formatar data_fim null lançava RangeError
+    // (Invalid time value) e quebrava o endpoint inteiro para qualquer atividade
+    // em andamento/restante/pausada.
     if (a.tipo_situacao_id === 4) {
       estatisticas[a.etapa_id].atividades_finalizadas += 1
-    }
 
-    if (a.tipo_situacao_id ===4 && dataFim === hoje) {
-      estatisticas[a.etapa_id].atividades_finalizadas_hoje += 1
-    }
+      if (a.data_fim) {
+        const hoje = format(new Date(), 'dd.MM.yyyy')
+        const semana = format(new Date(), 'I.yyyy')
+        // semanaAnterior precisa ser formatada como 'I.yyyy' para comparar com
+        // semanaFim (string). Antes era um Date → comparação sempre falsa.
+        const semanaAnterior = format(subWeeks(new Date(), 1), 'I.yyyy')
+        const dataFim = format(a.data_fim, 'dd.MM.yyyy')
+        const semanaFim = format(a.data_fim, 'I.yyyy')
 
-    if (a.tipo_situacao_id ===4 && semanaFim === semana) {
-      estatisticas[a.etapa_id].atividades_finalizadas_semana += 1
-    }
-
-    if (a.tipo_situacao_id ===4 && semanaFim === semanaAnterior) {
-      estatisticas[a.etapa_id].atividades_finalizadas_semana_anterior += 1
+        if (dataFim === hoje) {
+          estatisticas[a.etapa_id].atividades_finalizadas_hoje += 1
+        }
+        if (semanaFim === semana) {
+          estatisticas[a.etapa_id].atividades_finalizadas_semana += 1
+        }
+        if (semanaFim === semanaAnterior) {
+          estatisticas[a.etapa_id].atividades_finalizadas_semana_anterior += 1
+        }
+      }
     }
   })
 
@@ -111,27 +117,33 @@ controller.getInfoLote = async loteId => {//Verificar
     if (!a.data_inicio && !a.data_fim) {
       estatisticas[a.fase_id].atividades_restantes += 1
     }
-    const semanaFim = format(a.data_fim, 'I.yyyy')
-    const semana = format(new Date(), 'I.yyyy')
-    const mesFim = format(a.data_fim, 'M.yyyy')
-    const mes = format(new Date(), 'M.yyyy')
-    const semanaAnterior = subWeeks(new Date(), 1)
-    const mesAnterior = subMonths(new Date(), 1)
+    // data_fim só é não-nulo quando a fase do produto está concluída. Formatar
+    // data_fim null lançava RangeError e quebrava o endpoint para qualquer lote
+    // com trabalho em andamento.
+    if (a.data_inicio && a.data_fim) {
+      const semana = format(new Date(), 'I.yyyy')
+      const mes = format(new Date(), 'M.yyyy')
+      // Semana/mês anteriores precisam ser strings formatadas para comparar com
+      // semanaFim/mesFim. Antes eram Date → comparação sempre falsa.
+      const semanaAnterior = format(subWeeks(new Date(), 1), 'I.yyyy')
+      const mesAnterior = format(subMonths(new Date(), 1), 'M.yyyy')
+      const semanaFim = format(a.data_fim, 'I.yyyy')
+      const mesFim = format(a.data_fim, 'M.yyyy')
 
-
-
-    if (a.data_inicio && a.data_fim && semanaFim === semana) {
-      estatisticas[a.fase_id].atividades_finalizada_semana += 1
-    }
-    if (a.data_inicio && a.data_fim && mesFim === mes) {
-      estatisticas[a.fase_id].atividades_finalizadas_mes += 1
-    }
-
-    if (a.data_inicio && a.data_fim && semanaFim === semanaAnterior) {
-      estatisticas[a.fase_id].atividades_finalizadas_semana_anterior += 1
-    }
-    if (a.data_inicio && a.data_fim && mesFim === mesAnterior) {
-      estatisticas[a.fase_id].atividades_finalizadas_mes_anterior += 1
+      if (semanaFim === semana) {
+        // Corrige typo: antes incrementava 'atividades_finalizada_semana'
+        // (propriedade inexistente) → NaN, e o campo correto ficava em 0.
+        estatisticas[a.fase_id].atividades_finalizadas_semana += 1
+      }
+      if (mesFim === mes) {
+        estatisticas[a.fase_id].atividades_finalizadas_mes += 1
+      }
+      if (semanaFim === semanaAnterior) {
+        estatisticas[a.fase_id].atividades_finalizadas_semana_anterior += 1
+      }
+      if (mesFim === mesAnterior) {
+        estatisticas[a.fase_id].atividades_finalizadas_mes_anterior += 1
+      }
     }
   })
 
@@ -149,151 +161,6 @@ controller.ultimosLogin = async () => {
     ON l.usuario_id = u.id
     WHERE u.ativo IS TRUE
     ORDER BY l.data_login DESC;
-    `
-  )
-}
-
-controller.quantitativoFilaDistribuicao = async () => {//Verificar
-  return db.sapConn.any(
-    `SELECT ROW_NUMBER () OVER (ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.bloco_id) AS id,
-    ativ.perfil_producao_id, pp.nome AS perfil_producao, 
-    ativ.subfase_id, s.nome AS subfase,
-    ativ.bloco_id, l.nome AS bloco,  count(*) quantidade
-    FROM (
-    SELECT etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, bloco_id
-            FROM (
-            SELECT ut.bloco_id, se.subfase_id, ppo.perfil_producao_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
-            FROM macrocontrole.atividade AS ee
-            INNER JOIN macrocontrole.perfil_producao_etapa AS pse ON pse.etapa_id = ee.etapa_id
-            INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = pse.perfil_producao_id
-            INNER JOIN dgeo.usuario AS u ON u.id = ppo.usuario_id
-            INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-            INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-            INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
-            INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-            INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
-            LEFT JOIN
-            (
-              SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
-              INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-              WHERE ee.tipo_situacao_id in (1,2,3,4)
-            ) 
-            AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
-            AND se.ordem > ee_ant.ordem
-            WHERE ut.disponivel IS TRUE AND ee.tipo_situacao_id = 1
-            AND a.id NOT IN
-            (
-              SELECT a.id FROM macrocontrole.atividade AS a
-              INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
-              INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
-              INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-              INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-              INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
-              INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-              INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
-              INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
-              WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 1 AND 
-              ut.geom && ut_re.geom AND
-              st_relate(ut.geom, ut_re.geom, '2********') AND
-              a_re.tipo_situacao_id IN (1, 2, 3) AND a.tipo_situacao_id = 1
-            )
-            AND a.id NOT IN
-            (
-              SELECT a.id FROM macrocontrole.atividade AS a
-              INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
-              INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
-              INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-              INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-              INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
-              INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-              INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
-              INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
-              WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 2 AND 
-              ut.geom && ut_re.geom AND
-              st_relate(ut.geom, ut_re.geom, '2********') AND
-              a_re.tipo_situacao_id IN (2) AND a.tipo_situacao_id = 1
-            )
-            ) AS sit
-            GROUP BY etapa_id, unidade_trabalho_id, perfil_producao_id, subfase_id, bloco_id
-            HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
-    ) AS ativ
-    INNER JOIN macrocontrole.perfil_producao AS pp ON pp.id = ativ.perfil_producao_id
-    INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
-    INNER JOIN macrocontrole.bloco AS l ON l.id = ativ.bloco_id
-    GROUP BY ativ.perfil_producao_id, l.nome, s.nome, pp.nome, ativ.subfase_id, ativ.bloco_id
-    ORDER BY ativ.perfil_producao_id, ativ.subfase_id, ativ.bloco_id;
-    `
-  )
-}
-
-controller.quantitativoAtividades = async () => {//Verificar
-  return db.sapConn.any(
-    `SELECT ROW_NUMBER () OVER (ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.bloco_id) AS id, 
-    ativ.etapa_id, te.nome as etapa,
-    ativ.subfase_id, s.nome as subfase,
-    ativ.bloco_id, l.nome as bloco,
-    count(*) quantidade
-    FROM (
-    SELECT etapa_id, unidade_trabalho_id, subfase_id, bloco_id
-            FROM (
-            SELECT ut.bloco_id, se.subfase_id, ee.etapa_id, ee.unidade_trabalho_id, ee_ant.tipo_situacao_id AS situacao_ant
-            FROM macrocontrole.atividade AS ee
-            INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-            INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = ee.unidade_trabalho_id
-            INNER JOIN macrocontrole.bloco AS lo ON lo.id = ut.bloco_id
-            INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-            INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id          
-            LEFT JOIN
-            (
-              SELECT ee.tipo_situacao_id, ee.unidade_trabalho_id, se.ordem, se.subfase_id FROM macrocontrole.atividade AS ee
-              INNER JOIN macrocontrole.etapa AS se ON se.id = ee.etapa_id
-              WHERE ee.tipo_situacao_id in (1,2,3,4)
-            ) 
-            AS ee_ant ON ee_ant.unidade_trabalho_id = ee.unidade_trabalho_id AND ee_ant.subfase_id = se.subfase_id
-            AND se.ordem > ee_ant.ordem
-            WHERE ut.disponivel IS TRUE AND ee.tipo_situacao_id = 1
-            AND a.id NOT IN
-            (
-              SELECT a.id FROM macrocontrole.atividade AS a
-              INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
-              INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
-              INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-              INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-              INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
-              INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-              INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
-              INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
-              WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 1 AND 
-              ut.geom && ut_re.geom AND
-              st_relate(ut.geom, ut_re.geom, '2********') AND
-              a_re.tipo_situacao_id IN (1, 2, 3) AND a.tipo_situacao_id = 1
-            )
-            AND a.id NOT IN
-            (
-              SELECT a.id FROM macrocontrole.atividade AS a
-              INNER JOIN macrocontrole.perfil_producao_etapa AS ppe ON ppe.etapa_id = a.etapa_id
-              INNER JOIN macrocontrole.perfil_producao_operador AS ppo ON ppo.perfil_producao_id = ppe.perfil_producao_id
-              INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-              INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-              INNER JOIN macrocontrole.perfil_projeto_operador AS pproj ON pproj.projeto_id = l.projeto_id AND pproj.usuario_id = ppo.usuario_id
-              INNER JOIN macrocontrole.pre_requisito_subfase AS prs ON prs.subfase_posterior_id = ut.subfase_id
-              INNER JOIN macrocontrole.unidade_trabalho AS ut_re ON ut_re.subfase_id = prs.subfase_anterior_id
-              INNER JOIN macrocontrole.atividade AS a_re ON a_re.unidade_trabalho_id = ut_re.id
-              WHERE ppo.usuario_id = $1 AND prs.tipo_pre_requisito_id = 2 AND 
-              ut.geom && ut_re.geom AND
-              st_relate(ut.geom, ut_re.geom, '2********') AND
-              a_re.tipo_situacao_id IN (2) AND a.tipo_situacao_id = 1
-            )
-            ) AS sit
-            GROUP BY etapa_id, unidade_trabalho_id, subfase_id, bloco_id
-            HAVING MIN(situacao_ant) IS NULL OR every(situacao_ant IN (4))
-    ) AS ativ
-    INNER JOIN macrocontrole.etapa AS e ON e.id = ativ.etapa_id
-    INNER JOIN dominio.tipo_etapa AS te ON te.code = e.tipo_etapa_id
-    INNER JOIN macrocontrole.subfase AS s ON s.id = ativ.subfase_id
-    INNER JOIN macrocontrole.bloco AS l ON l.id = ativ.bloco_id
-    GROUP BY ativ.etapa_id, te.nome, s.nome, l.nome, ativ.subfase_id, ativ.bloco_id
-    ORDER BY ativ.etapa_id, ativ.subfase_id, ativ.bloco_id;
     `
   )
 }

@@ -996,7 +996,7 @@ controller.getAtalhos = async () => {
 
 controller.gravaAtalhos = async (atalhos, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'ferramenta',
@@ -1016,7 +1016,7 @@ controller.gravaAtalhos = async (atalhos, usuarioId) => {
 
 controller.atualizaAtalhos = async (atalhos, usuarioId) => {
   return db.sapConn.tx(async t => {
-    const usuarioPostoNome = getUsuarioNomeById(usuarioId)
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
 
     const cs = new db.pgp.helpers.ColumnSet([
       'id',

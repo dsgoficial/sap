@@ -120,7 +120,9 @@ managePermissions.grantPermissionsUser = async (
 
   grantSQL += `GRANT USAGE ON SCHEMA PUBLIC TO ${login}; GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO ${login};`
 
-  let camadas
+  // Inicia como [] para não quebrar o ramo `else` (camadas.map) caso chegue um
+  // tipo_etapa_id fora de {1,2,3,4,5} (camadas ficaria undefined → TypeError).
+  let camadas = []
   const tipoEtapa = grantInfo[0].tipo_etapa_id
 
   if (tipoEtapa === 1 || tipoEtapa === 4) {

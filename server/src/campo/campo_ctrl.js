@@ -68,7 +68,7 @@ controller.getCamposGeoJson = async () => {
     return db.sapConn.any(`
         SELECT json_build_object(
             'type', 'FeatureCollection',
-            'features', json_agg(
+            'features', COALESCE(json_agg(
                 json_build_object(
                     'type', 'Feature',
                     'geometry', ST_AsGeoJSON(ST_PointOnSurface(c.geom))::json,
@@ -82,13 +82,13 @@ controller.getCamposGeoJson = async () => {
                         'pit', c.pit
                     )
                 )
-            )
+            ), '[]'::json)
         ) AS geojson
         FROM controle_campo.campo AS c
         INNER JOIN controle_campo.situacao AS s ON s.code = c.situacao_id
         WHERE c.geom IS NOT NULL
     `).then(result => {
-        return result[0].geojson;
+        return result[0] ? result[0].geojson : null;
     });
 }
 

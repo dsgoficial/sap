@@ -41,10 +41,22 @@ controller.limpaLog = async() => {
 
   let fileData = await readFile(logDir, 'utf8')
 
-  let logData = fileData.split('\n').filter(entry => {
-    const logDate = new Date(entry.split('|')[0])
-    return logDate > cutofftimestamp
-  }).join('\n')
+  // Agrupa entradas multilinha: uma entrada começa numa linha com data parseável
+  // e inclui as linhas seguintes sem data (continuação de stack trace). A decisão
+  // de manter/remover é da entrada inteira, pela data do cabeçalho. Antes, o
+  // filtro por linha descartava toda linha sem data (Invalid Date > corte =
+  // false), corrompendo logs multilinha e apagando continuações legítimas.
+  const linhas = fileData.split('\n')
+  const mantidas = []
+  let mantendoEntrada = true
+  for (const linha of linhas) {
+    const logDate = new Date(linha.split('|')[0])
+    if (!isNaN(logDate.getTime())) {
+      mantendoEntrada = logDate > cutofftimestamp
+    }
+    if (mantendoEntrada) mantidas.push(linha)
+  }
+  let logData = mantidas.join('\n')
   
   fs.writeFileSync(logDir, logData);
 
@@ -53,8 +65,8 @@ controller.limpaLog = async() => {
 controller.getPropriedadesCamada = async () => {
   return db.sapConn.any(
     `SELECT pc.camada_id, pc.camada_incomum, pc.atributo_filtro_subfase, 
-    pc.camada_apontamento, pc.atributo_situacao_correcao, 
-    pc.atributo_justificativa_apontamento', pc.subfase_id
+    pc.camada_apontamento, pc.atributo_situacao_correcao,
+    pc.atributo_justificativa_apontamento, pc.subfase_id
     FROM macrocontrole.propriedades_camada AS pc
     INNER JOIN macrocontrole.subfase AS s ON s.id = pc.subfase_id`
   )

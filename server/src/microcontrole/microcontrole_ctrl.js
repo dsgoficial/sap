@@ -45,16 +45,22 @@ controller.armazenaFeicao = async (atividadeId, usuarioId, dados) => {
 
 controller.armazenaTela = async (atividadeId, usuarioId, dados) => {
   const cs = new db.pgp.helpers.ColumnSet(
-    ['geom', 'zoom', 'data', { name: 'atividade_id', init: () => atividadeId }, { name: 'usuario_id', init: () => usuarioId }]
+    [{ name: 'geom', mod: ':raw' }, 'zoom', 'data', { name: 'atividade_id', init: () => atividadeId }, { name: 'usuario_id', init: () => usuarioId }]
   )
 
-  dados.foreach(d => {
-    d.geom = `ST_GeomFromEWKT('SRID=4326;POLYGON(${d.x_min} ${d.y_min},${d.x_min} ${d.y_max},${d.x_max} ${d.y_max}, ${d.x_max} ${d.y_min}, ${d.x_min} ${d.y_min})')`
+  // geom é a envelope retangular da extensão de tela (x_min,y_min,x_max,y_max).
+  // Coluna `:raw` porque o valor é uma expressão SQL (ST_MakeEnvelope), montada
+  // com pgp.as.format para escapar as coordenadas — mesmo padrão de campo_ctrl.
+  // Bugs corrigidos aqui: `dados.foreach` (typo → TypeError, rota /tela 100%
+  // quebrada); geom sem `:raw` (entrava como texto literal → cast text→geometry
+  // falhava); e falta de `return` (insert não aguardado → sucesso falso).
+  dados.forEach(d => {
+    d.geom = db.pgp.as.format('ST_MakeEnvelope($1, $2, $3, $4, 4326)', [d.x_min, d.y_min, d.x_max, d.y_max])
   })
 
   const query = db.pgp.helpers.insert(dados, cs, { table: 'monitoramento_tela', schema: 'microcontrole' })
 
-  db.microConn.none(query)
+  return db.microConn.none(query)
 }
 
 controller.getPerfilMonitoramento = async () => {

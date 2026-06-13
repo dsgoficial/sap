@@ -65,9 +65,11 @@ router.get(
     params: acompanhamentoSchema.loteSubfaseParams
   }),
   asyncHandler(async (req, res, next) => {
+    // assinatura é (subfaseId, loteId) — a ordem estava trocada (passava lote
+    // como subfaseId e vice-versa), filtrando as colunas erradas no WHERE.
     const dados = await acompanhamentoCtrl.getInfoSubfaseLote(
-      req.params.lote,
-      req.params.subfase
+      req.params.subfase,
+      req.params.lote
     )
 
     const msg = 'Informações da subfase retornada'
@@ -175,120 +177,6 @@ router.get(
     )
 
     const msg = 'Últimos logins retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-/**
- * @swagger
- * /api/acompanhamento/quantitativo_fila_distribuicao:
- *   get:
- *     summary: Obtém o quantitativo da fila de distribuição
- *     description: Retorna o quantitativo de atividades na fila de distribuição.
- *     produces:
- *       - application/json
- *     tags:
- *       - acompanhamento
- *     responses:
- *       200:
- *         description: Quantitativo da fila de distribuição retornado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   description: Indica se a requisição ocorreu com sucesso
- *                 message:
- *                   type: string
- *                   description: Descrição do resultado da requisição
- *                 dados:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         description: ID do registro
- *                       perfil_producao:
- *                         type: string
- *                         description: Nome do perfil de produção
- *                       subfase:
- *                         type: string
- *                         description: Nome da subfase
- *                       bloco:
- *                         type: string
- *                         description: Nome do bloco
- *                       quantidade:
- *                         type: integer
- *                         description: Quantidade de atividades
- */
-router.get(
-  '/quantitativo_fila_distribuicao',
-  asyncHandler(async (req, res, next) => {
-    const dados = await acompanhamentoCtrl.quantitativoFilaDistribuicao(
-    )
-
-    const msg = 'Quantitativo da fila de distribuição retornados'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
-
-/**
- * @swagger
- * /api/acompanhamento/quantitativo_atividades:
- *   get:
- *     summary: Obtém o quantitativo de atividades
- *     description: Retorna o quantitativo de atividades por etapa e subfase.
- *     produces:
- *       - application/json
- *     tags:
- *       - acompanhamento
- *     responses:
- *       200:
- *         description: Quantitativo de atividades retornado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   description: Indica se a requisição ocorreu com sucesso
- *                 message:
- *                   type: string
- *                   description: Descrição do resultado da requisição
- *                 dados:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         description: ID do registro
- *                       etapa:
- *                         type: string
- *                         description: Nome da etapa
- *                       subfase:
- *                         type: string
- *                         description: Nome da subfase
- *                       bloco:
- *                         type: string
- *                         description: Nome do bloco
- *                       quantidade:
- *                         type: integer
- *                         description: Quantidade de atividades
- */
-router.get(
-  '/quantitativo_atividades',
-  asyncHandler(async (req, res, next) => {
-    const dados = await acompanhamentoCtrl.quantitativoAtividades(
-    )
-
-    const msg = 'Quantitativo de atividades retornados'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })

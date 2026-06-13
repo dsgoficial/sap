@@ -68,6 +68,18 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
+// /campos/estatisticas precisa vir ANTES de /campos/:uuid, senão o Express casa
+// "estatisticas" como :uuid (e a validação de uuid rejeita) → rota inacessível.
+router.get(
+  '/campos/estatisticas',
+  asyncHandler(async (req, res, next) => {
+    const dados = await campoCtrl.getEstatisticasCampos()
+
+    const msg = 'Estatísticas de campos retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
 router.get(
   '/campos/:uuid',
   schemaValidation({ params: campoSchema.uuidParams }),
@@ -116,17 +128,6 @@ router.delete(
     const msg = 'Campo deletado com sucesso'
 
     return res.sendJsonAndLog(true, msg, httpCode.OK)
-  })
-)
-
-router.get(
-  '/campos/estatisticas',
-  asyncHandler(async (req, res, next) => {
-    const dados = await campoCtrl.getEstatisticasCampos()
-
-    const msg = 'Estatísticas de campos retornadas com sucesso'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
 
@@ -206,8 +207,11 @@ router.delete(
   })
 );
 
+// Path distinto de /fotos/:uuid (segmento extra "campos") para não ser
+// sombreado. Antes era /fotos/:campo_id (inalcançável) e lia req.params.uuid
+// (undefined) em vez de req.params.campo_id.
 router.delete(
-  '/fotos/:campo_id',
+  '/fotos/campos/:uuid',
   verifyAdmin,
   schemaValidation({ params: campoSchema.uuidParams }),
   asyncHandler(async (req, res, next) => {

@@ -314,6 +314,7 @@ models.plugins = Joi.object().keys({
       })
     )
     .required()
+    .min(1)
 })
 
 models.pluginsAtualizacao = Joi.object().keys({
