@@ -24,8 +24,42 @@ import Map, {
   Source,
   NavigationControl,
   MapRef,
+  MapLayerMouseEvent,
 } from 'react-map-gl/maplibre';
+import type { PopoverProps } from '@mui/material';
 import 'maplibre-gl/dist/maplibre-gl.css';
+
+// Expande um par de bounds [[minLng,minLat],[maxLng,maxLat]] com um ponto.
+const extendBounds = (
+  bounds: [[number, number], [number, number]] | null,
+  lng: number,
+  lat: number,
+): [[number, number], [number, number]] => {
+  if (!bounds) {
+    return [
+      [lng, lat],
+      [lng, lat],
+    ];
+  }
+  return [
+    [Math.min(bounds[0][0], lng), Math.min(bounds[0][1], lat)],
+    [Math.max(bounds[1][0], lng), Math.max(bounds[1][1], lat)],
+  ];
+};
+
+// Percorre recursivamente as coordenadas de qualquer geometria GeoJSON
+// (Point, LineString, Polygon, MultiPolygon, ...).
+const walkCoords = (
+  coords: unknown,
+  cb: (lng: number, lat: number) => void,
+): void => {
+  if (!Array.isArray(coords)) return;
+  if (typeof coords[0] === 'number') {
+    cb(coords[0] as number, coords[1] as number);
+  } else {
+    for (const c of coords) walkCoords(c, cb);
+  }
+};
 
 import MapLegend from './MapLegend';
 import LayerControl from './LayerControl';
@@ -174,8 +208,12 @@ const MapVisualization = ({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showLegend, setShowLegend] = useState(!isMobile);
-  const [selectedFeature, setSelectedFeature] = useState<any>(null);
-  const [popupAnchorEl, setPopupAnchorEl] = useState<HTMLElement | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+  const [popupAnchorEl, setPopupAnchorEl] =
+    useState<PopoverProps['anchorEl']>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Toggle handlers
@@ -198,37 +236,45 @@ const MapVisualization = ({
   }, []);
 
   // Handle click on the map
-  const handleMapClick = useCallback((event: any) => {
-    if (!mapRef.current) return;
-  
-    // Obter IDs de camadas que devem ser consultadas (apenas camadas visíveis)
-    const layerIds = layers
-      .filter(layer => visibleLayers[layer.id])
-      .map(layer => `${layer.id}-fill`);
-  
-    // Se não houver camadas visíveis, simplesmente ignoramos o clique
-    if (layerIds.length === 0) {
-      // Se clicou e não havia camadas visíveis, fecha qualquer popup aberto
-      handleClosePopup();
-      return;
-    }
-  
-    // Get features at click point, mas apenas de camadas específicas e visíveis
-    const features = mapRef.current.queryRenderedFeatures(event.point, {
-      layers: layerIds
-    });
-  
-    if (features.length > 0) {
-      const feature = features[0];
-      if (feature.properties) {
-        setSelectedFeature(feature.properties);
-        setPopupAnchorEl(event.originalEvent.target);
+  const handleMapClick = useCallback(
+    (event: MapLayerMouseEvent) => {
+      if (!mapRef.current) return;
+
+      // Obter IDs de camadas que devem ser consultadas (apenas camadas visíveis)
+      const layerIds = layers
+        .filter(layer => visibleLayers[layer.id])
+        .map(layer => `${layer.id}-fill`);
+
+      // Se não houver camadas visíveis, simplesmente ignoramos o clique
+      if (layerIds.length === 0) {
+        // Se clicou e não havia camadas visíveis, fecha qualquer popup aberto
+        handleClosePopup();
+        return;
       }
-    } else {
-      // Se clicou fora de uma feição, fecha o popup
-      handleClosePopup();
-    }
-  }, [layers, visibleLayers, handleClosePopup]);
+
+      // Get features at click point, mas apenas de camadas visíveis
+      const features = mapRef.current.queryRenderedFeatures(event.point, {
+        layers: layerIds,
+      });
+
+      if (features.length > 0) {
+        const feature = features[0];
+        if (feature.properties) {
+          setSelectedFeature(feature.properties);
+          // Âncora virtual na posição do clique (em vez de ancorar no canvas).
+          const { clientX, clientY } = event.originalEvent;
+          setPopupAnchorEl({
+            nodeType: 1,
+            getBoundingClientRect: () => new DOMRect(clientX, clientY, 0, 0),
+          });
+        }
+      } else {
+        // Se clicou fora de uma feição, fecha o popup
+        handleClosePopup();
+      }
+    },
+    [layers, visibleLayers, handleClosePopup],
+  );
 
   // Fit bounds to data
   const fitBoundsToData = useCallback(() => {
@@ -256,40 +302,19 @@ const MapVisualization = ({
         }
 
         layer.geojson.features.forEach(feature => {
-          if (!feature.geometry) return;
+          const geom = feature.geometry;
+          if (!geom) return;
 
-          // Handle different geometry types
-          if (
-            feature.geometry.type === 'Point' &&
-            feature.geometry.coordinates
-          ) {
-            const [lng, lat] = feature.geometry.coordinates;
-            if (!combinedBounds) {
-              combinedBounds = [
-                [lng, lat],
-                [lng, lat],
-              ];
-            } else {
-              combinedBounds[0][0] = Math.min(combinedBounds[0][0], lng);
-              combinedBounds[0][1] = Math.min(combinedBounds[0][1], lat);
-              combinedBounds[1][0] = Math.max(combinedBounds[1][0], lng);
-              combinedBounds[1][1] = Math.max(combinedBounds[1][1], lat);
-            }
-          }
-          // Handle other geometry types (polygons, lines, etc.)
-          else if (feature.bbox) {
+          // Usa bbox quando disponível; senão percorre as coordenadas da
+          // geometria — cobre Polygon/MultiPolygon/LineString, não só Point.
+          if (feature.bbox) {
             const [minX, minY, maxX, maxY] = feature.bbox;
-            if (!combinedBounds) {
-              combinedBounds = [
-                [minX, minY],
-                [maxX, maxY],
-              ];
-            } else {
-              combinedBounds[0][0] = Math.min(combinedBounds[0][0], minX);
-              combinedBounds[0][1] = Math.min(combinedBounds[0][1], minY);
-              combinedBounds[1][0] = Math.max(combinedBounds[1][0], maxX);
-              combinedBounds[1][1] = Math.max(combinedBounds[1][1], maxY);
-            }
+            combinedBounds = extendBounds(combinedBounds, minX, minY);
+            combinedBounds = extendBounds(combinedBounds, maxX, maxY);
+          } else if ('coordinates' in geom) {
+            walkCoords(geom.coordinates, (lng, lat) => {
+              combinedBounds = extendBounds(combinedBounds, lng, lat);
+            });
           }
         });
       });
@@ -312,6 +337,32 @@ const MapVisualization = ({
       name: formatLayerName(layer.name),
     }));
   }, [layers]);
+
+  // Apenas camadas VISÍVEIS são interativas (evita cursor/hover sobre geometria
+  // de camadas desligadas) e o array é memoizado.
+  const interactiveLayerIds = useMemo(
+    () =>
+      layers
+        .filter(layer => visibleLayers[layer.id])
+        .map(layer => `${layer.id}-fill`),
+    [layers, visibleLayers],
+  );
+
+  // Paints memoizados por modo (claro/escuro) — não recriados a cada render.
+  const fillPaints = useMemo(
+    () => ({
+      visible: getFillLayerPaint(isDarkMode, true),
+      hidden: getFillLayerPaint(isDarkMode, false),
+    }),
+    [isDarkMode],
+  );
+  const linePaints = useMemo(
+    () => ({
+      visible: getLineLayerPaint(isDarkMode, true),
+      hidden: getLineLayerPaint(isDarkMode, false),
+    }),
+    [isDarkMode],
+  );
 
   // Generate map style URL based on dark/light mode
   const mapStyle = useMemo(() => {
@@ -406,7 +457,7 @@ const MapVisualization = ({
             onClick={handleMapClick}
             attributionControl={false}
             onLoad={handleMapLoad}
-            interactiveLayerIds={layers.map(layer => `${layer.id}-fill`)}
+            interactiveLayerIds={interactiveLayerIds}
           >
             {/* Render map sources and layers */}
             {layers.map(layer => {
@@ -423,18 +474,22 @@ const MapVisualization = ({
                   type="geojson"
                   data={layer.geojson}
                 >
-                  {/* Fill layer with styling from mapStyles.ts */}
+                  {/* Fill layer with styling from mapStyles.ts.
+                      Camadas invisíveis usam visibility:'none' (desmontadas do
+                      render do mapa), não apenas opacity 0. */}
                   <Layer
                     id={fillLayerId}
                     type="fill"
-                    paint={getFillLayerPaint(isDarkMode, isVisible)}
+                    layout={{ visibility: isVisible ? 'visible' : 'none' }}
+                    paint={isVisible ? fillPaints.visible : fillPaints.hidden}
                   />
 
                   {/* Line layer with styling from mapStyles.ts */}
                   <Layer
                     id={lineLayerId}
                     type="line"
-                    paint={getLineLayerPaint(isDarkMode, isVisible)}
+                    layout={{ visibility: isVisible ? 'visible' : 'none' }}
+                    paint={isVisible ? linePaints.visible : linePaints.hidden}
                   />
                 </Source>
               );

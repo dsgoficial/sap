@@ -11,11 +11,13 @@ import {
   Button,
   useTheme,
 } from '@mui/material';
+import type { PopoverProps } from '@mui/material';
 import { formatDate } from '@/utils/formatters';
 
 interface FeaturePopupProps {
-  selectedFeature: any;
-  anchorEl: HTMLElement | null;
+  selectedFeature: Record<string, unknown> | null;
+  // Aceita âncora virtual (posição do clique) além de HTMLElement.
+  anchorEl: PopoverProps['anchorEl'];
   onClose: () => void;
 }
 

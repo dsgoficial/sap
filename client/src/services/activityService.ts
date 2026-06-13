@@ -1,7 +1,7 @@
 // Path: services\activityService.ts
 import axios from 'axios';
 import apiClient from '../lib/axios';
-import { ApiResponse } from '../types/api';
+import { ApiResponse, ApiError } from '../types/api';
 import {
   CurrentActivityResponse,
   ErrorReport,
@@ -44,29 +44,40 @@ export const getCurrentActivity = async (
  */
 export const startActivity = async (
   cancelToken?: ReturnType<typeof createCancelToken>,
-): Promise<ApiResponse<any>> => {
+): Promise<ApiResponse<unknown>> => {
   try {
-    const response = await apiClient.post<ApiResponse<any>>(
+    const response = await apiClient.post<ApiResponse<unknown>>(
       '/distribuicao/inicia',
       {},
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
     return response.data;
   } catch (error) {
-    // Caso especial: tratamento do erro 400 como sucesso com mensagem específica
-    if (
-      error &&
-      typeof error === 'object' &&
-      'status' in error &&
-      error.status === 400
-    ) {
+    if (axios.isCancel(error)) {
+      throw error;
+    }
+
+    // O backend responde HTTP 400 com `success: true` e `dados: null` quando
+    // NÃO há atividades disponíveis (caso de negócio normal). Erros de negócio
+    // reais (ex.: "usuário já possui atividade em andamento") vêm com
+    // `success: false` — esses NÃO devem ser silenciados como sucesso.
+    const apiError = error as ApiError;
+    const body = apiError?.data as
+      | { success?: boolean; message?: string }
+      | undefined;
+
+    if (apiError?.status === 400 && body?.success === true) {
       return {
         success: true,
-        message: 'Sem atividades disponíveis para iniciar',
+        message: body.message || 'Sem atividades disponíveis para iniciar',
         dados: null,
       };
     }
 
+    // Demais casos: erro real — preserva a mensagem do backend, se houver.
+    if (body?.message) {
+      throw { ...apiError, message: body.message } as ApiError;
+    }
     throw handleApiError(error, 'Erro ao iniciar atividade', 'startActivity');
   }
 };
@@ -79,7 +90,7 @@ export const startActivity = async (
 export const finishActivity = async (
   activityId: string,
   cancelToken?: ReturnType<typeof createCancelToken>,
-): Promise<ApiResponse<any>> => {
+): Promise<ApiResponse<unknown>> => {
   try {
     const response = await apiClient.post<ApiResponse<any>>(
       '/distribuicao/finaliza',
@@ -107,7 +118,7 @@ export const finishActivity = async (
 export const reportError = async (
   errorData: ErrorReport,
   cancelToken?: ReturnType<typeof createCancelToken>,
-): Promise<ApiResponse<any>> => {
+): Promise<ApiResponse<unknown>> => {
   try {
     const response = await apiClient.post<ApiResponse<any>>(
       '/distribuicao/problema_atividade',

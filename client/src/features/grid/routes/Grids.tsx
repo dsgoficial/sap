@@ -61,7 +61,11 @@ export const Grids = () => {
         >
           {data &&
             data.map((grid: GridData, idx: number) => (
-              <GridCard key={idx} id={idx} grid={grid} />
+              <GridCard
+                key={`${grid.projeto}|${grid.lote}|${grid.fase}|${grid.subfase}|${grid.etapa}|${grid.data_inicio}`}
+                id={idx}
+                grid={grid}
+              />
             ))}
 
           {data && data.length === 0 && (

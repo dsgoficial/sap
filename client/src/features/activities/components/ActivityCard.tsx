@@ -33,6 +33,7 @@ export const ActivityCard = () => {
 
   const {
     currentActivity,
+    errorTypes,
     activityByQgis,
     isLoadingActivity,
     isStartingActivity,
@@ -47,10 +48,15 @@ export const ActivityCard = () => {
   const handleStartActivity = async () => {
     try {
       const response = await startActivity();
-      // Use the message from the API response
-      enqueueSnackbar(response.message || 'Atividade iniciada com sucesso', {
-        variant: 'success',
-      });
+      // "Sem atividades disponíveis" (dados === null) é informativo, não sucesso.
+      const noActivity = !response.dados;
+      enqueueSnackbar(
+        response.message ||
+          (noActivity
+            ? 'Sem atividades disponíveis'
+            : 'Atividade iniciada com sucesso'),
+        { variant: noActivity ? 'info' : 'success' },
+      );
       setShowStartDialog(false);
     } catch (error) {
       handleActivityError(error, 'Falha ao iniciar atividade');
@@ -256,6 +262,8 @@ export const ActivityCard = () => {
         onClose={() => setShowErrorDialog(false)}
         onSubmit={handleReportError}
         isSubmitting={isReportingError}
+        currentActivityId={currentActivity?.id}
+        errorTypes={errorTypes}
       />
     </>
   );

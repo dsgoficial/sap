@@ -1,5 +1,5 @@
 // Path: components\layouts\AuthLayout.tsx
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Box, Container, Typography, alpha } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useThemeMode } from '@/contexts/ThemeContext';
@@ -10,9 +10,6 @@ interface AuthLayoutProps {
   backgroundImageNumber?: number;
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
-
-// Generate a random number between 1 and 5 for background image if not provided
-const defaultImageNumber = Math.floor(Math.random() * 5) + 1;
 
 const BackgroundBox = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
@@ -59,15 +56,20 @@ const ContentContainer = styled(Container)(({ theme }) => ({
 export const AuthLayout = ({
   children,
   title,
-  backgroundImageNumber = defaultImageNumber,
+  backgroundImageNumber,
   maxWidth = 'sm',
 }: AuthLayoutProps) => {
   const { isDarkMode } = useThemeMode();
+  // Imagem de fundo aleatória por montagem (não fixada no load do módulo).
+  const [fallbackImageNumber] = useState(
+    () => Math.floor(Math.random() * 5) + 1,
+  );
+  const imageNumber = backgroundImageNumber ?? fallbackImageNumber;
 
   return (
     <BackgroundBox
       sx={{
-        backgroundImage: `url('/images/img-${backgroundImageNumber}.jpg')`,
+        backgroundImage: `url('/images/img-${imageNumber}.jpg')`,
       }}
     >
       <ContentContainer maxWidth={maxWidth}>

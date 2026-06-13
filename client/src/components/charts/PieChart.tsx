@@ -32,28 +32,36 @@ interface PieChartProps {
 const CustomTooltip = ({
   active,
   payload,
-}: TooltipProps<number, string> & { labelColors: string }) => {
+  bgColor,
+  textColor,
+}: TooltipProps<number, string> & { bgColor: string; textColor: string }) => {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
     <div
       style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: bgColor,
         padding: '8px 12px',
-        border: '1px solid #ccc',
+        border: `1px solid ${textColor}33`,
         borderRadius: '4px',
       }}
     >
-      {payload.map((entry, index) => (
-        <div
-          key={`item-${index}`}
-          style={{ color: '#ffffff', margin: '2px 0' }}
-        >
-          <span style={{ display: 'inline-block', marginRight: '8px' }}>
-            {entry.name}: {entry.value}
-          </span>
-        </div>
-      ))}
+      {payload.map((entry, index) => {
+        const pct = (entry as { percent?: number }).percent;
+        const percentText =
+          typeof pct === 'number' ? ` (${(pct * 100).toFixed(0)}%)` : '';
+        return (
+          <div
+            key={String(entry.name ?? entry.dataKey ?? index)}
+            style={{ color: textColor, margin: '2px 0' }}
+          >
+            <span style={{ display: 'inline-block', marginRight: '8px' }}>
+              {entry.name}: {entry.value}
+              {percentText}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -70,8 +78,6 @@ export const PieChart = React.memo(
     const chartColors = useChartColors();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-    const isDarkMode = theme.palette.mode === 'dark';
-
     // Calculate responsive height - memoized
     const responsiveHeight = useMemo(
       () =>
@@ -83,27 +89,41 @@ export const PieChart = React.memo(
       [isMobile, isTablet, height],
     );
 
+    // Soma total dos valores (memoizada) — base para % e empty-state.
+    const total = useMemo(
+      () => data.reduce((sum, item) => sum + (Number(item.value) || 0), 0),
+      [data],
+    );
+
+    // Sem dados quando não há itens OU todos somam zero (evita 0/0 = NaN%).
+    const hasData = data.length > 0 && total > 0;
+
     // Check if a single segment takes up almost all the chart (>95%)
     const hasDominantSegment = useMemo(() => {
-      if (data.length === 0) return false;
-      const total = data.reduce((sum, item) => sum + item.value, 0);
+      if (!hasData) return false;
       return data.some(item => item.value / total > 0.95);
-    }, [data]);
+    }, [data, hasData, total]);
 
-    // Transform data for Recharts format - memoized
+    // Transform data for Recharts format — cor já embutida (fonte única).
     const chartData = useMemo(
       () =>
-        data.map(item => ({
+        data.map((item, index) => ({
           name: item.label,
           value: item.value,
+          color:
+            item.color ||
+            chartColors.seriesColors[index % chartColors.seriesColors.length],
         })),
-      [data],
+      [data, chartColors.seriesColors],
     );
 
     // Custom label renderer - simplified for mobile and handles 100% case
     const renderCustomizedLabel = useCallback(
       ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
         if (!showLabels) return null;
+
+        // Sem percentual válido (ex.: todos os valores 0) — não renderiza label.
+        if (typeof percent !== 'number' || Number.isNaN(percent)) return null;
 
         // Don't show labels on mobile if too small
         if (isMobile && percent < 0.1) return null;
@@ -162,16 +182,6 @@ export const PieChart = React.memo(
       return '70%';
     }, [isMobile, isTablet]);
 
-    // Apply theme colors to data
-    const themedData = useMemo(() => {
-      return data.map((item, index) => ({
-        ...item,
-        color:
-          item.color ||
-          chartColors.seriesColors[index % chartColors.seriesColors.length],
-      }));
-    }, [data, chartColors.seriesColors]);
-
     // Legend style with proper type values
     const legendStyle = useMemo(
       () => ({
@@ -180,24 +190,18 @@ export const PieChart = React.memo(
           paddingTop: isMobile ? 5 : 10,
           color: chartColors.textPrimary,
         },
-        layout: isMobile
-          ? ('horizontal' as 'horizontal')
-          : ('vertical' as 'vertical'),
-        verticalAlign: isMobile
-          ? ('bottom' as 'bottom')
-          : ('middle' as 'middle'),
-        align: isMobile ? ('center' as 'center') : ('right' as 'right'),
+        layout: isMobile ? ('horizontal' as const) : ('vertical' as const),
+        verticalAlign: isMobile ? ('bottom' as const) : ('middle' as const),
+        align: isMobile ? ('center' as const) : ('right' as const),
       }),
       [isMobile, chartColors],
     );
 
     // Find the dominant segment if it exists
     const dominantSegment = useMemo(() => {
-      if (!hasDominantSegment || data.length === 0) return null;
-
-      const total = data.reduce((sum, item) => sum + item.value, 0);
+      if (!hasDominantSegment) return null;
       return data.find(item => item.value / total > 0.95);
-    }, [data, hasDominantSegment]);
+    }, [data, hasDominantSegment, total]);
 
     return (
       <Paper
@@ -219,80 +223,99 @@ export const PieChart = React.memo(
         </Typography>
 
         <Box sx={{ flexGrow: 1, width: '100%' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <RechartsPie>
-              <Pie
-                dataKey="value"
-                isAnimationActive={true}
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={showLabels && !isMobile && !hasDominantSegment}
-                label={hasDominantSegment ? false : renderCustomizedLabel}
-                outerRadius={outerRadius}
-                activeShape={renderActiveShape}
-                nameKey="name"
-              >
-                {chartData.map((_entry, index) => (
-                  <Cell key={`cell-${index}`} fill={themedData[index].color} />
-                ))}
+          {!hasData ? (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Sem dados disponíveis
+              </Typography>
+            </Box>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsPie>
+                <Pie
+                  dataKey="value"
+                  isAnimationActive={true}
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={showLabels && !isMobile && !hasDominantSegment}
+                  label={hasDominantSegment ? false : renderCustomizedLabel}
+                  outerRadius={outerRadius}
+                  activeShape={renderActiveShape}
+                  nameKey="name"
+                >
+                  {chartData.map(entry => (
+                    <Cell key={`cell-${entry.name}`} fill={entry.color} />
+                  ))}
 
-                {/* Special centered label for dominant segment case */}
-                {hasDominantSegment && dominantSegment && (
-                  <Label
-                    position="center"
-                    content={props => {
-                      const { viewBox } = props;
-                      const { cx, cy } = viewBox as { cx: number; cy: number };
-                      return (
-                        <g>
-                          <text
-                            x={cx}
-                            y={cy - 15}
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fontSize={16}
-                            fill={theme.palette.text.primary}
-                          >
-                            {dominantSegment.label}
-                          </text>
-                          <text
-                            x={cx}
-                            y={cy + 15}
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fontSize={18}
-                            fontWeight="bold"
-                            fill={theme.palette.text.primary}
-                          >
-                            {`100%`}
-                          </text>
-                        </g>
-                      );
+                  {/* Special centered label for dominant segment case */}
+                  {hasDominantSegment && dominantSegment && (
+                    <Label
+                      position="center"
+                      content={props => {
+                        const { viewBox } = props;
+                        const { cx, cy } = viewBox as {
+                          cx: number;
+                          cy: number;
+                        };
+                        return (
+                          <g>
+                            <text
+                              x={cx}
+                              y={cy - 15}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fontSize={16}
+                              fill={theme.palette.text.primary}
+                            >
+                              {dominantSegment.label}
+                            </text>
+                            <text
+                              x={cx}
+                              y={cy + 15}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fontSize={18}
+                              fontWeight="bold"
+                              fill={theme.palette.text.primary}
+                            >
+                              {`100%`}
+                            </text>
+                          </g>
+                        );
+                      }}
+                    />
+                  )}
+                </Pie>
+                {showLegend && (
+                  <Legend
+                    wrapperStyle={{
+                      ...legendStyle.wrapperStyle,
+                      color: chartColors.textPrimary,
                     }}
+                    layout={legendStyle.layout}
+                    verticalAlign={legendStyle.verticalAlign}
+                    align={legendStyle.align}
                   />
                 )}
-              </Pie>
-              {showLegend && (
-                <Legend
-                  wrapperStyle={{
-                    ...legendStyle.wrapperStyle,
-                    color: chartColors.textPrimary,
-                  }}
-                  layout={legendStyle.layout}
-                  verticalAlign={legendStyle.verticalAlign}
-                  align={legendStyle.align}
+                <Tooltip
+                  content={
+                    <CustomTooltip
+                      bgColor={chartColors.paper}
+                      textColor={chartColors.textPrimary}
+                    />
+                  }
                 />
-              )}
-              <Tooltip
-                content={
-                  <CustomTooltip
-                    labelColors={isDarkMode ? '#ffffff' : '#000000'}
-                  />
-                }
-              />
-            </RechartsPie>
-          </ResponsiveContainer>
+              </RechartsPie>
+            </ResponsiveContainer>
+          )}
         </Box>
       </Paper>
     );

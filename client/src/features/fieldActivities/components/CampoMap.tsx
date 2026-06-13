@@ -11,12 +11,15 @@ import {
   FormControl,
   InputLabel,
   Paper,
+  Alert,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import Map, {
   Source,
   Layer,
   NavigationControl,
   MapRef,
+  MapLayerMouseEvent,
 } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useFieldActivities } from '@/hooks/useFieldActivities';
@@ -25,6 +28,7 @@ import {
   useFieldActivitiesStore,
   selectSelectedTracks,
 } from '@/stores/fieldActivitiesStore';
+import { Campo } from '@/types/fieldActivities';
 import { useTheme } from '@mui/material/styles';
 
 interface CampoMapProps {
@@ -36,7 +40,7 @@ const CampoMap = ({ className }: CampoMapProps) => {
   const mapRef = useRef<MapRef>(null);
 
   // Local state
-  const [selectedFeature, setSelectedFeature] = useState<any>(null);
+  const [selectedFeature, setSelectedFeature] = useState<Campo | null>(null);
   const [popupAnchorEl, setPopupAnchorEl] = useState<HTMLElement | null>(null);
   const [showAllCampos, setShowAllCampos] = useState<boolean>(true);
   const [selectedYear, setSelectedYear] = useState<number>(
@@ -111,19 +115,19 @@ const CampoMap = ({ className }: CampoMapProps) => {
     return Array.from(yearsSet).sort((a, b) => b - a); // Sort descending (newest first)
   }, [geoJsonData]);
 
-  const handleMapClick = useCallback((event: any) => {
+  const handleMapClick = useCallback((event: MapLayerMouseEvent) => {
     if (!mapRef.current) return;
 
     // Get features from both campos-points and campos-polygons layers
     const features = mapRef.current.queryRenderedFeatures(event.point, {
-      layers: ['campos-points', 'campos-polygons']
+      layers: ['campos-points', 'campos-polygons'],
     });
 
     if (features.length > 0) {
       const feature = features[0];
       if (feature.properties) {
-        setSelectedFeature(feature.properties);
-        setPopupAnchorEl(event.originalEvent.target);
+        setSelectedFeature(feature.properties as unknown as Campo);
+        setPopupAnchorEl(event.originalEvent.target as HTMLElement);
       }
     } else {
       // Se clicou fora de uma feição, fecha o popup
@@ -180,7 +184,7 @@ const CampoMap = ({ className }: CampoMapProps) => {
       '#A1887F', // Brown 300
       '#E57373', // Red 300
       '#64B5F6', // Blue 300
-      '#F06292'  // Pink 300
+      '#F06292', // Pink 300
     ];
 
     // Função hash básica para converter trackId para um índice de cor
@@ -188,8 +192,14 @@ const CampoMap = ({ className }: CampoMapProps) => {
     return colors[index % colors.length];
   }, []);
 
+  // Whether the year filter produced no campos (para feedback ao usuário).
+  const noCamposInYear =
+    !showAllCampos &&
+    (!filteredGeoJsonData?.features ||
+      filteredGeoJsonData.features.length === 0);
+
   // Handle year selection change
-  const handleYearChange = (event: any) => {
+  const handleYearChange = (event: SelectChangeEvent<number>) => {
     setSelectedYear(Number(event.target.value));
   };
 
@@ -262,6 +272,12 @@ const CampoMap = ({ className }: CampoMapProps) => {
         </Box>
       </Paper>
 
+      {noCamposInYear && (
+        <Alert severity="info">
+          Nenhum campo encontrado para o ano {selectedYear}.
+        </Alert>
+      )}
+
       {/* Map container */}
       <Box
         sx={{ width: '100%', height: '500px', position: 'relative' }}
@@ -306,7 +322,7 @@ const CampoMap = ({ className }: CampoMapProps) => {
                 'fill-outline-color': isDarkMode ? '#ffffff' : '#000000',
               }}
             />
-            
+
             {/* Points layer - MANTIDA */}
             <Layer
               id="campos-points"
@@ -335,7 +351,10 @@ const CampoMap = ({ className }: CampoMapProps) => {
           {/* MVT sources for each selected track */}
           {showTracks &&
             selectedTracks.map((trackId, index) => {
-              const mvtUrl = `${window.location.origin}/campo/tracks/${trackId}/{z}/{x}/{y}.mvt`;
+              // Inclui o prefixo /api (mesmo baseURL do backend) e encoda o id.
+              const mvtUrl = `${window.location.origin}/api/campo/tracks/${encodeURIComponent(
+                trackId,
+              )}/{z}/{x}/{y}.mvt`;
 
               return (
                 <Source

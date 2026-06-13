@@ -95,10 +95,3 @@ export const handleApiError = (
 export const createCancelToken = (): CancelTokenSource => {
   return axios.CancelToken.source();
 };
-
-/**
- * Verifica se um erro é um erro de cancelamento
- */
-export const isRequestCancelled = (error: unknown): boolean => {
-  return axios.isCancel(error);
-};

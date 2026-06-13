@@ -74,8 +74,8 @@ export const PIT = () => {
           }}
         >
           {data &&
-            data.map((item: PitViewModel, idx: number) => (
-              <Box key={idx} sx={{ width: '100%' }}>
+            data.map((item: PitViewModel) => (
+              <Box key={item.project} sx={{ width: '100%' }}>
                 <Table
                   title={item.project}
                   columns={[
@@ -83,26 +83,26 @@ export const PIT = () => {
                     {
                       id: 'meta',
                       label: 'Meta',
-                      align: 'center' as 'center',
+                      align: 'center' as const,
                       minWidth: 70,
                     },
                     ...MONTHS.map(m => ({
                       id: m.id,
                       label: m.label,
-                      align: 'center' as 'center',
+                      align: 'center' as const,
                       minWidth: 50,
                       maxWidth: 70,
                     })),
                     {
                       id: 'count',
                       label: 'Quantitativo',
-                      align: 'center' as 'center',
+                      align: 'center' as const,
                       minWidth: 100,
                     },
                     {
                       id: 'percent',
                       label: '(%)',
-                      align: 'center' as 'center',
+                      align: 'center' as const,
                       minWidth: 80,
                     },
                   ]}

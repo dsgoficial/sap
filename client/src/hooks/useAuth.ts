@@ -87,6 +87,8 @@ export const useAuth = () => {
   // Wrap login function with useCallback for memoization
   const handleLogin = useCallback(
     async (credentials: LoginRequest): Promise<boolean> => {
+      // Limpa qualquer erro de uma tentativa anterior antes de iniciar a nova.
+      setError(null);
       try {
         // Cancela qualquer requisição pendente
         cancelTokenRef.current.cancel('New login request initiated');
@@ -106,7 +108,7 @@ export const useAuth = () => {
         return false;
       }
     },
-    [loginMutation, enqueueSnackbar],
+    [loginMutation],
   );
 
   // Wrap logout function with useCallback for memoization

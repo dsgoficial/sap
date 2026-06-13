@@ -1,14 +1,9 @@
 // Path: hooks\useFieldActivities.ts
 import { useQuery } from '@tanstack/react-query';
 import {
-  getCampos,
   getCampoById,
-  getFotos,
   getFotosByCampo,
-  getTracks,
   getTracksByCampo,
-  getSituacoes,
-  getCategorias,
   getCamposGeoJSON,
 } from '../services/fieldActivitiesService';
 import {
@@ -21,18 +16,12 @@ import {
   STALE_TIMES,
   standardizeError,
 } from '@/lib/queryClient';
-import { useEffect } from 'react';
 
 // Query keys
 const QUERY_KEYS = {
-  CAMPOS: createQueryKey('campos'),
   CAMPO_BY_ID: (id: string) => createQueryKey('campo', id),
-  FOTOS: createQueryKey('fotos'),
   FOTOS_BY_CAMPO: (id: string) => createQueryKey('fotos', id),
-  TRACKS: createQueryKey('tracks'),
   TRACKS_BY_CAMPO: (id: string) => createQueryKey('tracks', id),
-  SITUACOES: createQueryKey('situacoes'),
-  CATEGORIAS: createQueryKey('categorias'),
   CAMPOS_GEOJSON: createQueryKey('camposGeoJSON'),
 };
 
@@ -42,7 +31,6 @@ export const useFieldActivities = () => {
   const selectedCampoId = useSelectedCampoId();
   const selectedTracks = useSelectedTracks();
   const {
-    setGeoJsonData,
     setSelectedCampo,
     setSelectedTab,
     setShowSidebar,
@@ -50,7 +38,8 @@ export const useFieldActivities = () => {
     setSelectedTracks,
   } = useFieldActivitiesActions();
 
-  // Query for GeoJSON data
+  // Query for GeoJSON data. O React Query é a fonte única — não copiamos para o
+  // store (o antigo geoJsonData do store não era lido por ninguém).
   const geoJsonQuery = useQuery({
     queryKey: QUERY_KEYS.CAMPOS_GEOJSON,
     queryFn: async () => {
@@ -68,20 +57,13 @@ export const useFieldActivities = () => {
     staleTime: STALE_TIMES.REFERENCE_DATA, // GeoJSON data doesn't change frequently
   });
 
-  // Set GeoJSON data to store when loaded
-  useEffect(() => {
-    if (geoJsonQuery.data) {
-      setGeoJsonData(geoJsonQuery.data);
-    }
-  }, [geoJsonQuery.data, setGeoJsonData]);
-
   // Handler functions
   const handleSelectCampo = (campoId: string) => {
-    // Find campo name from GeoJSON data
+    // Find campo name from GeoJSON data (properties pode ser null em GeoJSON)
     const feature = geoJsonQuery.data?.features.find(
-      f => f.properties.id === campoId,
+      f => f.properties?.id === campoId,
     );
-    const campoNome = feature?.properties.nome || null;
+    const campoNome = feature?.properties?.nome || null;
 
     setSelectedCampo(campoId, campoNome);
   };
@@ -117,18 +99,6 @@ export const useFieldActivities = () => {
   };
 };
 
-// Hook for fetching all campos
-export const useCampos = () => {
-  return useQuery({
-    queryKey: QUERY_KEYS.CAMPOS,
-    queryFn: async () => {
-      const response = await getCampos();
-      return response.dados;
-    },
-    staleTime: STALE_TIMES.REFERENCE_DATA,
-  });
-};
-
 // Hook for fetching a specific campo by ID
 export const useCampoById = (campoId: string) => {
   return useQuery({
@@ -138,18 +108,6 @@ export const useCampoById = (campoId: string) => {
       return response.dados;
     },
     enabled: !!campoId, // Only run if campoId is provided
-    staleTime: STALE_TIMES.REFERENCE_DATA,
-  });
-};
-
-// Hook for fetching all fotos
-export const useFotos = () => {
-  return useQuery({
-    queryKey: QUERY_KEYS.FOTOS,
-    queryFn: async () => {
-      const response = await getFotos();
-      return response.dados;
-    },
     staleTime: STALE_TIMES.REFERENCE_DATA,
   });
 };
@@ -167,18 +125,6 @@ export const useFotosByCampo = (campoId: string) => {
   });
 };
 
-// Hook for fetching all tracks
-export const useTracks = () => {
-  return useQuery({
-    queryKey: QUERY_KEYS.TRACKS,
-    queryFn: async () => {
-      const response = await getTracks();
-      return response.dados;
-    },
-    staleTime: STALE_TIMES.REFERENCE_DATA,
-  });
-};
-
 // Hook for fetching tracks by campo
 export const useTracksByCampo = (campoId: string) => {
   return useQuery({
@@ -188,30 +134,6 @@ export const useTracksByCampo = (campoId: string) => {
       return response.dados;
     },
     enabled: !!campoId, // Only run if campoId is provided
-    staleTime: STALE_TIMES.REFERENCE_DATA,
-  });
-};
-
-// Hook for fetching all situações
-export const useSituacoes = () => {
-  return useQuery({
-    queryKey: QUERY_KEYS.SITUACOES,
-    queryFn: async () => {
-      const response = await getSituacoes();
-      return response.dados.dados;
-    },
-    staleTime: STALE_TIMES.REFERENCE_DATA,
-  });
-};
-
-// Hook for fetching all categorias
-export const useCategorias = () => {
-  return useQuery({
-    queryKey: QUERY_KEYS.CATEGORIAS,
-    queryFn: async () => {
-      const response = await getCategorias();
-      return response.dados.dados;
-    },
     staleTime: STALE_TIMES.REFERENCE_DATA,
   });
 };

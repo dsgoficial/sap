@@ -115,8 +115,10 @@ const authLoader = () => {
       keysToRemove.forEach(key => localStorage.removeItem(key));
 
       // Redirect to login and remember the intended destination
-      const currentPath = window.location.pathname;
-      if (currentPath !== '/' && currentPath !== '/login') {
+      // (preservando query string e hash, não só o pathname).
+      const { pathname, search, hash } = window.location;
+      const currentPath = pathname + search + hash;
+      if (pathname !== '/' && pathname !== '/login') {
         return redirect(`/login?from=${encodeURIComponent(currentPath)}`);
       }
       return redirect('/login');

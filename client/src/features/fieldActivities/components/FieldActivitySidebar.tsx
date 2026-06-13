@@ -72,6 +72,9 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
   const theme = useTheme();
 
   useEffect(() => {
+    // URL criada NESTA execução do efeito — revogada no cleanup desta mesma
+    // execução (evita o stale closure sobre o state imageUrl, que vazava 1 URL).
+    let createdBlobUrl: string | null = null;
     const loadImage = async () => {
       setLoading(true);
       setError(false);
@@ -120,6 +123,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
         };
 
         const url = processImageData(foto.imagem_bin);
+        if (url.startsWith('blob:')) createdBlobUrl = url;
         setImageUrl(url);
       } catch (err) {
         console.error('Error processing image:', err);
@@ -134,8 +138,8 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
 
     // Cleanup URL objects to prevent memory leaks
     return () => {
-      if (imageUrl && imageUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(imageUrl);
+      if (createdBlobUrl) {
+        URL.revokeObjectURL(createdBlobUrl);
       }
     };
   }, [foto]);

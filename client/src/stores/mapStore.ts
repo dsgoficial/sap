@@ -30,10 +30,15 @@ const useMapStoreBase = create<MapState & { actions: MapActions }>(
         // Compare new layers with existing ones to prevent unnecessary updates
         const currentLayers = get().layers;
 
-        // Only update if layer ids have changed
+        // Atualiza se mudou a quantidade, algum id, OU a referência do geojson
+        // (conteúdo refetchado) — não basta comparar só os ids.
         const shouldUpdate =
           layers.length !== currentLayers.length ||
-          layers.some((layer, index) => currentLayers[index]?.id !== layer.id);
+          layers.some(
+            (layer, index) =>
+              currentLayers[index]?.id !== layer.id ||
+              currentLayers[index]?.geojson !== layer.geojson,
+          );
 
         if (shouldUpdate) {
           set({ layers });
@@ -102,7 +107,3 @@ export const useLayers = () => useMapStoreBase(state => state.layers);
 export const useVisibleLayers = () =>
   useMapStoreBase(state => state.visibleLayers);
 export const useMapActions = () => useMapStoreBase(state => state.actions);
-
-// If you need to check if a specific layer is visible
-export const useLayerVisibility = (layerId: string) =>
-  useMapStoreBase(state => state.visibleLayers[layerId]);

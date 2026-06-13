@@ -34,7 +34,7 @@ const QUERY_KEYS = {
  * @returns String formatada com a duração
  */
 const formatDuration = (duracao: Duration | undefined): string => {
-  if (!duracao) return '';
+  if (!duracao) return '-';
 
   const parts = [];
 
@@ -43,7 +43,8 @@ const formatDuration = (duracao: Duration | undefined): string => {
   if (duracao.minutes !== undefined) parts.push(`Minutos: ${duracao.minutes}`);
   if (duracao.seconds !== undefined) parts.push(`Segundos: ${duracao.seconds}`);
 
-  return parts.join(', ');
+  // Placeholder quando a duração vem vazia/parcial (em vez de coluna em branco).
+  return parts.length > 0 ? parts.join(', ') : '-';
 };
 
 export const useMicroControlData = () => {

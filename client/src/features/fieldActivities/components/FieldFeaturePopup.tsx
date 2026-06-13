@@ -81,9 +81,10 @@ const FieldFeaturePopup: React.FC<FieldFeaturePopupProps> = ({
     pit,
   } = selectedFeature;
 
-  // Use contagens reais ou fallback para as propriedades
-  const fotosCount = fotos ? fotos.length : propQtdFotos || 0;
-  const tracksCount = tracks ? tracks.length : propQtdTrack || 0;
+  // Use contagens reais ou fallback para as propriedades.
+  // propQtd* podem vir como string (tiles MVT) — normaliza para número.
+  const fotosCount = fotos ? fotos.length : Number(propQtdFotos) || 0;
+  const tracksCount = tracks ? tracks.length : Number(propQtdTrack) || 0;
 
   // Função auxiliar para formatar datas
   const formatDate = (dateString?: string) => {
@@ -244,7 +245,6 @@ const FieldFeaturePopup: React.FC<FieldFeaturePopupProps> = ({
             <Typography variant="caption" color="text.secondary">
               Fotos
             </Typography>
-            {fotosCount > 0}
           </Box>
 
           {/* Contagem de tracks */}
@@ -272,7 +272,6 @@ const FieldFeaturePopup: React.FC<FieldFeaturePopupProps> = ({
             <Typography variant="caption" color="text.secondary">
               Tracks
             </Typography>
-            {tracksCount > 0}
           </Box>
         </Box>
 

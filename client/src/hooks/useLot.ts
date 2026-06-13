@@ -8,7 +8,7 @@ import {
 } from '@/lib/queryClient';
 import { LotSubphaseData } from '@/types/lot';
 import { ApiResponse } from '@/types/api';
-import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { createCancelToken } from '@/utils/apiErrorHandler';
 import axios from 'axios';
 
@@ -50,12 +50,13 @@ export const useLotData = () => {
     };
   }, []);
 
-  // Memoize o mês atual para estabilidade
-  const currentMonthIdx = useMemo(() => new Date().getMonth(), []);
-
   // Função de transformação memoizada
   const transformLotData = useCallback(
     (data: ApiResponse<LotSubphaseData[]>): LotViewModel[] => {
+      // Mês atual calculado a cada transformação (roda a cada refetch via
+      // refetchInterval) — não congelado no mount, sobrevive à virada de mês.
+      const currentMonthIdx = new Date().getMonth();
+
       // Transform data for table display
       const tableData: Record<string, Record<string, number[]>> = {};
 
@@ -101,7 +102,7 @@ export const useLotData = () => {
 
       return result;
     },
-    [currentMonthIdx],
+    [],
   );
 
   // Query com seletor para transformação

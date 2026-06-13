@@ -19,8 +19,11 @@ const Page = ({ children, title = '', description = '', meta }: PageProps) => {
         {title ? `${title} | SAP` : 'SAP - Sistema de Apoio à Produção'}
       </title>
       {description && <meta name="description" content={description} />}
-      {/* Additional meta tags */}
-      {meta && meta.map((item, index) => <meta key={index} {...item} />)}
+      {/* Additional meta tags — key estável por nome quando disponível */}
+      {meta &&
+        meta.map((item, index) => (
+          <meta key={item.name ?? `meta-${index}`} {...item} />
+        ))}
       <Box sx={{ height: '100%' }}>{children}</Box>
     </>
   );

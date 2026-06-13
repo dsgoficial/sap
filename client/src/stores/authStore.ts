@@ -1,9 +1,9 @@
 // Path: stores\authStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, UserRole, LoginResponse, LoginRequest } from '../types/auth';
-import { login as loginApi } from '../services/authService';
+import { User, UserRole, LoginResponse } from '../types/auth';
 import { navigateToLogin } from '../routes';
+import queryClient from '../lib/queryClient';
 
 // Storage keys for localStorage
 const STORAGE_KEYS = {
@@ -51,6 +51,28 @@ export const isTokenExpired = (): boolean => {
   }
 };
 
+// Decodifica o claim `exp` do JWT (segundos desde epoch) e retorna como ISO string.
+// O backend assina o token com expiração real (ex.: 10h); não fabricamos um prazo
+// no cliente. Fallback conservador caso o token não seja um JWT decodificável.
+const getTokenExpiry = (token: string): string => {
+  try {
+    const payload = token.split('.')[1];
+    if (payload) {
+      const decoded = JSON.parse(
+        atob(payload.replace(/-/g, '+').replace(/_/g, '/')),
+      );
+      if (typeof decoded.exp === 'number') {
+        return new Date(decoded.exp * 1000).toISOString();
+      }
+    }
+  } catch {
+    // Token não-JWT ou malformado: cai no fallback abaixo.
+  }
+  const fallback = new Date();
+  fallback.setHours(fallback.getHours() + 8);
+  return fallback.toISOString();
+};
+
 // Store user data to localStorage for legacy compatibility
 const saveUserDataToLocalStorage = (userData: {
   token: string;
@@ -58,11 +80,9 @@ const saveUserDataToLocalStorage = (userData: {
   uuid: string;
   username?: string;
 }): void => {
-  // Save token with 24-hour expiration
+  // Expiração derivada do próprio token (claim `exp`), não fabricada no cliente.
   tokenStorage.set(userData.token);
-  const expiryTime = new Date();
-  expiryTime.setHours(expiryTime.getHours() + 24);
-  tokenExpiryStorage.set(expiryTime.toISOString());
+  tokenExpiryStorage.set(getTokenExpiry(userData.token));
 
   // Save other user info
   localStorage.setItem(STORAGE_KEYS.USER_AUTHORIZATION, userData.role);
@@ -90,7 +110,6 @@ interface AuthState {
 
 // Define actions type
 interface AuthActions {
-  login: (credentials: LoginRequest) => Promise<boolean>;
   setUser: (loginResponse: LoginResponse) => void;
   logout: () => void;
   getRole: () => UserRole | null;
@@ -107,38 +126,24 @@ const useAuthStoreBase = create<AuthState & { actions: AuthActions }>()(
 
       // Actions
       actions: {
-        login: async (credentials: LoginRequest) => {
-          try {
-            const response = await loginApi(credentials);
-
-            if (response.success) {
-              get().actions.setUser({
-                ...response.dados,
-                username: credentials.usuario,
-              });
-              return true;
-            }
-            return false;
-          } catch (error) {
-            console.error('Login error:', error);
-            return false;
-          }
-        },
-
         setUser: (loginResponse: LoginResponse) => {
           const role = loginResponse.administrador
             ? UserRole.ADMIN
             : UserRole.USER;
 
-          // Recuperar nome de usuário do localStorage se não estiver na resposta
-          const storedUsername = localStorage.getItem('@sap_web-User-username');
+          // Usar o username vindo na resposta (já preenchido a partir das
+          // credenciais em useAuth), com fallback para o valor armazenado.
+          const username =
+            loginResponse.username ||
+            localStorage.getItem(STORAGE_KEYS.USER_NAME) ||
+            '';
 
           // Criar objeto de usuário com dados
           const userData = {
             uuid: loginResponse.uuid,
             role,
             token: loginResponse.token,
-            username: storedUsername || '', // Usar nome armazenado ou string vazia
+            username,
           };
 
           // Salvar para localStorage para compatibilidade legada
@@ -156,6 +161,10 @@ const useAuthStoreBase = create<AuthState & { actions: AuthActions }>()(
           // Clear localStorage
           clearUserDataFromLocalStorage();
 
+          // Limpar o cache do React Query para não vazar dados do usuário
+          // anterior caso outro usuário faça login na mesma aba sem reload.
+          queryClient.clear();
+
           // Reset Zustand state
           set({
             user: null,
@@ -169,9 +178,11 @@ const useAuthStoreBase = create<AuthState & { actions: AuthActions }>()(
     }),
     {
       name: 'auth-storage',
-      // Only persist these fields
+      // Only persist these fields. Não persistir o token dentro de `user`: a
+      // fonte única do token é a chave localStorage '@sap_web-Token' (lida pelo
+      // interceptor do axios), evitando duas cópias divergentes.
       partialize: state => ({
-        user: state.user,
+        user: state.user ? { ...state.user, token: '' } : null,
         isAuthenticated: state.isAuthenticated,
         isAdmin: state.isAdmin,
       }),
@@ -225,6 +236,10 @@ export const useAuthActions = () => useAuthStoreBase(state => state.actions);
 export const logoutAndRedirect = () => {
   // Limpar localStorage diretamente
   clearUserDataFromLocalStorage();
+
+  // Limpar o cache do React Query (cobre também expiração de token / 401,
+  // já que o interceptor do axios chama esta função).
+  queryClient.clear();
 
   // Resetar estado Zustand diretamente via getState/setState
   useAuthStoreBase.setState({

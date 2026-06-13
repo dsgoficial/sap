@@ -275,7 +275,6 @@ const DashboardSidebar = ({
       {/* Desktop drawer - now using PERMANENT variant which doesn't use aria-hidden */}
       <Drawer
         variant="permanent"
-        open={desktopOpen}
         sx={{
           display: { xs: 'none', lg: 'block' },
           '& .MuiDrawer-paper': {

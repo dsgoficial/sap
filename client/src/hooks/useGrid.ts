@@ -8,8 +8,7 @@ import {
 } from '@/lib/queryClient';
 import { GridData } from '@/types/grid';
 import { ApiResponse } from '@/types/api';
-import { useEffect, useRef, useCallback } from 'react';
-import { createCancelToken } from '@/utils/apiErrorHandler';
+import { useCallback } from 'react';
 import axios from 'axios';
 
 // Define query keys
@@ -18,20 +17,11 @@ const QUERY_KEYS = {
 };
 
 export const useGridStatistics = () => {
-  // Token de cancelamento para requisição
-  const cancelTokenRef = useRef(createCancelToken());
-
-  // Limpeza quando componente desmontar
-  useEffect(() => {
-    return () => {
-      cancelTokenRef.current.cancel('Component unmounted');
-    };
-  }, []);
-
   // Função memoizada para transformar os dados
   const transformGridData = useCallback(
     (data: ApiResponse<GridData[]>): GridData[] => {
-      return data.dados.sort((a, b) => {
+      // Cópia antes de ordenar para não mutar o array no cache do React Query.
+      return [...data.dados].sort((a, b) => {
         const dateA = a.data_inicio ? new Date(a.data_inicio).getTime() : 0;
         const dateB = b.data_inicio ? new Date(b.data_inicio).getTime() : 0;
         return dateB - dateA;
@@ -40,10 +30,11 @@ export const useGridStatistics = () => {
     [],
   );
 
-  // Query com tipagem adequada
+  // Query com tipagem adequada. O cancelamento é feito pelo AbortSignal que o
+  // React Query injeta na queryFn (cobre unmount e refetch, inclusive StrictMode).
   const query = useQuery<ApiResponse<GridData[]>, unknown, GridData[]>({
     queryKey: QUERY_KEYS.GRID_STATISTICS,
-    queryFn: () => getStatisticsGrid(cancelTokenRef.current),
+    queryFn: ({ signal }) => getStatisticsGrid(signal),
     staleTime: STALE_TIMES.FREQUENT_DATA,
     select: transformGridData,
     retry: (failureCount, error) => {

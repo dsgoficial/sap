@@ -176,9 +176,17 @@ export const useActivities = () => {
   });
 
   // Mutation para reportar erro
-  const reportErrorMutation = useMutation<ApiResponse<unknown>, Error, ErrorReport>({
+  const reportErrorMutation = useMutation<
+    ApiResponse<unknown>,
+    Error,
+    ErrorReport
+  >({
     mutationFn: (errorData: ErrorReport) => reportError(errorData),
-    // No need to invalidate since reporting an error doesn't change the current activity
+    // Reportar um problema bloqueia a atividade atual no backend e distribui
+    // outra, então é preciso invalidar para refletir a nova atividade.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_ACTIVITY });
+    },
   });
 
   // Helper functions

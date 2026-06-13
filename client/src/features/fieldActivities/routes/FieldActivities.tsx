@@ -32,5 +32,3 @@ export const FieldActivities: React.FC = () => {
     </Page>
   );
 };
-
-export default FieldActivities;

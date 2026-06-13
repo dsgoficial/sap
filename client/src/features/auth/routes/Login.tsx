@@ -44,7 +44,11 @@ const Login = () => {
   const { isDarkMode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const from = searchParams.get('from') || '/';
+  // Sanitiza o destino pós-login: apenas caminhos internos (começam com "/" e
+  // não com "//", que permitiria redirect para outro host).
+  const rawFrom = searchParams.get('from') || '/';
+  const from =
+    rawFrom.startsWith('/') && !rawFrom.startsWith('//') ? rawFrom : '/';
 
   // Get the random image number (1-5) for consistent layout with the original
   const [randomImageNumber] = useState(() => Math.floor(Math.random() * 5) + 1);

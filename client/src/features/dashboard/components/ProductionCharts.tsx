@@ -111,12 +111,16 @@ export const ProductionCharts = ({
     ];
   }, [data]);
 
-  // Format bar chart series
-  const barSeries = [
-    { dataKey: 'completed', name: 'Finalizados', color: '#7A9D54' },
-    { dataKey: 'running', name: 'Em Execução', color: '#4FC0D0' },
-    { dataKey: 'notStarted', name: 'Não Iniciado', color: '#F24C3D' },
-  ];
+  // Format bar chart series (memoizado — array estável evita derrotar o
+  // React.memo do StackedBarChart e recomputações internas).
+  const barSeries = useMemo(
+    () => [
+      { dataKey: 'completed', name: 'Finalizados', color: '#7A9D54' },
+      { dataKey: 'running', name: 'Em Execução', color: '#4FC0D0' },
+      { dataKey: 'notStarted', name: 'Não Iniciado', color: '#F24C3D' },
+    ],
+    [],
+  );
 
   // Dados mensais processados com filtros e agrupamentos
   const monthlyChartSeries = useMemo(() => {
@@ -248,6 +252,15 @@ export const ProductionCharts = ({
   }, [data, monthlyChartSeries]);
 
   // Processa e pagina os dados de atividades por lote com ordenação fixa
+  // Total de lotes que batem com o filtro (antes da paginação) — usado tanto na
+  // mensagem quanto no cálculo de páginas.
+  const filteredLotCount = useMemo(() => {
+    if (!data || !data.lotProgressData) return 0;
+    return data.lotProgressData.filter(item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    ).length;
+  }, [data, searchTerm]);
+
   const paginatedLotProgressData = useMemo(() => {
     if (!data || !data.lotProgressData) return [];
 
@@ -283,15 +296,10 @@ export const ProductionCharts = ({
   }, [data, activitiesPage, searchTerm]);
 
   // Calcula o número total de páginas para a paginação
-  const totalPages = useMemo(() => {
-    if (!data || !data.lotProgressData) return 1;
-
-    const filteredCount = data.lotProgressData.filter(item =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    ).length;
-
-    return Math.ceil(filteredCount / PAGE_SIZE);
-  }, [data, searchTerm]);
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredLotCount / PAGE_SIZE)),
+    [filteredLotCount],
+  );
 
   if (isLoading) {
     return (
@@ -431,8 +439,8 @@ export const ProductionCharts = ({
 
           {searchTerm && (
             <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
-              Filtrando por: "{searchTerm}" • {paginatedLotProgressData.length}{' '}
-              lotes encontrados
+              Filtrando por: "{searchTerm}" • {filteredLotCount} lotes
+              encontrados
             </Typography>
           )}
         </Box>

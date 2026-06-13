@@ -1,5 +1,5 @@
 // Path: features\map\routes\Maps.tsx
-import React, { useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import {
   Container,
   Box,
@@ -144,5 +144,3 @@ export const Maps = () => {
     </Page>
   );
 };
-
-export default React.memo(Maps);

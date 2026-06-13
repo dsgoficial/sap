@@ -3,19 +3,19 @@ import axios from 'axios';
 import apiClient from '../lib/axios';
 import { ApiResponse } from '../types/api';
 import { GridData } from '../types/grid';
-import { handleApiError, createCancelToken } from '@/utils/apiErrorHandler';
+import { handleApiError } from '@/utils/apiErrorHandler';
 
 /**
  * Get statistics grid data
- * @param cancelToken Token para possível cancelamento da requisição
+ * @param signal AbortSignal (injetado pelo React Query) para cancelamento
  */
 export const getStatisticsGrid = async (
-  cancelToken?: ReturnType<typeof createCancelToken>,
+  signal?: AbortSignal,
 ): Promise<ApiResponse<GridData[]>> => {
   try {
     const response = await apiClient.get<ApiResponse<GridData[]>>(
       '/acompanhamento/grade_acompanhamento/',
-      cancelToken ? { cancelToken: cancelToken.token } : undefined,
+      { signal },
     );
     return response.data;
   } catch (error) {

@@ -8,18 +8,16 @@ import {
   DashboardRunningItem,
   PitItem,
 } from '../types/dashboard';
-import { handleApiError, createCancelToken } from '@/utils/apiErrorHandler';
+import { handleApiError } from '@/utils/apiErrorHandler';
 
 /**
  * Get dashboard data (all APIs in one request)
- * @param cancelToken Token para possível cancelamento da requisição
+ * @param signal AbortSignal (injetado pelo React Query) para cancelamento
  */
-export const getDashboardData = async (
-  cancelToken?: ReturnType<typeof createCancelToken>,
-) => {
+export const getDashboardData = async (signal?: AbortSignal) => {
   try {
     const year = new Date().getFullYear();
-    const config = cancelToken ? { cancelToken: cancelToken.token } : undefined;
+    const config = { signal };
 
     const [quantityResponse, finishedResponse, runningResponse, pitResponse] =
       await Promise.all([

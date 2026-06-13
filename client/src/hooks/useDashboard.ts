@@ -7,8 +7,6 @@ import {
   STALE_TIMES,
   standardizeError,
 } from '@/lib/queryClient';
-import { useEffect, useRef } from 'react';
-import { createCancelToken } from '@/utils/apiErrorHandler';
 import axios from 'axios';
 
 const QUERY_KEYS = {
@@ -19,21 +17,12 @@ const QUERY_KEYS = {
  * Hook personalizado para buscar e gerenciar dados do dashboard
  */
 export const useDashboard = () => {
-  // Criação e gerenciamento do token de cancelamento
-  const cancelTokenRef = useRef(createCancelToken());
-
-  // Limpeza quando componente desmontar
-  useEffect(() => {
-    return () => {
-      cancelTokenRef.current.cancel('Component unmounted');
-    };
-  }, []);
-
   const query = useQuery({
     queryKey: QUERY_KEYS.DASHBOARD_DATA,
-    queryFn: async () => {
+    // Cancelamento via AbortSignal injetado pelo React Query (cobre StrictMode).
+    queryFn: async ({ signal }) => {
       try {
-        const rawData = await getDashboardData(cancelTokenRef.current);
+        const rawData = await getDashboardData(signal);
         return transformDashboardData(rawData);
       } catch (error) {
         if (axios.isCancel(error)) {

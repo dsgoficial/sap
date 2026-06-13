@@ -41,7 +41,7 @@ export const useActivitySubphase = () => {
       let lastLot: TimelineGroup | null = null;
       let count = 0;
 
-      for (let [i, lot] of data.dados.entries()) {
+      for (const [i, lot] of data.dados.entries()) {
         if (!lastLot || lastLotName !== lot.lote) {
           if (lastLot) graphsData.push(lastLot);
 
@@ -80,7 +80,8 @@ export const useActivitySubphase = () => {
 
         lastLot.dataset.push({
           measure: lot.subfase,
-          data: lot.data.map((item: [string, string, string]) => {
+          // Guard: a API pode omitir `data`; evita TypeError no map.
+          data: (lot.data ?? []).map((item: [string, string, string]) => {
             // Ensure correct data format [startDate, status, endDate]
             return [item[0], item[1], item[2]];
           }),
@@ -161,12 +162,12 @@ export const useSubphaseSituation = () => {
 
         groupedData[element.bloco].dataPointA.push({
           label: element.subfase,
-          y: element.finalizadas,
+          y: Number(element.finalizadas) || 0,
         });
 
         groupedData[element.bloco].dataPointB.push({
           label: element.subfase,
-          y: element.nao_finalizadas ? +element.nao_finalizadas : 0,
+          y: Number(element.nao_finalizadas) || 0,
         });
       });
 
@@ -250,10 +251,13 @@ export const useUserActivities = () => {
           dataset: data.dados.map((item: UserActivityData) => {
             return {
               measure: item.usuario,
-              data: item.data.map((dataItem: [string, string, string]) => {
-                // Ensure correct data format [startDate, status, endDate]
-                return [dataItem[0], dataItem[1], dataItem[2]];
-              }),
+              // Guard: a API pode omitir `data`; evita TypeError no map.
+              data: (item.data ?? []).map(
+                (dataItem: [string, string, string]) => {
+                  // Ensure correct data format [startDate, status, endDate]
+                  return [dataItem[0], dataItem[1], dataItem[2]];
+                },
+              ),
             };
           }),
         },

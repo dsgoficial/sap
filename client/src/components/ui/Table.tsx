@@ -50,8 +50,10 @@ interface Column<T extends Record<string, any>> {
   priority?: number;
 }
 
-interface TableProps<T extends Record<string, any>>
-  extends Omit<MuiTableProps, 'rows'> {
+interface TableProps<T extends Record<string, any>> extends Omit<
+  MuiTableProps,
+  'rows'
+> {
   columns: Column<T>[];
   rows: T[];
   isLoading?: boolean;
@@ -352,6 +354,8 @@ function createMobileCard<T extends Record<string, any>>() {
       );
 
       const mainValue = useMemo(() => {
+        // Guard: columns pode estar vazio (mainColumn undefined) — evita crash.
+        if (!mainColumn) return undefined;
         const value = row[mainColumn.id];
         return mainColumn.format ? mainColumn.format(value, row) : value;
       }, [row, mainColumn]);
@@ -542,14 +546,8 @@ export function Table<T extends Record<string, any>>({
     [customLocalization],
   );
 
-  // Columns state - keeping for mobile prioritization
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
-    {},
-  );
-
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredRows, setFilteredRows] = useState<T[]>(rows);
 
   // Internal sorting state when external sorting is not provided
   const [internalSorting, setInternalSorting] = useState<{
@@ -560,8 +558,9 @@ export function Table<T extends Record<string, any>>({
   // Card view for mobile
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
-  // Initialize column visibility based on priority
-  useEffect(() => {
+  // Column visibility derivada de columns/isMobile (memoizada). Antes era state
+  // sincronizado por efeito, causando render extra e um frame sem colunas.
+  const visibleColumns = useMemo(() => {
     const initialVisibility: Record<string, boolean> = {};
     columns.forEach(column => {
       if (isMobile) {
@@ -572,7 +571,7 @@ export function Table<T extends Record<string, any>>({
         initialVisibility[column.id] = true;
       }
     });
-    setVisibleColumns(initialVisibility);
+    return initialVisibility;
   }, [columns, isMobile]);
 
   // Search handler - memoized to prevent recreating it on each render
@@ -580,29 +579,24 @@ export function Table<T extends Record<string, any>>({
     setSearchTerm(term);
   }, []);
 
-  // Update filtered rows when search term or rows change
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredRows(rows);
-      return;
-    }
+  // filteredRows derivada de rows/searchTerm (memoizada). Antes era state
+  // sincronizado por efeito, com double render e janela de dados stale.
+  const filteredRows = useMemo(() => {
+    if (!searchTerm.trim()) return rows;
 
     const searchTermLower = searchTerm.toLowerCase();
-    const filtered = rows.filter(row => {
-      // Search through all properties of the row
-      return Object.keys(row).some(key => {
+    return rows.filter(row =>
+      Object.keys(row).some(key => {
         const value = row[key];
         if (value === null || value === undefined) return false;
         return String(value).toLowerCase().includes(searchTermLower);
-      });
-    });
-
-    setFilteredRows(filtered);
+      }),
+    );
   }, [searchTerm, rows]);
 
   // Apply sorting to filtered rows
   const sortedRows = useMemo(() => {
-    let sortedData = [...filteredRows];
+    const sortedData = [...filteredRows];
 
     // Use external sorting if provided, otherwise use internal
     const sortConfig = sorting || internalSorting;
@@ -633,6 +627,13 @@ export function Table<T extends Record<string, any>>({
 
     return sortedData;
   }, [filteredRows, sorting, internalSorting]);
+
+  // Ao mudar ordenação/filtro a posição das linhas muda; como a expansão no
+  // mobile é keada por posição quando não há rowKey, resetamos para não exibir
+  // o card errado expandido.
+  useEffect(() => {
+    setExpandedRows({});
+  }, [internalSorting, sorting, searchTerm]);
 
   // Row key getter
   const getRowKey = useCallback(
@@ -884,6 +885,13 @@ export function Table<T extends Record<string, any>>({
                 <TableCell
                   key={column.id}
                   align={column.align || 'left'}
+                  aria-sort={
+                    column.sortable && sortConfig?.orderBy === column.id
+                      ? sortConfig.order === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : undefined
+                  }
                   style={{
                     minWidth: column.minWidth,
                     maxWidth: column.maxWidth,

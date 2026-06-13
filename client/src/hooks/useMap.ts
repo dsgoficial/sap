@@ -119,24 +119,21 @@ export const useMapData = () => {
     staleTime: STALE_TIMES.REFERENCE_DATA, // GeoJSON data doesn't change frequently
   });
 
-  // Update the store when layers data is loaded, with race condition protection
+  // Sincroniza o store quando os dados de layers mudam. Compara a REFERÊNCIA dos
+  // dados do React Query (que muda a cada refetch de conteúdo) em vez de comparar
+  // só por IDs — assim mudanças de geometria com os mesmos IDs também propagam.
+  // O guard de conteúdo fica centralizado em mapStore.setLayers.
+  const lastSyncedRef = useRef<MapLayer[] | null>(null);
   useEffect(() => {
-    if (geoJSONQuery.data && geoJSONQuery.data.length > 0) {
-      // Only update if the data has changed
-      const currentLayerIds = layers
-        .map(layer => layer.id)
-        .sort()
-        .join(',');
-      const newLayerIds = geoJSONQuery.data
-        .map(layer => layer.id)
-        .sort()
-        .join(',');
-
-      if (currentLayerIds !== newLayerIds) {
-        setLayers(geoJSONQuery.data);
-      }
+    if (
+      geoJSONQuery.data &&
+      geoJSONQuery.data.length > 0 &&
+      geoJSONQuery.data !== lastSyncedRef.current
+    ) {
+      lastSyncedRef.current = geoJSONQuery.data;
+      setLayers(geoJSONQuery.data);
     }
-  }, [geoJSONQuery.data, layers, setLayers]);
+  }, [geoJSONQuery.data, setLayers]);
 
   return {
     layers,

@@ -23,14 +23,14 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ErrorReport, ErrorType } from '@/types/activity';
-import { useActivities } from '@/hooks/useActivities';
 
-// Form validation schema
+// Form validation schema. tipo_problema_id deve ser um id positivo: o default 0
+// representa "nada escolhido" e precisa ser rejeitado (z.number() sozinho aceita 0).
 const errorReportSchema = z.object({
-  tipo_problema_id: z.number({
-    required_error: 'Escolha o tipo de problema',
-    invalid_type_error: 'Escolha o tipo de problema',
-  }),
+  tipo_problema_id: z
+    .number({ invalid_type_error: 'Escolha o tipo de problema' })
+    .int()
+    .positive('Escolha o tipo de problema'),
   descricao: z.string().min(5, 'A descrição deve ter pelo menos 5 caracteres'),
 });
 
@@ -41,6 +41,9 @@ interface ReportErrorDialogProps {
   onClose: () => void;
   onSubmit: (data: ErrorReport) => void;
   isSubmitting: boolean;
+  // Recebidos por props (de ActivityCard) para não instanciar useActivities aqui.
+  currentActivityId?: string;
+  errorTypes: ErrorType[];
 }
 
 export const ReportErrorDialog = ({
@@ -48,8 +51,9 @@ export const ReportErrorDialog = ({
   onClose,
   onSubmit,
   isSubmitting,
+  currentActivityId,
+  errorTypes,
 }: ReportErrorDialogProps) => {
-  const { currentActivity, errorTypes } = useActivities();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -77,10 +81,10 @@ export const ReportErrorDialog = ({
   }, [open, reset]);
 
   const onFormSubmit = (data: ErrorReportForm) => {
-    if (!currentActivity?.id) return;
+    if (!currentActivityId) return;
 
     onSubmit({
-      atividade_id: currentActivity.id,
+      atividade_id: currentActivityId,
       ...data,
     });
   };

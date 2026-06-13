@@ -24,8 +24,8 @@ const MapLegend: React.FC<MapLegendProps> = ({ items }) => {
         Legenda
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-        {items.map((item, index) => (
-          <Box key={index} sx={{ display: 'flex', alignItems: 'center' }}>
+        {items.map(item => (
+          <Box key={item.label} sx={{ display: 'flex', alignItems: 'center' }}>
             <Box
               sx={{
                 width: 16,

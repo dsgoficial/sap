@@ -1,5 +1,11 @@
 // Path: components\timeline\EnhancedTimeline.tsx
-import React, { useRef, useEffect, useMemo, useCallback } from 'react';
+import React, {
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  useState,
+} from 'react';
 import { styled } from '@mui/material/styles';
 import { Box, Typography, Paper, useTheme, useMediaQuery } from '@mui/material';
 import { select, scaleTime, axisTop, timeFormat, timeMonth } from 'd3';
@@ -33,7 +39,7 @@ const TimelineContainer = styled(Box)(({ theme }) => ({
   fontFamily: theme.typography.fontFamily,
   '& .axis path, & .axis line': {
     fill: 'none',
-    stroke: '#ddd',
+    stroke: theme.palette.divider,
     shapeRendering: 'crispEdges',
   },
   '& .axis text': {
@@ -41,7 +47,7 @@ const TimelineContainer = styled(Box)(({ theme }) => ({
     fill: theme.palette.text.secondary,
   },
   '& .grid line': {
-    stroke: '#e0e0e0',
+    stroke: theme.palette.divider,
     shapeRendering: 'crispEdges',
     opacity: 0.7,
   },
@@ -105,10 +111,12 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const svgRef = useRef<SVGSVGElement>(null);
     const tooltipRef = useRef<HTMLDivElement>(null);
+    const [containerWidth, setContainerWidth] = useState(0);
 
     // Handle long group titles - memoized to prevent recalculation
     const maxTitleLength = useMemo(() => {
-      return Math.max(...groups.map(g => g.title.length), 0);
+      // reduce em vez de spread em Math.max (evita RangeError com muitos grupos).
+      return groups.reduce((max, g) => Math.max(max, g.title.length), 0);
     }, [groups]);
 
     // Constants for rendering - responsive adjustments
@@ -146,14 +154,17 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
       [contentHeight, MARGIN.top, MARGIN.bottom],
     );
 
-    // Memoize width calculation function
-    const getWidth = useCallback(
-      () =>
-        svgRef.current
-          ? svgRef.current.clientWidth - MARGIN.left - MARGIN.right
-          : 800,
-      [MARGIN.left, MARGIN.right],
-    );
+    // Mede a largura do SVG via ResizeObserver para redesenhar em qualquer
+    // resize (inclusive dentro do mesmo breakpoint), não só na 1ª montagem.
+    useEffect(() => {
+      const el = svgRef.current;
+      if (!el) return;
+      const update = () => setContainerWidth(el.clientWidth);
+      update();
+      const observer = new ResizeObserver(update);
+      observer.observe(el);
+      return () => observer.disconnect();
+    }, []);
 
     // Calculate date range based on data or custom dates
     const { minDate, maxDate } = useMemo(() => {
@@ -272,11 +283,25 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
       };
     }, [formatDate, barStyles]);
 
+    // Cores derivadas do tema, memoizadas — o efeito d3 depende só destas
+    // strings em vez do objeto `theme` inteiro (reduz teardown/rebuild).
+    const themeColors = useMemo(
+      () => ({
+        rowEven: theme.palette.background.default,
+        rowOdd: theme.palette.action.hover,
+        label: theme.palette.text.primary,
+      }),
+      [
+        theme.palette.background.default,
+        theme.palette.action.hover,
+        theme.palette.text.primary,
+      ],
+    );
+
     // Main render function using D3
     useEffect(() => {
-      if (!svgRef.current || groups.length === 0) return;
-
-      const width = getWidth();
+      const width = containerWidth - MARGIN.left - MARGIN.right;
+      if (!svgRef.current || groups.length === 0 || width <= 0) return;
 
       // Clear previous content
       select(svgRef.current).selectAll('*').remove();
@@ -342,9 +367,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
         .attr('width', width)
         .attr('height', ROW_HEIGHT)
         .attr('fill', (_, i) =>
-          i % 2 === 0
-            ? theme.palette.background.default
-            : theme.palette.action.hover,
+          i % 2 === 0 ? themeColors.rowEven : themeColors.rowOdd,
         )
         .attr('opacity', 0.3);
 
@@ -427,7 +450,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
         .attr('y', (_, i) => i * (ROW_HEIGHT + ROW_PADDING) + ROW_HEIGHT / 2)
         .attr('text-anchor', 'end')
         .attr('dominant-baseline', 'middle')
-        .attr('fill', theme.palette.text.primary)
+        .attr('fill', themeColors.label)
         .style('font-size', isMobile ? '10px' : '12px')
         .each(function (d) {
           // If title is too long, truncate it
@@ -449,14 +472,14 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
       minDate,
       maxDate,
       totalHeight,
-      theme,
+      themeColors,
       isMobile,
       MARGIN,
       ROW_HEIGHT,
       ROW_PADDING,
       contentHeight,
       AXIS_SPACING,
-      getWidth,
+      containerWidth,
       tooltipHandlers,
       barStyles,
     ]);

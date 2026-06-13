@@ -60,9 +60,9 @@ export const SubphaseSituation = () => {
           }}
         >
           {data &&
-            data.map((item: ChartGroup, idx: number) => (
+            data.map((item: ChartGroup) => (
               <StackedBarChart
-                key={idx}
+                key={item.title}
                 title={item.title}
                 data={item.dataPointA.map((dataPoint, index) => ({
                   name: dataPoint.label,
@@ -85,7 +85,7 @@ export const SubphaseSituation = () => {
               />
             ))}
 
-          {data && data.length === 0 && (
+          {(!data || data.length === 0) && (
             <Alert severity="info">
               Nenhuma situação de subfase disponível.
             </Alert>

@@ -81,15 +81,20 @@ export const BarChart = React.memo(
     const barSize = useMemo(() => (isMobile ? 10 : 20), [isMobile]);
 
     const truncatedDataMessage = useMemo(() => {
+      const messages: string[] = [];
       if (isMobile && data.length > 10) {
-        return (
-          <Typography variant="caption" align="center" color="text.secondary">
-            Mostrando os últimos 6 meses
-          </Typography>
-        );
+        messages.push('Mostrando os últimos 6 itens');
       }
-      return null;
-    }, [isMobile, data.length]);
+      if (isMobile && series.length > 3) {
+        messages.push(`Mostrando 3 de ${series.length} séries`);
+      }
+      if (messages.length === 0) return null;
+      return (
+        <Typography variant="caption" align="center" color="text.secondary">
+          {messages.join(' · ')}
+        </Typography>
+      );
+    }, [isMobile, data.length, series.length]);
 
     const themedSeries = useMemo(() => {
       return displaySeries.map((s, index) => ({

@@ -14,6 +14,6 @@ export interface ApiResponse<T> {
 export interface ApiError {
   message: string;
   status?: number;
-  data?: any;
+  data?: unknown;
   isCancelled?: boolean;
 }

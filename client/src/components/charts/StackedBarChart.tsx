@@ -74,7 +74,7 @@ const CustomTooltip = ({
 
         return (
           <Box
-            key={index}
+            key={String(entry.dataKey ?? entry.name ?? index)}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -165,24 +165,22 @@ export const StackedBarChart = React.memo(
       if (!stacked100) return displayData;
 
       return displayData.map(item => {
-        // Use type assertion to make TypeScript happy with dynamic access
-        const typedItem = item as Record<string, any>;
-
+        // StackedBarDataPoint já tem index signature, não precisa de cast `any`.
         // Calculate total across all series
         const total = themedSeries.reduce(
-          (acc, { dataKey }) => acc + (Number(typedItem[dataKey]) || 0),
+          (acc, { dataKey }) => acc + (Number(item[dataKey]) || 0),
           0,
         );
 
         // Create a new result object with explicit type
-        const result: Record<string, any> = {
+        const result: StackedBarDataPoint = {
           name: item.name,
           originalName: item.originalName || String(item.name),
         };
 
         // Add percentage values and store original values
         themedSeries.forEach(({ dataKey }) => {
-          const value = Number(typedItem[dataKey]) || 0;
+          const value = Number(item[dataKey]) || 0;
 
           // Store original raw value
           result[`${dataKey}_raw`] = value;
@@ -191,7 +189,7 @@ export const StackedBarChart = React.memo(
           result[dataKey] = total === 0 ? 0 : (value / total) * 100;
         });
 
-        return result as StackedBarDataPoint;
+        return result;
       });
     }, [displayData, themedSeries, stacked100]);
 
@@ -209,10 +207,11 @@ export const StackedBarChart = React.memo(
     // Bar size based on device
     const barSize = useMemo(() => (isMobile ? 15 : undefined), [isMobile]);
 
-    // Chart layout based on device and data size
+    // Chart layout based on device and data size. Usa displayData.length (o
+    // array efetivamente renderizado) para ficar consistente com o truncamento.
     const chartLayout = useMemo(
-      () => (isMobile && data.length > 5 ? 'vertical' : 'horizontal'),
-      [isMobile, data.length],
+      () => (isMobile && displayData.length > 5 ? 'vertical' : 'horizontal'),
+      [isMobile, displayData.length],
     );
 
     // Caption message for truncated data

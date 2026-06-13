@@ -37,11 +37,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     };
   }
 
-  static defaultProps = {
-    showHomeButton: true,
-    showReloadButton: true,
-  };
-
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     // Update state so the next render shows the fallback UI
     return {
@@ -105,7 +100,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               recarregar a página ou voltar à página inicial.
             </Typography>
 
-            {this.state.error && (
+            {this.state.error && import.meta.env.DEV && (
               <Box
                 sx={{
                   textAlign: 'left',
@@ -140,7 +135,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             )}
 
             <Stack direction="row" spacing={2} justifyContent="center">
-              {this.props.showReloadButton && (
+              {(this.props.showReloadButton ?? true) && (
                 <Button
                   variant="contained"
                   color="primary"
@@ -151,7 +146,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 </Button>
               )}
 
-              {this.props.showHomeButton && (
+              {(this.props.showHomeButton ?? true) && (
                 <Button
                   component={RouterLink}
                   to="/"

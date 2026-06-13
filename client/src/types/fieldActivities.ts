@@ -52,23 +52,6 @@ export interface Track {
 }
 
 /**
- * Situação (Status) entity
- */
-export interface Situacao {
-  id: number;
-  nome: string;
-  cor?: string; // Color for visualization
-}
-
-/**
- * Categoria (Category) entity
- */
-export interface Categoria {
-  id: number;
-  nome: string;
-}
-
-/**
  * GeoJSON response for map
  */
 export interface CamposGeoJSONResponse
@@ -80,12 +63,6 @@ export interface CamposGeoJSONResponse
 /**
  * API responses
  */
-export interface CamposResponse {
-  dados: Campo[];
-  success: boolean;
-  message: string;
-}
-
 export interface FotosResponse {
   dados: Foto[];
   success: boolean;
@@ -94,18 +71,6 @@ export interface FotosResponse {
 
 export interface TracksResponse {
   dados: Track[];
-  success: boolean;
-  message: string;
-}
-
-export interface SituacoesResponse {
-  dados: Situacao[];
-  success: boolean;
-  message: string;
-}
-
-export interface CategoriasResponse {
-  dados: Categoria[];
   success: boolean;
   message: string;
 }

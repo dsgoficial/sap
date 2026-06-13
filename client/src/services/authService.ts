@@ -6,7 +6,6 @@ import { handleApiError, createCancelToken } from '@/utils/apiErrorHandler';
 import axios from 'axios';
 
 const APLICACAO = 'sap_web';
-const TOKEN_EXPIRY_KEY = '@sap_web-Token-Expiry';
 
 /**
  * Login user with username and password
@@ -30,11 +29,18 @@ export const login = async (
       cancelToken ? { cancelToken: cancelToken.token } : undefined,
     );
 
-    // If login is successful, store token expiry (assuming token valid for 24 hours)
-    if (response.data.success && response.data.dados.token) {
-      const expiryTime = new Date();
-      expiryTime.setHours(expiryTime.getHours() + 24);
-      localStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toISOString());
+    // Validação de runtime do campo crítico: o token deve vir como string não
+    // vazia. A expiração é derivada do claim `exp` do JWT no authStore (setUser),
+    // não fabricada aqui.
+    if (response.data.success) {
+      const token = response.data.dados?.token;
+      if (typeof token !== 'string' || token.length === 0) {
+        throw handleApiError(
+          new Error('Resposta de login inválida: token ausente'),
+          'Resposta de login inválida',
+          'login',
+        );
+      }
     }
 
     return response.data;

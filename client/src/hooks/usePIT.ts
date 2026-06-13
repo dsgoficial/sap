@@ -82,8 +82,12 @@ export const usePITData = () => {
         if (element.month >= 1 && element.month <= 12) {
           projectData[element.projeto][element.lote].months[element.month - 1] =
             element.finalizadas;
-          // Store meta if provided
-          if (element.meta !== undefined) {
+          // Mantém a PRIMEIRA meta definida do lote (evita que a meta do último
+          // elemento sobrescreva silenciosamente as anteriores quando divergem).
+          if (
+            element.meta !== undefined &&
+            projectData[element.projeto][element.lote].meta === undefined
+          ) {
             projectData[element.projeto][element.lote].meta = element.meta;
           }
         }
@@ -96,9 +100,9 @@ export const usePITData = () => {
             project: projectKey,
             rows: Object.keys(projectData[projectKey]).map(lotKey => {
               const lotData = projectData[projectKey][lotKey];
-              const meta = lotData.meta || 0;
+              const meta = Number(lotData.meta) || 0;
               const count = lotData.months.reduce(
-                (sum, value) => sum + +value,
+                (sum, value) => sum + (Number(value) || 0),
                 0,
               );
               const percent =

@@ -7,6 +7,7 @@ import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { GridItem, GridData } from '@/types/grid';
+import { formatTimestamp } from '@/utils/dateFormatters';
 
 // Styled components
 const GridContainer = styled('div')({
@@ -80,6 +81,11 @@ export const Grid = ({
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
+  // Transformação atual acessível ao efeito de build sem colocá-la nas deps —
+  // o efeito de transform separado cuida das atualizações de pan/zoom.
+  const transformRef = useRef({ scale, translate });
+  transformRef.current = { scale, translate };
+
   const zoomIn = () => setScale(prev => Math.min(prev * 1.2, 3));
   const zoomOut = () => setScale(prev => Math.max(prev / 1.2, 0.5));
   const resetView = () => {
@@ -98,49 +104,8 @@ export const Grid = ({
     return { rowSize, colSize };
   }, [data.grade]);
 
-  const formatTimestamp = (dateString?: string) => {
-    if (!dateString) return '';
-    try {
-      // Parse the date, handling common UTC formats that might lack a timezone indicator
-      let date;
-
-      // If the dateString already has a timezone indicator, use it as is
-      if (
-        dateString.includes('Z') ||
-        dateString.includes('+') ||
-        dateString.match(/\d-\d{2}:\d{2}$/)
-      ) {
-        date = new Date(dateString);
-      } else {
-        // If it doesn't have a timezone indicator, assume it's UTC
-        if (dateString.includes('T')) {
-          // ISO format without timezone
-          date = new Date(dateString + 'Z');
-        } else if (dateString.includes(' ') && dateString.includes(':')) {
-          // "YYYY-MM-DD HH:MM:SS" format
-          date = new Date(dateString.replace(' ', 'T') + 'Z');
-        } else {
-          // Fallback
-          date = new Date(dateString);
-        }
-      }
-
-      // Format using locale string to convert to user's timezone
-      return date.toLocaleString('pt-BR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      });
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return dateString;
-    }
-  };
-
-  // Memoize handlers to prevent recreation on each render
+  // Memoize handlers to prevent recreation on each render.
+  // formatTimestamp é importado (referência estável) — fora das deps.
   const handlers = useMemo(() => {
     return {
       mouseOver: (d: GridItem) => {
@@ -192,7 +157,7 @@ export const Grid = ({
         }, 2000);
       },
     };
-  }, [onItemHover, formatTimestamp]);
+  }, [onItemHover]);
 
   // Memoize cell style with theme support
   const cellStyles = useMemo(
@@ -256,7 +221,7 @@ export const Grid = ({
     const svgSelection = select(svgRef.current);
 
     // Define drag behavior
-    const dragHandler = drag().on('drag', event => {
+    const dragHandler = drag<SVGSVGElement, unknown>().on('drag', event => {
       setTranslate(prev => ({
         x: prev.x + event.dx,
         y: prev.y + event.dy,
@@ -264,7 +229,7 @@ export const Grid = ({
     });
 
     // Apply drag to SVG element
-    svgSelection.call(dragHandler as any);
+    svgSelection.call(dragHandler);
   }, []);
 
   // Initialize grid position when first rendered
@@ -273,7 +238,9 @@ export const Grid = ({
     setTranslate(initialPos);
   }, [calculateInitialPosition, rowSize, colSize]);
 
-  // D3 code for grid visualization
+  // D3: constrói a árvore SVG apenas quando dados/dimensões/handlers mudam.
+  // NÃO depende de scale/translate — pan/zoom não reconstrói tudo (ver efeito
+  // de transform abaixo).
   useEffect(() => {
     if (!svgRef.current || rowSize === 0 || colSize === 0) return;
 
@@ -281,14 +248,17 @@ export const Grid = ({
     const svg = select(svgRef.current);
     svg.selectAll('*').remove();
 
-    // Create a group for all content with transform for zoom/pan
+    // Grupo principal — aplica a transformação atual (via ref) para o estado
+    // inicial; atualizações de zoom/pan ficam a cargo do efeito separado.
+    const { scale: curScale, translate: curTranslate } = transformRef.current;
     const mainGroup = svg
       .attr('width', '100%')
       .attr('height', '100%')
       .append('g')
+      .attr('class', 'main-group')
       .attr(
         'transform',
-        `translate(${translate.x},${translate.y}) scale(${scale})`,
+        `translate(${curTranslate.x},${curTranslate.y}) scale(${curScale})`,
       );
 
     const gridData = createGridData();
@@ -339,10 +309,19 @@ export const Grid = ({
     handlers,
     cellStyles,
     createGridData,
-    scale,
-    translate,
     setupDrag,
   ]);
+
+  // D3: aplica zoom/pan via transform incremental — sem reconstruir a árvore.
+  useEffect(() => {
+    if (!svgRef.current) return;
+    select(svgRef.current)
+      .select('.main-group')
+      .attr(
+        'transform',
+        `translate(${translate.x},${translate.y}) scale(${scale})`,
+      );
+  }, [scale, translate]);
 
   return (
     <GridContainer>
