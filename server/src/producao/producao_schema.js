@@ -110,6 +110,27 @@ models.finaliza = Joi.object().keys({
   observacao_atividade: Joi.string(),
 });
 
+models.metadadoEdicao = Joi.object().keys({
+  metadados: Joi.array()
+    .items(
+      Joi.object().keys({
+        produto_id: Joi.number().integer().strict().required(),
+        nome_produto: Joi.string().required(),
+        palavras_chave: Joi.array()
+          .items(
+            Joi.object().keys({
+              nome: Joi.string().required(),
+              tipo_palavra_chave_id: Joi.number().integer().strict().required(),
+            }),
+          )
+          .required(),
+      }),
+    )
+    .unique("produto_id")
+    .min(1)
+    .required(),
+});
+
 models.problemaAtividade = Joi.object().keys({
   atividade_id: Joi.number().integer().strict().required(),
   tipo_problema_id: Joi.number().integer().strict().required(),

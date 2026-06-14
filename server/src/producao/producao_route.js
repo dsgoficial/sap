@@ -161,6 +161,35 @@ router.get(
 
 /**
  * @swagger
+ * /api/distribuicao/metadados_edicao:
+ *   post:
+ *     summary: Salva metadado por folha na fase de Edição
+ *     description: Permite ao operador gravar o nome do produto e as palavras-chave das folhas da sua atividade de edição em execução. Cada produto é validado contra a UT da atividade do operador.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - producao
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Metadados de edição salvos com sucesso
+ */
+router.post(
+  "/metadados_edicao",
+  verifyLogin,
+  schemaValidation({ body: producaoSchema.metadadoEdicao }),
+  asyncHandler(async (req, res, next) => {
+    await producaoCtrl.salvaMetadadoEdicao(req.usuarioId, req.body.metadados);
+
+    const msg = "Metadados de edição salvos com sucesso";
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK);
+  }),
+);
+
+/**
+ * @swagger
  * /api/distribuicao/inicia:
  *   post:
  *     summary: Inicia uma nova atividade

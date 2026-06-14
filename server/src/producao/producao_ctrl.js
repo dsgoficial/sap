@@ -308,6 +308,32 @@ const getAtalhos = async (connection) => {
   );
 };
 
+// Lista os produtos (folhas) que a UT recobre geograficamente, com as
+// palavras-chave de cada um. So e chamado para atividade da fase de Edicao
+// (tipo_fase_id = 4). Em mapeamento sistematico a UT recobre uma folha (1:1),
+// mas a UT pode cobrir mais de uma; por isso devolve uma lista.
+const getInfoMetadadoEdicao = async (t, unidadeTrabalhoId) => {
+  const produtos = await t.any(
+    `SELECT p.id AS produto_id, p.uuid AS produto_uuid, p.nome AS nome_produto,
+      p.mi, p.inom
+    FROM macrocontrole.unidade_trabalho AS ut
+    INNER JOIN macrocontrole.produto AS p
+      ON p.lote_id = ut.lote_id AND p.geom && ut.geom
+      AND st_relate(p.geom, ut.geom, '2********')
+    WHERE ut.id = $<unidadeTrabalhoId>
+    ORDER BY p.inom, p.mi, p.nome`,
+    { unidadeTrabalhoId },
+  );
+  for (const produto of produtos) {
+    produto.palavras_chave = await t.any(
+      `SELECT nome, tipo_palavra_chave_id
+      FROM metadado.palavra_chave_produto WHERE produto_id = $<produtoId>`,
+      { produtoId: produto.produto_id },
+    );
+  }
+  return produtos;
+};
+
 const dadosProducao = async (atividadeId) => {
   const results = await db.sapConn.task(async (t) => {
     const dadosut = await t.one(prepared.retornaDadosProducao, [atividadeId]);
@@ -334,6 +360,7 @@ const dadosProducao = async (atividadeId) => {
     info.atividade.unidade_trabalho_id = dadosut.unidade_trabalho_id;
     info.atividade.lote_id = dadosut.lote_id;
     info.atividade.fase_id = dadosut.fase_id;
+    info.atividade.tipo_fase_id = dadosut.tipo_fase_id;
     info.atividade.subfase_id = dadosut.subfase_id;
     info.atividade.etapa_id = dadosut.etapa_id;
     info.atividade.tipo_etapa_id = dadosut.tipo_etapa_id;
@@ -432,7 +459,14 @@ const dadosProducao = async (atividadeId) => {
 
     info.atividade.atalhos = await getAtalhos(t);
 
-    //TODO infoEdicao se fase for de edição
+    // Metadado por folha que o operador edita na fase de Edicao (nome do produto
+    // e palavras-chave). Embutido no pacote (lido pelo plugin SAP_Operador).
+    if (dadosut.tipo_fase_id === 4) {
+      info.atividade.metadado_edicao = await getInfoMetadadoEdicao(
+        t,
+        dadosut.unidade_trabalho_id,
+      );
+    }
 
     return info;
   });
@@ -470,6 +504,64 @@ controller.verifica = async (usuarioId) => {
   }
 
   return controller.getDadosAtividade(emAndamento.id, usuarioId, false);
+};
+
+// Escrita de metadado por folha pelo OPERADOR durante a atividade de Edicao.
+// Diferente do /finaliza, aqui ha checagem de dono: cada produto_id precisa
+// pertencer (geograficamente) a UT da atividade EM EXECUCAO do operador, na
+// fase de Edicao (tipo_fase_id = 4). Substitui o conjunto de palavras-chave do
+// produto (DELETE + INSERT), em vez de so fazer upsert.
+controller.salvaMetadadoEdicao = async (usuarioId, metadados) => {
+  await db.sapConn.tx(async (t) => {
+    for (const edicao of metadados) {
+      const dono = await t.oneOrNone(
+        `SELECT 1
+        FROM macrocontrole.atividade AS a
+        INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+        INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
+        INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+        INNER JOIN macrocontrole.produto AS p
+          ON p.lote_id = ut.lote_id AND p.geom && ut.geom
+          AND st_relate(p.geom, ut.geom, '2********')
+        WHERE a.usuario_id = $<usuarioId> AND a.tipo_situacao_id = 2
+          AND f.tipo_fase_id = 4 AND p.id = $<produtoId>
+        LIMIT 1`,
+        { usuarioId, produtoId: edicao.produto_id },
+      );
+
+      if (!dono) {
+        throw new AppError(
+          "Produto não corresponde à atividade de edição em execução deste operador",
+          httpCode.BadRequest,
+        );
+      }
+
+      await t.none(
+        `UPDATE macrocontrole.produto SET nome = $<nome> WHERE id = $<produtoId>`,
+        { nome: edicao.nome_produto, produtoId: edicao.produto_id },
+      );
+
+      await t.none(
+        `DELETE FROM metadado.palavra_chave_produto WHERE produto_id = $<produtoId>`,
+        { produtoId: edicao.produto_id },
+      );
+
+      if (edicao.palavras_chave && edicao.palavras_chave.length > 0) {
+        const cs = new db.pgp.helpers.ColumnSet([
+          "nome",
+          "tipo_palavra_chave_id",
+          { name: "produto_id", init: () => edicao.produto_id },
+        ]);
+
+        const query = db.pgp.helpers.insert(edicao.palavras_chave, cs, {
+          table: "palavra_chave_produto",
+          schema: "metadado",
+        });
+
+        await t.none(query);
+      }
+    }
+  });
 };
 
 controller.finaliza = async (
