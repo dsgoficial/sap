@@ -31,6 +31,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import EditLocationAltIcon from '@mui/icons-material/EditLocationAlt';
 import { useThemeMode } from '@/contexts/ThemeContext';
 
 interface DashboardSidebarProps {
@@ -137,6 +138,12 @@ const DashboardSidebar = ({
       path: '/field-activities',
       icon: <LandscapeIcon />,
       adminOnly: false, // false significa que qualquer usuário pode acessar
+    },
+    {
+      title: 'Gerência de Campos',
+      path: '/gerencia-campos',
+      icon: <EditLocationAltIcon />,
+      adminOnly: true,
     },
     {
       title: 'Capacitações',

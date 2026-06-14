@@ -81,7 +81,7 @@ const CampoMap = ({ className }: CampoMapProps) => {
       if (!properties || !properties.pit) return false;
 
       // PIT is always a valid year in YYYY format
-      const pitYear = parseInt(properties.pit, 10);
+      const pitYear = Number(properties.pit);
       return pitYear === selectedYear;
     });
 
@@ -106,7 +106,7 @@ const CampoMap = ({ className }: CampoMapProps) => {
       if (!properties || !properties.pit) return;
 
       // PIT is always a valid year in YYYY format
-      const pitYear = parseInt(properties.pit, 10);
+      const pitYear = Number(properties.pit);
       if (!isNaN(pitYear)) {
         yearsSet.add(pitYear);
       }

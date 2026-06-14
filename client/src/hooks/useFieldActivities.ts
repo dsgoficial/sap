@@ -18,11 +18,16 @@ import {
 } from '@/lib/queryClient';
 
 // Query keys
-const QUERY_KEYS = {
+export const QUERY_KEYS = {
+  CAMPOS: createQueryKey('campos'),
   CAMPO_BY_ID: (id: string) => createQueryKey('campo', id),
   FOTOS_BY_CAMPO: (id: string) => createQueryKey('fotos', id),
   TRACKS_BY_CAMPO: (id: string) => createQueryKey('tracks', id),
   CAMPOS_GEOJSON: createQueryKey('camposGeoJSON'),
+  ESTATISTICAS: createQueryKey('campoEstatisticas'),
+  PRODUTOS_CAMPO: (id: string) => createQueryKey('produtosCampo', id),
+  PRODUTOS_LOTE: (id: number) => createQueryKey('produtosLote', id),
+  LOTES: createQueryKey('lotes'),
 };
 
 // Main hook for field activities
