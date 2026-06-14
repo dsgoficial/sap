@@ -22,11 +22,11 @@ models.feicao = Joi.object().keys({
           .required(),
         comprimento: Joi.number()
           .strict()
-          .when('operacao', { is: 1, then: Joi.required() }),
+          .when('tipo_operacao_id', { is: 1, then: Joi.required() }),
         vertices: Joi.number()
           .integer()
           .strict()
-          .when('operacao', { is: 1, then: Joi.required() }),
+          .when('tipo_operacao_id', { is: 1, then: Joi.required() }),
         camada: Joi.string().required()
       })
     )
@@ -89,6 +89,28 @@ models.perfilMonitoramentoAtualizacao = Joi.object().keys({
     )
     .required()
     .min(1)
+})
+
+// NOTA: sem .strict() nos campos numericos. req.query do Express chega como
+// string; .strict() bloquearia a coercao do Joi e todo filtro numerico daria
+// 400. As demais query schemas do repo seguem a mesma convencao (sem strict).
+models.resumoFeicaoQuery = Joi.object().keys({
+  lote_id: Joi.number().integer(),
+  data_inicio: Joi.date(),
+  data_fim: Joi.date()
+})
+
+models.coberturaTelaQuery = Joi.object().keys({
+  lote_id: Joi.number().integer(),
+  usuario_id: Joi.number().integer(),
+  data_inicio: Joi.date(),
+  data_fim: Joi.date()
+})
+
+models.aproveitamentoTelaQuery = Joi.object().keys({
+  usuario_id: Joi.number().integer().required(),
+  data_inicio: Joi.date(),
+  data_fim: Joi.date()
 })
 
 models.perfilMonitoramentoOperadorIds = Joi.object().keys({

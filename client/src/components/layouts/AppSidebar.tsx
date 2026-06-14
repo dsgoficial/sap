@@ -23,13 +23,14 @@ import PieChartIcon from '@mui/icons-material/PieChart';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import MapIcon from '@mui/icons-material/Map';
 import PeopleIcon from '@mui/icons-material/People';
-import SettingsIcon from '@mui/icons-material/Settings';
 import { useIsAdmin } from '@/stores/authStore';
 import LandscapeIcon from '@mui/icons-material/Landscape';
 import SchoolIcon from '@mui/icons-material/School';
 import AssignmentLateIcon from '@mui/icons-material/AssignmentLate';
 import BadgeIcon from '@mui/icons-material/Badge';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import QueryStatsIcon from '@mui/icons-material/QueryStats';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import { useThemeMode } from '@/contexts/ThemeContext';
 
 interface DashboardSidebarProps {
@@ -114,9 +115,15 @@ const DashboardSidebar = ({
       adminOnly: true,
     },
     {
-      title: 'Microcontrole',
+      title: 'Atividades',
       path: '/microcontrol',
-      icon: <SettingsIcon />,
+      icon: <AssignmentTurnedInIcon />,
+      adminOnly: true,
+    },
+    {
+      title: 'Microcontrole',
+      path: '/microcontrole-telemetria',
+      icon: <QueryStatsIcon />,
       adminOnly: true,
     },
     {

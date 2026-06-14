@@ -62,6 +62,13 @@ const MicroControl = lazy(() =>
     default: module.MicroControl,
   })),
 );
+const MicroControlTelemetry = lazy(() =>
+  import(
+    '../features/microControlTelemetry/routes/MicroControlTelemetry'
+  ).then(module => ({
+    default: module.MicroControlTelemetry,
+  })),
+);
 const Maps = lazy(() =>
   import('../features/map/routes/Maps').then(module => ({
     default: module.Maps,
@@ -283,6 +290,15 @@ const routes: RouteObject[] = [
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <MicroControl />
+          </Suspense>
+        ),
+        loader: adminLoader,
+      },
+      {
+        path: 'microcontrole-telemetria',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <MicroControlTelemetry />
           </Suspense>
         ),
         loader: adminLoader,

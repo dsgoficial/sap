@@ -177,9 +177,9 @@ const getInfoMonitoramento = async (connection, subfaseId, loteId) => {
     [subfaseId, loteId],
   );
 
-  return monitoramento.length > 0
-    ? monitoramento[0].tipo_monitoramento_id
-    : null;
+  // Lista de tipos de monitoramento (1=feicao, 2=tela). UNIQUE permite os dois
+  // por subfase+lote, entao devolve todos; o operador arma cada um.
+  return monitoramento.map((m) => m.tipo_monitoramento_id);
 };
 
 const getInfoInsumos = async (connection, unidadeTrabalhoId) => {
@@ -420,11 +420,11 @@ const dadosProducao = async (atividadeId) => {
       dadosut.lote_id,
     );
 
-    // info.atividade.monitoramento = await getInfoMonitoramento(
-    //   t,
-    //   dadosut.subfase_id,
-    //   dadosut.lote_id
-    // )
+    info.atividade.monitoramento = await getInfoMonitoramento(
+      t,
+      dadosut.subfase_id,
+      dadosut.lote_id,
+    );
 
     info.atividade.insumos = await getInfoInsumos(
       t,
