@@ -2,108 +2,22 @@ BEGIN;
 
 CREATE SCHEMA recurso_humano;
 
-CREATE TABLE recurso_humano.perda_recurso_humano(
-	id SERIAL NOT NULL PRIMARY KEY,	
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),	
- 	tipo_perda_recurso_humano_id SMALLINT NOT NULL REFERENCES dominio.tipo_perda_recurso_humano (code),	
-	horas REAL,
-	data_inicio timestamp with time zone NOT NULL,
-	data_fim timestamp with time zone NOT NULL,	
-	aprovado boolean not null default true,
-	observacao TEXT	
+-- Secao 5.1 do RPCMTec (Aproveitamento do efetivo, padrao 2026: Militar |
+-- Atividades). E um RETRATO MENSAL congelado: uma linha por militar por mes, com
+-- o posto da epoca (tipo_posto_grad_id) e a atividade/encargo principal
+-- (atividades, texto livre; vazio para quem so produziu). Guardar por mes torna
+-- a situacao de RH de cada mes fiel mesmo apos promocoes e baixas, e imutavel
+-- depois do relatorio assinado. O preenchimento de um mes novo e agilizado
+-- copiando o mes anterior (ver rh_ctrl.copiarMesAnterior).
+CREATE TABLE recurso_humano.aproveitamento_mes
+(
+    id SERIAL NOT NULL PRIMARY KEY,
+    ano SMALLINT NOT NULL,
+    mes SMALLINT NOT NULL,
+    usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+    tipo_posto_grad_id SMALLINT NOT NULL REFERENCES dominio.tipo_posto_grad (code),
+    atividades TEXT,
+    UNIQUE (ano, mes, usuario_id)
 );
-
-CREATE TABLE recurso_humano.ganho_recurso_humano(--horas além do expediente
-	id SERIAL NOT NULL PRIMARY KEY,	
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),	
-	horas REAL,
-	data_inicio timestamp with time zone NOT NULL,
-	data_fim timestamp with time zone NOT NULL,	
-	aprovado boolean not null default true,
-	observacao TEXT	
-);
-
-CREATE TABLE recurso_humano.funcao_especial(
-	id SERIAL NOT NULL PRIMARY KEY,
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
-	funcao VARCHAR(255) NOT NULL,
-	data_inicio timestamp with time zone NOT NULL,
-	data_fim timestamp with time zone
-);
-
-CREATE TABLE recurso_humano.expediente(
-	id SERIAL NOT NULL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-	segunda_feira REAL NOT NULL,
-	terca_feira REAL NOT NULL,
-	quarta_feira REAL NOT NULL,
-	quinta_feira REAL NOT NULL,
-	sexta_feira REAL NOT NULL,
-	sabado REAL NOT NULL,
-	domingo REAL NOT NULL,
-	UNIQUE(nome)
-);
-
-INSERT INTO recurso_humano.expediente (nome, segunda_feira, terca_feira, quarta_feira, quinta_feira, sexta_feira, sabado, domingo) VALUES
-('Expediente integral', 6.5, 6.5, 6.5, 6.5, 4, 0, 0),
-('Turno', 6, 6, 6, 6, 6, 0, 0),
-('Integral terça e quinta', 6, 6.5, 6, 6.5, 6, 0, 0);
-
-CREATE TABLE recurso_humano.perfil_expediente(
-	id SERIAL NOT NULL PRIMARY KEY,
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
- 	expediente_id INTEGER NOT NULL REFERENCES recurso_humano.expediente (id),
-	data_inicio timestamp with time zone NOT NULL,
-	data_fim timestamp with time zone
-);
-
-CREATE TABLE recurso_humano.informacoes_usuario(
-	id SERIAL NOT NULL PRIMARY KEY,
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
- 	turma_promocao INTEGER,
-    antiguidade_turma INTEGER,
-    data_nascimento DATE,
-    telefone VARCHAR(255),
-    identidade VARCHAR(255),
-    cpf VARCHAR(255),
-	email_eb VARCHAR(255),
-    email VARCHAR(255),
-    codigo_banco VARCHAR(255),
-    banco VARCHAR(255),
-    agencia_bancaria VARCHAR(255),
-    conta_bancaria VARCHAR(255),
-    UNIQUE(usuario_id)
-);
-
-CREATE TABLE recurso_humano.banco_dispensas(
-	id SERIAL NOT NULL PRIMARY KEY,
- 	usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
- 	motivo_dispensa TEXT NOT NULL,
-	dias_totais INTEGER NOT NULL,
-    dias_restantes INTEGER NOT NULL
-);
-
-CREATE TABLE dominio.tipo_perda_recurso_humano(	
-	code SMALLINT NOT NULL PRIMARY KEY,	
-	nome VARCHAR(255) NOT NULL	
-);	
-
-INSERT INTO dominio.tipo_perda_recurso_humano (code, nome) VALUES	
-(1, 'Atividades militares'),	
-(2, 'Atividades administrativas'),	
-(3, 'Problemas técnicos'),	
-(4, 'Feriado'),	
-(5, 'Férias'),
-(6, 'Dispensa por motivo de saúde'),
-(7, 'Dispensa como recompensa'),
-(8, 'Dispensa por regresso de atividade de campo'),
-(9, 'Designação para realizar curso / capacitação'),
-(10, 'Designação para ministrar curso / capacitação'),
-(11, 'Designação para participação em eventos'),
-(99, 'Outros');
-
-GRANT USAGE ON SCHEMA recurso_humano TO $1:name;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA recurso_humano TO $1:name;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA recurso_humano TO $1:name;
 
 COMMIT;

@@ -14,12 +14,13 @@ INSERT INTO controle_campo.situacao (code, nome) VALUES
 (3, 'Finalizado'),
 (4, 'Cancelado');
 
+-- Capacitacao deixou de ser categoria de campo (passou para o schema
+-- controle_capacitacao, que alimenta a 2.5/5.2 do RPCMTec).
 CREATE TYPE controle_campo.categoria_campo AS ENUM (
     'Reambulação',
     'Modelos 3D',
     'Imagens Panorâmicas em 360º',
     'Pontos de Controle',
-    'Capacitação em Geoinformação',
     'Ortoimagens de Drone'
 );
 

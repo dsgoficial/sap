@@ -26,6 +26,9 @@ import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useIsAdmin } from '@/stores/authStore';
 import LandscapeIcon from '@mui/icons-material/Landscape';
+import SchoolIcon from '@mui/icons-material/School';
+import AssignmentLateIcon from '@mui/icons-material/AssignmentLate';
+import BadgeIcon from '@mui/icons-material/Badge';
 import { useThemeMode } from '@/contexts/ThemeContext';
 
 interface DashboardSidebarProps {
@@ -126,6 +129,24 @@ const DashboardSidebar = ({
       path: '/field-activities',
       icon: <LandscapeIcon />,
       adminOnly: false, // false significa que qualquer usuário pode acessar
+    },
+    {
+      title: 'Capacitações',
+      path: '/capacitacao',
+      icon: <SchoolIcon />,
+      adminOnly: true,
+    },
+    {
+      title: 'Extra-PIT',
+      path: '/extra-pit',
+      icon: <AssignmentLateIcon />,
+      adminOnly: true,
+    },
+    {
+      title: 'Efetivo',
+      path: '/efetivo',
+      icon: <BadgeIcon />,
+      adminOnly: true,
     },
   ];
 

@@ -26,7 +26,109 @@ END $$;
 ALTER TABLE metadado.palavra_chave_produto DROP COLUMN IF EXISTS lote_id;
 ALTER TABLE metadado.palavra_chave_produto ALTER COLUMN produto_id SET NOT NULL;
 
--- 4) bump da versao do banco
+-- ==========================================================================
+-- Fontes do RPCMTec no SAP: capacitacao (2.5/5.2), extra_pit (2.6) e o
+-- aproveitamento do efetivo (5.1, schema recurso_humano refeito do zero).
+-- ==========================================================================
+
+-- 4) Capacitacao (2.5 ministrada / 5.2 recebida)
+CREATE SCHEMA IF NOT EXISTS controle_capacitacao;
+
+CREATE TABLE IF NOT EXISTS controle_capacitacao.situacao(
+    code SMALLINT NOT NULL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL UNIQUE
+);
+INSERT INTO controle_capacitacao.situacao (code, nome) VALUES
+(1, 'Prevista'), (2, 'Em Execução'), (3, 'Concluída'), (4, 'Cancelada')
+ON CONFLICT (code) DO NOTHING;
+
+DO $$ BEGIN
+    CREATE TYPE controle_capacitacao.tipo_capacitacao AS ENUM ('Ministrada', 'Recebida');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE TABLE IF NOT EXISTS controle_capacitacao.capacitacao(
+    id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nome VARCHAR(255) NOT NULL,
+    tipo controle_capacitacao.tipo_capacitacao NOT NULL,
+    instituicoes TEXT,
+    local VARCHAR(255),
+    inicio timestamp with time zone,
+    fim timestamp with time zone,
+    efetivo_capacitado INTEGER,
+    militares TEXT,
+    plano_codigo VARCHAR(255),
+    ano SMALLINT NOT NULL,
+    situacao_id SMALLINT NOT NULL REFERENCES controle_capacitacao.situacao (code),
+    documento VARCHAR(255)
+);
+
+-- 5) Extra-PIT (2.6)
+CREATE TABLE IF NOT EXISTS macrocontrole.situacao_extra_pit(
+    code SMALLINT NOT NULL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL UNIQUE
+);
+INSERT INTO macrocontrole.situacao_extra_pit (code, nome) VALUES
+(1, 'Previsto'), (2, 'Em Produção'), (3, 'Enviado'), (4, 'Concluído'), (5, 'Cancelado')
+ON CONFLICT (code) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS macrocontrole.extra_pit(
+    id SERIAL NOT NULL PRIMARY KEY,
+    ano INTEGER NOT NULL,
+    demandante VARCHAR(255) NOT NULL,
+    tipo_produto VARCHAR(255) NOT NULL,
+    quantidade INTEGER NOT NULL,
+    situacao_id SMALLINT NOT NULL REFERENCES macrocontrole.situacao_extra_pit (code),
+    documento_autorizacao VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    lote_id INTEGER REFERENCES macrocontrole.lote (id)
+);
+CREATE INDEX IF NOT EXISTS extra_pit_ano ON macrocontrole.extra_pit (ano);
+
+-- 6) Aproveitamento do efetivo (5.1) - retrato mensal congelado, uma linha por
+--    militar por mes (posto da epoca + atividade principal).
+CREATE SCHEMA IF NOT EXISTS recurso_humano;
+
+CREATE TABLE IF NOT EXISTS recurso_humano.aproveitamento_mes(
+    id SERIAL NOT NULL PRIMARY KEY,
+    ano SMALLINT NOT NULL,
+    mes SMALLINT NOT NULL,
+    usuario_id INTEGER NOT NULL REFERENCES dgeo.usuario (id),
+    tipo_posto_grad_id SMALLINT NOT NULL REFERENCES dominio.tipo_posto_grad (code),
+    atividades TEXT,
+    UNIQUE (ano, mes, usuario_id)
+);
+
+-- 7) Remove "Capacitação em Geoinformação" do enum de campo (passou para
+--    controle_capacitacao). Postgres nao remove valor de enum direto.
+-- 7a) PASSAGEM: move os campos dessa categoria para a nova tabela capacitacao
+--     (tipo Ministrada; orgao -> instituicoes; equipe da DGEO -> militares;
+--     situacao Concluida). O efetivo_capacitado nao existia em campo, fica NULL.
+INSERT INTO controle_capacitacao.capacitacao (nome, tipo, instituicoes, inicio, fim, militares, ano, situacao_id)
+SELECT c.nome, 'Ministrada', c.orgao, c.inicio, c.fim, c.militares,
+       EXTRACT(YEAR FROM COALESCE(c.inicio, now()))::smallint, 3
+FROM controle_campo.campo c
+WHERE 'Capacitação em Geoinformação' = ANY (c.categorias);
+
+-- 7b) tira o valor dos arrays (campo que era SO capacitacao fica com array
+--     vazio; nao se apaga o campo para nao quebrar FKs de fotos/tracks/produtos)
+ALTER TABLE controle_campo.campo ALTER COLUMN categorias DROP DEFAULT;
+UPDATE controle_campo.campo
+SET categorias = array_remove(categorias, 'Capacitação em Geoinformação'::controle_campo.categoria_campo)
+WHERE 'Capacitação em Geoinformação' = ANY (categorias);
+
+-- 7c) recria o enum sem o valor (rename -> novo -> cast -> drop)
+ALTER TYPE controle_campo.categoria_campo RENAME TO categoria_campo_old;
+CREATE TYPE controle_campo.categoria_campo AS ENUM (
+    'Reambulação', 'Modelos 3D', 'Imagens Panorâmicas em 360º',
+    'Pontos de Controle', 'Ortoimagens de Drone'
+);
+ALTER TABLE controle_campo.campo
+    ALTER COLUMN categorias TYPE controle_campo.categoria_campo[]
+    USING categorias::text[]::controle_campo.categoria_campo[];
+ALTER TABLE controle_campo.campo ALTER COLUMN categorias SET DEFAULT '{}';
+DROP TYPE controle_campo.categoria_campo_old;
+
+-- 8) bump da versao do banco
 UPDATE public.versao SET nome = '2.3.1' WHERE code = 1;
 
 COMMIT;

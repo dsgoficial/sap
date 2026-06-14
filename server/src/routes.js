@@ -18,6 +18,8 @@ const { usuarioRoute } = require('./usuario')
 const { perigoRoute } = require('./perigo')
 const { rhRoute } = require('./rh')
 const { campoRoute } = require('./campo')
+const { capacitacaoRoute } = require('./capacitacao')
+const { extraPitRoute } = require('./extra_pit')
 
 const router = express.Router()
 
@@ -86,5 +88,9 @@ router.use('/perigo', perigoRoute)
 router.use('/rh', rhRoute)
 
 router.use('/campo', campoRoute)
+
+router.use('/capacitacao', capacitacaoRoute)
+
+router.use('/extra_pit', extraPitRoute)
 
 module.exports = router

@@ -19,4 +19,32 @@ models.getAtividadesPorUsuarioEPeriodoParams = Joi.object().keys({
   dataFim: Joi.date().required()
 });
 
+// Aproveitamento do efetivo (Secao 5.1 do RPCMTec): retrato por (ano, mes).
+models.anoMesParams = Joi.object().keys({
+  ano: Joi.number().integer().required(),
+  mes: Joi.number().integer().min(1).max(12).required()
+})
+
+models.copiarMes = Joi.object().keys({
+  ano: Joi.number().integer().required(),
+  mes: Joi.number().integer().min(1).max(12).required()
+})
+
+models.aproveitamento = Joi.object().keys({
+  aproveitamento: Joi.object().keys({
+    ano: Joi.number().integer().required(),
+    mes: Joi.number().integer().min(1).max(12).required(),
+    usuario_id: Joi.number().integer().required(),
+    tipo_posto_grad_id: Joi.number().integer().allow(null),
+    atividades: Joi.string().allow(null, '')
+  }).required()
+})
+
+models.aproveitamentoUpdate = Joi.object().keys({
+  aproveitamento: Joi.object().keys({
+    tipo_posto_grad_id: Joi.number().integer().allow(null),
+    atividades: Joi.string().allow(null, '')
+  }).required()
+})
+
 module.exports = models

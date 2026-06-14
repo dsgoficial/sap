@@ -747,4 +747,35 @@ CREATE TRIGGER chk_bloco_status_consistency
     FOR EACH ROW
     EXECUTE PROCEDURE macrocontrole.chk_bloco_status();
 
+-- Demandas Extra-PIT (Secao 2.6 do RPCMTec). Irmao da tabela macrocontrole.pit,
+-- mas centrado na DEMANDA: nem toda demanda Extra-PIT vira lote de producao
+-- (ex.: super-resolucao de imagem, carta especial). lote_id e opcional e liga a
+-- producao quando aplicavel (a leitura da 2.1 ignora lotes com extra_pit.lote_id
+-- para nao contar em dobro).
+CREATE TABLE macrocontrole.situacao_extra_pit(
+    code SMALLINT NOT NULL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL UNIQUE
+);
+
+INSERT INTO macrocontrole.situacao_extra_pit (code, nome) VALUES
+(1, 'Previsto'),
+(2, 'Em Produção'),
+(3, 'Enviado'),
+(4, 'Concluído'),
+(5, 'Cancelado');
+
+CREATE TABLE macrocontrole.extra_pit(
+    id SERIAL NOT NULL PRIMARY KEY,
+    ano INTEGER NOT NULL,
+    demandante VARCHAR(255) NOT NULL,
+    tipo_produto VARCHAR(255) NOT NULL,
+    quantidade INTEGER NOT NULL,
+    situacao_id SMALLINT NOT NULL REFERENCES macrocontrole.situacao_extra_pit (code),
+    documento_autorizacao VARCHAR(255) NOT NULL,
+    descricao TEXT,
+    lote_id INTEGER REFERENCES macrocontrole.lote (id)
+);
+
+CREATE INDEX extra_pit_ano ON macrocontrole.extra_pit (ano);
+
 COMMIT;

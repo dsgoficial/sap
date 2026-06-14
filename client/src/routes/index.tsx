@@ -72,6 +72,21 @@ const FieldActivities = lazy(() =>
     default: module.FieldActivities,
   })),
 );
+const Training = lazy(() =>
+  import('../features/training/routes/Training').then(module => ({
+    default: module.Training,
+  })),
+);
+const ExtraPit = lazy(() =>
+  import('../features/extraPit/routes/ExtraPit').then(module => ({
+    default: module.ExtraPit,
+  })),
+);
+const Personnel = lazy(() =>
+  import('../features/personnel/routes/Personnel').then(module => ({
+    default: module.Personnel,
+  })),
+);
 const Unauthorized = lazy(() =>
   import('./Unauthorized').then(module => ({
     default: module.Unauthorized,
@@ -283,6 +298,33 @@ const routes: RouteObject[] = [
             <FieldActivities />
           </Suspense>
         ),
+      },
+      {
+        path: 'capacitacao',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <Training />
+          </Suspense>
+        ),
+        loader: adminLoader,
+      },
+      {
+        path: 'extra-pit',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ExtraPit />
+          </Suspense>
+        ),
+        loader: adminLoader,
+      },
+      {
+        path: 'efetivo',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <Personnel />
+          </Suspense>
+        ),
+        loader: adminLoader,
       },
     ],
   },

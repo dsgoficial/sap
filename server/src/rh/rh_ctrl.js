@@ -6,10 +6,10 @@ const { AppError, httpCode } = require('../utils')
 
 const controller = {}
 
-controller.getTipoPerdaHr = async () => {
-  return db.sapConn
-    .any('SELECT code, nome FROM dominio.tipo_perda_recurso_humano')
-}
+// ==========================================================================
+// Estatisticas de producao (alimentam o acompanhamento e a Secao 2.1 do
+// RPCMTec via skill consultar-sap). NAO alterar sem rever a consultar-sap.
+// ==========================================================================
 
 controller.getDiasLogadosUsuario = async usuarioId => {
   return db.sapConn.any(
@@ -42,9 +42,9 @@ controller.getAtividadesPorPeriodo = async (dataInicio, dataFim) => {
 
 controller.getAtividadesPorUsuarioEPeriodo = async (usuarioId, dataInicio, dataFim) => {
   return db.sapConn.any(
-    `SELECT  
+    `SELECT
       u.nome AS nome_usuario,
-      sf.nome AS nome_subfase, 
+      sf.nome AS nome_subfase,
       b.nome AS nome_bloco,
       COUNT(DISTINCT ut.id) AS qtd_ut
       FROM macrocontrole.atividade a
@@ -63,7 +63,7 @@ controller.getAtividadesPorUsuarioEPeriodo = async (usuarioId, dataInicio, dataF
 
 controller.getAllLoteStatsByDate = async (dataInicio, dataFim) => {
   return db.sapConn.any(
-    `SELECT 
+    `SELECT
     l.id AS lote_id,
     l.nome AS lote_nome,
     COUNT(*) AS total_atividades,
@@ -98,7 +98,7 @@ ORDER BY percent_exec DESC;`,
 
 controller.getAllBlocksStatsByDate = async (dataInicio, dataFim) => {
   return db.sapConn.any(
-    `SELECT 
+    `SELECT
     b.nome,
     COALESCE(COUNT(CASE WHEN a.tipo_situacao_id = 4 THEN 1 END) * 1.0 / NULLIF(COUNT(*), 0), 0.0) AS proporcao_4,
     COUNT(CASE WHEN a.tipo_situacao_id = 4
@@ -118,6 +118,116 @@ ORDER BY proporcao_4 DESC;
 `,
     { dataInicio: `${dataInicio} 00:00:00`, dataFim: `${dataFim} 23:59:59` }
   );
+}
+
+// ==========================================================================
+// Aproveitamento do efetivo (Secao 5.1 do RPCMTec, padrao 2026: Militar |
+// Atividades). Retrato MENSAL congelado: uma linha por militar por mes em
+// recurso_humano.aproveitamento_mes. Preencher um mes novo e agilizado copiando
+// o mes anterior. Serve tanto a leitura da 5.1 quanto a edicao no client web.
+// ==========================================================================
+
+// 5.1 de um mes: uma linha por militar, do mais antigo ao mais moderno
+// (tipo_posto_grad.code cresce com a antiguidade -> ORDER BY ... DESC). O posto
+// e o da epoca (congelado na linha), entao promocoes nao distorcem meses passados.
+controller.getAproveitamento = async (ano, mes) => {
+  return db.sapConn.any(
+    `SELECT a.id, a.usuario_id, a.tipo_posto_grad_id, tpg.nome_abrev AS posto,
+            u.nome_guerra, a.atividades
+     FROM recurso_humano.aproveitamento_mes a
+     JOIN dgeo.usuario u ON u.id = a.usuario_id
+     JOIN dominio.tipo_posto_grad tpg ON tpg.code = a.tipo_posto_grad_id
+     WHERE a.ano = $<ano> AND a.mes = $<mes>
+     ORDER BY tpg.code DESC, u.nome_guerra`,
+    { ano, mes }
+  )
+}
+
+controller.criarLinha = async linha => {
+  // Posto da epoca: se nao informado, congela o posto atual do militar.
+  let postoId = linha.tipo_posto_grad_id
+  if (postoId === null || postoId === undefined) {
+    const u = await db.sapConn.oneOrNone(
+      'SELECT tipo_posto_grad_id FROM dgeo.usuario WHERE id = $<usuario_id>',
+      { usuario_id: linha.usuario_id }
+    )
+    if (!u) {
+      throw new AppError('Militar não encontrado', httpCode.NotFound)
+    }
+    postoId = u.tipo_posto_grad_id
+  }
+  return db.sapConn.none(
+    `INSERT INTO recurso_humano.aproveitamento_mes
+       (ano, mes, usuario_id, tipo_posto_grad_id, atividades)
+     VALUES ($<ano>, $<mes>, $<usuario_id>, $<tipo_posto_grad_id>, $<atividades>)
+     ON CONFLICT (ano, mes, usuario_id) DO NOTHING`,
+    {
+      ano: linha.ano,
+      mes: linha.mes,
+      usuario_id: linha.usuario_id,
+      tipo_posto_grad_id: postoId,
+      atividades: linha.atividades ?? null
+    }
+  )
+}
+
+controller.atualizaLinha = async (id, linha) => {
+  const result = await db.sapConn.result(
+    `UPDATE recurso_humano.aproveitamento_mes
+     SET atividades = $<atividades>,
+         tipo_posto_grad_id = COALESCE($<tipo_posto_grad_id>, tipo_posto_grad_id)
+     WHERE id = $<id>`,
+    {
+      id,
+      atividades: linha.atividades ?? null,
+      tipo_posto_grad_id: linha.tipo_posto_grad_id ?? null
+    }
+  )
+  if (!result.rowCount) {
+    throw new AppError('Linha de aproveitamento não encontrada', httpCode.NotFound)
+  }
+}
+
+controller.deletaLinha = async id => {
+  const result = await db.sapConn.result(
+    'DELETE FROM recurso_humano.aproveitamento_mes WHERE id = $<id>',
+    { id }
+  )
+  if (!result.rowCount) {
+    throw new AppError('Linha de aproveitamento não encontrada', httpCode.NotFound)
+  }
+}
+
+// Copia as linhas do mes anterior para (ano, mes), sem sobrescrever quem ja
+// existe (ON CONFLICT DO NOTHING). Agiliza o preenchimento do mes novo.
+controller.copiarMesAnterior = async (ano, mes) => {
+  const mesAnt = mes === 1 ? 12 : mes - 1
+  const anoAnt = mes === 1 ? ano - 1 : ano
+  const result = await db.sapConn.result(
+    `INSERT INTO recurso_humano.aproveitamento_mes
+       (ano, mes, usuario_id, tipo_posto_grad_id, atividades)
+     SELECT $<ano>, $<mes>, a.usuario_id, a.tipo_posto_grad_id, a.atividades
+     FROM recurso_humano.aproveitamento_mes a
+     WHERE a.ano = $<anoAnt> AND a.mes = $<mesAnt>
+     ON CONFLICT (ano, mes, usuario_id) DO NOTHING`,
+    { ano, mes, anoAnt, mesAnt }
+  )
+  return { copiados: result.rowCount }
+}
+
+// Alternativa para o primeiro mes: cria as linhas a partir do efetivo ativo
+// atual (posto atual), com atividades vazias.
+controller.iniciarDoEfetivo = async (ano, mes) => {
+  const result = await db.sapConn.result(
+    `INSERT INTO recurso_humano.aproveitamento_mes
+       (ano, mes, usuario_id, tipo_posto_grad_id, atividades)
+     SELECT $<ano>, $<mes>, u.id, u.tipo_posto_grad_id, NULL
+     FROM dgeo.usuario u
+     WHERE u.ativo
+     ON CONFLICT (ano, mes, usuario_id) DO NOTHING`,
+    { ano, mes }
+  )
+  return { criados: result.rowCount }
 }
 
 module.exports = controller

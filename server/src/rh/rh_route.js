@@ -4,24 +4,14 @@ const express = require('express')
 
 const { schemaValidation, asyncHandler, httpCode } = require('../utils')
 
-const { verifyAdmin, verifyLogin } = require('../login')
+const { verifyAdmin } = require('../login')
 
 const rhCtrl = require('./rh_ctrl')
 const rhSchema = require('./rh_schema')
 
 const router = express.Router()
 
-router.get(
-  '/tipo_perda_rh',
-  verifyLogin,
-  asyncHandler(async (req, res, next) => {
-    const dados = await rhCtrl.getTipoPerdaHr()
-
-    const msg = 'Tipo perda de rh retornadas'
-
-    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
-  })
-)
+// --- Estatisticas de producao (acompanhamento / Secao 2.1 do RPCMTec) ---
 
 router.get(
   '/dias_logados/usuario/:id',
@@ -91,6 +81,72 @@ router.get(
     const dados = await rhCtrl.getAllBlocksStatsByDate(dataInicio, dataFim);
     const msg = 'Estatísticas de bloco retornadas com sucesso';
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados);
+  })
+)
+
+// --- Aproveitamento do efetivo (Secao 5.1 do RPCMTec): retrato mensal ---
+
+// 5.1 de um mes (leitura e base de edicao).
+router.get(
+  '/aproveitamento/:ano/:mes',
+  verifyAdmin,
+  schemaValidation({ params: rhSchema.anoMesParams }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await rhCtrl.getAproveitamento(req.params.ano, req.params.mes)
+    return res.sendJsonAndLog(
+      true, 'Aproveitamento do efetivo retornado com sucesso', httpCode.OK, dados)
+  })
+)
+
+// Copia o mes anterior para o mes informado (preenchimento rapido).
+router.post(
+  '/aproveitamento/copiar',
+  verifyAdmin,
+  schemaValidation({ body: rhSchema.copiarMes }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await rhCtrl.copiarMesAnterior(req.body.ano, req.body.mes)
+    return res.sendJsonAndLog(true, 'Mês anterior copiado com sucesso', httpCode.OK, dados)
+  })
+)
+
+// Inicia o mes a partir do efetivo ativo atual.
+router.post(
+  '/aproveitamento/iniciar',
+  verifyAdmin,
+  schemaValidation({ body: rhSchema.copiarMes }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await rhCtrl.iniciarDoEfetivo(req.body.ano, req.body.mes)
+    return res.sendJsonAndLog(true, 'Mês iniciado a partir do efetivo', httpCode.OK, dados)
+  })
+)
+
+router.post(
+  '/aproveitamento',
+  verifyAdmin,
+  schemaValidation({ body: rhSchema.aproveitamento }),
+  asyncHandler(async (req, res, next) => {
+    await rhCtrl.criarLinha(req.body.aproveitamento)
+    return res.sendJsonAndLog(true, 'Linha de aproveitamento criada com sucesso', httpCode.Created)
+  })
+)
+
+router.put(
+  '/aproveitamento/:id',
+  verifyAdmin,
+  schemaValidation({ params: rhSchema.idParams, body: rhSchema.aproveitamentoUpdate }),
+  asyncHandler(async (req, res, next) => {
+    await rhCtrl.atualizaLinha(req.params.id, req.body.aproveitamento)
+    return res.sendJsonAndLog(true, 'Linha de aproveitamento atualizada com sucesso', httpCode.OK)
+  })
+)
+
+router.delete(
+  '/aproveitamento/:id',
+  verifyAdmin,
+  schemaValidation({ params: rhSchema.idParams }),
+  asyncHandler(async (req, res, next) => {
+    await rhCtrl.deletaLinha(req.params.id)
+    return res.sendJsonAndLog(true, 'Linha de aproveitamento deletada com sucesso', httpCode.OK)
   })
 )
 
