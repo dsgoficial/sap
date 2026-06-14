@@ -39,7 +39,7 @@ controller.getProdutosByLot = async (lote_id) => {
 controller.getCampos = async () => {
     return db.sapConn.any(
         `SELECT c.id, c.nome, c.orgao, c.pit, c.descricao, c.militares, c.placas_vtr, c.inicio, 
-        c.fim, c.situacao_id, s.nome AS situacao, ST_AsEWKT(c.geom) AS geom, c.categorias,
+        c.fim, c.situacao_id, s.nome AS situacao, ST_AsEWKT(c.geom) AS geom, to_jsonb(c.categorias) AS categorias,
         (
             SELECT COUNT(*)
             FROM controle_campo.imagem AS img
@@ -144,11 +144,15 @@ controller.getCampoById = async (campo_id) => {
 
 // Função para criar um campo
 controller.criaCampo = async (campo) => {
+    // Geometria é desenhada no QGIS; na criação pela web pode vir vazia (NULL)
+    const temGeom = campo.geom !== null && campo.geom !== undefined && campo.geom !== ''
+    const geomExpr = temGeom ? 'ST_GEOMFROMEWKT($<geom>)' : 'NULL'
+
     return await db.sapConn.none(
             `INSERT INTO controle_campo.campo
             (nome, descricao, orgao, pit, militares, placas_vtr, inicio, fim, situacao_id, categorias, geom)
             VALUES
-            ($<nome>, $<descricao>, $<orgao>, $<pit>, $<militares>, $<placas_vtr>, $<inicio>, $<fim>, $<situacao_id>, $<categorias>::controle_campo.categoria_campo[], ST_GEOMFROMEWKT($<geom>))
+            ($<nome>, $<descricao>, $<orgao>, $<pit>, $<militares>, $<placas_vtr>, $<inicio>, $<fim>, $<situacao_id>, $<categorias>::controle_campo.categoria_campo[], ${geomExpr})
             `,
             {
                 nome: campo.nome,
@@ -262,8 +266,8 @@ controller.getEstatisticasCampos = async () => {
         // Área total (em km²)
         const areaTotalKm2 = await t.one(
             `SELECT SUM(
-                CASE 
-                  WHEN geom IS NOT NULL THEN ST_Area(ST_Transform(geom, 3857)::geography) / 1000000
+                CASE
+                  WHEN geom IS NOT NULL THEN ST_Area(geom::geography) / 1000000
                   ELSE 0
                 END
               ) AS area_total_km2

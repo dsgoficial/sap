@@ -3,7 +3,23 @@ import axios from 'axios';
 import apiClient from '../lib/axios';
 import { ApiResponse } from '../types/api';
 import { LotSubphaseData } from '../types/lot';
+import { Lote } from '../types/fieldActivities';
 import { handleApiError, createCancelToken } from '@/utils/apiErrorHandler';
+
+/**
+ * Get the list of lotes (id + nome) for selectors.
+ */
+export const getLotes = async (): Promise<ApiResponse<Lote[]>> => {
+  try {
+    const response = await apiClient.get<ApiResponse<Lote[]>>('/projeto/lote');
+    return response.data;
+  } catch (error) {
+    if (axios.isCancel(error)) {
+      throw error;
+    }
+    throw handleApiError(error, 'Erro ao carregar lotes', 'getLotes');
+  }
+};
 
 /**
  * Get lot statistics

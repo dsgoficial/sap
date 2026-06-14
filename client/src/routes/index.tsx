@@ -92,6 +92,11 @@ const PitNaoProducao = lazy(() =>
     default: module.PitNaoProducao,
   })),
 );
+const FieldManagement = lazy(() =>
+  import('../features/fieldActivities/routes/FieldManagement').then(module => ({
+    default: module.FieldManagement,
+  })),
+);
 const Unauthorized = lazy(() =>
   import('./Unauthorized').then(module => ({
     default: module.Unauthorized,
@@ -336,6 +341,15 @@ const routes: RouteObject[] = [
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <PitNaoProducao />
+          </Suspense>
+        ),
+        loader: adminLoader,
+      },
+      {
+        path: 'gerencia-campos',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <FieldManagement />
           </Suspense>
         ),
         loader: adminLoader,

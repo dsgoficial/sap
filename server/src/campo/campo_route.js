@@ -80,6 +80,7 @@ router.get(
     return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
   })
 )
+
 router.get(
   '/campos/:uuid',
   schemaValidation({ params: campoSchema.uuidParams }),

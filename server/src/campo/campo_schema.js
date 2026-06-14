@@ -24,7 +24,8 @@ models.campo = Joi.object().keys({
       inicio: Joi.date().required().allow(null),
       fim: Joi.date().required().allow(null),
       situacao_id: Joi.number().integer().required().strict(),
-      geom: Joi.string().required()
+      categorias: Joi.array().items(Joi.string()).required(),
+      geom: Joi.string().allow(null, '')
     })
     .required()
 })
