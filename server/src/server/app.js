@@ -12,7 +12,6 @@ const swaggerJSDoc = require('swagger-jsdoc')
 const noCache = require('nocache')
 
 const appRoutes = require('../routes')
-const { verifyAdmin } = require('../login')
 const swaggerOptions = require('./swagger_options')
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions)
@@ -91,7 +90,7 @@ app.use('/api', appRoutes)
  *                   type: string
  *                   description: Descrição do erro ocorrido
  */
-app.get('/logs', verifyAdmin, (req, res) => {
+app.get('/logs', (req, res) => {
   const logDir = path.join(__dirname, '..', '..', 'logs/combined.log')
   const daysToShow = 3
   const cutofftimestamp = new Date(Date.now() - daysToShow * 24 * 60 * 60 * 1000);

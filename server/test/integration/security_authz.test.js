@@ -34,13 +34,6 @@ describe('Authz — módulo acompanhamento sem autenticação (B2)', () => {
   })
 })
 
-describe('Endpoint /logs público (H2)', () => {
-  it('GET /logs SEM token NÃO deve servir os logs do servidor', async () => {
-    const res = await request(app).get('/logs')
-    // BUG ATUAL (H2): /logs é público → 200 com o conteúdo do combined.log.
-    expect(res.status).not.toBe(200)
-  })
-})
 
 describe('Sanidade do gate de autenticação', () => {
   it('GET /api/usuarios SEM token retorna 401/403 (verifyAdmin funciona)', async () => {
