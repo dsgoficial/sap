@@ -29,6 +29,7 @@ import LandscapeIcon from '@mui/icons-material/Landscape';
 import SchoolIcon from '@mui/icons-material/School';
 import AssignmentLateIcon from '@mui/icons-material/AssignmentLate';
 import BadgeIcon from '@mui/icons-material/Badge';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 import { useThemeMode } from '@/contexts/ThemeContext';
 
 interface DashboardSidebarProps {
@@ -146,6 +147,12 @@ const DashboardSidebar = ({
       title: 'Efetivo',
       path: '/efetivo',
       icon: <BadgeIcon />,
+      adminOnly: true,
+    },
+    {
+      title: 'PIT (não-produção)',
+      path: '/pit-nao-producao',
+      icon: <FactCheckIcon />,
       adminOnly: true,
     },
   ];

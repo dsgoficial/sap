@@ -650,12 +650,40 @@ AFTER INSERT OR UPDATE OR DELETE ON macrocontrole.produto
 FOR EACH ROW
 EXECUTE PROCEDURE macrocontrole.update_relacionamento_produto();
 
+-- A tabela pit serve a TODAS as metas do PIT. lote_id e o discriminador: meta COM
+-- lote = producao (realizado calculado pelo SAP a partir dos produtos finalizados);
+-- meta SEM lote = meta nao controlada pelo SAP (impressao, Programa Memoria, TI,
+-- EBGeo), descrita por numero_meta/item/descricao/unidade/prazo e com o realizado
+-- lancado a mao por mes em macrocontrole.pit_execucao_manual.
 CREATE TABLE macrocontrole.pit(
 	id SERIAL NOT NULL PRIMARY KEY,
-	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	lote_id INTEGER REFERENCES macrocontrole.lote (id),
 	meta INTEGER NOT NULL,
 	ano INTEGER NOT NULL,
-	UNIQUE(lote_id, ano)
+	numero_meta SMALLINT,
+	item VARCHAR(10),
+	descricao TEXT,
+	unidade VARCHAR(50),
+	prazo DATE,
+	UNIQUE(lote_id, ano),
+	-- Meta sem lote (nao-producao) tem de ter item, para o indice parcial abaixo
+	-- de fato garantir unicidade (item nulo escaparia, pois NULL != NULL).
+	CONSTRAINT pit_item_quando_sem_lote CHECK (lote_id IS NOT NULL OR item IS NOT NULL)
+);
+
+-- Identidade das metas sem lote (NULLs sao distintos na UNIQUE acima, entao o indice
+-- parcial garante uma linha por item/ano entre as metas nao controladas pelo SAP).
+CREATE UNIQUE INDEX pit_ano_item_uniq ON macrocontrole.pit (ano, item) WHERE lote_id IS NULL;
+
+-- Execucao mensal manual das metas do PIT que o SAP nao calcula (as de lote_id nulo).
+CREATE TABLE macrocontrole.pit_execucao_manual(
+	id SERIAL NOT NULL PRIMARY KEY,
+	pit_id INTEGER NOT NULL REFERENCES macrocontrole.pit (id) ON DELETE CASCADE,
+	mes SMALLINT NOT NULL CHECK (mes BETWEEN 1 AND 12),
+	quantidade INTEGER NOT NULL DEFAULT 0,
+	data_conclusao DATE,
+	observacao TEXT,
+	UNIQUE (pit_id, mes)
 );
 
 CREATE TABLE macrocontrole.relatorio_alteracao(

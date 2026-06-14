@@ -20,6 +20,7 @@ const { rhRoute } = require('./rh')
 const { campoRoute } = require('./campo')
 const { capacitacaoRoute } = require('./capacitacao')
 const { extraPitRoute } = require('./extra_pit')
+const { pitNaoProducaoRoute } = require('./pit_nao_producao')
 
 const router = express.Router()
 
@@ -92,5 +93,7 @@ router.use('/campo', campoRoute)
 router.use('/capacitacao', capacitacaoRoute)
 
 router.use('/extra_pit', extraPitRoute)
+
+router.use('/pit_nao_producao', pitNaoProducaoRoute)
 
 module.exports = router

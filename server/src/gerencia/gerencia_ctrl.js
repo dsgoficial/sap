@@ -1337,9 +1337,11 @@ controller.atualizaPit = async pit => {
 
 controller.deletePit = async pitIds => {
   return db.sapConn.task(async t => {
+    // So opera nas metas de PRODUCAO (com lote). As metas nao-producao (lote_id
+    // nulo) sao do modulo pit_nao_producao; este endpoint nunca as toca.
     const exists = await t.any(
       `SELECT id FROM macrocontrole.pit
-      WHERE id in ($<pitIds:csv>)`,
+      WHERE id in ($<pitIds:csv>) AND lote_id IS NOT NULL`,
       { pitIds }
     )
 
@@ -1352,7 +1354,7 @@ controller.deletePit = async pitIds => {
 
     return t.any(
       `DELETE FROM macrocontrole.pit
-      WHERE id in ($<pitIds:csv>)`,
+      WHERE id in ($<pitIds:csv>) AND lote_id IS NOT NULL`,
       { pitIds }
     )
   })

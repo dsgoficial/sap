@@ -64,3 +64,42 @@ describe('Authz — rotas do RPCMTec (capacitacao, extra_pit, efetivo)', () => {
     expect([401, 403]).not.toContain(res.status)
   })
 })
+
+// Metas do PIT nao controladas pelo SAP (impressao, Programa Memoria, TI, EBGeo):
+// leitura exige auth; cadastro e lancamento mensal exigem admin.
+describe('Authz — rotas do PIT nao-producao', () => {
+  it('GET /api/pit_nao_producao/2026 SEM token exige auth', async () => {
+    const res = await request(app).get('/api/pit_nao_producao/2026')
+    expect([401, 403]).toContain(res.status)
+  })
+
+  it('POST /api/pit_nao_producao SEM token exige auth (escrita admin)', async () => {
+    const res = await request(app).post('/api/pit_nao_producao').send({})
+    expect([401, 403]).toContain(res.status)
+  })
+
+  it('GET /api/pit_nao_producao/2026 COM token admin resolve (nao 401/403)', async () => {
+    const res = await request(app)
+      .get('/api/pit_nao_producao/2026')
+      .set('authorization', makeToken())
+    expect([401, 403]).not.toContain(res.status)
+  })
+
+  // /execucao/:ano/:mes precisa resolver antes de /:ano (senao "execucao" cai no :ano)
+  it('GET /api/pit_nao_producao/execucao/2026/6 nao colide com /:ano', async () => {
+    const res = await request(app)
+      .get('/api/pit_nao_producao/execucao/2026/6')
+      .set('authorization', makeToken())
+    expect(res.status).not.toBe(400)
+    expect([401, 403]).not.toContain(res.status)
+  })
+
+  it('POST /api/pit_nao_producao/execucao COM token admin resolve', async () => {
+    const res = await request(app)
+      .post('/api/pit_nao_producao/execucao')
+      .set('authorization', makeToken())
+      .send({ execucao: { pit_id: 1, mes: 6, quantidade: 10, data_conclusao: null, observacao: null } })
+    expect(res.status).not.toBe(400)
+    expect([401, 403]).not.toContain(res.status)
+  })
+})

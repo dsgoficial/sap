@@ -33,11 +33,7 @@ import {
   iniciarDoEfetivo,
   AproveitamentoLinha,
 } from '@/services/personnelService';
-
-const MESES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-];
+import { MESES } from '@/constants/meses';
 
 const hoje = new Date();
 

@@ -87,6 +87,11 @@ const Personnel = lazy(() =>
     default: module.Personnel,
   })),
 );
+const PitNaoProducao = lazy(() =>
+  import('../features/pitNaoProducao/routes/PitNaoProducao').then(module => ({
+    default: module.PitNaoProducao,
+  })),
+);
 const Unauthorized = lazy(() =>
   import('./Unauthorized').then(module => ({
     default: module.Unauthorized,
@@ -322,6 +327,15 @@ const routes: RouteObject[] = [
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <Personnel />
+          </Suspense>
+        ),
+        loader: adminLoader,
+      },
+      {
+        path: 'pit-nao-producao',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <PitNaoProducao />
           </Suspense>
         ),
         loader: adminLoader,

@@ -128,7 +128,42 @@ ALTER TABLE controle_campo.campo
 ALTER TABLE controle_campo.campo ALTER COLUMN categorias SET DEFAULT '{}';
 DROP TYPE controle_campo.categoria_campo_old;
 
--- 8) bump da versao do banco
+-- 8) PIT: a tabela passa a servir TODAS as metas do PIT, nao so as de producao.
+--    lote_id deixa de ser obrigatorio. Meta COM lote = producao (realizado calculado
+--    pelo SAP, como hoje). Meta SEM lote = meta nao controlada pelo SAP (impressao,
+--    Programa Memoria, TI, EBGeo), com o realizado lancado a mao em pit_execucao_manual.
+ALTER TABLE macrocontrole.pit ALTER COLUMN lote_id DROP NOT NULL;
+ALTER TABLE macrocontrole.pit ADD COLUMN IF NOT EXISTS numero_meta SMALLINT;
+ALTER TABLE macrocontrole.pit ADD COLUMN IF NOT EXISTS item VARCHAR(10);
+ALTER TABLE macrocontrole.pit ADD COLUMN IF NOT EXISTS descricao TEXT;
+ALTER TABLE macrocontrole.pit ADD COLUMN IF NOT EXISTS unidade VARCHAR(50);
+ALTER TABLE macrocontrole.pit ADD COLUMN IF NOT EXISTS prazo DATE;
+
+-- Identidade das metas sem lote: a UNIQUE(lote_id, ano) ja existente cobre a producao,
+-- mas como NULLs sao distintos numa UNIQUE, o indice parcial e que garante uma linha
+-- por item/ano entre as metas sem lote.
+CREATE UNIQUE INDEX IF NOT EXISTS pit_ano_item_uniq
+    ON macrocontrole.pit (ano, item) WHERE lote_id IS NULL;
+
+-- Meta sem lote tem de ter item (senao o indice parcial acima nao garante unicidade,
+-- pois NULL != NULL). Producao (com lote) pode ter item nulo.
+DO $$ BEGIN
+    ALTER TABLE macrocontrole.pit
+        ADD CONSTRAINT pit_item_quando_sem_lote CHECK (lote_id IS NOT NULL OR item IS NOT NULL);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Execucao mensal manual das metas sem lote (realizado por mes; o ano vem do join com pit)
+CREATE TABLE IF NOT EXISTS macrocontrole.pit_execucao_manual(
+    id SERIAL NOT NULL PRIMARY KEY,
+    pit_id INTEGER NOT NULL REFERENCES macrocontrole.pit (id) ON DELETE CASCADE,
+    mes SMALLINT NOT NULL CHECK (mes BETWEEN 1 AND 12),
+    quantidade INTEGER NOT NULL DEFAULT 0,
+    data_conclusao DATE,
+    observacao TEXT,
+    UNIQUE (pit_id, mes)
+);
+
+-- 9) bump da versao do banco
 UPDATE public.versao SET nome = '2.3.1' WHERE code = 1;
 
 COMMIT;
