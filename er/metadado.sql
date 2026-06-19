@@ -151,7 +151,7 @@ CREATE TABLE metadado.informacoes_edicao(
 	acesso_restrito BOOLEAN NOT NULL,
 	carta_militar BOOLEAN NOT NULL,
 	data_criacao VARCHAR(255) NOT NULL,
-	creditos_id SMALLINT NOT NULL REFERENCES metadado.creditos_qpt (id),
+	creditos_id SMALLINT REFERENCES metadado.creditos_qpt (id),
 	epsg_mde VARCHAR(255) NOT NULL,
 	caminho_mde VARCHAR(255) NOT NULL,
 	dados_terceiro text ARRAY,

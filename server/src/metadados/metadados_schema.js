@@ -75,9 +75,9 @@ models.informacoesProduto = Joi.object().keys({
       produto_id: Joi.number().integer().strict(),
       lote_id: Joi.number().integer().strict(),
       resumo: Joi.string().required(),
-      proposito: Joi.string().required(),
-      creditos: Joi.string().required(),
-      informacoes_complementares: Joi.string().required(),
+      proposito: Joi.string().allow('').required(),
+      creditos: Joi.string().allow('').required(),
+      informacoes_complementares: Joi.string().allow('').required(),
       limitacao_acesso_id: Joi.number().integer().strict().required(),
       limitacao_uso_id: Joi.number().integer().strict().required(),
       restricao_uso_id: Joi.number().integer().strict().required(),
@@ -87,7 +87,7 @@ models.informacoesProduto = Joi.object().keys({
       datum_vertical_id: Joi.number().integer().strict().required(),
       especificacao_id: Joi.number().integer().strict().required(),
       responsavel_produto_id: Joi.number().integer().strict().required(),
-      declaracao_linhagem: Joi.string().required(),
+      declaracao_linhagem: Joi.string().allow('').required(),
       projeto_bdgex: Joi.string().required()
     }).xor('produto_id', 'lote_id')
   )
@@ -101,9 +101,9 @@ models.informacoesProdutoAtualizacao = Joi.object().keys({
       produto_id: Joi.number().integer().strict(),
       lote_id: Joi.number().integer().strict(),
       resumo: Joi.string().required(),
-      proposito: Joi.string().required(),
-      creditos: Joi.string().required(),
-      informacoes_complementares: Joi.string().required(),
+      proposito: Joi.string().allow('').required(),
+      creditos: Joi.string().allow('').required(),
+      informacoes_complementares: Joi.string().allow('').required(),
       limitacao_acesso_id: Joi.number().integer().strict().required(),
       limitacao_uso_id: Joi.number().integer().strict().required(),
       restricao_uso_id: Joi.number().integer().strict().required(),
@@ -113,7 +113,7 @@ models.informacoesProdutoAtualizacao = Joi.object().keys({
       datum_vertical_id: Joi.number().integer().strict().required(),
       especificacao_id: Joi.number().integer().strict().required(),
       responsavel_produto_id: Joi.number().integer().strict().required(),
-      declaracao_linhagem: Joi.string().required(),
+      declaracao_linhagem: Joi.string().allow('').required(),
       projeto_bdgex: Joi.string().required()
     }).xor('produto_id', 'lote_id')
   )
@@ -246,7 +246,7 @@ models.informacoesEdicao = Joi.object().keys({
         acesso_restrito: Joi.boolean().required(),
         carta_militar: Joi.boolean().required(),
         data_criacao: Joi.string().required(),
-        creditos_id: Joi.number().integer().strict().required(),
+        creditos_id: Joi.number().integer().strict().allow(null),
         epsg_mde: Joi.string().required(),
         caminho_mde: Joi.string().required(),
         dados_terceiro: Joi.array().items(Joi.string()).required(),
@@ -276,7 +276,7 @@ models.informacoesEdicaoAtualizacao = Joi.object().keys({
         acesso_restrito: Joi.boolean().required(),
         carta_militar: Joi.boolean().required(),
         data_criacao: Joi.string().required(),
-        creditos_id: Joi.number().integer().strict().required(),
+        creditos_id: Joi.number().integer().strict().allow(null),
         epsg_mde: Joi.string().required(),
         caminho_mde: Joi.string().required(),
         dados_terceiro: Joi.array().items(Joi.string()).required(),
@@ -454,7 +454,7 @@ models.sensorCartaOrtoimagemIds = Joi.object().keys({
 })
 
 models.loteIdParams = Joi.object().keys({
-  loteId: Joi.number().integer().strict().required()
+  loteId: Joi.number().integer().required()
 })
 
 module.exports = models

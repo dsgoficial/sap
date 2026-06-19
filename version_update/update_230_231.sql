@@ -163,7 +163,11 @@ CREATE TABLE IF NOT EXISTS macrocontrole.pit_execucao_manual(
     UNIQUE (pit_id, mes)
 );
 
--- 9) bump da versao do banco
+-- 9) Creditos do QPT deixam de ser obrigatorios na informacao de edicao: o
+--    produto pode ter metadado de edicao sem credito QPT associado.
+ALTER TABLE metadado.informacoes_edicao ALTER COLUMN creditos_id DROP NOT NULL;
+
+-- 10) bump da versao do banco
 UPDATE public.versao SET nome = '2.3.1' WHERE code = 1;
 
 COMMIT;

@@ -189,7 +189,8 @@ controller.atualizaInformacoesProduto = async informacoes => {
   return db.sapConn.tx(async t => {
     const cs = new db.pgp.helpers.ColumnSet([
       'id',
-      { name: 'produto_id', def: null }, { name: 'lote_id', def: null },
+      // cast int: no UPDATE ... FROM (VALUES) o null vira text e bate com a coluna integer
+      { name: 'produto_id', def: null, cast: 'int' }, { name: 'lote_id', def: null, cast: 'int' },
       'resumo',
       'proposito',
       'creditos',
@@ -471,7 +472,7 @@ controller.getInformacoesEdicao = async () => {
     ie.creditos_id, cq.nome AS nome_creditos_qpt, cq.qpt AS creditos_qpt,
     ie.produto_id, ie.lote_id, p.nome, p.mi, p.inom, p.denominador_escala, p.edicao
     FROM metadado.informacoes_edicao AS ie
-    INNER JOIN metadado.creditos_qpt AS cq ON cq.id = ie.creditos_id
+    LEFT JOIN metadado.creditos_qpt AS cq ON cq.id = ie.creditos_id
     LEFT JOIN macrocontrole.produto AS p ON p.id = ie.produto_id`
   )
 }
@@ -482,7 +483,7 @@ controller.criaInformacoesEdicao = async informacoesEdicao => {
       { name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'pec_planimetrico', 'pec_altimetrico', 
       'origem_dados_altimetricos', 'territorio_internacional', 
       'acesso_restrito', 'carta_militar', 'data_criacao', 
-      'creditos_id', 'epsg_mde', 'caminho_mde', 'dados_terceiro',
+      { name: 'creditos_id', def: null }, 'epsg_mde', 'caminho_mde', 'dados_terceiro',
       'quadro_fases',
       { name: 'tipo_produto', def: null },
       { name: 'versao_produto', def: null },
@@ -502,16 +503,25 @@ controller.criaInformacoesEdicao = async informacoesEdicao => {
 
 controller.atualizaInformacoesEdicao = async informacoesEdicao => {
   return db.sapConn.tx(async t => {
+    // No UPDATE ... FROM (VALUES ...) o Postgres infere o tipo dos literais a
+    // partir do VALUES (e null/strings viram text). Colunas nullable nao-text
+    // (produto_id/lote_id INTEGER, creditos_id SMALLINT, arrays text[]) precisam
+    // de cast explicito, senao da "column X is of type Y but expression is text".
     const cs = new db.pgp.helpers.ColumnSet([
-      'id', { name: 'produto_id', def: null }, { name: 'lote_id', def: null }, 'pec_planimetrico', 'pec_altimetrico', 
-      'origem_dados_altimetricos', 'territorio_internacional', 
-      'acesso_restrito', 'carta_militar', 'data_criacao', 
-      'creditos_id', 'epsg_mde', 'caminho_mde', 'dados_terceiro',
-      'quadro_fases',
+      'id',
+      { name: 'produto_id', def: null, cast: 'int' },
+      { name: 'lote_id', def: null, cast: 'int' },
+      'pec_planimetrico', 'pec_altimetrico',
+      'origem_dados_altimetricos', 'territorio_internacional',
+      'acesso_restrito', 'carta_militar', 'data_criacao',
+      { name: 'creditos_id', def: null, cast: 'int2' },
+      'epsg_mde', 'caminho_mde',
+      { name: 'dados_terceiro', cast: 'text[]' },
+      { name: 'quadro_fases', cast: 'json' },
       { name: 'tipo_produto', def: null },
       { name: 'versao_produto', def: null },
       { name: 'licenca_produto', def: null },
-      { name: 'observacoes', def: null },
+      { name: 'observacoes', def: null, cast: 'text[]' },
       { name: 'dpi', def: 300, init: col => (col.value == null ? 300 : col.value) }
     ])
 
@@ -905,6 +915,10 @@ const validarJsonEdicao = json => {
 // Resolve servidor/porta/nome do banco de Edicao a partir das UTs do produto.
 // configuracao_producao tem o formato servidor:porta/nome (igual ao temporary_login.js).
 const resolveBancoEdicao = async (t, produtoId) => {
+  // Banco de producao PostGIS (tipo_dado_producao 2/3) das UTs que cobrem a folha.
+  // Preferimos a fase Edicao (tipo_fase_id = 4); se o lote nao tiver Edicao, caimos
+  // para a fase mais avancada (maior ordem) que tenha banco de producao - senao o
+  // banco saia {} em lotes que terminam antes da Edicao (ex.: so Extracao).
   const row = await t.oneOrNone(
     `SELECT dp.configuracao_producao
     FROM macrocontrole.produto AS p
@@ -913,8 +927,9 @@ const resolveBancoEdicao = async (t, produtoId) => {
     INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
     INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
     INNER JOIN macrocontrole.dado_producao AS dp ON dp.id = ut.dado_producao_id
-    WHERE p.id = $1 AND f.tipo_fase_id = 4 AND dp.tipo_dado_producao_id IN (2,3)
+    WHERE p.id = $1 AND dp.tipo_dado_producao_id IN (2,3)
       AND dp.configuracao_producao IS NOT NULL
+    ORDER BY (f.tipo_fase_id = 4) DESC, f.ordem DESC
     LIMIT 1`,
     [produtoId]
   )
