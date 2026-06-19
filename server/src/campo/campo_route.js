@@ -169,6 +169,25 @@ router.get(
   })
 )
 
+// Serve o binário da mídia (foto/vídeo). Resposta binária crua (não passa pelo
+// sendJsonAndLog), com o Content-Type correto, para o <img>/<video> do client.
+// Path distinto de /fotos/:uuid (segmento extra "arquivo").
+router.get(
+  '/fotos/:uuid/arquivo',
+  schemaValidation({ params: campoSchema.uuidParams }),
+  asyncHandler(async (req, res, next) => {
+    const midia = await campoCtrl.getFotoArquivo(req.params.uuid)
+
+    if (!midia || !midia.imagem_bin) {
+      return res.status(httpCode.NotFound).json({ message: 'Mídia não encontrada' })
+    }
+
+    res.setHeader('Content-Type', midia.mime_type || 'application/octet-stream')
+    res.setHeader('Cache-Control', 'private, max-age=3600')
+    return res.send(midia.imagem_bin)
+  })
+)
+
 router.post(
   '/fotos',
   verifyAdmin,

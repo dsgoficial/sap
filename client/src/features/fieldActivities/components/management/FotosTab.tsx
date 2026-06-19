@@ -21,50 +21,54 @@ import { useSnackbar } from 'notistack';
 import { useFotosByCampo } from '@/hooks/useFieldActivities';
 import { useCreateFotos, useDeleteFoto } from '@/hooks/useFieldManagement';
 import { Foto, FotoInput } from '@/types/fieldActivities';
+import { getFotoArquivo } from '@/services/fieldActivitiesService';
 import { formatDate } from '@/utils/formatters';
 import ConfirmDialog from './ConfirmDialog';
 
-const MAX_BYTES = 7 * 1024 * 1024; // ~7MB binário (limite Joi ~10MB base64)
-
-// Converte imagem_bin (string base64 | array | Buffer-json) em URL exibível
-const imagemBinToUrl = (imageBin: unknown): string | null => {
-  if (!imageBin) return null;
-  try {
-    if (typeof imageBin === 'string') {
-      return imageBin.startsWith('data:')
-        ? imageBin
-        : `data:image/jpeg;base64,${imageBin}`;
-    }
-    let bytes: Uint8Array | null = null;
-    if (Array.isArray(imageBin)) {
-      bytes = new Uint8Array(imageBin as number[]);
-    } else if (
-      typeof imageBin === 'object' &&
-      (imageBin as { type?: string }).type === 'Buffer' &&
-      Array.isArray((imageBin as { data?: number[] }).data)
-    ) {
-      bytes = new Uint8Array((imageBin as { data: number[] }).data);
-    } else if (typeof imageBin === 'object') {
-      bytes = new Uint8Array(Object.values(imageBin as Record<string, number>));
-    }
-    if (!bytes) return null;
-    return URL.createObjectURL(
-      new Blob([bytes as unknown as BlobPart], { type: 'image/jpeg' }),
-    );
-  } catch {
-    return null;
-  }
-};
+const MAX_FOTO_BYTES = 7 * 1024 * 1024; // ~7MB binário (foto)
+const MAX_VIDEO_BYTES = 40 * 1024 * 1024; // 40MB binário (vídeo)
 
 const FotoThumb = ({ foto }: { foto: Foto }) => {
   const [url, setUrl] = useState<string | null>(null);
+  const isVideo = foto.tipo === 'video';
+  // Baixa o binário pela rota dedicada (autenticada) e gera uma object URL.
   useEffect(() => {
-    const u = imagemBinToUrl(foto.imagem_bin);
-    setUrl(u);
+    let objectUrl: string | null = null;
+    let active = true;
+    getFotoArquivo(foto.id)
+      .then(blob => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch(() => {
+        if (active) setUrl(null);
+      });
     return () => {
-      if (u && u.startsWith('blob:')) URL.revokeObjectURL(u);
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [foto.imagem_bin]);
+  }, [foto.id]);
+
+  if (isVideo) {
+    return (
+      // objectFit 'contain' preserva a proporção nativa do vídeo (vertical ou
+      // horizontal); 'cover' cortava vídeos verticais para preencher a caixa.
+      <Box
+        component="video"
+        src={url || undefined}
+        controls
+        preload="metadata"
+        sx={{
+          width: '100%',
+          height: 160,
+          objectFit: 'contain',
+          backgroundColor: 'black',
+          display: 'block',
+        }}
+      />
+    );
+  }
 
   return (
     <CardMedia
@@ -106,8 +110,15 @@ export const FotosTab = ({ campoId }: FotosTabProps) => {
 
   const handleUpload = async () => {
     if (!file) return;
-    if (file.size > MAX_BYTES) {
-      enqueueSnackbar('Imagem muito grande (máx. ~7MB)', { variant: 'error' });
+    const isVideo = file.type.startsWith('video/');
+    const maxBytes = isVideo ? MAX_VIDEO_BYTES : MAX_FOTO_BYTES;
+    if (file.size > maxBytes) {
+      enqueueSnackbar(
+        isVideo
+          ? 'Vídeo muito grande (máx. 40MB)'
+          : 'Imagem muito grande (máx. ~7MB)',
+        { variant: 'error' },
+      );
       return;
     }
     try {
@@ -118,6 +129,8 @@ export const FotosTab = ({ campoId }: FotosTabProps) => {
         data_imagem: dataImagem
           ? new Date(dataImagem).toISOString()
           : new Date().toISOString(),
+        tipo: isVideo ? 'video' : 'foto',
+        mime_type: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
         imagem_base64,
       };
       await createMutation.mutateAsync({ campoId, fotos: [payload] });
@@ -148,7 +161,7 @@ export const FotosTab = ({ campoId }: FotosTabProps) => {
   return (
     <Box>
       <Typography variant="subtitle1" gutterBottom>
-        Adicionar foto
+        Adicionar foto ou vídeo
       </Typography>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -159,7 +172,7 @@ export const FotosTab = ({ campoId }: FotosTabProps) => {
           {file ? file.name : 'Selecionar arquivo'}
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             hidden
             onChange={e => setFile(e.target.files?.[0] ?? null)}
           />
@@ -193,7 +206,9 @@ export const FotosTab = ({ campoId }: FotosTabProps) => {
           <CircularProgress />
         </Box>
       ) : fotos.length === 0 ? (
-        <Alert severity="info">Nenhuma foto cadastrada para este campo.</Alert>
+        <Alert severity="info">
+          Nenhuma foto ou vídeo cadastrado para este campo.
+        </Alert>
       ) : (
         <Grid container spacing={2}>
           {fotos.map(foto => (

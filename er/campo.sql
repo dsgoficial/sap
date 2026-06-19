@@ -53,6 +53,8 @@ CREATE TABLE controle_campo.imagem
     id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
     descricao text,
     data_imagem timestamp with time zone,
+    tipo VARCHAR(10) NOT NULL DEFAULT 'foto' CHECK (tipo IN ('foto', 'video')),
+    mime_type VARCHAR(100),
     imagem_bin bytea,
     campo_id uuid NOT NULL REFERENCES controle_campo.campo (id)
 );

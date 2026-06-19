@@ -107,20 +107,29 @@ export interface FotoInput {
   campo_id: string;
   descricao: string;
   data_imagem: string;
+  tipo: MidiaTipo;
+  mime_type: string;
   imagem_base64: string;
 }
 
 /**
- * Foto (Photo) entity
+ * Tipo de mídia armazenada em controle_campo.imagem
+ */
+export type MidiaTipo = 'foto' | 'video';
+
+/**
+ * Foto/Vídeo (mídia) entity
  */
 export interface Foto {
   id: string;
   campo_id: string;
   descricao?: string;
   data_imagem?: string;
+  tipo?: MidiaTipo; // ausente em registros antigos => tratar como 'foto'
+  mime_type?: string;
   nome?: string;
   url?: string;
-  imagem_bin?: any; // Binary data for image
+  imagem_bin?: any; // Binary data for image/video
 }
 
 /**

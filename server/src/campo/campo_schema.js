@@ -36,7 +36,11 @@ models.fotos = Joi.object().keys({
       campo_id: Joi.string().uuid().required(),
       descricao: Joi.string().required(),
       data_imagem: Joi.date().required(),
-      imagem_base64: Joi.string().base64().max(10485760).required() // Base64 com no máximo 10MB
+      // 'foto' (imagem) ou 'video'; default mantém compatibilidade com clientes antigos
+      tipo: Joi.string().valid('foto', 'video').default('foto'),
+      mime_type: Joi.string().max(100).allow(null),
+      // Base64: ~40MB binário p/ vídeo => ~56MB em base64
+      imagem_base64: Joi.string().base64().max(58720256).required()
     })
   ).required()
 })

@@ -127,7 +127,8 @@ controller.getCampoById = async (campo_id) => {
                 'id', i.id,
                 'descricao', i.descricao,
                 'data_imagem', i.data_imagem,
-                'imagem_bin', i.imagem_bin
+                'tipo', i.tipo,
+                'mime_type', i.mime_type
             )
         )
             FROM controle_campo.imagem AS i
@@ -289,7 +290,7 @@ controller.getEstatisticasCampos = async () => {
 // Função para obter todas as fotos
 controller.getFotos = async () => {
     return db.sapConn.any(
-        `SELECT i.id, i.descricao, i.data_imagem, i.campo_id, c.nome AS nome_campo
+        `SELECT i.id, i.descricao, i.data_imagem, i.tipo, i.mime_type, i.campo_id, c.nome AS nome_campo
         FROM controle_campo.imagem AS i
         INNER JOIN controle_campo.campo AS c ON i.campo_id = c.id`
     )
@@ -298,28 +299,44 @@ controller.getFotos = async () => {
 // Função para obter uma foto específica pelo ID
 controller.getFotoById = async (id) => {
     return db.sapConn.one(
-        `SELECT id, descricao, data_imagem, imagem_bin, campo_id
+        `SELECT id, descricao, data_imagem, tipo, mime_type, imagem_bin, campo_id
         FROM controle_campo.imagem
         WHERE id = $<id>`,
         { id: id }
     )
 }
 
-// Função para obter todas as fotos de um campo específico
+// Função para obter todas as fotos de um campo específico.
+// NÃO retorna imagem_bin: o binário (que pode ser um vídeo de dezenas de MB) é
+// servido pela rota dedicada GET /fotos/:uuid/arquivo. Trafegar o bytea inline
+// em JSON (Buffer -> {type:'Buffer',data:[...]}) estourava a heap do Node.
 controller.getFotosByCampo = async (campo_id) => {
     return db.sapConn.any(
-        `SELECT id, descricao, data_imagem, imagem_bin
+        `SELECT id, descricao, data_imagem, tipo, mime_type
         FROM controle_campo.imagem
         WHERE campo_id = $<campo_id>`,
         { campo_id: campo_id }
     )
 }
 
-// Função para criar fotos
+// Função leve para servir o binário de uma mídia (foto/vídeo) pela rota dedicada
+controller.getFotoArquivo = async (id) => {
+    return db.sapConn.oneOrNone(
+        `SELECT mime_type, tipo, imagem_bin
+        FROM controle_campo.imagem
+        WHERE id = $<id>`,
+        { id: id }
+    )
+}
+
+// Função para criar fotos (e vídeos — ambos vivem na tabela imagem)
 controller.criaFotos = async (fotos) => {
     return db.sapConn.tx(async t => {
         const cs = new db.pgp.helpers.ColumnSet([
-            'descricao', 'campo_id', 'data_imagem', 'imagem_bin'
+            'descricao', 'campo_id', 'data_imagem',
+            { name: 'tipo', def: 'foto' },
+            { name: 'mime_type', def: null },
+            'imagem_bin'
         ])
 
         for (const foto of fotos) {

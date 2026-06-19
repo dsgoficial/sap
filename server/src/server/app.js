@@ -29,7 +29,7 @@ const app = express()
 // Add sendJsonAndLog to res object
 app.use(sendJsonAndLogMiddleware)
 
-app.use(express.json({ limit: '50mb' })) // parsear POST em JSON
+app.use(express.json({ limit: '60mb' })) // parsear POST em JSON (comporta video base64 ~40MB + folga)
 app.use(hpp()) // protection against parameter polution
 
 // CORS middleware

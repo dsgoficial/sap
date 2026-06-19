@@ -27,6 +27,7 @@ import {
   useFieldActivities,
   useCampoById,
 } from '@/hooks/useFieldActivities';
+import { getFotoArquivo } from '@/services/fieldActivitiesService';
 import {
   useSelectedCampoId,
   useSelectedTab,
@@ -70,79 +71,36 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   const theme = useTheme();
+  const isVideo = foto.tipo === 'video';
 
+  // O binário (foto ou vídeo) não vem mais no JSON da lista; é baixado pela
+  // rota dedicada /campo/fotos/:id/arquivo (autenticada) e vira uma object URL.
   useEffect(() => {
-    // URL criada NESTA execução do efeito — revogada no cleanup desta mesma
-    // execução (evita o stale closure sobre o state imageUrl, que vazava 1 URL).
-    let createdBlobUrl: string | null = null;
-    const loadImage = async () => {
-      setLoading(true);
-      setError(false);
-
-      try {
-        if (!foto.imagem_bin) {
+    let objectUrl: string | null = null;
+    let active = true;
+    setLoading(true);
+    setError(false);
+    getFotoArquivo(foto.id)
+      .then(blob => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setImageUrl(objectUrl);
+      })
+      .catch(() => {
+        if (active) {
+          setError(true);
           setImageUrl('/placeholder-image.jpg');
-          setLoading(false);
-          return;
         }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
-        // Function to convert binary data to base64
-        const processImageData = (imageBin: any) => {
-          // Handle different data formats
-          if (typeof imageBin === 'string') {
-            // Already a string (possibly base64)
-            return imageBin.startsWith('data:')
-              ? imageBin
-              : `data:image/jpeg;base64,${imageBin}`;
-          } else if (Array.isArray(imageBin)) {
-            // Array of bytes - convert to base64
-            const bytes = new Uint8Array(imageBin);
-            const blob = new Blob([bytes], { type: 'image/jpeg' });
-            return URL.createObjectURL(blob);
-          } else if (
-            imageBin &&
-            imageBin.type === 'Buffer' &&
-            Array.isArray(imageBin.data)
-          ) {
-            // Buffer object serialized as JSON
-            const bytes = new Uint8Array(imageBin.data);
-            const blob = new Blob([bytes], { type: 'image/jpeg' });
-            return URL.createObjectURL(blob);
-          } else if (imageBin && typeof imageBin === 'object') {
-            // Object with indices - convert to array
-            try {
-              const bytes = new Uint8Array(Object.values(imageBin));
-              const blob = new Blob([bytes], { type: 'image/jpeg' });
-              return URL.createObjectURL(blob);
-            } catch (err) {
-              throw new Error('Could not convert object to image data');
-            }
-          }
-
-          throw new Error('Unsupported image format');
-        };
-
-        const url = processImageData(foto.imagem_bin);
-        if (url.startsWith('blob:')) createdBlobUrl = url;
-        setImageUrl(url);
-      } catch (err) {
-        console.error('Error processing image:', err);
-        setError(true);
-        setImageUrl('/placeholder-image.jpg');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadImage();
-
-    // Cleanup URL objects to prevent memory leaks
     return () => {
-      if (createdBlobUrl) {
-        URL.revokeObjectURL(createdBlobUrl);
-      }
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [foto]);
+  }, [foto.id]);
 
   if (loading) {
     return (
@@ -176,6 +134,25 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
           Erro ao carregar imagem
         </Typography>
       </Box>
+    );
+  }
+
+  if (isVideo) {
+    // objectFit 'contain' preserva a proporção nativa (vertical/horizontal)
+    return (
+      <Box
+        component="video"
+        src={imageUrl}
+        controls
+        preload="metadata"
+        sx={{
+          width: '100%',
+          height: 200,
+          objectFit: 'contain',
+          backgroundColor: 'black',
+          display: 'block',
+        }}
+      />
     );
   }
 
@@ -433,7 +410,7 @@ const PhotosGrid: React.FC<{ campoId: string }> = ({ campoId }) => {
   if (!fotos || fotos.length === 0) {
     return (
       <Typography align="center" color="text.secondary" sx={{ mt: 4 }}>
-        Nenhuma foto disponível para esta atividade.
+        Nenhuma foto ou vídeo disponível para esta atividade.
       </Typography>
     );
   }

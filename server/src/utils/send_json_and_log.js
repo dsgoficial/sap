@@ -5,28 +5,37 @@ const { VERSION } = require('../config')
 
 // Retorna uma CÓPIA saneada (mascara senha, trunca strings longas) sem mutar o
 // objeto original (antes mutava req.body in-place e ainda retornava undefined).
-const truncate = dados => {
+// É recursivo e limitado: campos como imagem_base64 (vídeos de dezenas de MB)
+// vêm aninhados em arrays/objetos; logá-los inteiros estourava a heap do Node.
+const MAX_LENGTH = 500
+const MAX_DEPTH = 5
+const MAX_ARRAY = 20
+
+const truncate = (dados, depth = 0) => {
+  if (Object.prototype.toString.call(dados) === '[object String]') {
+    return dados.length > MAX_LENGTH ? dados.substring(0, MAX_LENGTH) + '…' : dados
+  }
+
   if (!dados || typeof dados !== 'object') {
     return dados
   }
 
-  const copy = { ...dados }
-
-  if ('senha' in copy) {
-    copy.senha = '*'
+  if (depth >= MAX_DEPTH) {
+    return Array.isArray(dados) ? '[...]' : '{...}'
   }
 
-  const MAX_LENGTH = 500
-
-  for (const key in copy) {
-    if (
-      Object.prototype.toString.call(copy[key]) === '[object String]' &&
-      copy[key].length > MAX_LENGTH
-    ) {
-      copy[key] = copy[key].substring(0, MAX_LENGTH)
+  if (Array.isArray(dados)) {
+    const items = dados.slice(0, MAX_ARRAY).map(item => truncate(item, depth + 1))
+    if (dados.length > MAX_ARRAY) {
+      items.push(`… (+${dados.length - MAX_ARRAY} itens)`)
     }
+    return items
   }
 
+  const copy = {}
+  for (const key in dados) {
+    copy[key] = key === 'senha' ? '*' : truncate(dados[key], depth + 1)
+  }
   return copy
 }
 const sendJsonAndLogMiddleware = (req, res, next) => {

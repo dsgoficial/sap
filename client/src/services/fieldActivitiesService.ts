@@ -121,6 +121,18 @@ export const getFotosByCampo = async (
 };
 
 /**
+ * Get the binary content (image/video) of a single mídia as a Blob.
+ * O binário NÃO vem mais inline no JSON da lista (evita estourar a heap do
+ * servidor com vídeos); é servido pela rota dedicada /fotos/:id/arquivo.
+ */
+export const getFotoArquivo = async (fotoId: string): Promise<Blob> => {
+  const response = await apiClient.get(`/campo/fotos/${fotoId}/arquivo`, {
+    responseType: 'blob',
+  });
+  return response.data as Blob;
+};
+
+/**
  * Get tracks by campo ID
  */
 export const getTracksByCampo = async (
