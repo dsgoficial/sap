@@ -2195,6 +2195,73 @@ controller.deleteProdutos = async produtoIds => {
   }
 }
 
+controller.getProdutos = async loteId => {
+  return db.sapConn.any(
+    `SELECT p.id, p.uuid, p.nome, p.mi, p.inom, p.denominador_escala,
+      p.edicao, p.tipo_produto_id, p.lote_id, ST_AsEWKT(p.geom) AS geom
+    FROM macrocontrole.produto AS p
+    WHERE $<loteId> IS NULL OR p.lote_id = $<loteId>
+    ORDER BY p.lote_id, p.mi, p.inom, p.id`,
+    { loteId: loteId || null }
+  )
+}
+
+controller.atualizaProdutos = async produtos => {
+  let loteIds
+  await db.sapConn.tx(async t => {
+    const produtoIds = produtos.map(p => p.id)
+
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.produto
+      WHERE id in ($<produtoIds:csv>)`,
+      { produtoIds }
+    )
+    if (exists.length < produtos.length) {
+      throw new AppError(
+        'O id informado não corresponde a um produto',
+        httpCode.BadRequest
+      )
+    }
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'uuid',
+      'nome',
+      'mi',
+      'inom',
+      // denominador_escala e integer no banco; o cast evita o erro de tipo do
+      // UPDATE ... FROM (VALUES ...) quando o valor chega como string
+      { name: 'denominador_escala', cast: 'int' },
+      'edicao'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        produtos,
+        cs,
+        { table: 'produto', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + ' WHERE Y.id = X.id'
+
+    await t.none(query)
+
+    loteIds = await t.map(
+      `SELECT DISTINCT lote_id FROM macrocontrole.produto
+      WHERE id in ($<produtoIds:csv>)`,
+      { produtoIds },
+      a => +a.lote_id
+    )
+  })
+
+  // Refresh materialized views for each affected lote
+  if (loteIds && loteIds.length > 0) {
+    await disableTriggers.refreshMaterializedViewFromLotes(db.sapConn, loteIds)
+  }
+}
+
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {
   let unidadeTrabalhoIds
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {

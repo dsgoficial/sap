@@ -4390,6 +4390,84 @@ router.delete(
 
 /**
  * @swagger
+ * /api/projeto/produto:
+ *   get:
+ *     summary: Retorna os produtos
+ *     description: Retorna os produtos cadastrados, opcionalmente filtrados por lote.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Produtos
+ *     parameters:
+ *       - in: query
+ *         name: lote_id
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Filtra os produtos de um lote especifico
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Produtos retornados com sucesso
+ */
+router.get(
+  '/produto',
+  verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.produtoQuery
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getProdutos(req.query.lote_id)
+
+    const msg = 'Produtos retornados'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/produto:
+ *   put:
+ *     summary: Atualiza produtos
+ *     description: Atualiza as informacoes dos produtos cadastrados (por id).
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Produtos
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/produtosUpdate'
+ *     responses:
+ *       200:
+ *         description: Produtos atualizados com sucesso
+ */
+router.put(
+  '/produto',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.produtosUpdate
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaProdutos(
+      req.body.produtos
+    )
+
+    const msg = 'Produtos atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
  * /api/projeto/lote:
  *   get:
  *     summary: Retorna os lotes

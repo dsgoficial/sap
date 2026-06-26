@@ -1215,6 +1215,35 @@ models.produtosIds = Joi.object().keys({
     .min(1)
 })
 
+models.produtoQuery = Joi.object().keys({
+  lote_id: Joi.number().integer()
+})
+
+models.produtosUpdate = Joi.object().keys({
+  produtos: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        // uuid permissivo: aceita o identificador canonico do produto vindo da
+        // producao/BDGEx, que nem sempre e um uuidv4 estrito (qualquer 8-4-4-4-12 hex)
+        uuid: Joi.string()
+          .pattern(
+            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+          )
+          .required(),
+        nome: Joi.string().required().allow(''),
+        mi: Joi.string().required().allow(''),
+        inom: Joi.string().required().allow(''),
+        denominador_escala: Joi.string().required(),
+        edicao: Joi.string().required().allow('')
+      })
+    )
+    .unique('id')
+    .unique('uuid')
+    .required()
+    .min(1)
+})
+
 models.configuracaoLoteCopiar = Joi.object().keys({
   lote_id_origem: Joi.number().integer().strict().required(),
   lote_id_destino: Joi.number().integer().strict().required(),
