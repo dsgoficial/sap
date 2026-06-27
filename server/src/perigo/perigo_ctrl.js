@@ -9,6 +9,8 @@ const { db, disableTriggers } = require('../database')
 
 const { AppError, httpCode } = require('../utils')
 
+const logger = require('../utils/logger')
+
 const controller = {}
 
 controller.limpaAtividades = async usuarioId => {
@@ -208,34 +210,112 @@ controller.deleteInsumo = async insumoIds => {
 
 controller.deleteProdutosSemUT = async () => {
   return db.sapConn.tx(async t => {
+    const produtosToDelete = await t.any(
+      `SELECT p.id
+      FROM macrocontrole.produto AS p
+      LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+      WHERE rp.ut_id IS NULL`
+    );
+
+    if (produtosToDelete.length === 0) {
+      return [];
+    }
+
+    const produtoIds = produtosToDelete.map(p => p.id);
+
+    // produto e referenciado por FK (sem ON DELETE CASCADE) por uma tabela de
+    // junção de campo e por sete tabelas de metadado de nivel produto. Como o
+    // produto sem UT esta sendo removido por inteiro, esses dependentes (todos
+    // escopados ao produto) precisam sair antes, senao estoura 23503.
+    // relacionamento_produto NAO entra aqui: o produto e selecionado JUSTAMENTE
+    // por nao ter linha la (rp.ut_id IS NULL). ATENCAO: manter esta lista em
+    // sincronia com as FKs para macrocontrole.produto (er/campo.sql, er/metadado.sql).
+    const removidos = {};
+    removidos.relacionamento_campo_produto = (await t.result(
+      `DELETE FROM controle_campo.relacionamento_campo_produto WHERE produto_id IN ($<produtoIds:csv>)`,
+      { produtoIds }
+    )).rowCount;
+    removidos.palavra_chave_produto = (await t.result(
+      `DELETE FROM metadado.palavra_chave_produto WHERE produto_id IN ($<produtoIds:csv>)`,
+      { produtoIds }
+    )).rowCount;
+    removidos.responsavel_fase_produto = (await t.result(
+      `DELETE FROM metadado.responsavel_fase_produto WHERE produto_id IN ($<produtoIds:csv>)`,
+      { produtoIds }
+    )).rowCount;
+    removidos.informacoes_produto = (await t.result(
+      `DELETE FROM metadado.informacoes_produto WHERE produto_id IN ($<produtoIds:csv>)`,
+      { produtoIds }
+    )).rowCount;
+    removidos.informacoes_edicao = (await t.result(
+      `DELETE FROM metadado.informacoes_edicao WHERE produto_id IN ($<produtoIds:csv>)`,
+      { produtoIds }
+    )).rowCount;
+    removidos.sensor_carta_ortoimagem = (await t.result(
+      `DELETE FROM metadado.sensor_carta_ortoimagem WHERE produto_id IN ($<produtoIds:csv>)`,
+      { produtoIds }
+    )).rowCount;
+    removidos.imagens_carta_ortoimagem = (await t.result(
+      `DELETE FROM metadado.imagens_carta_ortoimagem WHERE produto_id IN ($<produtoIds:csv>)`,
+      { produtoIds }
+    )).rowCount;
+    removidos.perfil_classes_complementares_orto = (await t.result(
+      `DELETE FROM metadado.perfil_classes_complementares_orto WHERE produto_id IN ($<produtoIds:csv>)`,
+      { produtoIds }
+    )).rowCount;
+
     const deletedProducts = await t.any(
       `DELETE FROM macrocontrole.produto
-      WHERE id IN (
-        SELECT p.id
-        FROM macrocontrole.produto AS p
-        LEFT JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
-        WHERE rp.ut_id IS NULL
-      )
-      RETURNING id`
+      WHERE id IN ($<produtoIds:csv>)
+      RETURNING id`,
+      { produtoIds }
     );
-    
+
+    // Zona de Perigo: registra o raio de explosao (quantos dependentes de cada
+    // tabela foram cascateados junto com os produtos orfaos).
+    logger.info('deleteProdutosSemUT: produtos sem UT removidos (cascata)', {
+      produtos_removidos: deletedProducts.length,
+      dependentes_removidos: removidos
+    });
+
     return deletedProducts;
   });
 };
 
 controller.deleteUTSemAtividade = async () => {
   return db.sapConn.tx(async t => {
+    const utToDelete = await t.any(
+      `SELECT ut.id
+      FROM macrocontrole.unidade_trabalho AS ut
+      LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+      WHERE a.unidade_trabalho_id IS NULL`
+    );
+
+    if (utToDelete.length === 0) {
+      return [];
+    }
+
+    const utIds = utToDelete.map(ut => ut.id);
+
+    // insumo_unidade_trabalho referencia unidade_trabalho por FK sem ON DELETE
+    // CASCADE, então as linhas de insumo precisam sair antes da UT (era a causa
+    // do erro 23503 insumo_unidade_trabalho_unidade_trabalho_id_fkey).
+    // relacionamento_ut e relacionamento_produto não têm FK: são limpos pela
+    // trigger AFTER DELETE a_relacionamento_unidade_trabalho, mantida ativa
+    // nesta transação (db.sapConn.tx, sem disableTriggers).
+    await t.none(
+      `DELETE FROM macrocontrole.insumo_unidade_trabalho
+      WHERE unidade_trabalho_id IN ($<utIds:csv>)`,
+      { utIds }
+    );
+
     const deletedUT = await t.any(
       `DELETE FROM macrocontrole.unidade_trabalho
-      WHERE id IN (
-        SELECT ut.id
-        FROM macrocontrole.unidade_trabalho AS ut
-        LEFT JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
-        WHERE a.unidade_trabalho_id IS NULL
-      )
-      RETURNING id`
+      WHERE id IN ($<utIds:csv>)
+      RETURNING id`,
+      { utIds }
     );
-    
+
     return deletedUT;
   });
 };
