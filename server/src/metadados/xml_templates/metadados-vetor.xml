@@ -275,7 +275,7 @@
 			<gmd:citation>
 				<gmd:CI_Citation>
 					<gmd:title>
-						<gco:CharacterString>{{NOME}} - {{INOM}} - {{ESCALA_FMT}}</gco:CharacterString>
+						<gco:CharacterString>{{TITULO}}</gco:CharacterString>
 					</gmd:title>
 					<gmd:alternateTitle>
 						<gco:CharacterString>{{NOME}}</gco:CharacterString>

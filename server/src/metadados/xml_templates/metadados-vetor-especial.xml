@@ -57,29 +57,84 @@
 			<gmd:complianceCode>
 				<gco:CharacterString>f</gco:CharacterString>
 			</gmd:complianceCode>
+			<gmd:language>
+				<gco:CharacterString>pt-BR</gco:CharacterString>
+			</gmd:language>
 			<gmd:includedWithDataset>
 				<gco:CharacterString>f</gco:CharacterString>
 			</gmd:includedWithDataset>
+			<gmd:featureCatalogueCitation>
+				<gmd:CI_Citation>
+					<gmd:title>
+						<gco:CharacterString>ET-EDGV - Esp. Tec. para Estruturação de Dados Geoespaciais Vetoriais;</gco:CharacterString>
+					</gmd:title>
+					<gmd:alternateTitle>
+						<gco:CharacterString>ET_EDGV</gco:CharacterString>
+					</gmd:alternateTitle>
+					<gmd:date>
+						<gmd:CI_Date>
+							<gmd:date>
+								<gco:Date>{{DATA_CRIACAO}}</gco:Date>
+							</gmd:date>
+							<gmd:dateType>
+								<gco:CharacterString>criacao</gco:CharacterString>
+							</gmd:dateType>
+						</gmd:CI_Date>
+					</gmd:date>
+					<gmd:edition>
+						<gco:CharacterString>3.0</gco:CharacterString>
+					</gmd:edition>
+					<gmd:editionDate>
+						<gco:Date>2018-01-01</gco:Date>
+					</gmd:editionDate>
+					<gmd:citedResponsibleParty>
+						<gmd:CI_ResponsibleParty>
+							<gmd:organisationName>
+								<gco:CharacterString>Comissão Nacional de Cartografia</gco:CharacterString>
+							</gmd:organisationName>
+							<gmd:contactInfo>
+								<gmd:CI_Contact>
+									<gmd:phone>
+										<gmd:CI_Telephone>
+											<gmd:voice>
+												<gco:CharacterString>(61)2020-4740</gco:CharacterString>
+											</gmd:voice>
+										</gmd:CI_Telephone>
+									</gmd:phone>
+									<gmd:address>
+										<gmd:CI_Address>
+											<gmd:deliveryPoint>
+												<gco:CharacterString>Esplanada dos Ministérios Block K - 3º andar - CEP:70.040-906 - Brasília - DF</gco:CharacterString>
+											</gmd:deliveryPoint>
+										</gmd:CI_Address>
+									</gmd:address>
+									<gmd:onlineResource>
+										<gmd:CI_OnlineResource>
+											<gmd:linkage>
+												<gco:CharacterString>www.planejamento.gov.br</gco:CharacterString>
+											</gmd:linkage>
+										</gmd:CI_OnlineResource>
+									</gmd:onlineResource>
+								</gmd:CI_Contact>
+							</gmd:contactInfo>
+							<gmd:role>
+								<gco:CharacterString>autor</gco:CharacterString>
+							</gmd:role>
+						</gmd:CI_ResponsibleParty>
+					</gmd:citedResponsibleParty>
+					<gmd:presentationForm>
+						<gco:CharacterString>documentDigital</gco:CharacterString>
+					</gmd:presentationForm>
+				</gmd:CI_Citation>
+			</gmd:featureCatalogueCitation>
 		</gmd:MD_FeatureCatalogueDescription>
 	</gmd:contentInfo>
 	<gmd:contentInfo>
 		<gmd:MD_ImageDescription>
-			<gmd:contentType>
-				<gco:CharacterString>imagem</gco:CharacterString>
-			</gmd:contentType>
 			<gmd:dimension>
 				<gmd:MD_Band>
-					<gmd:bitsPerValue>
-						<gco:Integer>8</gco:Integer>
-					</gmd:bitsPerValue>
 				</gmd:MD_Band>
 			</gmd:dimension>
-			<gmd:cloudCoverPercentage>
-				<gco:Decimal></gco:Decimal>
-			</gmd:cloudCoverPercentage>
-			<gmd:compressionGenerationQuality>
-				<gco:Integer></gco:Integer>
-			</gmd:compressionGenerationQuality>
 		</gmd:MD_ImageDescription>
 	</gmd:contentInfo>
 	<gmd:distributionInfo>
@@ -87,10 +142,10 @@
 			<gmd:distributionFormat>
 				<gmd:MD_Format>
 					<gmd:name>
-						<gco:CharacterString>Geo Tif</gco:CharacterString>
+						<gco:CharacterString>Shape File</gco:CharacterString>
 					</gmd:name>
 					<gmd:version>
-						<gco:CharacterString>1.8.2</gco:CharacterString>
+						<gco:CharacterString>1998</gco:CharacterString>
 					</gmd:version>
 				</gmd:MD_Format>
 			</gmd:distributionFormat>
@@ -126,9 +181,6 @@
 					</gmd:distributorContact>
 					<gmd:distributionOrderProcess>
 						<gmd:MD_StandardOrderProcess>
-							<gmd:fees>
-								<gco:CharacterString>Gratuito</gco:CharacterString>
-							</gmd:fees>
 						</gmd:MD_StandardOrderProcess>
 					</gmd:distributionOrderProcess>
 				</gmd:MD_Distributor>
@@ -184,37 +236,15 @@
 		</gmd:DQ_DataQuality>
 	</gmd:dataQualityInfo>
 	<gmd:spatialRepresentationInfo>
-		<gmd:MD_Georectified>
-			<gmd:numberOfDimensions>
-				<gco:Integer>2</gco:Integer>
-			</gmd:numberOfDimensions>
-			<gmd:axisDimensionProperties>
-				<gmd:MD_Dimension>
-					<gmd:dimensionName>
-						<gco:CharacterString>row</gco:CharacterString>
-					</gmd:dimensionName>
-				</gmd:MD_Dimension>
-			</gmd:axisDimensionProperties>
-			<gmd:axisDimensionProperties>
-				<gmd:MD_Dimension>
-					<gmd:dimensionName>
-						<gco:CharacterString>column</gco:CharacterString>
-					</gmd:dimensionName>
-				</gmd:MD_Dimension>
-			</gmd:axisDimensionProperties>
-			<gmd:cellGeometry>
-				<gco:CharacterString>area</gco:CharacterString>
-			</gmd:cellGeometry>
-			<gmd:transformationParameterAvailability>
-				<gco:CharacterString>t</gco:CharacterString>
-			</gmd:transformationParameterAvailability>
-			<gmd:checkPointAvailability>
-				<gco:CharacterString>f</gco:CharacterString>
-			</gmd:checkPointAvailability>
-			<gmd:pointInPixel>
-				<gco:CharacterString>centro</gco:CharacterString>
-			</gmd:pointInPixel>
-		</gmd:MD_Georectified>
+		<gmd:MD_VectorSpatialRepresentation>
+			<gmd:topologyLevel>
+				<gco:CharacterString>topologia1D</gco:CharacterString>
+			</gmd:topologyLevel>
+			<gmd:geometricObjects>
+				<gmd:MD_GeometricObjects>
+				</gmd:MD_GeometricObjects>
+			</gmd:geometricObjects>
+		</gmd:MD_VectorSpatialRepresentation>
 	</gmd:spatialRepresentationInfo>
 	<gmd:referenceSystemInfo>
 		<gmd:MD_ReferenceSystem>
@@ -247,9 +277,6 @@
 					<gmd:title>
 						<gco:CharacterString>{{TITULO}}</gco:CharacterString>
 					</gmd:title>
-					<gmd:alternateTitle>
-						<gco:CharacterString>{{NOME}}</gco:CharacterString>
-					</gmd:alternateTitle>
 					<gmd:date>
 						<gmd:CI_Date>
 							<gmd:date>
@@ -266,27 +293,13 @@
 					<gmd:editionDate>
 						<gco:Date>{{DATA_EDICAO}}</gco:Date>
 					</gmd:editionDate>
-					<gmd:identifier>
-						<gmd:RS_Identifier>
-							<gmd:code>
-								<gco:CharacterString>{{INOM}}</gco:CharacterString>
-							</gmd:code>
-						</gmd:RS_Identifier>
-					</gmd:identifier>
-					<gmd:identifier>
-						<gmd:RS_Identifier>
-							<gmd:code>
-								<gco:CharacterString>{{MI}}</gco:CharacterString>
-							</gmd:code>
-						</gmd:RS_Identifier>
-					</gmd:identifier>
 					<gmd:presentationForm>
 						<gco:CharacterString>mapDigital</gco:CharacterString>
 					</gmd:presentationForm>
 					<gmd:series>
 						<gmd:CI_Series>
 							<gmd:name>
-								<gco:CharacterString>SCN Carta Ortoimagem</gco:CharacterString>
+								<gco:CharacterString>Nao SCN Conj. de Dados Geoespaciais Vetoriais</gco:CharacterString>
 							</gmd:name>
 						</gmd:CI_Series>
 					</gmd:series>
@@ -385,7 +398,7 @@
 				</gmd:MD_MaintenanceInformation>
 			</gmd:resourceMaintenance>
 			<gmd:spatialRepresentationType>
-				<gco:CharacterString>matricial</gco:CharacterString>
+				<gco:CharacterString>vetorial</gco:CharacterString>
 			</gmd:spatialRepresentationType>
 			<gmd:spatialResolution>
 				<gmd:MD_Resolution>
@@ -396,24 +409,6 @@
 							</gmd:denominator>
 						</gmd:MD_RepresentativeFraction>
 					</gmd:equivalentScale>
-				</gmd:MD_Resolution>
-			</gmd:spatialResolution>
-			<gmd:spatialResolution>
-				<gmd:MD_Resolution>
-					<gmd:equivalentScale>
-						<gmd:MD_RepresentativeFraction>
-							<gmd:denominator>
-								<gco:Integer>{{ESCALA}}</gco:Integer>
-							</gmd:denominator>
-						</gmd:MD_RepresentativeFraction>
-					</gmd:equivalentScale>
-				</gmd:MD_Resolution>
-			</gmd:spatialResolution>
-			<gmd:spatialResolution>
-				<gmd:MD_Resolution>
-					<gmd:distance>
-						<gco:Decimal>{{EQUIDISTANCIA}}</gco:Decimal>
-					</gmd:distance>
 				</gmd:MD_Resolution>
 			</gmd:spatialResolution>
 			<gmd:language>
@@ -428,8 +423,6 @@
 			<gmd:extent>
 				<gmd:EX_Extent>
 					<gmd:geographicElement>
-						<gmd:EX_GeographicBoundingBox>
-						</gmd:EX_GeographicBoundingBox>
 					</gmd:geographicElement>
 					<gmd:verticalExtent>
 						<gmd:EX_VerticalExtent>

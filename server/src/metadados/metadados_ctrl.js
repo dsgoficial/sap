@@ -1142,7 +1142,19 @@ const XML_TEMPLATE = {
   vetor: 'metadados-vetor.xml'
 }
 
-const EQUIDISTANCIA_POR_ESCALA = { 25000: '10', 50000: '20', 100000: '50', 250000: '100' }
+// Produto nao-SCN (carta/CDGV especial, fora da articulacao, sem INOM): template
+// proprio, espelhando os XML de producao -> titulo so o NOME, serie "Nao SCN ...
+// Especial", e sem alternateTitle nem identificador SCN (INOM/MI).
+const XML_TEMPLATE_ESPECIAL = {
+  topo: 'metadados-topo-especial.xml',
+  orto: 'metadados-orto-especial.xml',
+  vetor: 'metadados-vetor-especial.xml'
+}
+
+// Equidistancia da curva de nivel por escala (ET-RDG). Sub-25k (1:10.000) incluido
+// porque ha cartas urbanas/especiais nessa escala; confira o valor com a ET-RDG ao
+// adicionar uma escala nova (depende tambem do relevo na pratica).
+const EQUIDISTANCIA_POR_ESCALA = { 10000: '5', 25000: '10', 50000: '20', 100000: '50', 250000: '100' }
 
 // rationale (descricao do passo de linhagem) por Fase do SAP (dominio.tipo_fase).
 // Textos extraidos dos XML de producao; fase sem texto cai no proprio nome.
@@ -1190,7 +1202,8 @@ const montaMetadadoXml = async (t, produto) => {
       httpCode.BadRequest
     )
   }
-  const templateNome = XML_TEMPLATE[kind]
+  // SCN (tem INOM) usa o template base; nao-SCN/especial usa o -especial.
+  const templateNome = produto.inom ? XML_TEMPLATE[kind] : XML_TEMPLATE_ESPECIAL[kind]
 
   const loteId = produto.lote_id
 
@@ -1228,10 +1241,16 @@ const montaMetadadoXml = async (t, produto) => {
 
   const hoje = new Date().toISOString().slice(0, 10)
   const escala = produto.denominador_escala
+  const nome = produto.nome || produto.mi || produto.inom || ''
+  const escalaFmt = fmtEscala(escala)
+  // Titulo do produto: nas folhas SCN e "NOME - INOM - escala"; nas nao-SCN
+  // (carta especial, sem INOM) e so o NOME, sem o " -  - " com INOM vazio.
+  const titulo = produto.inom ? `${nome} - ${produto.inom} - ${escalaFmt}` : nome
   const valores = {
     INOM: produto.inom || '',
     MI: produto.mi || '',
-    NOME: produto.nome || produto.mi || produto.inom || '',
+    NOME: nome,
+    TITULO: titulo,
     UUID: produto.uuid,
     CHEFE_DGEO: (infoProduto && infoProduto.responsavel) || '',
     ORGAO_NOME: (infoProduto && infoProduto.org_nome) || '',
@@ -1239,7 +1258,7 @@ const montaMetadadoXml = async (t, produto) => {
     ORGAO_ENDERECO: (infoProduto && infoProduto.org_endereco) || '',
     ORGAO_TELEFONE: (infoProduto && infoProduto.org_telefone) || '',
     ESCALA: String(escala),
-    ESCALA_FMT: fmtEscala(escala),
+    ESCALA_FMT: escalaFmt,
     EQUIDISTANCIA: EQUIDISTANCIA_POR_ESCALA[escala] || '',
     PROJETO: (infoProduto && infoProduto.projeto_bdgex) || '',
     DATUM_VERTICAL: (infoProduto && infoProduto.datum_vertical) || '',
