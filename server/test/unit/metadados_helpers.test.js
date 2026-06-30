@@ -7,6 +7,7 @@ const {
   escapeXml,
   fmtEscala,
   isoData,
+  normalizaCaminhoRede,
   resolveLicenca,
   resolveTipoVersao,
   validarJsonEdicao,
@@ -47,6 +48,26 @@ describe('metadados.isoData', () => {
   })
   it('string ISO → primeiros 10 caracteres', () => {
     expect(isoData('2024-03-15T10:00:00Z')).toBe('2024-03-15')
+  })
+})
+
+describe('metadados.normalizaCaminhoRede', () => {
+  it('conserta UNC quebrada (uma barra inicial -> duas)', () => {
+    expect(normalizaCaminhoRede('\\10.25.163.3\\share\\fabdem.tif'))
+      .toBe('\\\\10.25.163.3\\share\\fabdem.tif')
+  })
+  it('UNC valida (duas barras) fica intacta', () => {
+    expect(normalizaCaminhoRede('\\\\10.25.163.3\\share\\fabdem.tif'))
+      .toBe('\\\\10.25.163.3\\share\\fabdem.tif')
+  })
+  it('caminho com letra de drive e POSIX ficam intactos', () => {
+    expect(normalizaCaminhoRede('Y:\\Produtos\\fabdem.tif')).toBe('Y:\\Produtos\\fabdem.tif')
+    expect(normalizaCaminhoRede('/dados/mde.tif')).toBe('/dados/mde.tif')
+  })
+  it('null/undefined/vazio passam sem quebrar', () => {
+    expect(normalizaCaminhoRede(null)).toBe(null)
+    expect(normalizaCaminhoRede(undefined)).toBe(undefined)
+    expect(normalizaCaminhoRede('')).toBe('')
   })
 })
 
@@ -110,6 +131,11 @@ describe('metadados.validarJsonEdicao (portão de QA)', () => {
     const j = jsonValido()
     j.mde_diagrama_elevacao.caminho_mde = '/dados com espaco/mde.tif'
     expect(validarJsonEdicao(j).some(e => /caminho_mde contem espaco/.test(e))).toBe(true)
+  })
+  it('acusa caminho_mde com UNC quebrada (uma barra invertida inicial)', () => {
+    const j = jsonValido()
+    j.mde_diagrama_elevacao.caminho_mde = '\\10.25.163.3\\share\\mde.tif'
+    expect(validarJsonEdicao(j).some(e => /UNC quebrada/.test(e))).toBe(true)
   })
   it('acusa banco não resolvido quando falta servidor/porta/nome', () => {
     const j = jsonValido()

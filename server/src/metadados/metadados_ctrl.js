@@ -898,6 +898,9 @@ const validarJsonEdicao = json => {
   const mde = json.mde_diagrama_elevacao || {}
   if (!mde.caminho_mde || !mde.epsg) erros.push('mde_diagrama_elevacao (caminho_mde/epsg) incompleto')
   if (mde.caminho_mde && /\s/.test(mde.caminho_mde)) erros.push('caminho_mde contem espaco (a exportacao falha)')
+  if (mde.caminho_mde && mde.caminho_mde[0] === '\\' && mde.caminho_mde[1] !== '\\') {
+    erros.push('caminho_mde e UNC quebrada (uma barra invertida inicial em vez de duas; a exportacao falha)')
+  }
   if (!Array.isArray(json.fases) || json.fases.length === 0) erros.push('fases ausente (quadro_fases)')
   const it = json.info_tecnica || {}
   for (const k of ['data_criacao', 'pec_planimetrico', 'pec_altimetrico', 'datum_vertical', 'origem_dados_altimetricos']) {
@@ -1013,7 +1016,7 @@ const montaJsonEdicao = async (t, produto) => {
     acesso_restrito: !!infoEdicao.acesso_restrito,
     dpi: infoEdicao.dpi || 300,
     mde_diagrama_elevacao: {
-      caminho_mde: infoEdicao.caminho_mde,
+      caminho_mde: normalizaCaminhoRede(infoEdicao.caminho_mde),
       epsg: infoEdicao.epsg_mde
     },
     fases: fases || [],
@@ -1054,8 +1057,8 @@ const montaJsonEdicao = async (t, produto) => {
       produto.id, loteId
     )
     json.imagens = imagens.map(i => {
-      const img = { caminho_imagem: i.caminho_imagem, epsg: i.epsg }
-      if (i.caminho_estilo) img.caminho_estilo = i.caminho_estilo
+      const img = { caminho_imagem: normalizaCaminhoRede(i.caminho_imagem), epsg: i.epsg }
+      if (i.caminho_estilo) img.caminho_estilo = normalizaCaminhoRede(i.caminho_estilo)
       return img
     })
 
@@ -1194,6 +1197,18 @@ const escapeXml = s =>
   String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 const fmtEscala = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+
+// Conserta UNC quebrada: caminho de rede que veio com UMA barra invertida
+// inicial (`\host\share\...`) em vez de DUAS (`\\host\share\...`). O plugin de
+// exportacao (Ferramentas de Edicao) le a barra unica como relativa a raiz do
+// drive atual (inexistente) e o diagrama de elevacao falha, derrubando a folha
+// inteira sem PDF. So mexe nesse caso: UNC valida (`\\...`), caminho com letra
+// de drive (`Y:\...`) e caminho POSIX (`/...`) ficam intactos; null/vazio idem.
+const normalizaCaminhoRede = p => {
+  if (typeof p !== 'string' || p.length === 0) return p
+  if (p[0] === '\\' && p[1] !== '\\') return '\\' + p
+  return p
+}
 
 // aceita Date (timestamp do pg) ou DD/MM/AAAA; devolve YYYY-MM-DD (gco:Date).
 // Usa os componentes de data LOCAIS (nao toISOString, que e UTC e rolaria o dia
@@ -1484,6 +1499,7 @@ controller._helpers = {
   escapeXml,
   fmtEscala,
   isoData,
+  normalizaCaminhoRede,
   resolveLicenca,
   resolveTipoVersao,
   validarJsonEdicao
