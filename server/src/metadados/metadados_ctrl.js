@@ -1035,7 +1035,7 @@ const montaJsonEdicao = async (t, produto) => {
     json.escala = produto.denominador_escala
   }
 
-  if (infoEdicao.territorio_internacional) json.territorio_internacional = true
+  json.territorio_internacional = !!infoEdicao.territorio_internacional
   if (infoProduto && infoProduto.especificacao) json.info_tecnica.especificacao_representacao = infoProduto.especificacao
   if (Array.isArray(infoEdicao.observacoes) && infoEdicao.observacoes.length) {
     json.info_tecnica.observacoes = infoEdicao.observacoes
@@ -1157,12 +1157,28 @@ const XML_TEMPLATE_ESPECIAL = {
 const EQUIDISTANCIA_POR_ESCALA = { 10000: '5', 25000: '10', 50000: '20', 100000: '50', 250000: '100' }
 
 // rationale (descricao do passo de linhagem) por Fase do SAP (dominio.tipo_fase).
-// Textos extraidos dos XML de producao; fase sem texto cai no proprio nome.
-const RATIONALE_FASE = {
-  'Processamento Digital de Imagens': 'Processamento Digital de Imagem - Consiste na manipulação numérica de dados contidos em imagens digitais (realce de imagens, manipulação de brilho e contraste, redimensionamento da imagens, aplicação de filtros diversos, etc.).',
-  'Extração': 'Digitalizacao Tela Mono - Processo, também, conhecido como Restituição Monoscópica, que consiste em adquirir a geometria de feições do terreno a partir de um imagens orientadas.',
-  'Validação': 'Controle de qualidade direto interno, que tem por finalidade realizar de forma automatizada uma inspeção completa da consistência lógica de um conjunto de dados geoespaciais vetoriais e realizar a correção dos erros verificados.',
-  'Edição': 'Consiste na aplicação das representações cartograficas segundo a ET-RDG'
+// Mapa de FASE de producao -> etapa de linhagem: descricao canonica (NAO o nome
+// da fase) + rationale. Fase sem mapeamento (ex.: Disseminacao) NAO entra na linhagem.
+// O 'Preparo' mapeia para PreparoCDG (Preparo do Conjunto de Dados Geoespaciais),
+// o novo padrao da edicao (no lugar do antigo PDI).
+const RATIONALE_PREPARO_CDG = 'Preparo Conj Dados Geoespaciais - Consiste em definir o Projeto, o tipo do conjunto de dados geoespaciais, o pessoal e meios a serem utilizados (equipamentos, programas, insumos etc.). Neste processo deve-se cadastrar os metadados relativos as feições a serem produzidas, os quais acompanharão a feição por todo o seu ciclo de vida e que serão utilizados como subsídios para a elaboração dos metadados dos futuros produtos elaborados a partir das feições.'
+const LINHAGEM_FASE = {
+  'Preparo': {
+    desc: 'PreparoCDG',
+    rationale: RATIONALE_PREPARO_CDG
+  },
+  'Extração': {
+    desc: 'DigitalizaçãoTela',
+    rationale: 'Digitalizacao Tela Mono - Processo, também, conhecido como Restituição Monoscópica, que consiste em adquirir a geometria de feições do terreno a partir de um imagens orientadas.'
+  },
+  'Validação': {
+    desc: 'ValidaçãoQGIS',
+    rationale: 'Controle de qualidade direto interno, que tem por finalidade realizar de forma automatizada uma inspeção completa da consistência lógica de um conjunto de dados geoespaciais vetoriais e realizar a correção dos erros verificados.'
+  },
+  'Edição': {
+    desc: 'Edição',
+    rationale: 'Consiste na aplicação das representações cartograficas segundo a ET-RDG'
+  }
 }
 
 // templates lidos do disco uma vez e reusados (sao 3 e nao mudam em runtime)
@@ -1252,7 +1268,8 @@ const montaMetadadoXml = async (t, produto) => {
     NOME: nome,
     TITULO: titulo,
     UUID: produto.uuid,
-    CHEFE_DGEO: (infoProduto && infoProduto.responsavel) || '',
+    // individualName no formato do BDGEx: NOME em maiusculas seguido de " / ;"
+    CHEFE_DGEO: infoProduto && infoProduto.responsavel ? `${infoProduto.responsavel.toUpperCase()} / ;` : '',
     ORGAO_NOME: (infoProduto && infoProduto.org_nome) || '',
     ORGAO_SITE: (infoProduto && infoProduto.org_site) || '',
     ORGAO_ENDERECO: (infoProduto && infoProduto.org_endereco) || '',
@@ -1294,16 +1311,17 @@ const montaMetadadoXml = async (t, produto) => {
   const chefeXml = escapeXml(valores.CHEFE_DGEO)
   const orgNomeXml = escapeXml(valores.ORGAO_NOME)
   const orgSiteXml = escapeXml(valores.ORGAO_SITE)
-  const linhagemProcesso = fasesRows.map(fr => {
+  const linhagemProcesso = fasesRows.filter(fr => LINHAGEM_FASE[fr.fase]).map(fr => {
+    const fmap = LINHAGEM_FASE[fr.fase]
     const data = fr.fim ? isoData(fr.fim) : hoje
     return [
       '<gmd:processStep>',
       '\t\t\t\t\t\t<gmd:LI_ProcessStep>',
       '\t\t\t\t\t\t\t<gmd:description>',
-      `\t\t\t\t\t\t\t\t<gco:CharacterString>${escapeXml(fr.fase)}</gco:CharacterString>`,
+      `\t\t\t\t\t\t\t\t<gco:CharacterString>${escapeXml(fmap.desc)}</gco:CharacterString>`,
       '\t\t\t\t\t\t\t</gmd:description>',
       '\t\t\t\t\t\t\t<gmd:rationale>',
-      `\t\t\t\t\t\t\t\t<gco:CharacterString>${escapeXml(RATIONALE_FASE[fr.fase] || fr.fase)}</gco:CharacterString>`,
+      `\t\t\t\t\t\t\t\t<gco:CharacterString>${escapeXml(fmap.rationale)}</gco:CharacterString>`,
       '\t\t\t\t\t\t\t</gmd:rationale>',
       '\t\t\t\t\t\t\t<gmd:dateTime>',
       `\t\t\t\t\t\t\t\t<gco:Date>${data}</gco:Date>`,
@@ -1377,17 +1395,26 @@ const montaMetadadoXml = async (t, produto) => {
     .join('\n\t\t\t')
   xml = xml.split('{{PALAVRAS_CHAVE}}').join(palavrasChave)
 
-  // preenche os bounding box vazios a partir da geometria do produto (EPSG 4326)
+  // preenche o bounding box vazio a partir da geometria do produto (EPSG 4326),
+  // SOMENTE na identificationInfo. O LI_Source/sourceExtent (na dataQualityInfo) deve
+  // ficar SEMPRE em branco, conforme os XML reais do BDGEx. Na SCN a identificacao nao
+  // tem o Decimal vazio (o BDGEx a preenche pelo INOM); so a nao-SCN (especial) preenche.
   const bbox = [
     ['westBoundLongitude', produto.bbox_w],
     ['eastBoundLongitude', produto.bbox_e],
     ['southBoundLatitude', produto.bbox_s],
     ['northBoundLatitude', produto.bbox_n]
   ]
-  for (const [tag, val] of bbox) {
-    if (val == null) continue
-    const re = new RegExp(`(<gmd:${tag}>\\s*<gco:Decimal>)(</gco:Decimal>)`, 'g')
-    xml = xml.replace(re, `$1${val}$2`)
+  const idIni = xml.indexOf('<gmd:identificationInfo>')
+  const idFim = xml.indexOf('</gmd:identificationInfo>')
+  if (idIni >= 0 && idFim > idIni) {
+    let idPart = xml.slice(idIni, idFim)
+    for (const [tag, val] of bbox) {
+      if (val == null) continue
+      const re = new RegExp(`(<gmd:${tag}>\\s*<gco:Decimal>)(</gco:Decimal>)`, 'g')
+      idPart = idPart.replace(re, `$1${val}$2`)
+    }
+    xml = xml.slice(0, idIni) + idPart + xml.slice(idFim)
   }
 
   const erros = []
