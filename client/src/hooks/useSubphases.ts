@@ -1,5 +1,5 @@
 // Path: hooks\useSubphases.ts
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getActivitySubphase,
@@ -13,7 +13,6 @@ import {
   standardizeError,
 } from '@/lib/queryClient';
 import { ApiResponse } from '@/types/api';
-import { createCancelToken } from '@/utils/apiErrorHandler';
 import axios from 'axios';
 
 const QUERY_KEYS = {
@@ -23,16 +22,6 @@ const QUERY_KEYS = {
 };
 
 export const useActivitySubphase = () => {
-  // Token de cancelamento para requisição
-  const cancelTokenRef = useRef(createCancelToken());
-
-  // Limpeza quando componente desmontar
-  useEffect(() => {
-    return () => {
-      cancelTokenRef.current.cancel('Component unmounted');
-    };
-  }, []);
-
   // Função de transformação memoizada
   const transformSubphaseData = useCallback(
     (data: ApiResponse<SubphaseData[]>): TimelineGroup[] => {
@@ -101,7 +90,7 @@ export const useActivitySubphase = () => {
   const query = useQuery<ApiResponse<SubphaseData[]>, unknown, TimelineGroup[]>(
     {
       queryKey: QUERY_KEYS.ACTIVITY_SUBPHASE,
-      queryFn: () => getActivitySubphase(cancelTokenRef.current),
+      queryFn: () => getActivitySubphase(),
       staleTime: STALE_TIMES.FREQUENT_DATA,
       select: transformSubphaseData,
       retry: (failureCount, error) => {
@@ -130,16 +119,6 @@ interface SituationData {
 }
 
 export const useSubphaseSituation = () => {
-  // Token de cancelamento para requisição
-  const cancelTokenRef = useRef(createCancelToken());
-
-  // Limpeza quando componente desmontar
-  useEffect(() => {
-    return () => {
-      cancelTokenRef.current.cancel('Component unmounted');
-    };
-  }, []);
-
   // Função de transformação memoizada
   const transformSituationData = useCallback(
     (data: ApiResponse<SituationData[]>): ChartGroup[] => {
@@ -185,7 +164,7 @@ export const useSubphaseSituation = () => {
   // Query com seletor para transformação
   const query = useQuery<ApiResponse<SituationData[]>, unknown, ChartGroup[]>({
     queryKey: QUERY_KEYS.SUBPHASES_SITUATION,
-    queryFn: () => getSubphasesSituation(cancelTokenRef.current),
+    queryFn: () => getSubphasesSituation(),
     staleTime: STALE_TIMES.FREQUENT_DATA,
     select: transformSituationData,
     retry: (failureCount, error) => {
@@ -211,16 +190,6 @@ interface UserActivityData {
 }
 
 export const useUserActivities = () => {
-  // Token de cancelamento para requisição
-  const cancelTokenRef = useRef(createCancelToken());
-
-  // Limpeza quando componente desmontar
-  useEffect(() => {
-    return () => {
-      cancelTokenRef.current.cancel('Component unmounted');
-    };
-  }, []);
-
   // Função de transformação memoizada
   const transformUserActivitiesData = useCallback(
     (data: ApiResponse<UserActivityData[]>): TimelineGroup[] => {
@@ -273,7 +242,7 @@ export const useUserActivities = () => {
     TimelineGroup[]
   >({
     queryKey: QUERY_KEYS.USER_ACTIVITIES,
-    queryFn: () => getUserActivities(cancelTokenRef.current),
+    queryFn: () => getUserActivities(),
     staleTime: STALE_TIMES.FREQUENT_DATA,
     select: transformUserActivitiesData,
     retry: (failureCount, error) => {

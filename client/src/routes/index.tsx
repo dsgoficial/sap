@@ -99,6 +99,11 @@ const PitNaoProducao = lazy(() =>
     default: module.PitNaoProducao,
   })),
 );
+const Rpcmtec = lazy(() =>
+  import('../features/rpcmtec/routes/Rpcmtec').then(module => ({
+    default: module.Rpcmtec,
+  })),
+);
 const FieldManagement = lazy(() =>
   import('../features/fieldActivities/routes/FieldManagement').then(module => ({
     default: module.FieldManagement,
@@ -357,6 +362,15 @@ const routes: RouteObject[] = [
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <PitNaoProducao />
+          </Suspense>
+        ),
+        loader: adminLoader,
+      },
+      {
+        path: 'rpcmtec',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <Rpcmtec />
           </Suspense>
         ),
         loader: adminLoader,

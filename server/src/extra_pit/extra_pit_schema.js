@@ -22,6 +22,7 @@ models.extraPit = Joi.object().keys({
       situacao_id: Joi.number().integer().required(),
       documento_autorizacao: Joi.string().required(),
       descricao: Joi.string().required().allow(null),
+      data_entrega: Joi.date().required().allow(null),
       lote_id: Joi.number().integer().required().allow(null)
     })
     .required()

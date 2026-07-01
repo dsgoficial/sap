@@ -41,6 +41,7 @@ const vazia = (ano: number): ExtraPitInput => ({
   situacao_id: 1,
   documento_autorizacao: '',
   descricao: '',
+  data_entrega: null,
   lote_id: null,
 });
 
@@ -99,6 +100,7 @@ export const ExtraPit = () => {
       situacao_id: d.situacao_id,
       documento_autorizacao: d.documento_autorizacao,
       descricao: d.descricao,
+      data_entrega: d.data_entrega,
       lote_id: d.lote_id,
     });
     setOpen(true);
@@ -111,6 +113,7 @@ export const ExtraPit = () => {
       quantidade: Number(form.quantidade),
       situacao_id: Number(form.situacao_id),
       descricao: form.descricao || null,
+      data_entrega: form.data_entrega || null,
       lote_id: form.lote_id === null ? null : Number(form.lote_id),
     };
     if (editId) {
@@ -130,6 +133,14 @@ export const ExtraPit = () => {
     { id: 'tipo_produto', label: 'Tipo de produto', align: 'left' as const },
     { id: 'quantidade', label: 'Quantidade', align: 'center' as const },
     { id: 'situacao', label: 'Situação', align: 'center' as const },
+    {
+      id: 'data_entrega',
+      label: 'Data de entrega',
+      align: 'center' as const,
+      sortable: true,
+      format: (v: string | null) =>
+        v ? new Date(v).toLocaleDateString('pt-BR') : '-',
+    },
     {
       id: 'documento_autorizacao',
       label: 'Documento autorização',
@@ -280,6 +291,15 @@ export const ExtraPit = () => {
                 fullWidth
                 multiline
                 minRows={2}
+              />
+              <TextField
+                label="Data de entrega"
+                type="date"
+                value={form.data_entrega ?? ''}
+                onChange={e => set('data_entrega', e.target.value || null)}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                helperText="Mês desta data define em qual RPCMTec a demanda entra (2.6)"
               />
               <TextField
                 label="Lote (id, opcional)"

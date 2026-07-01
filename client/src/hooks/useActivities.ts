@@ -1,5 +1,5 @@
 // Path: hooks\useActivities.ts
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ErrorReport } from '../types/activity';
 import { ApiResponse } from '../types/api';
@@ -16,8 +16,6 @@ import {
   createQueryKey,
 } from '@/lib/queryClient';
 import axios from 'axios';
-import type { CancelTokenSource } from 'axios';
-import { createCancelToken } from '@/utils/apiErrorHandler';
 
 const QUERY_KEYS = {
   CURRENT_ACTIVITY: createQueryKey('currentActivity'),
@@ -26,25 +24,6 @@ const QUERY_KEYS = {
 
 export const useActivities = () => {
   const queryClient = useQueryClient();
-  // Referências para tokens de cancelamento
-  const currentActivityCancelTokenRef = useRef<CancelTokenSource | null>(null);
-  const errorTypesCancelTokenRef = useRef<CancelTokenSource | null>(null);
-
-  // Criar novos tokens de cancelamento
-  useEffect(() => {
-    currentActivityCancelTokenRef.current = createCancelToken();
-    errorTypesCancelTokenRef.current = createCancelToken();
-
-    // Cleanup - cancelar requisições pendentes quando o componente for desmontado
-    return () => {
-      if (currentActivityCancelTokenRef.current) {
-        currentActivityCancelTokenRef.current.cancel('Component unmounted');
-      }
-      if (errorTypesCancelTokenRef.current) {
-        errorTypesCancelTokenRef.current.cancel('Component unmounted');
-      }
-    };
-  }, []);
 
   // Query para atividade atual
   const {
@@ -54,8 +33,7 @@ export const useActivities = () => {
     refetch: refetchActivity,
   } = useQuery({
     queryKey: QUERY_KEYS.CURRENT_ACTIVITY,
-    queryFn: () =>
-      getCurrentActivity(currentActivityCancelTokenRef.current || undefined),
+    queryFn: () => getCurrentActivity(),
     staleTime: STALE_TIMES.FREQUENT_DATA, // Activity data changes frequently
     retry: (failureCount, error) => {
       // Não tentar novamente se for um erro de cancelamento
@@ -67,7 +45,7 @@ export const useActivities = () => {
   // Query para tipos de erro
   const { data: errorTypesData } = useQuery({
     queryKey: QUERY_KEYS.ERROR_TYPES,
-    queryFn: () => getErrorTypes(errorTypesCancelTokenRef.current || undefined),
+    queryFn: () => getErrorTypes(),
     staleTime: STALE_TIMES.REFERENCE_DATA, // Error types rarely change
     retry: (failureCount, error) => {
       // Não tentar novamente se for um erro de cancelamento

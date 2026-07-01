@@ -38,6 +38,7 @@ describe('extraPitService', () => {
       situacao_id: 3,
       documento_autorizacao: 'DIEx 1455-E3/DSG',
       descricao: null,
+      data_entrega: null,
       lote_id: null,
     };
     await criarExtraPit(input);

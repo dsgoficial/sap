@@ -12,6 +12,7 @@ export interface ExtraPit {
   situacao?: string;
   documento_autorizacao: string;
   descricao: string | null;
+  data_entrega: string | null;
   lote_id: number | null;
   lote_nome?: string | null;
 }

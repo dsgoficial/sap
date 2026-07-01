@@ -801,6 +801,7 @@ CREATE TABLE macrocontrole.extra_pit(
     situacao_id SMALLINT NOT NULL REFERENCES macrocontrole.situacao_extra_pit (code),
     documento_autorizacao VARCHAR(255) NOT NULL,
     descricao TEXT,
+    data_entrega DATE,
     lote_id INTEGER REFERENCES macrocontrole.lote (id)
 );
 

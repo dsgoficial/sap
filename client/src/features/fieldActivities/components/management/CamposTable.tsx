@@ -33,6 +33,16 @@ export const CamposTable = () => {
     setFormOpen(true);
   };
 
+  // Ordem padrão: por data de início, do mais recente para o mais antigo.
+  // (O usuário ainda pode reordenar clicando nos cabeçalhos da tabela.)
+  const camposOrdenados = useMemo(() => {
+    return [...campos].sort((a, b) => {
+      const da = a.inicio ? new Date(a.inicio).getTime() : -Infinity;
+      const db = b.inicio ? new Date(b.inicio).getTime() : -Infinity;
+      return db - da;
+    });
+  }, [campos]);
+
   const handleDelete = async () => {
     if (!deletingCampo) return;
     try {
@@ -53,6 +63,14 @@ export const CamposTable = () => {
       { id: 'nome', label: 'Nome', align: 'left' as const, sortable: true },
       { id: 'orgao', label: 'Órgão', align: 'left' as const, sortable: true },
       { id: 'pit', label: 'PIT', align: 'center' as const, sortable: true },
+      {
+        id: 'inicio',
+        label: 'Data',
+        align: 'center' as const,
+        sortable: true,
+        format: (value: string) =>
+          value ? new Date(value).toLocaleDateString('pt-BR') : '—',
+      },
       {
         id: 'situacao',
         label: 'Situação',
@@ -122,7 +140,7 @@ export const CamposTable = () => {
 
       <Table
         columns={columns}
-        rows={campos}
+        rows={camposOrdenados}
         isLoading={isLoading}
         rowKey={(row: Campo) => row.id}
         searchPlaceholder="Buscar campo..."

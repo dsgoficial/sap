@@ -32,6 +32,7 @@ import FactCheckIcon from '@mui/icons-material/FactCheck';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import EditLocationAltIcon from '@mui/icons-material/EditLocationAlt';
+import PrintIcon from '@mui/icons-material/Print';
 import { useThemeMode } from '@/contexts/ThemeContext';
 
 interface DashboardSidebarProps {
@@ -167,6 +168,12 @@ const DashboardSidebar = ({
       title: 'PIT (não-produção)',
       path: '/pit-nao-producao',
       icon: <FactCheckIcon />,
+      adminOnly: true,
+    },
+    {
+      title: 'RPCMTec',
+      path: '/rpcmtec',
+      icon: <PrintIcon />,
       adminOnly: true,
     },
   ];

@@ -18,7 +18,7 @@ controller.getByAno = async ano => {
   return db.sapConn.any(
     `SELECT e.id, e.ano, e.demandante, e.tipo_produto, e.quantidade,
             e.situacao_id, s.nome AS situacao, e.documento_autorizacao,
-            e.descricao, e.lote_id, l.nome AS lote_nome
+            e.descricao, e.data_entrega, e.lote_id, l.nome AS lote_nome
      FROM macrocontrole.extra_pit AS e
      JOIN macrocontrole.situacao_extra_pit AS s ON s.code = e.situacao_id
      LEFT JOIN macrocontrole.lote AS l ON l.id = e.lote_id
@@ -31,9 +31,9 @@ controller.getByAno = async ano => {
 controller.criaExtraPit = async extraPit => {
   return db.sapConn.none(
     `INSERT INTO macrocontrole.extra_pit
-      (ano, demandante, tipo_produto, quantidade, situacao_id, documento_autorizacao, descricao, lote_id)
+      (ano, demandante, tipo_produto, quantidade, situacao_id, documento_autorizacao, descricao, data_entrega, lote_id)
      VALUES
-      ($<ano>, $<demandante>, $<tipo_produto>, $<quantidade>, $<situacao_id>, $<documento_autorizacao>, $<descricao>, $<lote_id>)`,
+      ($<ano>, $<demandante>, $<tipo_produto>, $<quantidade>, $<situacao_id>, $<documento_autorizacao>, $<descricao>, $<data_entrega>, $<lote_id>)`,
     extraPit
   )
 }
@@ -43,7 +43,8 @@ controller.atualizaExtraPit = async (id, extraPit) => {
     `UPDATE macrocontrole.extra_pit SET
        ano = $<ano>, demandante = $<demandante>, tipo_produto = $<tipo_produto>,
        quantidade = $<quantidade>, situacao_id = $<situacao_id>,
-       documento_autorizacao = $<documento_autorizacao>, descricao = $<descricao>, lote_id = $<lote_id>
+       documento_autorizacao = $<documento_autorizacao>, descricao = $<descricao>,
+       data_entrega = $<data_entrega>, lote_id = $<lote_id>
      WHERE id = $<id>`,
     { id, ...extraPit }
   )
