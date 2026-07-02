@@ -38,7 +38,13 @@ const texto = valor => (valor == null || valor === '' ? '-' : String(valor))
 // dd/mm/aaaa a partir de Date/string; '-' quando vazio/inválido.
 const formatData = valor => {
   if (!valor) return '-'
-  const d = valor instanceof Date ? valor : new Date(valor)
+  // String só-data ('YYYY-MM-DD'): parse como dia local — new Date() a
+  // trataria como meia-noite UTC e getDate() local voltaria um dia.
+  const d = valor instanceof Date
+    ? valor
+    : typeof valor === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valor)
+      ? new Date(valor + 'T00:00:00')
+      : new Date(valor)
   if (isNaN(d.getTime())) return '-'
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
 }

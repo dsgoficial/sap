@@ -25,18 +25,16 @@ import { useSnackbar } from 'notistack';
 import { useTracksByCampo } from '@/hooks/useFieldActivities';
 import { useUpdateTrack, useDeleteTrack } from '@/hooks/useFieldManagement';
 import { Track } from '@/types/fieldActivities';
-import { formatDate } from '@/utils/formatters';
+import { formatDate, toDateInputValue } from '@/utils/formatters';
 import ConfirmDialog from './ConfirmDialog';
 
 interface TracksTabProps {
   campoId: string;
 }
 
-const toDateInput = (value?: string | null): string => {
-  if (!value) return '';
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
-};
+// Converte para 'yyyy-MM-dd' no fuso LOCAL (toISOString() deslocaria o dia
+// caso o fuso do servidor mudasse).
+const toDateInput = (value?: string | null): string => toDateInputValue(value);
 
 export const TracksTab = ({ campoId }: TracksTabProps) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -74,7 +72,9 @@ export const TracksTab = ({ campoId }: TracksTabProps) => {
           chefe_vtr: form.chefe_vtr,
           motorista: form.motorista,
           placa_vtr: form.placa_vtr,
-          dia: form.dia ? new Date(form.dia).toISOString() : undefined,
+          // Coluna DATE no servidor: envia 'YYYY-MM-DD' cru, sem passar por
+          // Date/toISOString (que injetaria fuso e poderia deslocar o dia).
+          dia: form.dia || undefined,
         },
       });
       enqueueSnackbar('Track atualizado', { variant: 'success' });

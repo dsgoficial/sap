@@ -30,6 +30,7 @@ import {
   ExtraPit as ExtraPitItem,
   ExtraPitInput,
 } from '@/services/extraPitService';
+import { formatDate, toDateInputValue } from '@/utils/formatters';
 
 const ANO_ATUAL = new Date().getFullYear();
 
@@ -100,7 +101,9 @@ export const ExtraPit = () => {
       situacao_id: d.situacao_id,
       documento_autorizacao: d.documento_autorizacao,
       descricao: d.descricao,
-      data_entrega: d.data_entrega,
+      // API serializa a coluna DATE como ISO datetime ('...T03:00:00.000Z');
+      // o input type="date" exige 'YYYY-MM-DD' — sem converter, exibe vazio.
+      data_entrega: toDateInputValue(d.data_entrega) || null,
       lote_id: d.lote_id,
     });
     setOpen(true);
@@ -138,8 +141,8 @@ export const ExtraPit = () => {
       label: 'Data de entrega',
       align: 'center' as const,
       sortable: true,
-      format: (v: string | null) =>
-        v ? new Date(v).toLocaleDateString('pt-BR') : '-',
+      // formatDate trata 'YYYY-MM-DD' como dia local (parse cru seria UTC).
+      format: (v: string | null) => (v ? formatDate(v) : '-'),
     },
     {
       id: 'documento_autorizacao',

@@ -28,6 +28,7 @@ import {
   useUpdateCampo,
 } from '@/hooks/useFieldManagement';
 import { Campo, CampoInput } from '@/types/fieldActivities';
+import { toDateInputValue, dateInputToISO } from '@/utils/formatters';
 
 const schema = z.object({
   nome: z.string().min(1, 'Nome é obrigatório'),
@@ -57,13 +58,9 @@ interface CampoFormDialogProps {
   onClose: () => void;
 }
 
-// ISO/timestamp -> 'yyyy-MM-dd' para input date
-const toDateInput = (value?: string | null): string => {
-  if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toISOString().slice(0, 10);
-};
+// ISO/timestamp -> 'yyyy-MM-dd' para input date, no fuso LOCAL
+// (toISOString() deslocaria o dia em UTC-3).
+const toDateInput = (value?: string | null): string => toDateInputValue(value);
 
 const emptyValues: CampoFormValues = {
   nome: '',
@@ -132,8 +129,10 @@ export const CampoFormDialog = ({
       pit: values.pit,
       militares: values.militares ? values.militares : null,
       placas_vtr: values.placas_vtr ? values.placas_vtr : null,
-      inicio: values.inicio ? new Date(values.inicio).toISOString() : null,
-      fim: values.fim ? new Date(values.fim).toISOString() : null,
+      // Meia-noite LOCAL: new Date('YYYY-MM-DD') seria meia-noite UTC e
+      // gravaria 21:00 do dia anterior em UTC-3.
+      inicio: dateInputToISO(values.inicio),
+      fim: dateInputToISO(values.fim),
       situacao_id: values.situacao_id,
       categorias: values.categorias,
     };

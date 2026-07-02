@@ -22,7 +22,7 @@ import { useFotosByCampo } from '@/hooks/useFieldActivities';
 import { useCreateFotos, useDeleteFoto } from '@/hooks/useFieldManagement';
 import { Foto, FotoInput } from '@/types/fieldActivities';
 import { getFotoArquivo } from '@/services/fieldActivitiesService';
-import { formatDate } from '@/utils/formatters';
+import { formatDate, dateInputToISO } from '@/utils/formatters';
 import ConfirmDialog from './ConfirmDialog';
 
 const MAX_FOTO_BYTES = 7 * 1024 * 1024; // ~7MB binário (foto)
@@ -126,9 +126,9 @@ export const FotosTab = ({ campoId }: FotosTabProps) => {
       const payload: FotoInput = {
         campo_id: campoId,
         descricao: descricao || file.name,
-        data_imagem: dataImagem
-          ? new Date(dataImagem).toISOString()
-          : new Date().toISOString(),
+        // Meia-noite LOCAL do dia escolhido (input type="date"); parse direto
+        // seria meia-noite UTC e a exibição mostraria o dia anterior.
+        data_imagem: dateInputToISO(dataImagem) ?? new Date().toISOString(),
         tipo: isVideo ? 'video' : 'foto',
         mime_type: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
         imagem_base64,

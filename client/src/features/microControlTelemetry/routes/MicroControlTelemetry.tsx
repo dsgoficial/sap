@@ -16,12 +16,12 @@ import { useLotesOptions } from '@/hooks/useMicroControlTelemetry';
 import { MicroControlTelemetryFilters } from '@/types/microControlTelemetry';
 import { FeicaoSection } from '../components/FeicaoSection';
 import { TelaSection } from '../components/TelaSection';
+import { toDateInputValue } from '@/utils/formatters';
 
-// Data ISO (YYYY-MM-DD) de hoje e de N dias atras, para os filtros padrao.
-const isoDate = (d: Date): string => d.toISOString().slice(0, 10);
-
-const defaultDataFim = isoDate(new Date());
-const defaultDataInicio = isoDate(
+// Data (YYYY-MM-DD) de hoje e de N dias atras, para os filtros padrao.
+// No fuso LOCAL: toISOString() viraria "amanhã" a partir das 21h em UTC-3.
+const defaultDataFim = toDateInputValue(new Date());
+const defaultDataInicio = toDateInputValue(
   new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
 );
 

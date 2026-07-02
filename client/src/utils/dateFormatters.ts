@@ -26,6 +26,10 @@ export const formatTimestampWithTimezone = (dateString?: string): string => {
       } else if (dateString.includes(' ') && dateString.includes(':')) {
         // "YYYY-MM-DD HH:MM:SS" format
         date = new Date(dateString.replace(' ', 'T') + 'Z');
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        // Só data (sem hora): dia local, sem conversão de fuso — o construtor
+        // de Date trataria como meia-noite UTC e exibiria o dia anterior.
+        date = new Date(dateString + 'T00:00:00');
       } else {
         // Fallback
         date = new Date(dateString);
@@ -68,6 +72,10 @@ export const formatTimestamp = (dateString?: string): string => {
       date = new Date(dateString + 'Z');
     } else if (dateString.includes(' ') && dateString.includes(':')) {
       date = new Date(dateString.replace(' ', 'T') + 'Z');
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      // Só data (sem hora): dia local, sem conversão de fuso — o construtor
+      // de Date trataria como meia-noite UTC e exibiria o dia anterior.
+      date = new Date(dateString + 'T00:00:00');
     } else {
       date = new Date(dateString);
     }
