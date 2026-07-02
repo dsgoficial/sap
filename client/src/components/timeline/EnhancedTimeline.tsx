@@ -205,6 +205,18 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
       });
     }, []);
 
+    // endDate dos segmentos é exclusivo (dia seguinte ao último dia do
+    // período); para exibição, mostra o último dia efetivamente incluído.
+    const formatRange = useCallback(
+      (d: TimelineItem) => {
+        const inclusiveEnd = new Date(d.endDate);
+        inclusiveEnd.setDate(inclusiveEnd.getDate() - 1);
+        const end = inclusiveEnd < d.startDate ? d.startDate : inclusiveEnd;
+        return `${formatDate(d.startDate)} - ${formatDate(end)}`;
+      },
+      [formatDate],
+    );
+
     // Memoize the bar styles to prevent recalculation
     const barStyles = useMemo(() => {
       return {
@@ -227,7 +239,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
 
           const tooltip = select(tooltipRef.current);
           tooltip.html(`
-            <div class="tooltip-date-range">${formatDate(d.startDate)} - ${formatDate(d.endDate)}</div>
+            <div class="tooltip-date-range">${formatRange(d)}</div>
             <div class="tooltip-status">
               <span class="status-indicator" style="background-color: ${statusColor}"></span>
               <span>Status: ${statusText}</span>
@@ -262,7 +274,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
 
           const tooltip = select(tooltipRef.current);
           tooltip.html(`
-            <div class="tooltip-date-range">${formatDate(d.startDate)} - ${formatDate(d.endDate)}</div>
+            <div class="tooltip-date-range">${formatRange(d)}</div>
             <div class="tooltip-status">
               <span class="status-indicator" style="background-color: ${statusColor}"></span>
               <span>Status: ${statusText}</span>
@@ -281,7 +293,7 @@ export const EnhancedTimeline: React.FC<EnhancedTimelineProps> = React.memo(
           }, 2000);
         },
       };
-    }, [formatDate, barStyles]);
+    }, [formatRange, barStyles]);
 
     // Cores derivadas do tema, memoizadas — o efeito d3 depende só destas
     // strings em vez do objeto `theme` inteiro (reduz teardown/rebuild).

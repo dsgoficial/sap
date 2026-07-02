@@ -40,6 +40,13 @@ interface TimelineVisualizationProps {
   dataset: VisavailDataset[];
 }
 
+// 'YYYY-MM-DD' sem hora é interpretado como meia-noite UTC pelo construtor
+// de Date, o que desloca o dia no fuso local (UTC-3 exibe o dia anterior).
+const parseLocalDate = (value: string): Date =>
+  /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T00:00:00`)
+    : new Date(value);
+
 export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
   options,
   dataset,
@@ -48,8 +55,8 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({
     const timelineItems: TimelineItem[] = item.data.map(
       ([startDateStr, status, endDateStr]) => {
         // Parse dates
-        const startDate = new Date(startDateStr);
-        const endDate = new Date(endDateStr);
+        const startDate = parseLocalDate(startDateStr);
+        const endDate = parseLocalDate(endDateStr);
 
         return {
           startDate,

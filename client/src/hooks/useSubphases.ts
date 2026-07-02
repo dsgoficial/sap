@@ -112,6 +112,7 @@ export const useActivitySubphase = () => {
 
 // Define the type for situation data from API
 interface SituationData {
+  bloco_id: number;
   bloco: string;
   subfase: string;
   finalizadas: number;
@@ -122,39 +123,44 @@ export const useSubphaseSituation = () => {
   // Função de transformação memoizada
   const transformSituationData = useCallback(
     (data: ApiResponse<SituationData[]>): ChartGroup[] => {
-      // Transform data for visualization
-      const groupedData: Record<
-        string,
+      // Agrupa por ID do bloco (não pelo nome: blocos homônimos em lotes
+      // diferentes se fundiriam). Map preserva a ordem vinda da API
+      // (ORDER BY prioridade) — objeto com chave numérica reordenaria por id.
+      const groupedData = new Map<
+        number | string,
         {
+          title: string;
           dataPointA: { label: string; y: number }[];
           dataPointB: { label: string; y: number }[];
         }
-      > = {};
+      >();
 
       data.dados.forEach((element: SituationData) => {
-        if (!groupedData[element.bloco]) {
-          groupedData[element.bloco] = {
-            dataPointA: [],
-            dataPointB: [],
-          };
+        const key = element.bloco_id ?? element.bloco;
+        let group = groupedData.get(key);
+        if (!group) {
+          group = { title: element.bloco, dataPointA: [], dataPointB: [] };
+          groupedData.set(key, group);
         }
 
-        groupedData[element.bloco].dataPointA.push({
+        group.dataPointA.push({
           label: element.subfase,
           y: Number(element.finalizadas) || 0,
         });
 
-        groupedData[element.bloco].dataPointB.push({
+        group.dataPointB.push({
           label: element.subfase,
           y: Number(element.nao_finalizadas) || 0,
         });
       });
 
-      const chartGroups: ChartGroup[] = Object.keys(groupedData).map(key => ({
-        title: key,
-        dataPointA: groupedData[key].dataPointA.reverse(),
-        dataPointB: groupedData[key].dataPointB.reverse(),
-      }));
+      const chartGroups: ChartGroup[] = [...groupedData.values()].map(
+        group => ({
+          title: group.title,
+          dataPointA: group.dataPointA.reverse(),
+          dataPointB: group.dataPointB.reverse(),
+        }),
+      );
 
       return chartGroups;
     },

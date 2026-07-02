@@ -368,15 +368,17 @@ controller.atividadeSubfase = async () => {
     activity_days AS (
       SELECT DISTINCT dates.day, activity_intervals.lote_id, activity_intervals.subfase_id
       FROM dates
-      INNER JOIN activity_intervals ON dates.day BETWEEN activity_intervals.data_inicio AND activity_intervals.data_fim
+      -- Compara date com date: sem o cast, dates.day vira meia-noite e o dia
+      -- de inicio da atividade (ou atividades de um mesmo dia) nunca conta.
+      INNER JOIN activity_intervals ON dates.day BETWEEN activity_intervals.data_inicio::date AND activity_intervals.data_fim::date
       ORDER BY dates.day
     ),
     activity_groups AS (
-    SELECT l.nome AS lote, s.nome AS subfase, array_agg(array[ad.day::text, 1::text, (ad.day + INTERVAL '1 day')::date::text]) AS data, MIN(ad.day) AS min_date
+    SELECT l.nome AS lote, s.nome AS subfase, array_agg(array[ad.day::text, 1::text, (ad.day + INTERVAL '1 day')::date::text] ORDER BY ad.day) AS data, MIN(ad.day) AS min_date
     FROM activity_days AS ad
     INNER JOIN macrocontrole.lote AS l ON l.id = ad.lote_id
     INNER JOIN macrocontrole.subfase AS s ON s.id = ad.subfase_id
-    GROUP BY lote, subfase
+    GROUP BY ad.lote_id, ad.subfase_id, lote, subfase
     )
     SELECT lote, subfase, data
     FROM activity_groups
@@ -458,15 +460,17 @@ controller.atividadeUsuario = async () => {
     activity_days AS (
       SELECT DISTINCT dates.day, activity_intervals.usuario_id
       FROM dates
-      INNER JOIN activity_intervals ON dates.day BETWEEN activity_intervals.data_inicio AND activity_intervals.data_fim
+      -- Compara date com date: sem o cast, dates.day vira meia-noite e o dia
+      -- de inicio da atividade (ou atividades de um mesmo dia) nunca conta.
+      INNER JOIN activity_intervals ON dates.day BETWEEN activity_intervals.data_inicio::date AND activity_intervals.data_fim::date
       ORDER BY dates.day
     ),
     activity_groups AS (
-    SELECT tpg.nome_abrev || ' ' || u.nome_guerra as usuario, array_agg(array[ad.day::text, 1::text, (ad.day + INTERVAL '1 day')::date::text]) AS data, MIN(ad.day) AS min_date
+    SELECT tpg.nome_abrev || ' ' || u.nome_guerra as usuario, array_agg(array[ad.day::text, 1::text, (ad.day + INTERVAL '1 day')::date::text] ORDER BY ad.day) AS data, MIN(ad.day) AS min_date
     FROM activity_days AS ad
     INNER JOIN dgeo.usuario AS u ON u.id = ad.usuario_id
     INNER JOIN dominio.tipo_posto_grad AS tpg ON tpg.code = u.tipo_posto_grad_id
-    GROUP BY usuario
+    GROUP BY u.id, usuario
     )
     SELECT usuario, data
     FROM activity_groups
@@ -596,7 +600,7 @@ controller.situacaoSubfase = async () => {
     FROM finalizadas t1
     FULL OUTER JOIN nao_finalizadas t2  ON t1.bloco_id = t2.bloco_id AND t1.subfase_id = t2.subfase_id
     )
-    SELECT b.nome AS bloco, s.nome AS subfase, c.finalizadas, c.nao_finalizadas
+    SELECT b.id AS bloco_id, b.nome AS bloco, s.nome AS subfase, c.finalizadas, c.nao_finalizadas
     FROM combined AS c
     INNER JOIN macrocontrole.bloco AS b ON b.id = c.bloco_id
     INNER JOIN macrocontrole.subfase AS s ON s.id = c.subfase_id
