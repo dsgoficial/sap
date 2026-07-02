@@ -18,6 +18,7 @@ import {
   Tooltip,
   Popover,
   Paper,
+  useTheme,
 } from '@mui/material';
 import { PieChart } from '@/components/charts/PieChart';
 import { BarChart } from '@/components/charts/BarChart';
@@ -57,8 +58,21 @@ export const ProductionCharts = ({
   data,
   isLoading,
 }: ProductionChartsProps) => {
+  const theme = useTheme();
   // Referência para o botão de filtros
   const filterButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Cores de status por modo (light/dark). Fixá-las igual nos dois modos deixava
+  // o contraste ruim; aqui seguem o tema para legibilidade em ambos e mantêm
+  // pizza e barras consistentes (mesma cor por status em todo o dashboard).
+  const statusColors = useMemo(() => {
+    const isDark = theme.palette.mode === 'dark';
+    return {
+      completed: isDark ? '#AAF27F' : '#229A16', // Finalizados — verde
+      running: isDark ? '#74CAFF' : '#1890FF', // Em Execução — azul
+      notStarted: isDark ? '#FF6B6B' : '#D32F2F', // Não Iniciado — vermelho
+    };
+  }, [theme.palette.mode]);
 
   // Estados para filtros e ordenação
   const [filterAnchorEl, setFilterAnchorEl] =
@@ -96,30 +110,38 @@ export const ProductionCharts = ({
       {
         label: 'Finalizados',
         value: completed,
-        color: '#7A9D54',
+        color: statusColors.completed,
       },
       {
         label: 'Não Iniciado',
         value: notStarted,
-        color: '#F24C3D',
+        color: statusColors.notStarted,
       },
       {
         label: 'Em Execução',
         value: running,
-        color: '#4FC0D0',
+        color: statusColors.running,
       },
     ];
-  }, [data]);
+  }, [data, statusColors]);
 
   // Format bar chart series (memoizado — array estável evita derrotar o
   // React.memo do StackedBarChart e recomputações internas).
   const barSeries = useMemo(
     () => [
-      { dataKey: 'completed', name: 'Finalizados', color: '#7A9D54' },
-      { dataKey: 'running', name: 'Em Execução', color: '#4FC0D0' },
-      { dataKey: 'notStarted', name: 'Não Iniciado', color: '#F24C3D' },
+      {
+        dataKey: 'completed',
+        name: 'Finalizados',
+        color: statusColors.completed,
+      },
+      { dataKey: 'running', name: 'Em Execução', color: statusColors.running },
+      {
+        dataKey: 'notStarted',
+        name: 'Não Iniciado',
+        color: statusColors.notStarted,
+      },
     ],
-    [],
+    [statusColors],
   );
 
   // Dados mensais processados com filtros e agrupamentos
