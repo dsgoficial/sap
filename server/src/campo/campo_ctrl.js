@@ -79,7 +79,10 @@ controller.getCamposGeoJson = async () => {
                         'situacao', s.nome,
                         'inicio', c.inicio,
                         'fim', c.fim,
-                        'pit', c.pit
+                        'pit', c.pit,
+                        'orgao', c.orgao,
+                        'militares', c.militares,
+                        'placas_vtr', c.placas_vtr
                     )
                 )
             ), '[]'::json)
@@ -327,6 +330,27 @@ controller.getFotoArquivo = async (id) => {
         WHERE id = $<id>`,
         { id: id }
     )
+}
+
+// Mídias criadas antes da coluna mime_type (update_231_232.sql) têm o campo
+// NULL no banco. Sem Content-Type de imagem/vídeo o navegador trata a
+// resposta como binário genérico e força download sem extensão em vez de
+// exibir inline. Detecta o tipo real pelos magic bytes como fallback.
+controller.sniffMimeType = (buffer) => {
+    if (!Buffer.isBuffer(buffer) || buffer.length < 12) return null
+
+    if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return 'image/jpeg'
+    if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return 'image/png'
+    if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38) return 'image/gif'
+    if (buffer[0] === 0x42 && buffer[1] === 0x4D) return 'image/bmp'
+    if (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'image/webp'
+    if (
+        (buffer[0] === 0x49 && buffer[1] === 0x49 && buffer[2] === 0x2A && buffer[3] === 0x00) ||
+        (buffer[0] === 0x4D && buffer[1] === 0x4D && buffer[2] === 0x00 && buffer[3] === 0x2A)
+    ) return 'image/tiff'
+    if (buffer.toString('ascii', 4, 8) === 'ftyp') return 'video/mp4'
+
+    return null
 }
 
 // Função para criar fotos (e vídeos — ambos vivem na tabela imagem)

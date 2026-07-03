@@ -22,6 +22,8 @@ export interface Campo {
   // Campos específicos para dados do GeoJSON feature properties
   inicio?: string;
   fim?: string;
+  // Presente apenas na resposta de getCampoById (detalhe de um campo)
+  produtos?: { id: number; nome: string }[];
 }
 
 /**

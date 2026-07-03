@@ -182,7 +182,11 @@ router.get(
       return res.status(httpCode.NotFound).json({ message: 'Mídia não encontrada' })
     }
 
-    res.setHeader('Content-Type', midia.mime_type || 'application/octet-stream')
+    const mimeType = midia.mime_type
+      || campoCtrl.sniffMimeType(midia.imagem_bin)
+      || (midia.tipo === 'video' ? 'video/mp4' : 'image/jpeg')
+
+    res.setHeader('Content-Type', mimeType)
     res.setHeader('Cache-Control', 'private, max-age=3600')
     return res.send(midia.imagem_bin)
   })

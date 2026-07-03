@@ -79,6 +79,7 @@ const FieldFeaturePopup: React.FC<FieldFeaturePopupProps> = ({
     qtd_track: propQtdTrack,
     orgao,
     pit,
+    militares,
   } = selectedFeature;
 
   // Use contagens reais ou fallback para as propriedades.
@@ -157,6 +158,21 @@ const FieldFeaturePopup: React.FC<FieldFeaturePopupProps> = ({
                 {situacao || '-'}
               </TableCell>
             </TableRow>
+
+            {militares && (
+              <TableRow>
+                <TableCell
+                  component="th"
+                  scope="row"
+                  sx={{ fontWeight: 'bold', p: 1 }}
+                >
+                  Militares
+                </TableCell>
+                <TableCell align="right" sx={{ p: 1, whiteSpace: 'pre-line' }}>
+                  {militares}
+                </TableCell>
+              </TableRow>
+            )}
 
             {orgao && (
               <TableRow>

@@ -21,6 +21,9 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoIcon from '@mui/icons-material/Photo';
 import SummarizeIcon from '@mui/icons-material/Summarize';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
 import {
   useFotosByCampo,
   useTracksByCampo,
@@ -168,9 +171,46 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ foto }) => {
   );
 };
 
+// Small stat tile used in the summary header (fotos/tracks/produtos counts)
+const StatTile: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  loading?: boolean;
+}> = ({ icon, label, value, loading }) => {
+  const theme = useTheme();
+  return (
+    <Box
+      sx={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        p: 1,
+        borderRadius: 1,
+        bgcolor: theme.palette.action.hover,
+      }}
+    >
+      {icon}
+      {loading ? (
+        <CircularProgress size={20} sx={{ my: 0.5 }} />
+      ) : (
+        <Typography variant="h6" sx={{ mt: 0.5 }}>
+          {value}
+        </Typography>
+      )}
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+    </Box>
+  );
+};
+
 // Field summary component
 const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
   const { data: campo, isLoading } = useCampoById(campoId);
+  const { data: fotos, isLoading: loadingFotos } = useFotosByCampo(campoId);
+  const { data: tracks, isLoading: loadingTracks } = useTracksByCampo(campoId);
 
   if (isLoading) {
     return (
@@ -188,6 +228,8 @@ const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
     );
   }
 
+  const produtosCount = campo.produtos?.length || 0;
+
   return (
     <Paper
       elevation={1}
@@ -198,8 +240,29 @@ const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
       }}
     >
       <Typography variant="h6" gutterBottom>
-        Informações do Campo
+        Resumo do Campo
       </Typography>
+
+      {/* Contagens rápidas */}
+      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+        <StatTile
+          icon={<PhotoLibraryIcon color="primary" />}
+          label="Fotos"
+          value={fotos ? fotos.length : 0}
+          loading={loadingFotos}
+        />
+        <StatTile
+          icon={<TimelineIcon color="primary" />}
+          label="Tracks"
+          value={tracks ? tracks.length : 0}
+          loading={loadingTracks}
+        />
+        <StatTile
+          icon={<Inventory2Icon color="primary" />}
+          label="Produtos"
+          value={produtosCount}
+        />
+      </Box>
 
       <Stack spacing={1.5}>
         {campo.descricao && (
@@ -274,6 +337,39 @@ const FieldSummary: React.FC<{ campoId: string }> = ({ campoId }) => {
             </Typography>
           </Box>
         </Box>
+
+        {campo.militares && (
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              Militares:
+            </Typography>
+            <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+              {campo.militares}
+            </Typography>
+          </Box>
+        )}
+
+        {campo.placas_vtr && (
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              Viaturas:
+            </Typography>
+            <Typography variant="body1">{campo.placas_vtr}</Typography>
+          </Box>
+        )}
+
+        {produtosCount > 0 && (
+          <Box>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Produtos associados:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {campo.produtos!.map(produto => (
+                <Chip key={produto.id} label={produto.nome} size="small" />
+              ))}
+            </Box>
+          </Box>
+        )}
       </Stack>
     </Paper>
   );
