@@ -62,12 +62,23 @@ export interface Lote {
 }
 
 /**
- * Associação produto-campo retornada pela API
+ * Associação produto-campo retornada pela API (escopo de um único campo)
  */
 export interface ProdutoCampo {
-  id: number;
+  id: number; // id do produto
   produto_nome: string;
-  nome: string;
+  nome_lote: string;
+}
+
+/**
+ * Associação produto-campo retornada pela API (todas as associações do
+ * sistema — usado para a análise campo x lote)
+ */
+export interface CampoProdutoAssociacao {
+  produto_id: number;
+  produto_nome: string;
+  campo_id: string;
+  campo_nome: string;
   nome_lote: string;
 }
 

@@ -558,10 +558,13 @@ controller.criaTrackerPonto = async (tracks) => {
     }
 
 // Funções de Controle Relaciomaneto Produto x Campo
-// Função para obter todos os produtos de um campo
+// Função para obter todas as associações produto x campo do sistema.
+// c.id/c.nome e p.id/p.nome precisam de alias distintos: sem eles, as colunas
+// repetidas 'id'/'nome' se sobrescrevem no objeto retornado (o id do campo
+// "vencia" e o id do produto era perdido).
 controller.getProdutosCampo = async () => {
     return db.sapConn.any(
-        `SELECT p.id, p.nome as produto_nome, c.id, c.nome, l.nome as nome_lote
+        `SELECT p.id AS produto_id, p.nome AS produto_nome, c.id AS campo_id, c.nome AS campo_nome, l.nome as nome_lote
         FROM controle_campo.relacionamento_campo_produto AS rcp
         INNER JOIN controle_campo.campo AS c ON c.id = rcp.campo_id
         INNER JOIN macrocontrole.produto AS p ON p.id = rcp.produto_id
@@ -571,12 +574,11 @@ controller.getProdutosCampo = async () => {
 
 controller.getProdutosByCampoId = async (campo_id) => {
     return db.sapConn.any(
-        `SELECT p.id, p.nome as produto_nome, c.id, c.nome, l.nome as nome_lote
+        `SELECT p.id, p.nome as produto_nome, l.nome as nome_lote
         FROM controle_campo.relacionamento_campo_produto AS rcp
-        INNER JOIN controle_campo.campo AS c ON c.id = rcp.campo_id
         INNER JOIN macrocontrole.produto AS p ON p.id = rcp.produto_id
 		INNER JOIN macrocontrole.lote as l ON l.id = p.lote_id
-        WHERE c.id = $<campo_id>`,
+        WHERE rcp.campo_id = $<campo_id>`,
         { campo_id: campo_id }
     )
 }

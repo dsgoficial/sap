@@ -13,6 +13,7 @@ import {
   Track,
   ProdutoLote,
   ProdutoCampo,
+  CampoProdutoAssociacao,
   AssociacaoInput,
   EstatisticasCampos,
 } from '../types/fieldActivities';
@@ -249,6 +250,19 @@ export const getProdutosByLote = async (
 ): Promise<ApiResponse<ProdutoLote[]>> => {
   const response = await apiClient.get<ApiResponse<ProdutoLote[]>>(
     `/campo/produtos/${loteId}`,
+  );
+  return response.data;
+};
+
+/**
+ * Get all produto <-> campo associations in the system (used for the
+ * campo x lote cross-reference analysis table)
+ */
+export const getProdutosCampoTodos = async (): Promise<
+  ApiResponse<CampoProdutoAssociacao[]>
+> => {
+  const response = await apiClient.get<ApiResponse<CampoProdutoAssociacao[]>>(
+    '/campo/produtos_campo',
   );
   return response.data;
 };

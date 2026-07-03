@@ -26,6 +26,7 @@ export const QUERY_KEYS = {
   CAMPOS_GEOJSON: createQueryKey('camposGeoJSON'),
   ESTATISTICAS: createQueryKey('campoEstatisticas'),
   PRODUTOS_CAMPO: (id: string) => createQueryKey('produtosCampo', id),
+  PRODUTOS_CAMPO_TODOS: createQueryKey('produtosCampoTodos'),
   PRODUTOS_LOTE: (id: number) => createQueryKey('produtosLote', id),
   LOTES: createQueryKey('lotes'),
 };

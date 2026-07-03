@@ -4,6 +4,7 @@ import { Box, Typography, Paper, Tabs, Tab, Container } from '@mui/material';
 import Page from '@/components/Page/Page';
 import CamposTable from '../components/management/CamposTable';
 import EstatisticasPanel from '../components/management/EstatisticasPanel';
+import CampoLoteTable from '../components/management/CampoLoteTable';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -31,6 +32,7 @@ export const FieldManagement = () => {
           <Tabs value={tab} onChange={(_e, v) => setTab(v)}>
             <Tab label="Campos" />
             <Tab label="Estatísticas" />
+            <Tab label="Campo × Lote" />
           </Tabs>
         </Paper>
 
@@ -39,6 +41,9 @@ export const FieldManagement = () => {
         </TabPanel>
         <TabPanel value={tab} index={1}>
           <EstatisticasPanel />
+        </TabPanel>
+        <TabPanel value={tab} index={2}>
+          <CampoLoteTable />
         </TabPanel>
       </Container>
     </Page>

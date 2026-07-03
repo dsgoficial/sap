@@ -10,6 +10,7 @@ import {
   getEstatisticasCampos,
   getProdutosByLote,
   getProdutosByCampoId,
+  getProdutosCampoTodos,
   criaProdutosCampo,
   deletaProdutosByCampo,
   criaFotos,
@@ -166,11 +167,26 @@ export const useProdutosByCampo = (campoId: string) => {
   });
 };
 
+/** Todas as associações produto x campo do sistema (tabela de análise campo x lote). */
+export const useProdutosCampoTodos = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.PRODUTOS_CAMPO_TODOS,
+    queryFn: async () => {
+      const response = await getProdutosCampoTodos();
+      return response.dados;
+    },
+    staleTime: STALE_TIMES.USER_DATA,
+  });
+};
+
 const useInvalidateProdutosCampo = () => {
   const queryClient = useQueryClient();
   return (campoId: string) => {
     queryClient.invalidateQueries({
       queryKey: QUERY_KEYS.PRODUTOS_CAMPO(campoId),
+    });
+    queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.PRODUTOS_CAMPO_TODOS,
     });
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CAMPOS });
   };
