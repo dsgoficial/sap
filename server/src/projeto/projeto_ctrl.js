@@ -3409,8 +3409,9 @@ controller.reshapeUnidadeTrabalho = async (unidadeTrabalhoId, reshapeGeom) => {
       { unidadeTrabalhoId, reshapeGeom }
     )
 
-  }) -
-    await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, [unidadeTrabalhoId])
+  })
+
+  await disableTriggers.handleRelacionamentoUtInsertUpdate(db.sapConn, [unidadeTrabalhoId])
   await disableTriggers.refreshMaterializedViewFromUTs(db.sapConn, [unidadeTrabalhoId])
 }
 
