@@ -3852,149 +3852,151 @@ controller.copiarConfiguracaoLote = async (
     )
   }
 
-  if (copiar_estilo) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_estilo(grupo_estilo_id,subfase_id,lote_id)
-      SELECT pe.grupo_estilo_id, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_estilo AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+  await db.sapConn.tx(async t => {
+    if (copiar_estilo) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_estilo(grupo_estilo_id,subfase_id,lote_id)
+        SELECT pe.grupo_estilo_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_estilo AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_menu) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_menu(menu_id,menu_revisao,subfase_id,lote_id)
-      SELECT pe.menu_id, pe.menu_revisao, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_menu AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_menu) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_menu(menu_id,menu_revisao,subfase_id,lote_id)
+        SELECT pe.menu_id, pe.menu_revisao, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_menu AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_regra) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_regras(layer_rules_id,subfase_id,lote_id)
-      SELECT pe.layer_rules_id, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_regras AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_regra) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_regras(layer_rules_id,subfase_id,lote_id)
+        SELECT pe.layer_rules_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_regras AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_modelo) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_model_qgis(qgis_model_id,parametros,requisito_finalizacao,tipo_rotina_id,ordem,subfase_id,lote_id)
-      SELECT pe.qgis_model_id, pe.parametros, pe.requisito_finalizacao, pe.tipo_rotina_id, pe.ordem, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_model_qgis AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_modelo) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_model_qgis(qgis_model_id,parametros,requisito_finalizacao,tipo_rotina_id,ordem,subfase_id,lote_id)
+        SELECT pe.qgis_model_id, pe.parametros, pe.requisito_finalizacao, pe.tipo_rotina_id, pe.ordem, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_model_qgis AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_workflow) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_workflow_dsgtools(workflow_dsgtools_id,requisito_finalizacao,subfase_id,lote_id)
-      SELECT pe.workflow_dsgtools_id, pe.requisito_finalizacao, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_workflow_dsgtools AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_workflow) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_workflow_dsgtools(workflow_dsgtools_id,requisito_finalizacao,subfase_id,lote_id)
+        SELECT pe.workflow_dsgtools_id, pe.requisito_finalizacao, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_workflow_dsgtools AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_alias) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_alias(alias_id,subfase_id,lote_id)
-      SELECT pe.alias_id, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_alias AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_alias) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_alias(alias_id,subfase_id,lote_id)
+        SELECT pe.alias_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_alias AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_linhagem) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_linhagem(tipo_exibicao_id,subfase_id,lote_id)
-      SELECT pe.tipo_exibicao_id, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_linhagem AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_linhagem) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_linhagem(tipo_exibicao_id,subfase_id,lote_id)
+        SELECT pe.tipo_exibicao_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_linhagem AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_finalizacao) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_requisito_finalizacao(descricao,ordem,subfase_id,lote_id)
-      SELECT pe.descricao, pe.ordem, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_requisito_finalizacao AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_finalizacao) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_requisito_finalizacao(descricao,ordem,subfase_id,lote_id)
+        SELECT pe.descricao, pe.ordem, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_requisito_finalizacao AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_tema) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_tema(tema_id,subfase_id,lote_id)
-      SELECT pe.tema_id, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_tema AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_tema) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_tema(tema_id,subfase_id,lote_id)
+        SELECT pe.tema_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_tema AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_fme) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_fme(gerenciador_fme_id,rotina,requisito_finalizacao,tipo_rotina_id,ordem,subfase_id,lote_id)
-      SELECT pe.gerenciador_fme_id, pe.rotina, pe.requisito_finalizacao, pe.tipo_rotina_id, pe.ordem, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_fme AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_fme) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_fme(gerenciador_fme_id,rotina,requisito_finalizacao,tipo_rotina_id,ordem,subfase_id,lote_id)
+        SELECT pe.gerenciador_fme_id, pe.rotina, pe.requisito_finalizacao, pe.tipo_rotina_id, pe.ordem, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_fme AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  if (copiar_configuracao_qgis) {
-    await db.sapConn.any(
-      `
-      INSERT INTO macrocontrole.perfil_configuracao_qgis(tipo_configuracao_id,parametros,subfase_id,lote_id)
-      SELECT pe.tipo_configuracao_id, pe.parametros, pe.subfase_id, $<lote_id_destino> AS lote_id
-      FROM macrocontrole.perfil_configuracao_qgis AS pe
-      WHERE pe.lote_id = $<lote_id_origem>
-      `,
-      { lote_id_origem, lote_id_destino }
-    )
-  }
+    if (copiar_configuracao_qgis) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_configuracao_qgis(tipo_configuracao_id,parametros,subfase_id,lote_id)
+        SELECT pe.tipo_configuracao_id, pe.parametros, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_configuracao_qgis AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
 
-  // if(copiar_monitoramento){
-  //   await db.sapConn.any(
-  //     `
-  //     INSERT INTO microcontrole.perfil_monitoramento(tipo_monitoramento_id,subfase_id,lote_id)
-  //     SELECT pe.tipo_monitoramento_id, pe.subfase_id, $<lote_id_destino> AS lote_id
-  //     FROM microcontrole.perfil_monitoramento AS pe
-  //     WHERE pe.lote_id = $<lote_id_origem>
-  //     `,
-  //     { lote_id_origem, lote_id_destino }
-  //   )
-  // }
+    // if(copiar_monitoramento){
+    //   await t.any(
+    //     `
+    //     INSERT INTO microcontrole.perfil_monitoramento(tipo_monitoramento_id,subfase_id,lote_id)
+    //     SELECT pe.tipo_monitoramento_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+    //     FROM microcontrole.perfil_monitoramento AS pe
+    //     WHERE pe.lote_id = $<lote_id_origem>
+    //     `,
+    //     { lote_id_origem, lote_id_destino }
+    //   )
+    // }
+  })
 
 }
 
