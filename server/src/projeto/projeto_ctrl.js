@@ -2124,6 +2124,24 @@ controller.criaProdutos = async (produtos, loteId) => {
       { loteId }
     );
 
+    // O trigger macrocontrole.chk_product_scale existe para impedir produto com
+    // escala diferente da do lote, mas NAO dispara aqui: esta transacao roda com
+    // session_replication_role = 'replica', que desliga os triggers de usuario.
+    // Sem esta checagem, o produto com escala errada entra em silencio.
+    const lote = await t.one(
+      'SELECT denominador_escala FROM macrocontrole.lote WHERE id = $<loteId>',
+      { loteId }
+    )
+    const escalaDivergente = produtos.find(
+      p => +p.denominador_escala !== +lote.denominador_escala
+    )
+    if (escalaDivergente) {
+      throw new AppError(
+        `A escala do produto (${escalaDivergente.denominador_escala}) deve ser igual a do lote (${lote.denominador_escala})`,
+        httpCode.BadRequest
+      )
+    }
+
     const cs = new db.pgp.helpers.ColumnSet([
       'uuid',
       'nome',
