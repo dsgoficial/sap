@@ -139,7 +139,8 @@ CREATE TABLE macrocontrole.perfil_requisito_finalizacao(
 	descricao VARCHAR(255) NOT NULL,
     ordem INTEGER NOT NULL,
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
-	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id)
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(descricao,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_fme(
@@ -150,7 +151,8 @@ CREATE TABLE macrocontrole.perfil_fme(
 	tipo_rotina_id SMALLINT NOT NULL REFERENCES dominio.tipo_rotina (code),
 	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
 	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
-	ordem INTEGER NOT NULL
+	ordem INTEGER NOT NULL,
+	UNIQUE(gerenciador_fme_id,rotina,subfase_id,lote_id)
 );
 
 CREATE TABLE macrocontrole.perfil_configuracao_qgis(
