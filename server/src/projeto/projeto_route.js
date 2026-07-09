@@ -4066,6 +4066,43 @@ router.post(
 /**
  * @swagger
  * /api/projeto/unidade_trabalho:
+ *   get:
+ *     summary: Retorna as unidades de trabalho de um lote
+ *     description: Lista as unidades de trabalho do lote (sem a geometria), com a subfase e o bloco de cada uma. Permite saber se um lote já tem UT numa subfase antes de criar novas, evitando duplicação (a tabela não tem restrição de unicidade).
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Unidade de Trabalho
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: lote_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Unidades de trabalho retornadas com sucesso
+ */
+router.get(
+  '/unidade_trabalho',
+  verifyAdmin,
+  schemaValidation({
+    query: projetoSchema.unidadeTrabalhoQuery
+  }),
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getUnidadesTrabalho(+req.query.lote_id)
+
+    const msg = 'Unidades de trabalho retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/unidade_trabalho:
  *   post:
  *     summary: Cria novas unidades de trabalho
  *     description: Insere novas unidades de trabalho no sistema com base nos IDs fornecidos.

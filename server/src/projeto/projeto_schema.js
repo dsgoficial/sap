@@ -797,6 +797,10 @@ models.unidadeTrabalhoInsumoQuery = Joi.object().keys({
   unidade_trabalho_id: Joi.number().integer().required()
 })
 
+models.unidadeTrabalhoQuery = Joi.object().keys({
+  lote_id: Joi.number().integer().required()
+})
+
 models.insumoAtualizacao = Joi.object().keys({
   insumos: Joi.array()
     .items(

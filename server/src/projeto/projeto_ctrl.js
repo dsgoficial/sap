@@ -2262,6 +2262,21 @@ controller.atualizaProdutos = async produtos => {
   }
 }
 
+controller.getUnidadesTrabalho = async loteId => {
+  return db.sapConn.any(
+    `SELECT ut.id, ut.nome, ut.epsg, ut.disponivel, ut.prioridade,
+            ut.subfase_id, s.nome AS subfase,
+            ut.bloco_id, b.nome AS bloco,
+            ut.dado_producao_id
+     FROM macrocontrole.unidade_trabalho AS ut
+     INNER JOIN macrocontrole.subfase AS s ON s.id = ut.subfase_id
+     INNER JOIN macrocontrole.bloco AS b ON b.id = ut.bloco_id
+     WHERE ut.lote_id = $<loteId>
+     ORDER BY ut.subfase_id, ut.id`,
+    { loteId }
+  )
+}
+
 controller.criaUnidadeTrabalho = async (unidadesTrabalho, loteId, subfaseIds) => {
   let unidadeTrabalhoIds
   await disableTriggers.disableAllTriggersInTransaction(db.sapConn, async t => {
