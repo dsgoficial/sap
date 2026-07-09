@@ -1,6 +1,6 @@
 {
   "name": "sap",
-  "version": "2.2.4",
+  "version": "2.3.4",
   "main": "src/index.js",
   "scripts": {
     "create-docs": "node create_documentation.js",
