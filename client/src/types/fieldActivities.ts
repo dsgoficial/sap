@@ -43,12 +43,10 @@ export interface CampoInput {
   geom?: string | null;
 }
 
-/**
- * Produto pertencente a um lote (seletor de associação)
- */
 export interface ProdutoLote {
   id: number;
   nome: string;
+  mi: string | null;
 }
 
 /**

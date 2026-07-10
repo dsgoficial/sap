@@ -26,7 +26,7 @@ controller.getCategorias = async () => {
 // Função para obter todos os produtos de um lote
 controller.getProdutosByLot = async (lote_id) => {
     return db.sapConn.any(
-        `SELECT p.id, p.nome
+        `SELECT p.id, p.nome, p.mi
         FROM macrocontrole.produto as p
         INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id
         WHERE l.id = $<lot>`,

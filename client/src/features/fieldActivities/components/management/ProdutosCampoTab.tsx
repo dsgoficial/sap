@@ -114,7 +114,13 @@ export const ProdutosCampoTab = ({ campoId }: ProdutosCampoTabProps) => {
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                 {(selected as number[]).map(id => {
                   const p = produtosLote.find(pr => pr.id === id);
-                  return <Chip key={id} label={p?.nome ?? id} size="small" />;
+                  return (
+                    <Chip
+                      key={id}
+                      label={p?.nome || p?.mi || id}
+                      size="small"
+                    />
+                  );
                 })}
               </Box>
             )}
@@ -127,7 +133,7 @@ export const ProdutosCampoTab = ({ campoId }: ProdutosCampoTabProps) => {
             )}
             {produtosLote.map(p => (
               <MenuItem key={p.id} value={p.id}>
-                {p.nome}
+                {p.nome || p.mi || p.id}
               </MenuItem>
             ))}
           </Select>
