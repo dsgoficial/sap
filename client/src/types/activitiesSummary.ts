@@ -1,4 +1,4 @@
-// Path: types\microControl.ts
+// Path: types\activitiesSummary.ts
 export interface Duration {
   days?: number;
   hours?: number;

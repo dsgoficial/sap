@@ -1,4 +1,4 @@
-// Path: hooks\useMicroControl.ts
+// Path: hooks\useActivitiesSummary.ts
 import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -11,7 +11,7 @@ import {
   CompletedActivity,
   Duration,
   FormattedCompletedActivity,
-} from '@/types/microControl';
+} from '@/types/activitiesSummary';
 import {
   createQueryKey,
   STALE_TIMES,
@@ -47,7 +47,7 @@ const formatDuration = (duracao: Duration | undefined): string => {
   return parts.length > 0 ? parts.join(', ') : '-';
 };
 
-export const useMicroControlData = () => {
+export const useActivitiesSummaryData = () => {
   // Referências para tokens de cancelamento
   const runningActivitiesCancelTokenRef = useRef<CancelTokenSource | null>(
     null,

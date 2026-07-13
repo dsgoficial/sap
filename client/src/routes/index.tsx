@@ -57,10 +57,12 @@ const PIT = lazy(() =>
     default: module.PIT,
   })),
 );
-const MicroControl = lazy(() =>
-  import('../features/microControl/routes/MicroControl').then(module => ({
-    default: module.MicroControl,
-  })),
+const ActivitiesSummary = lazy(() =>
+  import('../features/activitiesSummary/routes/ActivitiesSummary').then(
+    module => ({
+      default: module.ActivitiesSummary,
+    }),
+  ),
 );
 const MicroControlTelemetry = lazy(() =>
   import(
@@ -296,10 +298,10 @@ const routes: RouteObject[] = [
         loader: adminLoader,
       },
       {
-        path: 'microcontrol',
+        path: 'activities-summary',
         element: (
           <Suspense fallback={<LoadingFallback />}>
-            <MicroControl />
+            <ActivitiesSummary />
           </Suspense>
         ),
         loader: adminLoader,

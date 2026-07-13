@@ -2,7 +2,7 @@
 import axios from 'axios';
 import apiClient from '../lib/axios';
 import { ApiResponse } from '../types/api';
-import { RunningActivity, CompletedActivity } from '../types/microControl';
+import { RunningActivity, CompletedActivity } from '../types/activitiesSummary';
 import { handleApiError, createCancelToken } from '@/utils/apiErrorHandler';
 
 /**

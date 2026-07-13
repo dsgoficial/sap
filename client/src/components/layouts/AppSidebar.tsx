@@ -118,7 +118,7 @@ const DashboardSidebar = ({
     },
     {
       title: 'Atividades',
-      path: '/microcontrol',
+      path: '/activities-summary',
       icon: <AssignmentTurnedInIcon />,
       adminOnly: true,
     },

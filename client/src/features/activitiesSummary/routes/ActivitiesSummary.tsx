@@ -1,4 +1,4 @@
-// Path: features\microControl\routes\MicroControl.tsx
+// Path: features\activitiesSummary\routes\ActivitiesSummary.tsx
 import {
   Container,
   Box,
@@ -7,14 +7,14 @@ import {
   CircularProgress,
 } from '@mui/material';
 import Page from '@/components/Page/Page';
-import { useMicroControlData } from '@/hooks/useMicroControl';
+import { useActivitiesSummaryData } from '@/hooks/useActivitiesSummary';
 import { Table } from '@/components/ui/Table';
 import {
   FormattedRunningActivity,
   FormattedCompletedActivity,
-} from '@/types/microControl';
+} from '@/types/activitiesSummary';
 
-export const MicroControl = () => {
+export const ActivitiesSummary = () => {
   const {
     runningActivities,
     completedActivities,
@@ -22,13 +22,13 @@ export const MicroControl = () => {
     isLoadingCompleted,
     errorRunning,
     errorCompleted,
-  } = useMicroControlData();
+  } = useActivitiesSummaryData();
 
   return (
-    <Page title="Microcontrole">
+    <Page title="Atividades">
       <Container maxWidth="xl">
         <Typography variant="h4" sx={{ mb: 3 }}>
-          Microcontrole
+          Atividades
         </Typography>
 
         <Box
