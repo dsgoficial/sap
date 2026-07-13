@@ -1,6 +1,7 @@
 // Path: features\fieldActivities\components\management\ProdutosCampoTab.tsx
 import { useState } from 'react';
 import {
+  Autocomplete,
   Box,
   Button,
   Stack,
@@ -29,7 +30,7 @@ import {
   useCreateAssociacoes,
   useDeleteAssociacoes,
 } from '@/hooks/useFieldManagement';
-import { AssociacaoInput } from '@/types/fieldActivities';
+import { AssociacaoInput, Lote } from '@/types/fieldActivities';
 import ConfirmDialog from './ConfirmDialog';
 
 interface ProdutosCampoTabProps {
@@ -85,22 +86,21 @@ export const ProdutosCampoTab = ({ campoId }: ProdutosCampoTabProps) => {
         Adicionar produtos
       </Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
-        <TextField
-          select
-          label="Lote"
-          value={loteId ?? ''}
-          onChange={e => {
-            setLoteId(Number(e.target.value));
+        <Autocomplete<Lote>
+          options={lotes}
+          value={lotes.find(l => l.id === loteId) ?? null}
+          onChange={(_, novoLote) => {
+            setLoteId(novoLote?.id ?? null);
             setSelectedProdutos([]);
           }}
-          sx={{ minWidth: 220 }}
-        >
-          {lotes.map(lote => (
-            <MenuItem key={lote.id} value={lote.id}>
-              {lote.nome}
-            </MenuItem>
-          ))}
-        </TextField>
+          getOptionLabel={lote => lote.nome}
+          isOptionEqualToValue={(option, val) => option.id === val.id}
+          noOptionsText="Nenhum lote encontrado"
+          sx={{ minWidth: 260 }}
+          renderInput={params => (
+            <TextField {...params} label="Lote" placeholder="Buscar lote..." />
+          )}
+        />
 
         <FormControl sx={{ minWidth: 260, flex: 1 }} disabled={!loteId}>
           <InputLabel id="produtos-label">Produtos</InputLabel>
