@@ -2460,6 +2460,47 @@ router.get(
 
 /**
  * @swagger
+ * /api/projeto/configuracao/camadas/linha_producao:
+ *   get:
+ *     summary: Retorna as linhas de produção associadas a cada camada
+ *     description: Retorna, para cada camada com propriedades_camada associadas, os nomes das linhas de produção (via propriedades_camada/subfase/fase) em que ela é utilizada.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Linhas de produção das camadas retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   camada_id:
+ *                     type: integer
+ *                     description: ID da camada
+ *                   linhas_producao:
+ *                     type: string
+ *                     description: Nomes das linhas de produção associadas à camada, separados por vírgula
+ */
+router.get(
+  '/configuracao/camadas/linha_producao',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getCamadasLinhaProducao()
+
+    const msg = 'Linhas de produção das camadas retornadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
  * /api/projeto/configuracao/camadas:
  *   delete:
  *     summary: Deleta uma camada de configuração

@@ -1130,6 +1130,19 @@ controller.getCamadas = async () => {
   )
 }
 
+controller.getCamadasLinhaProducao = async () => {
+  return db.sapConn.any(
+    `SELECT c.id AS camada_id,
+    STRING_AGG(DISTINCT lp.nome, ', ' ORDER BY lp.nome) AS linhas_producao
+    FROM macrocontrole.camada AS c
+    INNER JOIN macrocontrole.propriedades_camada AS ppc ON ppc.camada_id = c.id
+    INNER JOIN macrocontrole.subfase AS s ON s.id = ppc.subfase_id
+    INNER JOIN macrocontrole.fase AS f ON f.id = s.fase_id
+    INNER JOIN macrocontrole.linha_producao AS lp ON lp.id = f.linha_producao_id
+    GROUP BY c.id`
+  )
+}
+
 controller.deleteCamadas = async camadasIds => {
   return db.sapConn.task(async t => {
     const exists = await t.any(
