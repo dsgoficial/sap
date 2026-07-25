@@ -52,7 +52,22 @@ pipeline os preenche com o que descobrir apos criar):
     "copiar":            { "lote_id_origem": 9, "lote_id_destino": null, ... }
   }
 
-Contrato de cada corpo: sap schema lote | bloco | produto | unidade_trabalho.`
+Contrato de cada corpo: sap schema lote | bloco | produto | unidade_trabalho.
+
+  sap lote fase criar --lote 68 --subfases 148,149,150 --fases 45,47,48 \\
+                      --molde 163 [--dry-run] --confirmar 68
+      Completa fase(s) que faltaram num lote JA existente. Clona a unidade de
+      trabalho da subfase-molde (epsg, dado de producao, bloco e geometria saem
+      do proprio lote, nunca transcritos a mao), cria as etapas padrao e as
+      atividades. ABORTA se as subfases ja tiverem etapa: o passo da unidade de
+      trabalho nao e idempotente e duplicaria em silencio.
+
+  sap lote fase finalizar --lote 68 --subfases 148,149,150 --usuario <uuid> \\
+                          [--data <ISO 8601> | --molde-vf 163] --confirmar <N>
+      Marca como concluidas as atividades ainda nao iniciadas dessas subfases.
+      Sem --data, herda a data da Verificacao Final indicada por --molde-vf, e
+      RECUSA se houver mais de uma data distinta: lancamento retroativo datado
+      de hoje falsifica o mes do relatorio. --confirmar leva a QUANTIDADE.`
 
 // Ordem obrigatoria. `recurso` aponta a entrada da registry de onde sai o schema
 // Joi; `caminho` e a rota real; `repetivel` diz se o passo pode ser reexecutado
@@ -326,20 +341,255 @@ async function pipeline (args, cfg) {
   return { texto: ['pipeline concluido.', '', ...feitos].join('\n'), avisos }
 }
 
+// --- fase: completar fase que faltou num lote JA configurado ---------------
+//
+// O `pipeline` acima e para lote NOVO. Este e o Modo B: o lote existe, roda ha
+// meses, e descobre-se que uma ou mais subfases nunca foram cadastradas.
+//
+// A parte dificil nunca foi escrever, foi LER: para clonar a unidade de
+// trabalho de uma subfase-molde era preciso saber epsg, dado de producao, bloco
+// e geometria dela. Ate 2026-07-25 isso saia de um `psql` direto no banco de
+// producao, disparado do vault, com credencial de banco fora do sistema. Hoje
+// sai de GET /projeto/lote/<id>/subfases, com o mesmo verifyAdmin do resto.
+
+/**
+ * Monta as unidades de trabalho novas a partir das do molde. Copia epsg, dado
+ * de producao, bloco e geometria; o resto e o padrao de uma unidade recem-criada.
+ * A geometria vai como veio (EWKT, com SRID): remontar a partir de `epsg` seria
+ * trocar o CRS de TRABALHO pelo CRS da GEOMETRIA, que sao coisas diferentes.
+ */
+function clonarUnidades (uts) {
+  return uts.map((u, i) => ({
+    nome: String(i + 1),
+    epsg: u.epsg,
+    observacao: '',
+    geom: u.geom,
+    dado_producao_id: u.dado_producao_id,
+    bloco_id: u.bloco_id,
+    disponivel: true,
+    prioridade: i + 1,
+    dificuldade: 0,
+    tempo_estimado_minutos: 0
+  }))
+}
+
+/**
+ * Resolve a data do lancamento retroativo. Devolve a data ou LANCA, nunca
+ * inventa: datar com hoje uma atividade que terminou em maio poe o numero no
+ * mes errado de um relatorio assinado.
+ */
+function resolverData (dataExplicita, moldeVf, datasDoMolde) {
+  if (dataExplicita) return dataExplicita
+  if (!moldeVf) {
+    throw new Error(
+      'Informe --data <ISO 8601> ou --molde-vf <subfase_id> para herdar a data da ' +
+      'Verificacao Final do lote. Sem um dos dois, a data seria a de hoje, e um ' +
+      'lancamento retroativo datado de hoje falsifica o mes do relatorio.'
+    )
+  }
+  const datas = datasDoMolde || []
+  if (datas.length !== 1) {
+    throw new Error(
+      `A subfase ${moldeVf} tem ${datas.length} data(s) de conclusao distintas` +
+      (datas.length ? ` (${datas.join(', ')})` : '') +
+      '. Nao da para herdar uma so: passe --data explicitamente e diga qual vale.'
+    )
+  }
+  return datas[0]
+}
+
+async function lerSubfases (cfg, loteId, ids, comGeom) {
+  const q = [`subfase_ids=${ids.join(',')}`]
+  if (comGeom) q.push('geom=true')
+  const r = await http.autenticada(cfg, 'GET', `/projeto/lote/${loteId}/subfases?${q.join('&')}`)
+  return Array.isArray(r.dados) ? r.dados : []
+}
+
+async function faseCriar (args, cfg) {
+  const flags = args.flags
+  const loteId = argsLib.numero(flags, 'lote', null)
+  if (!loteId) throw new Error('Informe --lote <id>.')
+  const subfases = (argsLib.lista(flags.subfases) || []).map(Number)
+  const fases = (argsLib.lista(flags.fases) || []).map(Number)
+  const molde = argsLib.numero(flags, 'molde', null)
+  if (!subfases.length) throw new Error('Informe --subfases <ids> (as que faltam).')
+  if (!fases.length) throw new Error('Informe --fases <ids> (as fases das subfases que faltam).')
+  if (!molde) throw new Error('Informe --molde <subfase_id> (uma subfase JA cadastrada neste lote, de onde se clona a unidade de trabalho).')
+  if (subfases.includes(molde)) {
+    throw new Error(`--molde ${molde} nao pode estar em --subfases: o molde e o que ja existe, e as subfases sao o que falta.`)
+  }
+
+  const estado = await lerSubfases(cfg, loteId, [...subfases, molde], true)
+  const por = new Map(estado.map(s => [s.subfase_id, s]))
+
+  // Trava contra rodar duas vezes. O POST de unidade de trabalho NAO e
+  // idempotente e nao tem UNIQUE: repetir duplica em silencio.
+  const jaTem = subfases.filter(id => (por.get(id) || {}).etapas > 0)
+  if (jaTem.length) {
+    throw new Error(
+      `O lote ${loteId} JA tem etapa nas subfases ${jaTem.join(', ')}. ` +
+      'Rodar assim mesmo DUPLICARIA as unidades de trabalho, sem erro e sem aviso do servidor. ' +
+      'Tire essas subfases do --subfases, ou confira se o cadastro ja foi feito.'
+    )
+  }
+  const faltando = subfases.filter(id => !por.has(id))
+  if (faltando.length) throw new Error(`Subfases inexistentes: ${faltando.join(', ')}.`)
+
+  const moldeInfo = por.get(molde)
+  if (!moldeInfo) throw new Error(`Subfase-molde ${molde} nao existe.`)
+  const uts = moldeInfo.unidades_trabalho || []
+  if (!uts.length) {
+    throw new Error(
+      `A subfase-molde ${molde} nao tem unidade de trabalho no lote ${loteId}, ` +
+      'entao nao ha o que clonar. Escolha uma subfase que ja esteja cadastrada e povoada neste lote.'
+    )
+  }
+
+  const unidades = clonarUnidades(uts)
+
+  const corpoUt = { unidades_trabalho: unidades, subfase_ids: subfases, lote_id: loteId }
+
+  const val = esquema.validarCorpo(obter('unidade_trabalho').schema().unidadesTrabalho, corpoUt)
+  if (val.erro) return { texto: val.erro, codigo: 1 }
+
+  const resumo = [
+    `lote ${loteId}: clonando ${unidades.length} unidade(s) de trabalho da subfase-molde ${molde}`,
+    `  para ${subfases.length} subfase(s): ${subfases.join(', ')}`,
+    `  = ${unidades.length * subfases.length} unidades novas, e uma atividade para cada`,
+    `  epsg=${uts[0].epsg}  dado_producao_id=${uts[0].dado_producao_id}  bloco_id=${uts[0].bloco_id}`,
+    `  etapas padrao para as fases: ${fases.join(', ')}`
+  ]
+
+  if (flags['dry-run']) {
+    return { texto: ['DRY-RUN (nada foi enviado)', '', ...resumo].join('\n') }
+  }
+
+  const alvo = String(flags.confirmar === undefined ? '' : flags.confirmar)
+  if (alvo !== String(loteId)) {
+    return {
+      texto: [
+        ...resumo,
+        '',
+        `Para executar: --confirmar ${loteId}`,
+        'O passo da unidade de trabalho NAO e idempotente: se rodar duas vezes, duplica em silencio.'
+      ].join('\n'),
+      codigo: 1
+    }
+  }
+
+  const feitos = []
+  const r1 = await http.autenticada(cfg, 'POST', '/projeto/unidade_trabalho', { corpo: corpoUt })
+  feitos.push(`1/3 unidade_trabalho: ${r1.mensagem || 'ok'}`)
+
+  for (const faseId of fases) {
+    const r = await http.autenticada(cfg, 'POST', '/projeto/etapas/padrao', {
+      corpo: { padrao_cq: 1, fase_id: faseId, lote_id: loteId }
+    })
+    feitos.push(`2/3 etapas/padrao fase ${faseId}: ${r.mensagem || 'ok'}`)
+  }
+
+  const r3 = await http.autenticada(cfg, 'POST', '/projeto/atividades/todas', {
+    corpo: {
+      lote_id: loteId,
+      atividades_revisao: false,
+      atividades_revisao_correcao: false,
+      atividades_revisao_final: false
+    }
+  })
+  feitos.push(`3/3 atividades/todas: ${r3.mensagem || 'ok'}`)
+
+  return { texto: [...resumo, '', ...feitos].join('\n') }
+}
+
+async function faseFinalizar (args, cfg) {
+  const flags = args.flags
+  const loteId = argsLib.numero(flags, 'lote', null)
+  if (!loteId) throw new Error('Informe --lote <id>.')
+  const subfases = (argsLib.lista(flags.subfases) || []).map(Number)
+  if (!subfases.length) throw new Error('Informe --subfases <ids>.')
+  const usuario = argsLib.exigir(flags, 'usuario', 'uuid do usuario a quem as atividades serao atribuidas')
+
+  const moldeVf = argsLib.numero(flags, 'molde-vf', null)
+  const alvos = moldeVf ? [...subfases, moldeVf] : subfases
+  const estado = await lerSubfases(cfg, loteId, alvos, false)
+  const por = new Map(estado.map(s => [s.subfase_id, s]))
+
+  const vf = por.get(moldeVf)
+  const data = resolverData(
+    flags.data && flags.data !== true ? String(flags.data) : null,
+    moldeVf,
+    (vf && vf.atividades && vf.atividades.datas_fim_concluidas) || []
+  )
+
+  const ids = subfases.flatMap(id => ((por.get(id) || {}).atividades || {}).nao_iniciadas || [])
+  if (!ids.length) {
+    return { texto: `Nenhuma atividade "nao iniciada" nas subfases ${subfases.join(', ')} do lote ${loteId}. Nada a fazer.` }
+  }
+
+  const resumo = [
+    `lote ${loteId}: finalizar ${ids.length} atividade(s) das subfases ${subfases.join(', ')}`,
+    `  data de inicio e fim: ${data}`,
+    `  atribuidas ao usuario ${usuario}`
+  ]
+
+  if (flags['dry-run']) return { texto: ['DRY-RUN (nada foi enviado)', '', ...resumo].join('\n') }
+
+  const alvo = argsLib.numero(flags, 'confirmar', null)
+  if (alvo !== ids.length) {
+    return {
+      texto: [...resumo, '', `Para executar: --confirmar ${ids.length} (a QUANTIDADE de atividades).`].join('\n'),
+      codigo: 1
+    }
+  }
+
+  let ok = 0
+  const falhas = []
+  for (const id of ids) {
+    try {
+      await http.autenticada(cfg, 'PUT', '/gerencia/finalizar_modo_local', {
+        corpo: { atividade_id: id, usuario_uuid: usuario, data_inicio: data, data_fim: data }
+      })
+      ok++
+    } catch (err) {
+      falhas.push(`  atividade ${id}: ${err.message}`)
+    }
+  }
+
+  // Sao N chamadas sem transacao: dizer quantas passaram E quantas nao e o
+  // minimo para quem for retomar saber onde parou.
+  const texto = [...resumo, '', `Finalizadas: ${ok} de ${ids.length}.`]
+  if (falhas.length) texto.push(`Falharam ${falhas.length}:`, ...falhas)
+  return { texto: texto.join('\n'), codigo: falhas.length ? 1 : 0 }
+}
+
+async function fase (args, cfg) {
+  const acao = args._[2]
+  if (acao === 'criar') return faseCriar(args, cfg)
+  if (acao === 'finalizar') return faseFinalizar(args, cfg)
+  throw new Error('Use: sap lote fase criar ... | sap lote fase finalizar ...')
+}
+
 async function executar (args, cfg) {
   const sub = args._[1]
   if (!sub || args.flags.ajuda || args.flags.help) return { texto: AJUDA }
   if (sub === 'fechar') return fechar(args, cfg)
   if (sub === 'pipeline') return pipeline(args, cfg)
-  throw new Error(`Subcomando "${sub}" desconhecido. Use: fechar, pipeline.`)
+  if (sub === 'fase') return fase(args, cfg)
+  throw new Error(`Subcomando "${sub}" desconhecido. Use: fechar, pipeline, fase.`)
 }
 
 // O pipeline e OFFLINE por padrao: so vai a rede com --executar. Sao sete
 // escritas sem transacao entre elas, e o passo 4 duplica em silencio se
 // repetido, entao executar tem que ser um ato deliberado, nao o default.
-const precisaServidor = args =>
-  args._[1] === 'pipeline'
-    ? args.flags.executar === true
-    : args.flags['dry-run'] !== true
+const precisaServidor = args => {
+  if (args._[1] === 'pipeline') return args.flags.executar === true
+  // `fase` precisa de servidor ate no --dry-run: o molde a clonar so existe no
+  // banco. O dry-run aqui garante que nada e ESCRITO, nao que nada e lido.
+  if (args._[1] === 'fase') return true
+  return args.flags['dry-run'] !== true
+}
 
-module.exports = { executar, precisaServidor, PASSOS, validarPlano, preencher }
+module.exports = {
+  executar, precisaServidor, PASSOS, validarPlano, preencher,
+  clonarUnidades, resolverData
+}

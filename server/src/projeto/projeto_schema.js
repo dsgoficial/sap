@@ -8,6 +8,22 @@ models.idParams = Joi.object().keys({
   id: Joi.number().integer().required()
 })
 
+// Estado das subfases de um lote (cadastro PARCIAL de fase que faltou).
+// Existe porque o vault do Chefe da DGEO lia isto por psql direto no banco de
+// produção, com credencial de banco fora do sistema e SQL montado por
+// interpolação de string. É leitura, e leitura pertence a uma rota.
+models.loteIdParams = Joi.object().keys({
+  lote_id: Joi.number().integer().required()
+})
+
+models.subfasesLoteQuery = Joi.object().keys({
+  // csv, para casar com o resto do módulo; vazio = todas as subfases do lote.
+  subfase_ids: Joi.string().pattern(/^\d+(,\d+)*$/),
+  // A geometria das unidades de trabalho é cara e só interessa a quem vai
+  // CLONAR o molde, então é opt-in.
+  geom: Joi.boolean().default(false)
+})
+
 models.usuarios = Joi.object().keys({
   usuarios: Joi.array()
     .items(

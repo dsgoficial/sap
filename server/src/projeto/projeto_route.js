@@ -6156,4 +6156,57 @@ router.delete(
 )
 
 
+/**
+ * @swagger
+ * /api/projeto/lote/{lote_id}/subfases:
+ *   get:
+ *     summary: Estado das subfases de um lote (etapas, unidades de trabalho e atividades)
+ *     description: Responde, de uma vez, o que o cadastro PARCIAL de fase precisa saber antes de escrever - se a subfase ja tem etapa no lote, qual a unidade de trabalho molde a clonar, quais atividades ainda nao comecaram e em que data a fase concluiu. Substitui a leitura por psql direto no banco.
+ *     produces:
+ *       - application/json
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: lote_id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *       - in: query
+ *         name: subfase_ids
+ *         schema:
+ *           type: string
+ *         description: Lista separada por virgula. Sem ela, todas as subfases.
+ *       - in: query
+ *         name: geom
+ *         schema:
+ *           type: boolean
+ *         description: Inclui a geometria (WKT) das unidades de trabalho. Cara; so quem vai clonar o molde precisa.
+ *     responses:
+ *       200:
+ *         description: Estado das subfases retornado com sucesso
+ */
+router.get(
+  '/lote/:lote_id/subfases',
+  verifyAdmin,
+  schemaValidation({
+    params: projetoSchema.loteIdParams,
+    query: projetoSchema.subfasesLoteQuery
+  }),
+  asyncHandler(async (req, res, next) => {
+    const subfaseIds = req.query.subfase_ids
+      ? req.query.subfase_ids.split(',').map(Number)
+      : null
+
+    const dados = await projetoCtrl.getSubfasesLote(+req.params.lote_id, {
+      subfaseIds,
+      incluirGeom: req.query.geom === true
+    })
+
+    const msg = 'Estado das subfases do lote retornado com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
 module.exports = router

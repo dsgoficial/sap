@@ -4212,4 +4212,91 @@ controller.deletaWorkflows = async workflowsId => {
 }
 
 
+// Estado das subfases de um lote, para o cadastro PARCIAL de fase que faltou.
+//
+// Responde de uma vez as quatro perguntas que esse fluxo faz antes de escrever:
+//   1. estas subfases ja tem etapa neste lote? (rodar duas vezes duplicaria UT)
+//   2. qual a unidade de trabalho MOLDE (epsg, dado de producao, bloco, geom)
+//      de uma subfase ja cadastrada, para clonar em vez de transcrever a mao
+//   3. quais atividades ainda nao comecaram (as que se pode finalizar em lote)
+//   4. em que data a Verificacao Final concluiu (para datar o lancamento
+//      retroativo com a data real, e nao com a de hoje)
+//
+// Ate 2026-07-25 isso era lido por `psql` direto no banco de producao, a partir
+// do vault, com credencial de banco fora do sistema e SQL montado por
+// interpolacao de string. Leitura pertence a uma rota: aqui ela passa pelo
+// mesmo verifyAdmin, pelo mesmo log e pelo mesmo schema que o resto.
+controller.getSubfasesLote = async (loteId, { subfaseIds = null, incluirGeom = false } = {}) => {
+  const filtroSubfase = subfaseIds && subfaseIds.length
+    ? 'AND s.id IN ($<subfaseIds:csv>)'
+    : ''
+
+  const subfases = await db.sapConn.any(`
+    SELECT s.id AS subfase_id, s.nome AS subfase, s.fase_id,
+           COUNT(DISTINCT e.id)::int AS etapas
+    FROM macrocontrole.subfase AS s
+    LEFT JOIN macrocontrole.etapa AS e
+      ON e.subfase_id = s.id AND e.lote_id = $<loteId>
+    WHERE TRUE ${filtroSubfase}
+    GROUP BY s.id, s.nome, s.fase_id
+    ORDER BY s.id
+  `, { loteId, subfaseIds })
+
+  if (!subfases.length) return []
+
+  const ids = subfases.map(s => s.subfase_id)
+
+  const unidades = await db.sapConn.any(`
+    -- EWKT, nao WKT: a coluna e geometry(POLYGON, 4326) e o POST de unidade de
+    -- trabalho espera a geometria COM o SRID. O ut.epsg e outra coisa (o CRS de
+    -- trabalho da unidade, tipicamente UTM), e confundir os dois faz o clone
+    -- nascer com a geometria rotulada errada. Devolver EWKT tira a adivinhacao
+    -- de quem consome.
+    SELECT ut.id, ut.nome, ut.subfase_id, ut.epsg, ut.dado_producao_id, ut.bloco_id
+           ${incluirGeom ? ', ST_AsEWKT(ut.geom) AS geom' : ''}
+    FROM macrocontrole.unidade_trabalho AS ut
+    WHERE ut.lote_id = $<loteId> AND ut.subfase_id IN ($<ids:csv>)
+    ORDER BY ut.subfase_id, ut.id
+  `, { loteId, ids })
+
+  // Uma linha por (subfase, situacao) com a contagem, mais os ids do que ainda
+  // nao comecou e as datas em que se concluiu. As datas vem DISTINTAS de
+  // proposito: mais de uma data numa Verificacao Final significa que o lote nao
+  // fechou de uma vez, e quem for datar um lancamento retroativo precisa
+  // ESCOLHER, nao receber a primeira calada.
+  const atividades = await db.sapConn.any(`
+    SELECT e.subfase_id,
+           a.tipo_situacao_id,
+           COUNT(*)::int AS quantidade,
+           array_agg(a.id ORDER BY a.id) FILTER (WHERE a.tipo_situacao_id = 1) AS nao_iniciadas,
+           array_agg(DISTINCT a.data_fim) FILTER (WHERE a.tipo_situacao_id = 4) AS datas_fim
+    FROM macrocontrole.atividade AS a
+    INNER JOIN macrocontrole.etapa AS e ON e.id = a.etapa_id
+    WHERE e.lote_id = $<loteId> AND e.subfase_id IN ($<ids:csv>)
+    GROUP BY e.subfase_id, a.tipo_situacao_id
+    ORDER BY e.subfase_id, a.tipo_situacao_id
+  `, { loteId, ids })
+
+  return subfases.map(s => {
+    const minhas = atividades.filter(a => a.subfase_id === s.subfase_id)
+    const porSituacao = {}
+    let naoIniciadas = []
+    let datasFim = []
+    for (const a of minhas) {
+      porSituacao[a.tipo_situacao_id] = a.quantidade
+      if (a.nao_iniciadas) naoIniciadas = naoIniciadas.concat(a.nao_iniciadas)
+      if (a.datas_fim) datasFim = datasFim.concat(a.datas_fim)
+    }
+    return {
+      ...s,
+      unidades_trabalho: unidades.filter(u => u.subfase_id === s.subfase_id),
+      atividades: {
+        por_situacao: porSituacao,
+        nao_iniciadas: naoIniciadas,
+        datas_fim_concluidas: [...new Set(datasFim.map(d => (d instanceof Date ? d.toISOString() : d)))]
+      }
+    }
+  })
+}
+
 module.exports = controller
