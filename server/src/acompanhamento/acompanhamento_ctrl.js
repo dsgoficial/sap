@@ -755,7 +755,26 @@ controller.getInfoPIT = async ano => {
   return await db.sapConn.any(
     `
     WITH months AS (
-      SELECT generate_series(1, EXTRACT(MONTH FROM current_date)::int) AS month
+      -- A grade de meses e ancorada no ANO PEDIDO, nao em hoje.
+      --
+      -- Ate 2026-07-25 isto era generate_series(1, EXTRACT(MONTH FROM current_date)),
+      -- o que truncava em SILENCIO qualquer consulta de ano passado: pedir o PIT de
+      -- 2025 em julho de 2026 devolvia so os meses 1 a 7 de 2025, e tudo que foi
+      -- finalizado de agosto a dezembro sumia sem erro, subestimando a soma anual.
+      -- Como esta rota alimenta a Secao 2 do RPCMTec e o RTM, o numero saia errado
+      -- num relatorio assinado. O defeito existia desde 2023-07-19 (1ebc111).
+      --
+      -- Ano passado (ou futuro): os 12 meses. Ano corrente: so ate o mes atual,
+      -- preservando a intencao original de nao exibir mes que ainda nao aconteceu
+      -- como se fosse producao zerada.
+      SELECT generate_series(
+        1,
+        CASE
+          WHEN $<ano>::int = EXTRACT(YEAR FROM current_date)::int
+            THEN EXTRACT(MONTH FROM current_date)::int
+          ELSE 12
+        END
+      ) AS month
   ),
   projects_lotes_meta AS (
       SELECT DISTINCT pr.nome AS projeto, l.nome AS lote, pit.meta
