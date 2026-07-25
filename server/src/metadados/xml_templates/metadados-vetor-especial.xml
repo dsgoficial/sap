@@ -74,7 +74,7 @@
 					<gmd:date>
 						<gmd:CI_Date>
 							<gmd:date>
-								<gco:Date>{{DATA_CRIACAO}}</gco:Date>
+								<gco:Date>2018-01-01</gco:Date>
 							</gmd:date>
 							<gmd:dateType>
 								<gco:CharacterString>criacao</gco:CharacterString>
