@@ -1,0 +1,14 @@
+{
+  "name": "sap_cli",
+  "version": "1.0.0",
+  "description": "Interface de linha de comando do SAP, desenhada para agentes",
+  "main": "sap.js",
+  "bin": {
+    "sap": "./sap.js"
+  },
+  "scripts": {
+    "test": "node --test \"__tests__/*.test.js\""
+  },
+  "dependencies": {},
+  "license": "MIT"
+}
