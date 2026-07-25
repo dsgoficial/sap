@@ -449,8 +449,14 @@ async function faseCriar (args, cfg) {
 
   const corpoUt = { unidades_trabalho: unidades, subfase_ids: subfases, lote_id: loteId }
 
-  const val = esquema.validarCorpo(obter('unidade_trabalho').schema().unidadesTrabalho, corpoUt)
-  if (val.erro) return { texto: val.erro, codigo: 1 }
+  const schemaUt = obter('unidade_trabalho').schema().unidadesTrabalho
+  const val = esquema.validarCorpo(schemaUt, corpoUt)
+  if (!val.ok) {
+    return {
+      texto: esquema.explicarErro(schemaUt, val.erros, 'sap schema unidade_trabalho'),
+      codigo: 1
+    }
+  }
 
   const resumo = [
     `lote ${loteId}: clonando ${unidades.length} unidade(s) de trabalho da subfase-molde ${molde}`,

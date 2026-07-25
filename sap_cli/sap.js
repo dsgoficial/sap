@@ -101,7 +101,8 @@ const ROTEADOR = {
 // crud generico e daria "acao desconhecida".
 const SUBVERBOS = {
   'lote fechar': './comandos/lote',
-  'lote pipeline': './comandos/lote'
+  'lote pipeline': './comandos/lote',
+  'lote fase': './comandos/lote'
 }
 
 async function principal () {
