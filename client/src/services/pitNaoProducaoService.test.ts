@@ -37,6 +37,7 @@ describe('pitNaoProducaoService', () => {
     const input: MetaNaoProducaoInput = {
       ano: 2026,
       numero_meta: 4,
+      nome_meta: 'Impressão',
       item: '4.1',
       descricao: 'Impressão em sulfite',
       unidade: 'produtos',

@@ -127,28 +127,35 @@ async function producao (args, cfg) {
 
 // ---------------------------------------------------------------------------
 
-const AJUDA_SECAO2 = `sap secao2 - Secao 2 do RPCMTec, montada pelo servidor
+const AJUDA_SECAO2 = `sap secao2 - as subsecoes do RPCMTec que saem do SAP
 
   sap secao2 --ano 2026 --mes 7               markdown pronto
   sap secao2 --ano 2026 --mes 7 --json        o JSON cru do servidor
   sap secao2 --ano 2026 --mes 7 --docx --saida rpcmtec.docx
 
 Uma unica chamada: GET /api/relatorio/rpcmtec/<ano>/<mes>. O servidor ja aplica
-o recorte cumulativo (janeiro ate o fim do mes) e as mesmas contas do DOCX
-oficial, entao o CLI so formata.`
+o recorte cumulativo (janeiro ate o fim do mes) e devolve as celulas EM TEXTO,
+com o separador de milhar e o '-' de "nao houve" no lugar; o CLI so as poe em
+tabela. Formatar de novo aqui faria o markdown divergir do DOCX.
 
+A numeracao e a do documento da Divisao (2.1 a 2.6, 3.3, 6.1 e 6.2). As demais
+subsecoes vem do SCA (acervo, mapoteca e orcamento) ou sao escritas a mao.`
+
+// [chave no JSON, titulo, colunas]. O titulo traz o NUMERO da subsecao no
+// documento da Divisao, o mesmo que o DOCX escreve -- ate 2026-08-02 o servidor
+// tinha numeracao propria (a execucao por lote era "2.1", o Extra-PIT "2.6") e
+// quem montava a edicao tinha de descobrir a cada mes qual "2.1" era qual.
 const SECOES = [
-  ['estadoPitProducao', '2.1 Estado atual do PIT (producao)', ['lote', 'previsto', 'prontos_ano', 'prontos_mes', 'percentual']],
-  ['estadoPitNaoProducao', '2.1 Estado atual do PIT (nao-producao)', ['numero_meta', 'item', 'descricao', 'previsto', 'realizado_ano', 'realizado_mes', 'percentual']],
-  ['execucaoLote', '2.1 Execucao por lote e bloco', ['bloco', 'num_produtos', 'num_operadores', 'percentual']],
-  ['entregas', '2.2 Produtos finalizados no mes', ['tipo', 'escala', 'identificador', 'lote', 'uuid']],
-  ['campo', '2.3 Atividades de campo', ['local', 'data', 'finalidade', 'efetivo']],
-  ['capacitacaoMinistrada', '2.5 Capacitacoes ministradas', ['capacitacao', 'periodo', 'instituicoes', 'efetivo_capacitado']],
-  ['extraPit', '2.6 Extra-PIT', ['demandante', 'tipo_produto', 'quantidade', 'situacao', 'documento_autorizacao', 'data_entrega']],
-  ['aproveitamento', '5.1 Aproveitamento do efetivo', ['militar', 'atividades']],
-  ['capacitacaoRecebida', '5.2 Capacitacoes recebidas', ['plano_codigo', 'capacitacao', 'instituicao', 'militar']],
-  ['totalCapacitacao', 'Total de capacitacao', ['indicador', 'mes', 'ano']],
-  ['totais', 'Totais do mes e do ano', ['indicador', 'mes', 'ano']]
+  ['estadoPit', '2.1 Estado Atual do PIT', ['meta_texto', 'item', 'produto_servico', 'quantidade', 'prontos_mes', 'prontos_ano', 'previsao_termino']],
+  ['totais', '2.2 Totais do Mes e do Ano', ['tipo_produto', 'mes', 'ano']],
+  ['execucaoLote', '2.3 Execucao por Lote de Producao', ['lote', 'num_produtos', 'num_operadores', 'percentual']],
+  ['entregas', '2.4 Entregas detalhada de produtos finais no mes', ['tipo', 'escala', 'uuid', 'identificador', 'meta_pit', 'lote']],
+  ['campo', '2.5 Atividades de campo', ['local', 'data', 'finalidade', 'efetivo']],
+  ['capacitacaoMinistrada', '2.6 Capacitacoes externas', ['capacitacao', 'periodo', 'instituicoes', 'efetivo_capacitado']],
+  ['capacitacaoMinistradaTotais', '2.6 Capacitacoes externas (totais do ano)', ['rotulo', 'valor']],
+  ['extraPit', '3.3 Extra-PIT', ['demandante', 'tipo_produto', 'quantidade', 'situacao', 'documento_autorizacao', 'descricao']],
+  ['aproveitamento', '6.1 Aproveitamento do efetivo', ['militar', 'atividades']],
+  ['capacitacaoRecebida', '6.2 Capacitacao do efetivo', ['plano_codigo', 'capacitacao', 'instituicao', 'militar']]
 ]
 
 /** Tabela markdown de uma lista de objetos, nas colunas pedidas. */
@@ -187,7 +194,7 @@ async function secao2 (args, cfg) {
 
   if (flags.json) return { texto: JSON.stringify(d, null, 2) }
 
-  const out = [`# RPCMTec ${String(mes).padStart(2, '0')}/${ano} - secao de producao e pessoal`, '']
+  const out = [`# RPCMTec ${String(mes).padStart(2, '0')}/${ano} - subsecoes do SAP`, '']
   for (const [chave, titulo, colunas] of SECOES) {
     out.push(`## ${titulo}`)
     out.push('')

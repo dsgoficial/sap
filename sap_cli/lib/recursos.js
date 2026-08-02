@@ -35,7 +35,7 @@ const RECURSOS = {
   // Secoes manuais do RPCMTec: o que o chefe LANCA todo mes.
   // -------------------------------------------------------------------------
   campo: {
-    nome: 'atividade de campo (Secao 2.3 do RPCMTec)',
+    nome: 'atividade de campo (Secao 2.5 do RPCMTec)',
     modulo: 'campo',
     caminho: '/campo/campos',
     schema: carregar('campo/campo_schema'),
@@ -50,7 +50,7 @@ const RECURSOS = {
   },
 
   capacitacao: {
-    nome: 'capacitacao ministrada ou recebida (Secoes 2.5 e 5.2)',
+    nome: 'capacitacao ministrada ou recebida (Secoes 2.6 e 6.2)',
     modulo: 'capacitacao',
     caminho: '/capacitacao/capacitacoes',
     schema: carregar('capacitacao/capacitacao_schema'),
@@ -65,7 +65,7 @@ const RECURSOS = {
   },
 
   extra_pit: {
-    nome: 'demanda Extra-PIT (Secao 2.6)',
+    nome: 'demanda Extra-PIT (Secao 3.3)',
     modulo: 'extra_pit',
     caminho: '/extra_pit',
     schema: carregar('extra_pit/extra_pit_schema'),

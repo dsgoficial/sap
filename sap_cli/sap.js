@@ -36,7 +36,7 @@ CONTRATO  (nao gasta rede nem credencial; leia isto antes de montar um corpo)
 
 DIA A DIA
   sap producao --ano 2026 [--mes 7]     estado do PIT (com lote e sem lote)
-  sap secao2 --ano 2026 --mes 7         Secao 2 do RPCMTec em markdown
+  sap secao2 --ano 2026 --mes 7         subsecoes do RPCMTec (SAP) em markdown
   sap secao2 --ano 2026 --mes 7 --docx --saida rpcmtec.docx
   sap dominio                           tabelas de dominio (os codigos dos *_id)
   sap dominio tipo_etapa

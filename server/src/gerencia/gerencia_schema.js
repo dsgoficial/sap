@@ -388,13 +388,33 @@ models.propriedadesAtualizacao = Joi.object().keys({
     .min(1)
 })
 
+// As colunas que DESCREVEM a linha da meta de producao na subsecao 2.1 do
+// RPCMTec (Meta | Item | Produto ou servico | ... | Previsao de termino). Todas
+// opcionais: uma meta de producao vale sem elas, e antes de 2.3.5 nenhuma era
+// enviada. Nao entram no `required` para nao invalidar o cadastro que ja existe.
+//
+// `prazo` e DIA DE CALENDARIO. Sem o `.raw()` o Joi converte 'AAAA-MM-DD' em
+// meia-noite UTC, e o Postgres, em UTC-3, guarda o DIA ANTERIOR na coluna DATE:
+// prazo de 01/08 volta 31/07 na "Previsao de termino" do relatorio. O `.iso()`
+// anda junto porque sem ele a string segue crua e o DateStyle padrao (MDY) leria
+// '01/08/2026' como 8 de JANEIRO.
+const descricaoPit = {
+  numero_meta: Joi.number().integer().strict().min(1).max(7).allow(null),
+  nome_meta: Joi.string().allow(null, ''),
+  item: Joi.string().allow(null, ''),
+  descricao: Joi.string().allow(null, ''),
+  unidade: Joi.string().allow(null, ''),
+  prazo: Joi.date().iso().raw().allow(null)
+}
+
 models.pit = Joi.object().keys({
   pit: Joi.array()
     .items(
       Joi.object().keys({
         lote_id: Joi.number().integer().strict().required(),
         meta: Joi.number().integer().strict().required(),
-        ano: Joi.number().integer().strict().required()
+        ano: Joi.number().integer().strict().required(),
+        ...descricaoPit
       })
     )
     .required()
@@ -408,7 +428,8 @@ models.pitAtualizacao = Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         lote_id: Joi.number().integer().strict().required(),
         meta: Joi.number().integer().strict().required(),
-        ano: Joi.number().integer().strict().required()
+        ano: Joi.number().integer().strict().required(),
+        ...descricaoPit
       })
     )
     .required()

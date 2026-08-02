@@ -41,6 +41,7 @@ const soData = (v: string | null) => (v ? String(v).slice(0, 10) : '');
 const metaVazia = (ano: number): MetaNaoProducaoInput => ({
   ano,
   numero_meta: 4,
+  nome_meta: null,
   item: '',
   descricao: '',
   unidade: '',
@@ -55,7 +56,10 @@ const baseColumns = [
     label: 'Meta',
     align: 'center' as const,
     minWidth: 70,
-    format: (v: number) => `Meta ${v}`,
+    // Como a coluna Meta da 2.1 do RPCMTec a escreve: "Meta 6 - Programa
+    // Memória", ou só "Meta 6" enquanto o nome não estiver cadastrado.
+    format: (v: number, row: { nome_meta?: string | null }) =>
+      row?.nome_meta ? `Meta ${v} - ${row.nome_meta}` : `Meta ${v}`,
   },
   { id: 'item', label: 'Item', align: 'left' as const, minWidth: 60 },
   { id: 'descricao', label: 'Descrição', align: 'left' as const },
@@ -120,6 +124,7 @@ const Definicoes = ({ ano }: { ano: number }) => {
     setForm({
       ano: m.ano,
       numero_meta: m.numero_meta,
+      nome_meta: m.nome_meta,
       item: m.item,
       descricao: m.descricao,
       unidade: m.unidade,
@@ -135,6 +140,7 @@ const Definicoes = ({ ano }: { ano: number }) => {
       ano: Number(form.ano),
       numero_meta: Number(form.numero_meta),
       meta: Number(form.meta),
+      nome_meta: form.nome_meta ? form.nome_meta : null,
       unidade: form.unidade ? form.unidade : null,
       prazo: form.prazo ? form.prazo : null,
     };
@@ -258,6 +264,13 @@ const Definicoes = ({ ano }: { ano: number }) => {
                 helperText='ex.: "4.1"'
               />
             </Stack>
+            <TextField
+              label="Nome da meta (opcional)"
+              value={form.nome_meta ?? ''}
+              onChange={e => set('nome_meta', e.target.value || null)}
+              fullWidth
+              helperText='O nome do ano, ex.: "Programa Memória". A coluna Meta da 2.1 do RPCMTec sai "Meta 6 - Programa Memória"; sem ele, só "Meta 6".'
+            />
             <TextField
               label="Descrição"
               value={form.descricao}

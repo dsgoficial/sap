@@ -11,7 +11,8 @@ const controller = {}
 // EXEC_PIT do RTM. As metas de producao (com lote) seguem em /acompanhamento/pit.
 controller.getByAno = async ano => {
   return db.sapConn.any(
-    `SELECT p.id, p.ano, p.numero_meta, p.item, p.descricao, p.unidade, p.meta, p.prazo,
+    `SELECT p.id, p.ano, p.numero_meta, p.nome_meta, p.item, p.descricao, p.unidade,
+            p.meta, p.prazo::text AS prazo,
             COALESCE(SUM(e.quantidade), 0) AS realizado,
             CASE WHEN p.meta > 0
                  THEN round(100.0 * COALESCE(SUM(e.quantidade), 0) / p.meta, 1)
@@ -25,23 +26,28 @@ controller.getByAno = async ano => {
   )
 }
 
+// `nome_meta` e opcional no schema, e o `$<param>` do pg-promise ESTOURA quando a
+// propriedade nao existe (nao a trata como null). O default explicito e o que
+// permite o cadastro que ja existe continuar chamando sem o campo novo.
+const comPadroes = pit => ({ nome_meta: null, ...pit })
+
 controller.criaMeta = async pit => {
   return db.sapConn.none(
     `INSERT INTO macrocontrole.pit
-      (lote_id, ano, numero_meta, item, descricao, unidade, meta, prazo)
+      (lote_id, ano, numero_meta, nome_meta, item, descricao, unidade, meta, prazo)
      VALUES
-      (NULL, $<ano>, $<numero_meta>, $<item>, $<descricao>, $<unidade>, $<meta>, $<prazo>)`,
-    pit
+      (NULL, $<ano>, $<numero_meta>, $<nome_meta>, $<item>, $<descricao>, $<unidade>, $<meta>, $<prazo>)`,
+    comPadroes(pit)
   )
 }
 
 controller.atualizaMeta = async (id, pit) => {
   const result = await db.sapConn.result(
     `UPDATE macrocontrole.pit SET
-       ano = $<ano>, numero_meta = $<numero_meta>, item = $<item>,
+       ano = $<ano>, numero_meta = $<numero_meta>, nome_meta = $<nome_meta>, item = $<item>,
        descricao = $<descricao>, unidade = $<unidade>, meta = $<meta>, prazo = $<prazo>
      WHERE id = $<id> AND lote_id IS NULL`,
-    { id, ...pit }
+    { id, ...comPadroes(pit) }
   )
   if (!result.rowCount) {
     throw new AppError('Meta do PIT (nao-producao) não encontrada', httpCode.NotFound)
@@ -63,8 +69,10 @@ controller.deletaMeta = async id => {
 // daquele mes (campos de execucao nulos quando ainda nao lancado).
 controller.getExecucao = async (ano, mes) => {
   return db.sapConn.any(
-    `SELECT p.id AS pit_id, p.numero_meta, p.item, p.descricao, p.unidade, p.meta, p.prazo,
-            e.id AS execucao_id, e.quantidade, e.data_conclusao, e.observacao
+    `SELECT p.id AS pit_id, p.numero_meta, p.nome_meta, p.item, p.descricao, p.unidade,
+            p.meta, p.prazo::text AS prazo,
+            e.id AS execucao_id, e.quantidade, e.data_conclusao::text AS data_conclusao,
+            e.observacao
      FROM macrocontrole.pit AS p
      LEFT JOIN macrocontrole.pit_execucao_manual AS e
             ON e.pit_id = p.id AND e.mes = $<mes>

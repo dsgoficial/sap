@@ -8,6 +8,9 @@ export interface MetaNaoProducao {
   id: number;
   ano: number;
   numero_meta: number;
+  // Nome da meta do ano ("Programa Memória"). A coluna Meta da subseção 2.1 do
+  // RPCMTec diz "Meta 6 - Programa Memória"; sem nome sai só "Meta 6".
+  nome_meta: string | null;
   item: string;
   descricao: string;
   unidade: string | null;
@@ -20,6 +23,7 @@ export interface MetaNaoProducao {
 export interface MetaNaoProducaoInput {
   ano: number;
   numero_meta: number;
+  nome_meta: string | null;
   item: string;
   descricao: string;
   unidade: string | null;
@@ -31,6 +35,7 @@ export interface MetaNaoProducaoInput {
 export interface ExecucaoLinha {
   pit_id: number;
   numero_meta: number;
+  nome_meta: string | null;
   item: string;
   descricao: string;
   unidade: string | null;

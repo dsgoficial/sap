@@ -1267,14 +1267,34 @@ controller.atualizaPluginPath = async (
   )
 }
 
+// Metas de PRODUCAO do PIT (com lote). As colunas descritivas
+// (numero_meta/nome_meta/item/descricao/unidade/prazo) sao as MESMAS das metas
+// de nao-producao: sao as colunas da subsecao 2.1 do RPCMTec, e a 2.1 abre
+// justamente com as metas de producao. Ate 2.3.4 elas so eram gravadas pelo
+// modulo pit_nao_producao, e a 2.1 nascia sem item e sem previsao de termino
+// nas metas 1 a 3. Continuam OPCIONAIS: quem so quer a meta numerica do
+// acompanhamento nao e obrigado a descrever a linha do relatorio.
 controller.getPit = async () => {
   return db.sapConn.any(
     `SELECT p.id, p.lote_id, p.meta, p.ano,
+    p.numero_meta, p.nome_meta, p.item, p.descricao, p.unidade,
+    p.prazo::text AS prazo,
     l.nome AS lote
     FROM macrocontrole.pit AS p
     INNER JOIN macrocontrole.lote AS l ON l.id = p.lote_id`
   )
 }
+
+// As colunas descritivas de uma meta de producao, na ordem do ColumnSet. Nulo e
+// aceito em todas: elas descrevem a linha do RPCMTec, e nao a meta em si.
+const COLUNAS_PIT_DESCRITIVAS = [
+  { name: 'numero_meta', def: null },
+  { name: 'nome_meta', def: null },
+  { name: 'item', def: null },
+  { name: 'descricao', def: null },
+  { name: 'unidade', def: null },
+  { name: 'prazo', def: null, cast: 'date' }
+]
 
 controller.getProducaoDetalhada = async ano => {
   return db.sapConn.any(
@@ -1305,7 +1325,9 @@ controller.getProducaoDetalhada = async ano => {
 
 controller.criaPit = async pit => {
   return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet(['lote_id', 'meta', 'ano'])
+    const cs = new db.pgp.helpers.ColumnSet([
+      'lote_id', 'meta', 'ano', ...COLUNAS_PIT_DESCRITIVAS
+    ])
 
     const query = db.pgp.helpers.insert(pit, cs, {
       table: 'pit',
@@ -1318,7 +1340,9 @@ controller.criaPit = async pit => {
 
 controller.atualizaPit = async pit => {
   return db.sapConn.tx(async t => {
-    const cs = new db.pgp.helpers.ColumnSet(['id', 'lote_id', 'meta', 'ano'])
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id', 'lote_id', 'meta', 'ano', ...COLUNAS_PIT_DESCRITIVAS
+    ])
 
     const query =
       db.pgp.helpers.update(

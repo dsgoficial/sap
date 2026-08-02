@@ -1,7 +1,10 @@
 'use strict'
 
-// RPCMTec (seção produção/pessoal do SAP). Rotas admin-only, mesmo padrão do
-// SCO/SCA: preview em JSON e export DOCX (download binário).
+// RPCMTec: as subseções que saem do SAP (2.1 a 2.6, 3.3, 6.1 e 6.2), na
+// numeração e na formatação do documento da Divisão. Rotas admin-only, mesmo
+// padrão do SCA: preview em JSON e export DOCX (download binário). A guarda é
+// `verifyAdmin`, e não perfil: o RPCMTec é o relatório da Divisão, e não existe
+// perfil de RPCMTec porque não existe módulo RPCMTec.
 
 const express = require('express')
 const { schemaValidation, asyncHandler, httpCode } = require('../utils')
@@ -20,7 +23,7 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const { ano, mes } = req.params
     const buffer = await relatorioCtrl.gerarRelatorioSapDocx({ ano, mes })
-    const nome = `RPCMTec-sap-${ano}-${String(mes).padStart(2, '0')}.docx`
+    const nome = `RPCMTec-SAP-${ano}-${String(mes).padStart(2, '0')}.docx`
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
     res.setHeader('Content-Disposition', `attachment; filename="${nome}"`)
     return res.send(buffer)
@@ -33,7 +36,7 @@ router.get(
   schemaValidation({ params: relatorioSchema.anoMesParams }),
   asyncHandler(async (req, res, next) => {
     const dados = await relatorioCtrl.gerarRelatorioSap({ ano: req.params.ano, mes: req.params.mes })
-    return res.sendJsonAndLog(true, 'RPCMTec (seção produção/pessoal) gerado com sucesso', httpCode.OK, dados)
+    return res.sendJsonAndLog(true, 'RPCMTec (subseções do SAP) gerado com sucesso', httpCode.OK, dados)
   })
 )
 

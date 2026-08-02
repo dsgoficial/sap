@@ -2,31 +2,46 @@
 import apiClient from '../lib/axios';
 import { ApiResponse } from '../types/api';
 
-// RPCMTec - seções de produção e pessoal que o SAP gera (preview + DOCX).
+// RPCMTec: as subseções que o SAP gera, na numeração do documento da Divisão
+// (2.1 a 2.6, 3.3, 6.1 e 6.2). As demais são do SCA ou não têm dono em sistema
+// nenhum -- ver o cabeçalho de server/src/relatorio/relatorio_ctrl.js.
+//
+// Toda célula chega do servidor JÁ EM TEXTO, com o separador de milhar e o '-'
+// de "não houve" no lugar. Formatar de novo aqui faria a tela divergir do DOCX
+// no arredondamento, e quem confere um contra o outro veria diferença onde não
+// há.
 
-export interface EstadoPitProducao {
-  lote: string;
-  previsto: number;
-  prontos_ano: number;
-  prontos_mes: number;
-  percentual: number | null;
+// A célula "Meta" da 2.1 pode ser um objeto de mesclagem vertical (o DOCX a
+// funde entre as linhas da mesma meta). Na tela não há mesclagem, e é
+// `meta_texto` que se mostra.
+export interface CelulaMesclada {
+  texto: string;
+  merge?: 'restart' | 'continue';
+  span?: number;
 }
 
-export interface EstadoPitNaoProducao {
-  numero_meta: number;
+export interface EstadoPitLinha {
+  meta: string | CelulaMesclada;
+  meta_texto: string;
   item: string;
-  descricao: string;
-  previsto: number;
-  realizado_ano: number;
-  realizado_mes: number;
-  percentual: number | null;
+  produto_servico: string;
+  quantidade: string;
+  prontos_mes: string;
+  prontos_ano: string;
+  previsao_termino: string;
+}
+
+export interface TotalLinha {
+  tipo_produto: string;
+  mes: string;
+  ano: string;
 }
 
 export interface ExecucaoLote {
-  bloco: string;
-  num_produtos: number;
-  num_operadores: number;
-  percentual: number | null;
+  lote: string;
+  num_produtos: string;
+  num_operadores: string;
+  percentual: string;
 }
 
 export interface Entrega {
@@ -34,6 +49,7 @@ export interface Entrega {
   escala: string;
   uuid: string;
   identificador: string;
+  meta_pit: string;
   lote: string;
 }
 
@@ -41,58 +57,55 @@ export interface AtividadeCampo {
   local: string;
   data: string;
   finalidade: string;
-  efetivo: string | null;
+  efetivo: string;
 }
 
 export interface CapacitacaoMinistrada {
   capacitacao: string;
   periodo: string;
-  instituicoes: string | null;
-  efetivo_capacitado: number | null;
+  instituicoes: string;
+  efetivo_capacitado: string;
+}
+
+export interface TotalCapacitacao {
+  rotulo: string;
+  valor: string;
 }
 
 export interface ExtraPitLinha {
   demandante: string;
   tipo_produto: string;
-  quantidade: number;
+  quantidade: string;
   situacao: string;
-  data_entrega: string | null;
-  documento_autorizacao: string | null;
-  descricao: string | null;
+  documento_autorizacao: string;
+  descricao: string;
 }
 
 export interface Aproveitamento {
   militar: string;
-  atividades: string | null;
+  atividades: string;
 }
 
 export interface CapacitacaoRecebida {
-  plano_codigo: string | null;
+  plano_codigo: string;
   capacitacao: string;
-  instituicao: string | null;
-  militar: string | null;
-}
-
-export interface LinhaIndicador {
-  indicador: string;
-  mes: number | string;
-  ano: number | string;
+  instituicao: string;
+  militar: string;
 }
 
 export interface RpcmtecSap {
   ano: number;
   mes: number;
-  estadoPitProducao: EstadoPitProducao[];
-  estadoPitNaoProducao: EstadoPitNaoProducao[];
+  estadoPit: EstadoPitLinha[];
+  totais: TotalLinha[];
   execucaoLote: ExecucaoLote[];
   entregas: Entrega[];
   campo: AtividadeCampo[];
   capacitacaoMinistrada: CapacitacaoMinistrada[];
+  capacitacaoMinistradaTotais: TotalCapacitacao[];
   extraPit: ExtraPitLinha[];
   aproveitamento: Aproveitamento[];
   capacitacaoRecebida: CapacitacaoRecebida[];
-  totalCapacitacao: LinhaIndicador[];
-  totais: LinhaIndicador[];
 }
 
 // Preview em tela (JSON).
@@ -119,7 +132,7 @@ export const downloadRpcmtecDocx = async (
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `RPCMTec-sap-${ano}-${String(mes).padStart(2, '0')}.docx`;
+  a.download = `RPCMTec-SAP-${ano}-${String(mes).padStart(2, '0')}.docx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

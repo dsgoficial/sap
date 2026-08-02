@@ -1,5 +1,5 @@
 // Path: features\rpcmtec\routes\Rpcmtec.tsx
-import { ReactNode, useState } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Typography,
@@ -25,148 +25,134 @@ type Coluna = {
   id: string;
   label: string;
   align?: 'left' | 'center' | 'right';
-  format?: (value: any, row: any) => ReactNode;
 };
 
-const pct = (v: number | null | undefined) =>
-  v === null || v === undefined ? '-' : `${v}%`;
-const txt = (v: any) => (v === null || v === undefined || v === '' ? '-' : v);
-
-// Definição das seções, na mesma ordem do DOCX.
+// As subseções na numeração e com os cabeçalhos do documento da Divisão -- os
+// MESMOS de SUBSECOES em server/src/relatorio/relatorio_ctrl.js. As células já
+// chegam em texto; a tela só as coloca na coluna certa.
+//
+// `rodape` é a chave de uma lista de linhas de total que o modelo escreve com
+// as três primeiras colunas mescladas (a 2.6). Na tela elas entram como linhas
+// normais, com o rótulo na primeira coluna.
 const SECOES: {
+  numero: string;
   titulo: string;
   chave: keyof RpcmtecSap;
   colunas: Coluna[];
   emptyMessage: string;
+  rodape?: keyof RpcmtecSap;
 }[] = [
   {
-    titulo: 'Estado Atual do PIT — Produção (metas 1-3)',
-    chave: 'estadoPitProducao',
-    emptyMessage: 'Sem lotes de produção com meta no ano',
+    numero: '2.1',
+    titulo: 'Estado Atual do PIT',
+    chave: 'estadoPit',
+    emptyMessage: 'Sem metas do PIT cadastradas no ano',
     colunas: [
-      { id: 'lote', label: 'Lote' },
-      { id: 'previsto', label: 'Previsto', align: 'center' },
-      { id: 'prontos_ano', label: 'Prontos (ano)', align: 'center' },
-      { id: 'prontos_mes', label: 'Prontos (mês)', align: 'center' },
-      { id: 'percentual', label: '%', align: 'center', format: pct },
+      { id: 'meta_texto', label: 'Meta' },
+      { id: 'item', label: 'Item', align: 'center' },
+      { id: 'produto_servico', label: 'Produto ou serviço' },
+      { id: 'quantidade', label: 'Quantidade', align: 'center' },
+      { id: 'prontos_mes', label: 'Prontos no mês', align: 'center' },
+      { id: 'prontos_ano', label: 'Prontos', align: 'center' },
+      { id: 'previsao_termino', label: 'Previsão de término', align: 'center' },
     ],
   },
   {
-    titulo: 'Estado Atual do PIT — Não-produção (metas 4-7)',
-    chave: 'estadoPitNaoProducao',
-    emptyMessage: 'Sem metas de não-produção no ano',
+    numero: '2.2',
+    titulo: 'Totais do Mês e do Ano',
+    chave: 'totais',
+    emptyMessage: 'Sem totais',
     colunas: [
-      { id: 'numero_meta', label: 'Meta', align: 'center' },
-      { id: 'item', label: 'Item' },
-      { id: 'descricao', label: 'Descrição' },
-      { id: 'previsto', label: 'Previsto', align: 'center' },
-      { id: 'realizado_ano', label: 'Realizado (ano)', align: 'center' },
-      { id: 'realizado_mes', label: 'Realizado (mês)', align: 'center' },
-      { id: 'percentual', label: '%', align: 'center', format: pct },
+      { id: 'tipo_produto', label: 'Tipo de produto' },
+      { id: 'mes', label: 'Quantidade no mês', align: 'center' },
+      { id: 'ano', label: 'Quantidade no ano', align: 'center' },
     ],
   },
   {
-    titulo: '2.1 Execução por Lote de Produção',
+    numero: '2.3',
+    titulo: 'Execução por Lote de Produção',
     chave: 'execucaoLote',
     emptyMessage: 'Sem blocos com atividade finalizada no mês',
     colunas: [
-      { id: 'bloco', label: 'Lote SAP' },
-      { id: 'num_produtos', label: 'Nº de produtos', align: 'center' },
-      { id: 'num_operadores', label: 'Nº de operadores', align: 'center' },
-      { id: 'percentual', label: '% concluído', align: 'center', format: pct },
+      { id: 'lote', label: 'Lote SAP' },
+      { id: 'num_produtos', label: 'Número de Produtos', align: 'center' },
+      { id: 'num_operadores', label: 'Número de operadores', align: 'center' },
+      { id: 'percentual', label: 'Percentual concluído', align: 'center' },
     ],
   },
   {
-    titulo: '2.2 Entregas de Produtos Finais',
+    numero: '2.4',
+    titulo: 'Entregas detalhada de produtos finais (BDGEx, IGW, EBGeo) no mês',
     chave: 'entregas',
     emptyMessage: 'Sem produtos finalizados no mês',
     colunas: [
       { id: 'tipo', label: 'Tipo produto' },
       { id: 'escala', label: 'Escala', align: 'center' },
-      { id: 'uuid', label: 'UUID', align: 'center' },
+      { id: 'uuid', label: 'UUID BDGEx', align: 'center' },
       { id: 'identificador', label: 'Identificador', align: 'center' },
+      { id: 'meta_pit', label: 'Meta PIT', align: 'center' },
       { id: 'lote', label: 'Lote SAP' },
     ],
   },
   {
-    titulo: '2.3 Atividades de Campo',
+    numero: '2.5',
+    titulo: 'Atividades de campo',
     chave: 'campo',
     emptyMessage: 'Sem atividades de campo no mês',
     colunas: [
       { id: 'local', label: 'Local' },
       { id: 'data', label: 'Data', align: 'center' },
-      { id: 'finalidade', label: 'Finalidade' },
-      { id: 'efetivo', label: 'Efetivo', format: txt },
+      { id: 'finalidade', label: 'Finalidade Campo' },
+      { id: 'efetivo', label: 'Efetivo' },
     ],
   },
   {
-    titulo: '2.5 Capacitações Externas',
+    numero: '2.6',
+    titulo: 'Capacitações externas',
     chave: 'capacitacaoMinistrada',
+    rodape: 'capacitacaoMinistradaTotais',
     emptyMessage: 'Sem capacitações ministradas no mês',
     colunas: [
       { id: 'capacitacao', label: 'Capacitação' },
       { id: 'periodo', label: 'Período', align: 'center' },
-      { id: 'instituicoes', label: 'Instituições', format: txt },
-      {
-        id: 'efetivo_capacitado',
-        label: 'Efetivo capacitado',
-        align: 'center',
-        format: txt,
-      },
+      { id: 'instituicoes', label: 'Instituições participantes' },
+      { id: 'efetivo_capacitado', label: 'Efetivo capacitado', align: 'center' },
     ],
   },
   {
-    titulo: '2.6 Extra-PIT',
+    numero: '3.3',
+    titulo: 'Extra-PIT',
     chave: 'extraPit',
-    emptyMessage: 'Sem demandas Extra-PIT no ano',
+    emptyMessage: 'Sem demandas Extra-PIT entregues no mês',
     colunas: [
       { id: 'demandante', label: 'Demandante' },
       { id: 'tipo_produto', label: 'Tipo de produto' },
       { id: 'quantidade', label: 'Qtd', align: 'center' },
       { id: 'situacao', label: 'Situação', align: 'center' },
-      { id: 'data_entrega', label: 'Data de entrega', align: 'center', format: txt },
-      { id: 'documento_autorizacao', label: 'Documento autorização', format: txt },
-      { id: 'descricao', label: 'Descrição', format: txt },
+      { id: 'documento_autorizacao', label: 'Documento autorização' },
+      { id: 'descricao', label: 'Descrição' },
     ],
   },
   {
-    titulo: '5.1 Aproveitamento do Efetivo',
+    numero: '6.1',
+    titulo: 'Aproveitamento do efetivo',
     chave: 'aproveitamento',
     emptyMessage: 'Sem efetivo lançado no mês',
     colunas: [
       { id: 'militar', label: 'Militar' },
-      { id: 'atividades', label: 'Atividades', format: txt },
+      { id: 'atividades', label: 'Atividades' },
     ],
   },
   {
-    titulo: '5.2 Capacitação do Efetivo',
+    numero: '6.2',
+    titulo: 'Capacitação do efetivo',
     chave: 'capacitacaoRecebida',
     emptyMessage: 'Sem capacitações recebidas no mês',
     colunas: [
-      { id: 'plano_codigo', label: 'Plano / Código', format: txt },
+      { id: 'plano_codigo', label: 'Plano / Código' },
       { id: 'capacitacao', label: 'Capacitação' },
-      { id: 'instituicao', label: 'Instituição', format: txt },
-      { id: 'militar', label: 'Militar', format: txt },
-    ],
-  },
-  {
-    titulo: 'Total de Capacitação',
-    chave: 'totalCapacitacao',
-    emptyMessage: 'Sem dados de capacitação',
-    colunas: [
-      { id: 'indicador', label: 'Indicador' },
-      { id: 'mes', label: 'Total no mês', align: 'center' },
-      { id: 'ano', label: 'Total no ano', align: 'center' },
-    ],
-  },
-  {
-    titulo: 'Totais do Mês e do Ano',
-    chave: 'totais',
-    emptyMessage: 'Sem totais',
-    colunas: [
-      { id: 'indicador', label: 'Indicador' },
-      { id: 'mes', label: 'Total no mês', align: 'center' },
-      { id: 'ano', label: 'Total no ano', align: 'center' },
+      { id: 'instituicao', label: 'Instituição' },
+      { id: 'militar', label: 'Militar' },
     ],
   },
 ];
@@ -195,10 +181,30 @@ export const Rpcmtec = () => {
     }
   };
 
+  // As linhas de total da 2.6 entram na mesma tabela, com o rótulo na primeira
+  // coluna e o valor na última: é onde o documento as põe.
+  const linhasDa = (secao: (typeof SECOES)[number], dados: RpcmtecSap) => {
+    const corpo = (dados[secao.chave] as unknown as Record<string, string>[]) || [];
+    if (!secao.rodape || corpo.length === 0) return corpo;
+    const totais =
+      (dados[secao.rodape] as unknown as { rotulo: string; valor: string }[]) || [];
+    const primeira = secao.colunas[0].id;
+    const ultima = secao.colunas[secao.colunas.length - 1].id;
+    return [
+      ...corpo,
+      ...totais.map(t => ({ [primeira]: t.rotulo, [ultima]: t.valor })),
+    ];
+  };
+
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
       <Typography variant="h4" gutterBottom>
-        RPCMTec — Seção Produção e Pessoal
+        RPCMTec — subseções do SAP
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Numeração e formatação do documento da Divisão: cada tabela é colável na
+        subseção de mesmo número. As demais subseções vêm do SCA (acervo,
+        mapoteca e orçamento) ou são preenchidas à mão.
       </Typography>
 
       <Paper
@@ -253,20 +259,18 @@ export const Rpcmtec = () => {
         </Box>
       )}
 
-      {isError && (
-        <Alert severity="error">Erro ao carregar o RPCMTec.</Alert>
-      )}
+      {isError && <Alert severity="error">Erro ao carregar o RPCMTec.</Alert>}
 
       {data &&
         !isLoading &&
         SECOES.map(secao => (
-          <Box key={secao.chave as string} sx={{ mb: 3 }}>
+          <Box key={secao.numero} sx={{ mb: 3 }}>
             <Typography variant="h6" sx={{ mb: 1 }}>
-              {secao.titulo}
+              {secao.numero}. {secao.titulo}
             </Typography>
             <Table
               columns={secao.colunas}
-              rows={(data[secao.chave] as Record<string, any>[]) || []}
+              rows={linhasDa(secao, data)}
               emptyMessage={secao.emptyMessage}
             />
           </Box>

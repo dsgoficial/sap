@@ -655,14 +655,25 @@ EXECUTE PROCEDURE macrocontrole.update_relacionamento_produto();
 -- A tabela pit serve a TODAS as metas do PIT. lote_id e o discriminador: meta COM
 -- lote = producao (realizado calculado pelo SAP a partir dos produtos finalizados);
 -- meta SEM lote = meta nao controlada pelo SAP (impressao, Programa Memoria, TI,
--- EBGeo), descrita por numero_meta/item/descricao/unidade/prazo e com o realizado
--- lancado a mao por mes em macrocontrole.pit_execucao_manual.
+-- EBGeo), com o realizado lancado a mao por mes em macrocontrole.pit_execucao_manual.
+--
+-- numero_meta/nome_meta/item/descricao/unidade/prazo descrevem a linha nos DOIS
+-- casos: sao as colunas da subsecao 2.1 do RPCMTec ("Meta | Item | Produto ou
+-- servico | Quantidade | Prontos no mes | Prontos | Previsao de termino"), e a
+-- 2.1 abre com as metas de PRODUCAO. Ate 2.3.4 o CRUD de producao gravava so
+-- lote_id/meta/ano e as deixava nulas, e a 2.1 nascia sem item e sem previsao de
+-- termino justamente nas metas 1 a 3.
+--
+-- nome_meta e o nome do ano ("Producao de Geoinformacao"), repetido nas linhas da
+-- mesma meta; o gerador o escreve so na primeira, como o documento faz. Nulo e
+-- resposta: sem ele sai apenas "Meta N".
 CREATE TABLE macrocontrole.pit(
 	id SERIAL NOT NULL PRIMARY KEY,
 	lote_id INTEGER REFERENCES macrocontrole.lote (id),
 	meta INTEGER NOT NULL,
 	ano INTEGER NOT NULL,
 	numero_meta SMALLINT,
+	nome_meta VARCHAR(255),
 	item VARCHAR(10),
 	descricao TEXT,
 	unidade VARCHAR(50),

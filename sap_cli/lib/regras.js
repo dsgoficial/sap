@@ -45,12 +45,12 @@ const REGRAS = {
     'guard de idempotencia (o POST em si nao e idempotente).',
     '`pit` e o ANO do PIT a que o campo pertence (smallint), nao um id de meta.',
     '`categorias` sai de: sap dominio campo_categoria. `situacao_id`, de campo_situacao.',
-    'Para a Secao 2.3 do RPCMTec exclui-se a categoria de capacitacao: campo de',
-    'capacitacao entra na 2.5, pela rota de capacitacao, e contar nos dois duplica.'
+    'Para a Secao 2.5 do RPCMTec exclui-se a categoria de capacitacao: campo de',
+    'capacitacao entra na 2.6, pela rota de capacitacao, e contar nos dois duplica.'
   ],
 
   capacitacao: [
-    'tipo Ministrada alimenta a Secao 2.5; Recebida alimenta a 5.2.',
+    'tipo Ministrada alimenta a Secao 2.6; Recebida alimenta a 6.2.',
     'O POST NAO e idempotente e a tabela nao tem UNIQUE: rodar duas vezes cria duas',
     'capacitacoes iguais. Liste antes de criar.',
     'A rota de relatorio GET /api/capacitacao/rpcmtec/<inicio>/<fim> filtra por',
@@ -60,7 +60,7 @@ const REGRAS = {
 
   extra_pit: [
     'A listagem e SO DO ANO pedido, nao acumulada. O RPCMTec e cumulativo: para a',
-    'Secao 2.6 de um mes, liste o ano e recorte voce mesmo.',
+    'Secao 3.3 de um mes, liste o ano e recorte voce mesmo.',
     'O POST nao e idempotente (id serial): repetir duplica a demanda.'
   ],
 

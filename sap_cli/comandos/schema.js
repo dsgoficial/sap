@@ -26,7 +26,7 @@ function executar (args) {
       '',
       'verbos de intencao (contrato proprio, veja sap <verbo> --ajuda)',
       '  producao   estado do PIT do ano, producao e nao-producao juntas',
-      '  secao2     Secao 2 do RPCMTec em markdown',
+      '  secao2     subsecoes do RPCMTec que saem do SAP, em markdown',
       '  finalizar  lancamento retroativo de atividade (modo local)',
       '  lote       fechar / pipeline de configuracao de lote novo',
       '  dominio    tabelas de dominio (os codigos de status, fase, situacao...)',
