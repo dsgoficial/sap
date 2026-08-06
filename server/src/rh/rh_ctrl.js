@@ -63,35 +63,75 @@ controller.getAtividadesPorUsuarioEPeriodo = async (usuarioId, dataInicio, dataF
 
 controller.getAllLoteStatsByDate = async (dataInicio, dataFim) => {
   return db.sapConn.any(
-    `SELECT
-    l.id AS lote_id,
-    l.nome AS lote_nome,
-    COUNT(*) AS total_atividades,
-    COUNT(CASE WHEN a.tipo_situacao_id = 4 THEN 1 END) * 1.0 / NULLIF(COUNT(*), 0) AS percent_exec,
-    COUNT(CASE WHEN a.tipo_situacao_id = 4
-               AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
-               THEN 1 END) AS exec_no_periodo,
-    COUNT(CASE WHEN a.tipo_situacao_id = 4
-               AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
-               THEN 1 END) * 1.0 / NULLIF(COUNT(*), 0) AS percent_periodo,
-    COUNT(CASE WHEN a.tipo_situacao_id = 4
-               AND a.data_fim <= $<dataFim>::timestamptz
-               THEN 1 END) AS exec_acumulado,
-    COUNT(CASE WHEN a.tipo_situacao_id = 4
-               AND a.data_fim <= $<dataFim>::timestamptz
-               THEN 1 END) * 1.0 / NULLIF(COUNT(*), 0) AS percent_acumulado,
-    AVG(EXTRACT(EPOCH FROM (a.data_fim - a.data_inicio))) / 3600 AS tempo_medio_horas,
-    STDDEV(EXTRACT(EPOCH FROM (a.data_fim - a.data_inicio))) / 3600 AS desvio_padrao_tempo
-FROM macrocontrole.atividade AS a
-INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
-INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
-WHERE l.status_id IN (1, 2)
-AND a.tipo_situacao_id BETWEEN 1 AND 5
-GROUP BY l.id, l.nome
-HAVING COUNT(CASE WHEN a.tipo_situacao_id = 4
-                  AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
-                  THEN 1 END) > 0
-ORDER BY percent_exec DESC;`,
+    `WITH atividades_stats AS (
+    SELECT
+      l.id AS lote_id,
+      l.nome AS lote_nome,
+      COUNT(*) AS total_atividades,
+      COUNT(CASE WHEN a.tipo_situacao_id = 4 THEN 1 END) * 1.0 / NULLIF(COUNT(*), 0) AS percent_exec,
+      COUNT(CASE WHEN a.tipo_situacao_id = 4
+                 AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
+                 THEN 1 END) AS exec_no_periodo,
+      COUNT(CASE WHEN a.tipo_situacao_id = 4
+                 AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
+                 THEN 1 END) * 1.0 / NULLIF(COUNT(*), 0) AS percent_periodo,
+      COUNT(CASE WHEN a.tipo_situacao_id = 4
+                 AND a.data_fim <= $<dataFim>::timestamptz
+                 THEN 1 END) AS exec_acumulado,
+      COUNT(CASE WHEN a.tipo_situacao_id = 4
+                 AND a.data_fim <= $<dataFim>::timestamptz
+                 THEN 1 END) * 1.0 / NULLIF(COUNT(*), 0) AS percent_acumulado,
+      AVG(EXTRACT(EPOCH FROM (a.data_fim - a.data_inicio))) / 3600 AS tempo_medio_horas,
+      STDDEV(EXTRACT(EPOCH FROM (a.data_fim - a.data_inicio))) / 3600 AS desvio_padrao_tempo,
+      COUNT(DISTINCT CASE WHEN a.tipo_situacao_id = 4
+                 AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
+                 THEN a.usuario_id END) AS qtd_operadores_periodo
+    FROM macrocontrole.atividade AS a
+    INNER JOIN macrocontrole.unidade_trabalho AS ut ON ut.id = a.unidade_trabalho_id
+    INNER JOIN macrocontrole.lote AS l ON l.id = ut.lote_id
+    WHERE l.status_id IN (1, 2)
+    AND a.tipo_situacao_id BETWEEN 1 AND 5
+    GROUP BY l.id, l.nome
+    HAVING COUNT(CASE WHEN a.tipo_situacao_id = 4
+                      AND a.data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
+                      THEN 1 END) > 0
+  ),
+  -- UT finalizada = todas as atividades da UT tem data_fim (mesmo criterio de getFinalizadasAno/getInfoSubfasePIT)
+  ut_situacao AS (
+    SELECT ut.id, (CASE WHEN count(*) - count(a.data_fim) = 0 THEN TRUE ELSE FALSE END) AS finalizada, max(a.data_fim) AS data_fim
+    FROM macrocontrole.unidade_trabalho AS ut
+    INNER JOIN macrocontrole.atividade AS a ON a.unidade_trabalho_id = ut.id
+    GROUP BY ut.id
+  ),
+  -- Produto finalizado = todas as UTs relacionadas a ele estao finalizadas
+  produto_situacao AS (
+    SELECT p.id, p.lote_id, bool_and(ut.finalizada) AS finalizada, max(ut.data_fim) AS data_fim
+    FROM macrocontrole.produto AS p
+    INNER JOIN macrocontrole.relacionamento_produto AS rp ON rp.p_id = p.id
+    INNER JOIN ut_situacao AS ut ON ut.id = rp.ut_id
+    GROUP BY p.id, p.lote_id
+  ),
+  produto_stats AS (
+    SELECT
+      lote_id,
+      COUNT(*) AS total_produtos,
+      COUNT(CASE WHEN finalizada
+                 AND data_fim BETWEEN $<dataInicio>::timestamptz AND $<dataFim>::timestamptz
+                 THEN 1 END) AS produtos_no_periodo,
+      COUNT(CASE WHEN finalizada AND data_fim <= $<dataFim>::timestamptz THEN 1 END) AS produtos_acumulado
+    FROM produto_situacao
+    GROUP BY lote_id
+  )
+  SELECT
+    a.lote_id, a.lote_nome, a.total_atividades, a.percent_exec, a.exec_no_periodo, a.percent_periodo,
+    a.exec_acumulado, a.percent_acumulado, a.tempo_medio_horas, a.desvio_padrao_tempo,
+    a.qtd_operadores_periodo,
+    COALESCE(p.total_produtos, 0) AS total_produtos,
+    COALESCE(p.produtos_no_periodo, 0) AS produtos_no_periodo,
+    COALESCE(p.produtos_acumulado, 0) AS produtos_acumulado
+  FROM atividades_stats AS a
+  LEFT JOIN produto_stats AS p ON p.lote_id = a.lote_id
+  ORDER BY a.percent_exec DESC;`,
     { dataInicio: `${dataInicio} 00:00:00`, dataFim: `${dataFim} 23:59:59` }
   );
 }
