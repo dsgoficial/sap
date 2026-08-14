@@ -1215,9 +1215,12 @@ controller.criaCamadas = async camadas => {
 
 controller.getPerfilFME = async () => {
   return db.sapConn.any(
-    `SELECT pf.id, pf.gerenciador_fme_id, pf.rotina, pf.requisito_finalizacao, pf.tipo_rotina_id, pf.subfase_id, pf.ordem, s.nome
+    // lote_id sai daqui porque perfilFMEAtualizacao o exige de volta. Sem ele o
+    // cliente nao consegue montar o PUT a partir do que leu.
+    `SELECT pf.id, pf.gerenciador_fme_id, pf.rotina, pf.requisito_finalizacao, pf.tipo_rotina_id, pf.subfase_id, pf.lote_id, pf.ordem, s.nome, l.nome AS lote
     FROM macrocontrole.perfil_fme AS pf
-    INNER JOIN macrocontrole.subfase AS s ON s.id = pf.subfase_id`
+    INNER JOIN macrocontrole.subfase AS s ON s.id = pf.subfase_id
+    INNER JOIN macrocontrole.lote AS l ON l.id = pf.lote_id`
   )
 }
 
