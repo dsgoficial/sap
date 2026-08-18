@@ -2,6 +2,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { ApiError } from '../types/api';
 import { logoutAndRedirect } from '../stores/authStore';
+import { API_BASE_PATH } from './basePath';
 
 // Token storage key
 const TOKEN_KEY = '@sap_web-Token';
@@ -11,7 +12,8 @@ const apiClient: AxiosInstance = axios.create({
   // Sempre use caminho relativo para evitar "localhost" no navegador do cliente.
   // DEV: o Vite proxy encaminha /api para o backend.
   // PROD: o servidor que entrega o frontend deve encaminhar /api para o backend.
-  baseURL: '/api',
+  // Respeita o prefixo de deploy: "/api" na raiz, "/sap/api" atras do proxy.
+  baseURL: API_BASE_PATH,
   headers: {
     'Content-Type': 'application/json',
   },

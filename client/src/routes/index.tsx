@@ -415,7 +415,11 @@ const routes: RouteObject[] = [
 ];
 
 // Create the router with the routes configuration
-const router = createBrowserRouter(routes);
+// basename = prefixo de deploy (VITE_BASE_PATH). Com ele os paths das rotas e
+// os redirects dos loaders continuam sendo escritos a partir da raiz do app.
+const router = createBrowserRouter(routes, {
+  basename: import.meta.env.BASE_URL,
+});
 
 // Export router instance for use outside of components
 export default router;

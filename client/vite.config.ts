@@ -11,6 +11,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   return {
+    // Prefixo em que o app é servido. "/" na raiz; "/sap/" quando está atrás
+    // de um proxy reverso em subcaminho (definido em .env.production).
+    base: env.VITE_BASE_PATH || '/',
     plugins: [
       react({
         jsxImportSource: '@emotion/react',

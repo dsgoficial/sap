@@ -12,6 +12,7 @@ const swaggerJSDoc = require('swagger-jsdoc')
 const noCache = require('nocache')
 
 const appRoutes = require('../routes')
+const config = require('../config')
 const swaggerOptions = require('./swagger_options')
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions)
@@ -25,6 +26,38 @@ const {
 } = require('../utils')
 
 const app = express()
+
+// Atrás de um proxy reverso (nginx), req.ip é o IP do proxy: o rate limit por
+// IP passa a ser um balde único para todos os usuários e os logs registram
+// sempre o mesmo endereço. TRUST_PROXY lista os proxies confiáveis, então o
+// Express resolve o IP real a partir do X-Forwarded-For.
+if (config.TRUST_PROXY) {
+  app.set(
+    'trust proxy',
+    config.TRUST_PROXY.split(',')
+      .map(item => item.trim())
+      .filter(Boolean)
+  )
+}
+
+// Prefixo público em que o frontend foi buildado (VITE_BASE_PATH), ex.: "/sap".
+// Atrás do nginx o prefixo já vem removido pelo proxy; ao acessar o servidor
+// direto na porta ele chega inteiro, e é removido aqui do mesmo jeito. Assim o
+// mesmo build funciona nos dois endereços.
+const publicPath = (config.PUBLIC_PATH || '').replace(/\/+$/, '')
+if (publicPath) {
+  app.use((req, res, next) => {
+    if (req.url === publicPath) {
+      return res.redirect(`${publicPath}/`)
+    }
+    // "/" não é redirecionado para o prefixo: atrás do proxy o "/" já é o
+    // prefixo removido, e o redirect viraria loop.
+    if (req.url.startsWith(`${publicPath}/`)) {
+      req.url = req.url.slice(publicPath.length)
+    }
+    return next()
+  })
+}
 
 // Add sendJsonAndLog to res object
 app.use(sendJsonAndLogMiddleware)

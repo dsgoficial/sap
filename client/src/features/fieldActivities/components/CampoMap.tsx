@@ -23,6 +23,7 @@ import Map, {
 } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useFieldActivities } from '@/hooks/useFieldActivities';
+import { API_BASE_PATH } from '@lib/basePath';
 import FieldFeaturePopup from './FieldFeaturePopup';
 import {
   useFieldActivitiesStore,
@@ -355,7 +356,7 @@ const CampoMap = ({ className }: CampoMapProps) => {
               // O tile MVT é buscado pelo MapLibre SEM header de auth, então o
               // token vai na query string (o backend aceita via ?token=).
               const token = localStorage.getItem('@sap_web-Token') || '';
-              const mvtUrl = `${window.location.origin}/api/campo/tracks/${encodeURIComponent(
+              const mvtUrl = `${window.location.origin}${API_BASE_PATH}/campo/tracks/${encodeURIComponent(
                 trackId,
               )}/{z}/{x}/{y}.mvt?token=${encodeURIComponent(token)}`;
 

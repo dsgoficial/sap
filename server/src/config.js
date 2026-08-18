@@ -48,7 +48,14 @@ const configSchema = Joi.object().keys({
     .required(),
   VERSION: Joi.string().required(),
   MIN_DATABASE_VERSION: Joi.string().required(),
-  MIN_MICROCONTROLE_VERSION: Joi.string().required()
+  MIN_MICROCONTROLE_VERSION: Joi.string().required(),
+  TRUST_PROXY: Joi.string()
+    .allow('')
+    .optional(),
+  PUBLIC_PATH: Joi.string()
+    .allow('')
+    .pattern(/^\/[^\s]*$/)
+    .optional()
 })
 
 /**
@@ -68,6 +75,8 @@ const configSchema = Joi.object().keys({
  * @property {string} VERSION - Versão da aplicação do SAP
  * @property {string} MIN_DATABASE_VERSION - Versão mínima do banco de dados do SAP compatível com a versão da aplicação
  * @property {string} MIN_MICROCONTROLE_VERSION - Versão mínima do banco de dados de microcontrole
+ * @property {string} TRUST_PROXY - Lista de proxies reversos confiáveis, separados por vírgula (ex.: "10.25.160.49,loopback"). Necessário quando o SAP fica atrás de um proxy, senão req.ip é o IP do proxy
+ * @property {string} PUBLIC_PATH - Prefixo público em que o frontend foi buildado (VITE_BASE_PATH), ex.: "/sap". Permite acessar o servidor direto na porta, sem o proxy reverso na frente
  */
 const config = {
   PORT: process.env.PORT,
@@ -81,7 +90,9 @@ const config = {
   AUTH_SERVER: process.env.AUTH_SERVER,
   VERSION,
   MIN_DATABASE_VERSION,
-  MIN_MICROCONTROLE_VERSION
+  MIN_MICROCONTROLE_VERSION,
+  TRUST_PROXY: process.env.TRUST_PROXY,
+  PUBLIC_PATH: process.env.PUBLIC_PATH
 }
 
 const { error } = configSchema.validate(config, {

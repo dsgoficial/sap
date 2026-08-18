@@ -3,6 +3,7 @@ import { ReactNode, useState } from 'react';
 import { Box, Container, Typography, alpha } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useThemeMode } from '@/contexts/ThemeContext';
+import { asset } from '@lib/basePath';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -69,7 +70,7 @@ export const AuthLayout = ({
   return (
     <BackgroundBox
       sx={{
-        backgroundImage: `url('/images/img-${imageNumber}.jpg')`,
+        backgroundImage: `url('${asset(`images/img-${imageNumber}.jpg`)}')`,
       }}
     >
       <ContentContainer maxWidth={maxWidth}>

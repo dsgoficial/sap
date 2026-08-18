@@ -9,6 +9,8 @@
 interface ImportMetaEnv {
   // Usado somente pelo proxy do Vite no desenvolvimento.
   readonly VITE_PROXY_TARGET?: string;
+  // Prefixo de deploy do frontend (vira o `base` do Vite). Ex.: "/sap/".
+  readonly VITE_BASE_PATH?: string;
 }
 
 interface ImportMeta {
