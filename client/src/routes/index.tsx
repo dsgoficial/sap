@@ -11,6 +11,7 @@ import { CircularProgress, Box } from '@mui/material';
 import { UserRole } from '../types/auth';
 import { ErrorBoundaryRoute } from './ErrorBoundaryRoute';
 import { isTokenExpired } from '../stores/authStore';
+import { appPath, ROUTER_BASENAME } from '@lib/basePath';
 
 // Layouts
 const DashboardLayout = lazy(() => import('@/components/layouts/AppLayout'));
@@ -155,9 +156,15 @@ const authLoader = () => {
 
       // Redirect to login and remember the intended destination
       // (preservando query string e hash, não só o pathname).
+      //
+      // O `pathname` do navegador inclui o basename, e as rotas do router não:
+      // guardar "/sap/relatorio" aqui fazia o `navigate` do login aplicar o
+      // prefixo outra vez ("/sap/sap/relatorio"), que não casa rota e termina
+      // no 404. `appPath` devolve o caminho do APP.
       const { pathname, search, hash } = window.location;
-      const currentPath = pathname + search + hash;
-      if (pathname !== '/' && pathname !== '/login') {
+      const rotaAtual = appPath(pathname);
+      const currentPath = rotaAtual + search + hash;
+      if (rotaAtual !== '/' && rotaAtual !== '/login') {
         return redirect(`/login?from=${encodeURIComponent(currentPath)}`);
       }
       return redirect('/login');
@@ -415,10 +422,11 @@ const routes: RouteObject[] = [
 ];
 
 // Create the router with the routes configuration
-// basename = prefixo de deploy (VITE_BASE_PATH). Com ele os paths das rotas e
-// os redirects dos loaders continuam sendo escritos a partir da raiz do app.
+// basename = prefixo em que a página REALMENTE abriu (ver lib/basePath.ts). Com
+// ele os paths das rotas e os redirects dos loaders continuam sendo escritos a
+// partir da raiz do app, e o mesmo build atende sob o prefixo e na raiz nua.
 const router = createBrowserRouter(routes, {
-  basename: import.meta.env.BASE_URL,
+  basename: ROUTER_BASENAME,
 });
 
 // Export router instance for use outside of components

@@ -1,6 +1,7 @@
 // Path: features\auth\routes\Login.tsx
 import { useState } from 'react';
 import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
+import { appPath } from '@lib/basePath';
 import {
   Box,
   TextField,
@@ -46,9 +47,15 @@ const Login = () => {
 
   // Sanitiza o destino pós-login: apenas caminhos internos (começam com "/" e
   // não com "//", que permitiria redirect para outro host).
+  //
+  // O `appPath` remove o prefixo de deploy: o `navigate` daqui já o aplica pelo
+  // basename, e um `from` que o traga dentro (de link antigo ou favorito) viria
+  // duplicado ("/sap/sap/...") e cairia no 404.
   const rawFrom = searchParams.get('from') || '/';
   const from =
-    rawFrom.startsWith('/') && !rawFrom.startsWith('//') ? rawFrom : '/';
+    rawFrom.startsWith('/') && !rawFrom.startsWith('//')
+      ? appPath(rawFrom)
+      : '/';
 
   // Get the random image number (1-5) for consistent layout with the original
   const [randomImageNumber] = useState(() => Math.floor(Math.random() * 5) + 1);
