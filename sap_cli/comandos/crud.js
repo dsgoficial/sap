@@ -171,6 +171,18 @@ async function executar (args, cfg) {
   // -------------------------------------------------------------------------
   if (op.metodo === 'GET') {
     const q = montarQuery(op, flags, modulo)
+    // --dry-run tambem vale para leitura. Sem isto o comando ia direto a rede e,
+    // como precisaServidor() dispensa credencial no dry-run, estourava num token
+    // nulo em vez de dizer o que faria.
+    if (flags['dry-run']) {
+      return {
+        texto: [
+          '[dry-run] nada foi enviado. A requisicao seria:',
+          `  GET /api${caminho}${q.texto}`
+        ].join('\n'),
+        avisos: q.avisos
+      }
+    }
     const r = await http.autenticada(cfg, 'GET', caminho + q.texto)
     const unico = op.acao === 'obter'
     const out = unico

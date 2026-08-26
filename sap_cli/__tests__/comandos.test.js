@@ -70,6 +70,50 @@ test('dry-run com corpo valido nao exige servidor e mostra a requisicao', async 
   assert.deepStrictEqual(r.avisos, [])
 })
 
+test('dry-run vale para LEITURA tambem, sem exigir credencial', async () => {
+  // Antes o ramo de GET ia direto a rede. Como precisaServidor() dispensa a
+  // credencial no dry-run, o comando estourava num token nulo em vez de dizer o
+  // que faria. Vale para todo recurso de leitura, nao so para os do metadados.
+  const r = await crud.executar(
+    parse(['xml_metadado', 'obter', '--dry-run', '--uuid', '11111111-2222-3333-4444-555555555555']),
+    null
+  )
+  assert.match(r.texto, /\[dry-run\] nada foi enviado/)
+  assert.match(r.texto, /GET \/api\/metadados\/xml\/produto\/11111111-2222-3333-4444-555555555555/)
+})
+
+test('metadado por lote passa no xor, e por lote MAIS produto reprova', async () => {
+  // informacoes_produto tem .xor('produto_id','lote_id'): exatamente um dos dois.
+  const base = {
+    resumo: 'x', proposito: '', creditos: '', informacoes_complementares: '',
+    limitacao_acesso_id: 1, limitacao_uso_id: 1, restricao_uso_id: 1, grau_sigilo_id: 1,
+    organizacao_responsavel_id: 1, organizacao_distribuicao_id: 1, datum_vertical_id: 1,
+    especificacao_id: 4, responsavel_produto_id: 1, declaracao_linhagem: '',
+    projeto_bdgex: 'Mapeamento Sistematico'
+  }
+  const bom = { informacoes_produto: [Object.assign({ lote_id: 101 }, base)] }
+  const r = await crud.executar(
+    parse(['metadado_produto', 'criar', '--dry-run', '--data', JSON.stringify(bom)]), null
+  )
+  assert.match(r.texto, /POST \/api\/metadados\/informacoes_produto/)
+
+  const torto = { informacoes_produto: [Object.assign({ lote_id: 101, produto_id: 1355 }, base)] }
+  await assert.rejects(
+    () => crud.executar(parse(['metadado_produto', 'criar', '--dry-run', '--data', JSON.stringify(torto)]), null),
+    err => /exclusive peers/.test(err.message)
+  )
+})
+
+test('palavra-chave e por PRODUTO: lote_id nao substitui produto_id', async () => {
+  await assert.rejects(
+    () => crud.executar(parse([
+      'metadado_palavra_chave', 'criar', '--dry-run',
+      '--data', JSON.stringify({ palavras_chave_produto: [{ nome: 'Paredao', tipo_palavra_chave_id: 5, lote_id: 101 }] })
+    ]), null),
+    err => /produto_id.*is required/.test(err.message)
+  )
+})
+
 test('dry-run com corpo invalido reprova e imprime o contrato do campo', async () => {
   const torto = JSON.parse(JSON.stringify(CAMPO_VALIDO))
   torto.campo.pit = '2026'

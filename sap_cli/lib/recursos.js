@@ -218,6 +218,129 @@ const RECURSOS = {
       { acao: 'criar', metodo: 'POST', sufixo: '', body: 'listaUsuario' },
       { acao: 'atualizar', metodo: 'PUT', sufixo: '', body: 'updateUsuarioLista' }
     ]
+  },
+
+  // -------------------------------------------------------------------------
+  // Modulo metadados: o que alimenta o XML (ISO 19115) e o JSON de edicao.
+  //
+  // Familia COLECAO, como a do modulo projeto: POST, PUT e DELETE todos no
+  // caminho da colecao, com array no corpo, inclusive no DELETE. Nenhuma rota
+  // aceita id na URL. Todas exigem admin.
+  //
+  // Duas armadilhas do contrato, que o schema do server ja diz e vale repetir
+  // porque custam caro:
+  //   - informacoes_produto e responsavel_fase_produto tem .xor(produto_id,
+  //     lote_id): exatamente UM dos dois, nunca os dois nem nenhum. Na pratica
+  //     a DGEO cadastra por LOTE.
+  //   - palavra_chave_produto NAO aceita lote_id. E por produto, sempre, porque
+  //     o toponimo e da folha.
+  // -------------------------------------------------------------------------
+  metadado_produto: {
+    nome: 'metadado do produto (resumo, sigilo, especificacao) - por lote ou por produto',
+    modulo: 'metadados',
+    caminho: '/metadados/informacoes_produto',
+    schema: carregar('metadados/metadados_schema'),
+    colunas: ['id', 'lote_id', 'produto_id', 'resumo', 'especificacao_id', 'grau_sigilo_id', 'projeto_bdgex'],
+    operacoes: [
+      { acao: 'listar', metodo: 'GET', sufixo: '' },
+      { acao: 'criar', metodo: 'POST', sufixo: '', body: 'informacoesProduto' },
+      { acao: 'atualizar', metodo: 'PUT', sufixo: '', body: 'informacoesProdutoAtualizacao' },
+      { acao: 'deletar', metodo: 'DELETE', sufixo: '', body: 'informacoesProdutoIds' }
+    ]
+  },
+
+  metadado_responsavel: {
+    nome: 'responsavel por fase do produto (vira a linhagem do XML)',
+    modulo: 'metadados',
+    caminho: '/metadados/responsavel_fase_produto',
+    schema: carregar('metadados/metadados_schema'),
+    colunas: ['id', 'lote_id', 'produto_id', 'fase_id', 'usuario_id'],
+    operacoes: [
+      { acao: 'listar', metodo: 'GET', sufixo: '' },
+      { acao: 'criar', metodo: 'POST', sufixo: '', body: 'responsavelFaseProduto' },
+      { acao: 'atualizar', metodo: 'PUT', sufixo: '', body: 'responsavelFaseProdutoAtualizacao' },
+      { acao: 'deletar', metodo: 'DELETE', sufixo: '', body: 'responsavelFaseProdutoIds' }
+    ]
+  },
+
+  metadado_palavra_chave: {
+    nome: 'palavra-chave do produto (toponimo da folha) - SO por produto',
+    modulo: 'metadados',
+    caminho: '/metadados/palavra_chave_produto',
+    schema: carregar('metadados/metadados_schema'),
+    colunas: ['id', 'produto_id', 'nome', 'tipo_palavra_chave_id'],
+    operacoes: [
+      { acao: 'listar', metodo: 'GET', sufixo: '' },
+      { acao: 'criar', metodo: 'POST', sufixo: '', body: 'palavraChaveProduto' },
+      { acao: 'atualizar', metodo: 'PUT', sufixo: '', body: 'palavraChaveProdutoAtualizacao' },
+      { acao: 'deletar', metodo: 'DELETE', sufixo: '', body: 'palavraChaveProdutoIds' }
+    ]
+  },
+
+  metadado_edicao: {
+    nome: 'informacoes de edicao do lote (alimenta o JSON de edicao da carta)',
+    modulo: 'metadados',
+    caminho: '/metadados/informacoes_edicao',
+    schema: carregar('metadados/metadados_schema'),
+    colunas: ['id', 'lote_id', 'produto_id', 'tipo_produto', 'versao_produto', 'pec_planimetrico', 'pec_altimetrico', 'licenca_produto'],
+    operacoes: [
+      { acao: 'listar', metodo: 'GET', sufixo: '' },
+      { acao: 'criar', metodo: 'POST', sufixo: '', body: 'informacoesEdicao' },
+      { acao: 'atualizar', metodo: 'PUT', sufixo: '', body: 'informacoesEdicaoAtualizacao' },
+      { acao: 'deletar', metodo: 'DELETE', sufixo: '', body: 'informacoesEdicaoIds' }
+    ]
+  },
+
+  metadado_creditos_qpt: {
+    nome: 'creditos do QPT (quadro de pessoal do produto)',
+    modulo: 'metadados',
+    caminho: '/metadados/creditos_qpt',
+    schema: carregar('metadados/metadados_schema'),
+    colunas: ['id', 'lote_id', 'produto_id'],
+    operacoes: [
+      { acao: 'listar', metodo: 'GET', sufixo: '' },
+      { acao: 'criar', metodo: 'POST', sufixo: '', body: 'creditosQpt' },
+      { acao: 'atualizar', metodo: 'PUT', sufixo: '', body: 'creditosQptAtualizacao' },
+      { acao: 'deletar', metodo: 'DELETE', sufixo: '', body: 'creditosQptIds' }
+    ]
+  },
+
+  metadado_usuario: {
+    nome: 'pessoa que assina o metadado (responsavel e processor da linhagem)',
+    modulo: 'metadados',
+    caminho: '/metadados/usuario',
+    schema: carregar('metadados/metadados_schema'),
+    colunas: ['id', 'nome', 'nome_guerra', 'funcao', 'seguranca'],
+    operacoes: [
+      { acao: 'listar', metodo: 'GET', sufixo: '' },
+      { acao: 'criar', metodo: 'POST', sufixo: '', body: 'usuario' },
+      { acao: 'atualizar', metodo: 'PUT', sufixo: '', body: 'usuarioAtualizacao' },
+      { acao: 'deletar', metodo: 'DELETE', sufixo: '', body: 'usuarioIds' }
+    ]
+  },
+
+  // Os dois EXPORTADORES. Nao sao CRUD: devolvem o documento pronto de UM
+  // produto, pelo uuid. Sao a razao de existir de todo o resto deste modulo.
+  xml_metadado: {
+    nome: 'XML de metadados (ISO 19115) de um produto, pelo uuid',
+    modulo: 'metadados',
+    caminho: '/metadados/xml/produto',
+    schema: carregar('metadados/metadados_schema'),
+    colunas: [],
+    operacoes: [
+      { acao: 'obter', metodo: 'GET', sufixo: '/:uuid', chave: 'uuid' }
+    ]
+  },
+
+  json_edicao: {
+    nome: 'JSON de edicao da carta de um produto, pelo uuid',
+    modulo: 'metadados',
+    caminho: '/metadados/json_edicao/produto',
+    schema: carregar('metadados/metadados_schema'),
+    colunas: [],
+    operacoes: [
+      { acao: 'obter', metodo: 'GET', sufixo: '/:uuid', chave: 'uuid' }
+    ]
   }
 }
 
@@ -247,7 +370,15 @@ const DOMINIOS = {
   campo_categoria: '/campo/categoria',
   capacitacao_situacao: '/capacitacao/situacao',
   capacitacao_tipos: '/capacitacao/tipos',
-  extra_pit_situacao: '/extra_pit/situacao'
+  extra_pit_situacao: '/extra_pit/situacao',
+  // Dominios do modulo metadados. Sao os *_id que informacoes_produto exige.
+  metadado_organizacao: '/metadados/organizacao',
+  metadado_especificacao: '/metadados/especificacao',
+  metadado_datum_vertical: '/metadados/datum_vertical',
+  metadado_codigo_restricao: '/metadados/codigo_restricao',
+  metadado_codigo_classificacao: '/metadados/codigo_classificacao',
+  metadado_tipo_palavra_chave: '/metadados/tipo_palavra_chave',
+  metadado_usuario: '/metadados/usuario'
 }
 
 function obter (chave) {
