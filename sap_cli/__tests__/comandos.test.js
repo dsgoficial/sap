@@ -104,6 +104,33 @@ test('metadado por lote passa no xor, e por lote MAIS produto reprova', async ()
   )
 })
 
+test('organizacao so tem listar e atualizar, e o PUT exige o code', async () => {
+  // A organizacao e dominio E registro editavel. O UPDATE do server casa por
+  // `code` (nao por id serial) e SOBRESCREVE os cinco campos de contato, entao
+  // quem atualiza tem de reenviar os que nao mudam, senao eles vao a null.
+  const r = await crud.executar(
+    parse(['metadado_organizacao', 'listar', '--dry-run']), null
+  )
+  assert.match(r.texto, /GET \/api\/metadados\/organizacao/)
+
+  await assert.rejects(
+    () => crud.executar(parse(['metadado_organizacao', 'criar', '--dry-run', '--data', '{}']), null),
+    err => /Acao "criar" nao existe/.test(err.message)
+  )
+
+  const bom = { organizacoes: [{ code: 1, nome: 'x', sigla: 'y', endereco: 'z', telefone: '(51)0000-0000', site: 'http://x/' }] }
+  const ok = await crud.executar(
+    parse(['metadado_organizacao', 'atualizar', '--dry-run', '--data', JSON.stringify(bom)]), null
+  )
+  assert.match(ok.texto, /PUT \/api\/metadados\/organizacao/)
+
+  const semCode = { organizacoes: [{ nome: 'x' }] }
+  await assert.rejects(
+    () => crud.executar(parse(['metadado_organizacao', 'atualizar', '--dry-run', '--data', JSON.stringify(semCode)]), null),
+    err => /code/.test(err.message)
+  )
+})
+
 test('palavra-chave e por PRODUTO: lote_id nao substitui produto_id', async () => {
   await assert.rejects(
     () => crud.executar(parse([

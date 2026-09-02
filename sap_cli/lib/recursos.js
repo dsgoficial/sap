@@ -305,6 +305,22 @@ const RECURSOS = {
     ]
   },
 
+  // A organizacao produtora/distribuidora. E dominio (o organizacao_id de
+  // informacoes_produto) e tambem registro EDITAVEL: nome, sigla, endereco,
+  // telefone e site dela vao para o XML de metadados de TODO produto dela.
+  // Chave e o `code`, nao um id serial, e o recurso so tem listar e atualizar.
+  metadado_organizacao: {
+    nome: 'organizacao produtora/distribuidora (contato que vai ao XML de todo produto dela)',
+    modulo: 'metadados',
+    caminho: '/metadados/organizacao',
+    schema: carregar('metadados/metadados_schema'),
+    colunas: ['code', 'nome', 'sigla', 'endereco', 'telefone', 'site'],
+    operacoes: [
+      { acao: 'listar', metodo: 'GET', sufixo: '' },
+      { acao: 'atualizar', metodo: 'PUT', sufixo: '', body: 'organizacao' }
+    ]
+  },
+
   metadado_usuario: {
     nome: 'pessoa que assina o metadado (responsavel e processor da linhagem)',
     modulo: 'metadados',
