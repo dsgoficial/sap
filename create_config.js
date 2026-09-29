@@ -157,7 +157,7 @@ DB_PORT=${answers.db_port}
 DB_NAME=${answers.db_name}
 DB_USER=${answers.db_user}
 DB_PASSWORD=${answers.db_password}
-JWT_SECRET=tassofragoso`;
+JWT_SECRET=${require("crypto").randomBytes(32).toString("hex")}`;
 
       let exists = fs.existsSync(".env");
       if (exists) {
