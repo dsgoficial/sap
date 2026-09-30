@@ -63,8 +63,8 @@ export interface LoteOption {
 }
 
 /**
- * Lista de lotes cadastrados (GET /projeto/lote, admin-only). Usada apenas para
- * popular o seletor de filtro de lote.
+ * Lista de lotes em execucao (GET /projeto/lote?status=execucao, admin-only).
+ * Usada apenas para popular o seletor de filtro de lote.
  * @param cancelToken Token para possivel cancelamento da requisicao
  */
 export const getLotesList = (
@@ -74,7 +74,7 @@ export const getLotesList = (
     '/projeto/lote',
     'Erro ao buscar a lista de lotes',
     'getLotesList',
-    { cancelToken },
+    { params: { status: 'execucao' }, cancelToken },
   );
 
 /**
