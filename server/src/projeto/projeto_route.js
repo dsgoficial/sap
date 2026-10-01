@@ -5348,7 +5348,7 @@ router.put(
  *                     description: Nome da configuração
  *                   definicao_colunas:
  *                     type: string
- *                     description: JSON em texto no formato {"tabela": ["coluna"]}
+ *                     description: 'JSON em texto no formato {"tabela": ["coluna"]}'
  */
 router.get(
   '/colunas_ocultas',
