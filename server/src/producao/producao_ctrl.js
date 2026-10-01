@@ -161,6 +161,16 @@ const getInfoTemas = async (connection, subfaseId, loteId) => {
   );
 };
 
+const getInfoColunasOcultas = async (connection, subfaseId, loteId) => {
+  return connection.any(
+    `SELECT lc.nome, lc.definicao_colunas
+    FROM macrocontrole.perfil_colunas_ocultas AS pc
+    INNER JOIN dgeo.layer_colunas_ocultas AS lc ON lc.id = pc.colunas_ocultas_id
+    WHERE pc.subfase_id = $<subfaseId> AND pc.lote_id = $<loteId>`,
+    { subfaseId, loteId },
+  );
+};
+
 const getInfoConfigQGIS = async (connection, subfaseId, loteId) => {
   return connection.any(
     "SELECT tipo_configuracao_id, parametros FROM macrocontrole.perfil_configuracao_qgis WHERE subfase_id = $<subfaseId> AND lote_id = $<loteId>",
@@ -409,6 +419,12 @@ const dadosProducao = async (atividadeId) => {
     );
 
     info.atividade.temas = await getInfoTemas(
+      t,
+      dadosut.subfase_id,
+      dadosut.lote_id,
+    );
+
+    info.atividade.colunas_ocultas = await getInfoColunasOcultas(
       t,
       dadosut.subfase_id,
       dadosut.lote_id,

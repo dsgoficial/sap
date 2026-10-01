@@ -5320,6 +5320,319 @@ router.put(
 
 /**
  * @swagger
+ * /api/projeto/colunas_ocultas:
+ *   get:
+ *     summary: Retorna as configurações de colunas ocultas
+ *     description: Retorna as configurações que definem quais colunas a tabela de atributos do QGIS oculta para o operador.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Colunas Ocultas
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Configurações de colunas ocultas retornadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID da configuração
+ *                   nome:
+ *                     type: string
+ *                     description: Nome da configuração
+ *                   definicao_colunas:
+ *                     type: string
+ *                     description: JSON em texto no formato {"tabela": ["coluna"]}
+ */
+router.get(
+  '/colunas_ocultas',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getColunasOcultas()
+
+    const msg = 'Colunas ocultas retornadas'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/colunas_ocultas:
+ *   post:
+ *     summary: Cria configurações de colunas ocultas
+ *     description: Insere novas configurações de colunas ocultas no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Colunas Ocultas
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/colunasOcultas'
+ *     responses:
+ *       201:
+ *         description: Colunas ocultas gravadas com sucesso
+ */
+router.post(
+  '/colunas_ocultas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.colunasOcultas }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.gravaColunasOcultas(req.body.colunas_ocultas, req.usuarioId)
+
+    const msg = 'Colunas ocultas gravadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/colunas_ocultas:
+ *   put:
+ *     summary: Atualiza configurações de colunas ocultas
+ *     description: Atualiza as configurações de colunas ocultas cadastradas no sistema.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Colunas Ocultas
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/colunasOcultasAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Colunas ocultas atualizadas com sucesso
+ */
+router.put(
+  '/colunas_ocultas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.colunasOcultasAtualizacao }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaColunasOcultas(req.body.colunas_ocultas, req.usuarioId)
+
+    const msg = 'Colunas ocultas atualizadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/colunas_ocultas:
+ *   delete:
+ *     summary: Deleta configurações de colunas ocultas
+ *     description: Remove configurações de colunas ocultas com base nos IDs fornecidos. Falha se alguma estiver associada a um perfil.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Colunas Ocultas
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/colunasOcultasIds'
+ *     responses:
+ *       200:
+ *         description: Colunas ocultas deletadas com sucesso
+ */
+router.delete(
+  '/colunas_ocultas',
+  verifyAdmin,
+  schemaValidation({ body: projetoSchema.colunasOcultasIds }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletaColunasOcultas(req.body.colunas_ocultas_ids)
+
+    const msg = 'Colunas ocultas deletadas com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_colunas_ocultas:
+ *   get:
+ *     summary: Retorna os perfis de colunas ocultas
+ *     description: Retorna a associação das configurações de colunas ocultas por subfase e lote.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfis de colunas ocultas retornados com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: ID do perfil
+ *                   colunas_ocultas_id:
+ *                     type: integer
+ *                   subfase_id:
+ *                     type: integer
+ *                   lote_id:
+ *                     type: integer
+ *                   colunas_ocultas:
+ *                     type: string
+ *                     description: Nome da configuração
+ */
+router.get(
+  '/configuracao/perfil_colunas_ocultas',
+  verifyAdmin,
+  asyncHandler(async (req, res, next) => {
+    const dados = await projetoCtrl.getPerfilColunasOcultas()
+
+    const msg = 'Perfis de colunas ocultas retornados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK, dados)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_colunas_ocultas:
+ *   delete:
+ *     summary: Deleta perfis de colunas ocultas
+ *     description: Remove perfis de colunas ocultas com base nos IDs fornecidos.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilColunasOcultasIds'
+ *     responses:
+ *       200:
+ *         description: Perfis de colunas ocultas deletados com sucesso
+ */
+router.delete(
+  '/configuracao/perfil_colunas_ocultas',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilColunasOcultasIds
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.deletePerfilColunasOcultas(req.body.perfil_colunas_ocultas_ids)
+
+    const msg = 'Perfis de colunas ocultas deletados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_colunas_ocultas:
+ *   post:
+ *     summary: Cria perfis de colunas ocultas
+ *     description: Associa configurações de colunas ocultas a subfases e lotes.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilColunasOcultas'
+ *     responses:
+ *       201:
+ *         description: Perfis de colunas ocultas criados com sucesso
+ */
+router.post(
+  '/configuracao/perfil_colunas_ocultas',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilColunasOcultas
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.criaPerfilColunasOcultas(req.body.perfis_colunas_ocultas)
+
+    const msg = 'Perfis de colunas ocultas criados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.Created)
+  })
+)
+
+/**
+ * @swagger
+ * /api/projeto/configuracao/perfil_colunas_ocultas:
+ *   put:
+ *     summary: Atualiza perfis de colunas ocultas
+ *     description: Atualiza as associações de colunas ocultas por subfase e lote.
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - Configurações
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/perfilColunasOcultasAtualizacao'
+ *     responses:
+ *       200:
+ *         description: Perfis de colunas ocultas atualizados com sucesso
+ */
+router.put(
+  '/configuracao/perfil_colunas_ocultas',
+  verifyAdmin,
+  schemaValidation({
+    body: projetoSchema.perfilColunasOcultasAtualizacao
+  }),
+  asyncHandler(async (req, res, next) => {
+    await projetoCtrl.atualizaPerfilColunasOcultas(req.body.perfis_colunas_ocultas)
+
+    const msg = 'Perfis de colunas ocultas atualizados com sucesso'
+
+    return res.sendJsonAndLog(true, msg, httpCode.OK)
+  })
+)
+
+/**
+ * @swagger
  * /api/projeto/unidade_trabalho/reshape:
  *   put:
  *     summary: Realiza o reshape de uma unidade de trabalho
@@ -5868,7 +6181,8 @@ router.post(
       req.body.copiar_tema,
       req.body.copiar_fme,
       req.body.copiar_configuracao_qgis,
-      req.body.copiar_monitoramento
+      req.body.copiar_monitoramento,
+      req.body.copiar_colunas_ocultas
     )
 
     const msg = 'Configurações de Lote copiadas com sucesso.'

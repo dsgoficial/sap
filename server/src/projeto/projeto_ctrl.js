@@ -3290,6 +3290,163 @@ controller.deletePerfilLinhagem = async perfilLinhagemId => {
   })
 }
 
+controller.getPerfilColunasOcultas = async () => {
+  return db.sapConn.any(
+    `SELECT pc.id, pc.colunas_ocultas_id, pc.subfase_id, pc.lote_id,
+    lc.nome AS colunas_ocultas, lc.definicao_colunas
+    FROM macrocontrole.perfil_colunas_ocultas AS pc
+    INNER JOIN dgeo.layer_colunas_ocultas AS lc ON lc.id = pc.colunas_ocultas_id`
+  )
+}
+
+controller.criaPerfilColunasOcultas = async perfilColunasOcultas => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'colunas_ocultas_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query = db.pgp.helpers.insert(perfilColunasOcultas, cs, {
+      table: 'perfil_colunas_ocultas',
+      schema: 'macrocontrole'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaPerfilColunasOcultas = async perfilColunasOcultas => {
+  return db.sapConn.tx(async t => {
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'colunas_ocultas_id',
+      'subfase_id',
+      'lote_id'
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        perfilColunasOcultas,
+        cs,
+        { table: 'perfil_colunas_ocultas', schema: 'macrocontrole' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletePerfilColunasOcultas = async perfilColunasOcultasId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM macrocontrole.perfil_colunas_ocultas
+      WHERE id in ($<perfilColunasOcultasId:csv>)`,
+      { perfilColunasOcultasId }
+    )
+    if (exists && exists.length < perfilColunasOcultasId.length) {
+      throw new AppError(
+        'O id informado não corresponde a um perfil de colunas ocultas',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM macrocontrole.perfil_colunas_ocultas
+      WHERE id in ($<perfilColunasOcultasId:csv>)`,
+      { perfilColunasOcultasId }
+    )
+  })
+}
+
+controller.getColunasOcultas = async () => {
+  return db.sapConn.any(
+    'SELECT id, nome, definicao_colunas, owner, update_time FROM dgeo.layer_colunas_ocultas'
+  )
+}
+
+controller.gravaColunasOcultas = async (colunasOcultas, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'nome',
+      'definicao_colunas',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query = db.pgp.helpers.insert(colunasOcultas, cs, {
+      table: 'layer_colunas_ocultas',
+      schema: 'dgeo'
+    })
+
+    await t.none(query)
+  })
+}
+
+controller.atualizaColunasOcultas = async (colunasOcultas, usuarioId) => {
+  return db.sapConn.tx(async t => {
+    const usuarioPostoNome = await getUsuarioNomeById(usuarioId)
+
+    const cs = new db.pgp.helpers.ColumnSet([
+      'id',
+      'nome',
+      'definicao_colunas',
+      { name: 'owner', init: () => usuarioPostoNome },
+      { name: 'update_time', mod: ':raw', init: () => 'NOW()' }
+    ])
+
+    const query =
+      db.pgp.helpers.update(
+        colunasOcultas,
+        cs,
+        { table: 'layer_colunas_ocultas', schema: 'dgeo' },
+        {
+          tableAlias: 'X',
+          valueAlias: 'Y'
+        }
+      ) + 'WHERE Y.id = X.id'
+    await t.none(query)
+  })
+}
+
+controller.deletaColunasOcultas = async colunasOcultasId => {
+  return db.sapConn.task(async t => {
+    const exists = await t.any(
+      `SELECT id FROM dgeo.layer_colunas_ocultas
+      WHERE id in ($<colunasOcultasId:csv>)`,
+      { colunasOcultasId }
+    )
+    if (exists && exists.length < colunasOcultasId.length) {
+      throw new AppError(
+        'O id informado não corresponde a uma configuração de colunas ocultas',
+        httpCode.BadRequest
+      )
+    }
+
+    const emUso = await t.any(
+      `SELECT id FROM macrocontrole.perfil_colunas_ocultas
+      WHERE colunas_ocultas_id in ($<colunasOcultasId:csv>)`,
+      { colunasOcultasId }
+    )
+    if (emUso.length > 0) {
+      throw new AppError(
+        'A configuração de colunas ocultas está associada a um perfil e não pode ser excluída',
+        httpCode.BadRequest
+      )
+    }
+
+    return t.any(
+      `DELETE FROM dgeo.layer_colunas_ocultas
+      WHERE id in ($<colunasOcultasId:csv>)`,
+      { colunasOcultasId }
+    )
+  })
+}
+
 controller.getPerfilTemas = async () => {
   return db.sapConn.any(
     `SELECT pt.id, pt.tema_id, pt.subfase_id, pt.lote_id,
@@ -3883,7 +4040,8 @@ controller.copiarConfiguracaoLote = async (
   copiar_tema,
   copiar_fme,
   copiar_configuracao_qgis,
-  copiar_monitoramento
+  copiar_monitoramento,
+  copiar_colunas_ocultas = false
 ) => {
   let valid = await db.sapConn.any(
     `
@@ -4004,6 +4162,18 @@ controller.copiarConfiguracaoLote = async (
         INSERT INTO macrocontrole.perfil_tema(tema_id,subfase_id,lote_id)
         SELECT pe.tema_id, pe.subfase_id, $<lote_id_destino> AS lote_id
         FROM macrocontrole.perfil_tema AS pe
+        WHERE pe.lote_id = $<lote_id_origem>
+        `,
+        { lote_id_origem, lote_id_destino }
+      )
+    }
+
+    if (copiar_colunas_ocultas) {
+      await t.any(
+        `
+        INSERT INTO macrocontrole.perfil_colunas_ocultas(colunas_ocultas_id,subfase_id,lote_id)
+        SELECT pe.colunas_ocultas_id, pe.subfase_id, $<lote_id_destino> AS lote_id
+        FROM macrocontrole.perfil_colunas_ocultas AS pe
         WHERE pe.lote_id = $<lote_id_origem>
         `,
         { lote_id_origem, lote_id_destino }

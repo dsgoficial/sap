@@ -1,6 +1,6 @@
 {
   "name": "sap",
-  "version": "2.3.5",
+  "version": "2.3.6",
   "description": "Sistema de Apoio a Produção",
   "main": "src/index.js",
   "repository": {

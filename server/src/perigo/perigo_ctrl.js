@@ -412,6 +412,7 @@ controller.deleteLoteSemProduto = async () => {
     await t.none(`DELETE FROM macrocontrole.perfil_regras WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
     await t.none(`DELETE FROM macrocontrole.perfil_menu WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
     await t.none(`DELETE FROM macrocontrole.perfil_tema WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
+    await t.none(`DELETE FROM macrocontrole.perfil_colunas_ocultas WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
     await t.none(`DELETE FROM macrocontrole.perfil_model_qgis WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
     await t.none(`DELETE FROM macrocontrole.perfil_linhagem WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });
     await t.none(`DELETE FROM macrocontrole.perfil_workflow_dsgtools WHERE lote_id IN ($<loteIds:csv>)`, { loteIds });

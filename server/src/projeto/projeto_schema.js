@@ -4,6 +4,45 @@ const Joi = require('joi')
 
 const models = {}
 
+// A definicao de colunas ocultas e um JSON em texto: {"<tabela>": ["<coluna>"]}.
+// "*" vale para toda camada da atividade. O formato e validado aqui porque o
+// SAP_Operador aplica o conteudo sem conferir: um JSON malformado chegaria a
+// estacao do operador e derrubaria o carregamento da atividade.
+const validaDefinicaoColunas = (value, helpers) => {
+  let definicao
+  try {
+    definicao = JSON.parse(value)
+  } catch (e) {
+    return helpers.message('"definicao_colunas" deve ser um JSON válido')
+  }
+  if (!definicao || typeof definicao !== 'object' || Array.isArray(definicao)) {
+    return helpers.message(
+      '"definicao_colunas" deve ser um objeto JSON que associa cada tabela a uma lista de colunas'
+    )
+  }
+  const chaves = Object.keys(definicao)
+  if (chaves.length === 0) {
+    return helpers.message('"definicao_colunas" não pode ser um objeto vazio')
+  }
+  for (const chave of chaves) {
+    const colunas = definicao[chave]
+    const valido =
+      chave.trim() !== '' &&
+      Array.isArray(colunas) &&
+      colunas.every(c => typeof c === 'string' && c.trim() !== '')
+    if (!valido) {
+      return helpers.message(
+        {
+          custom:
+            '"definicao_colunas": a chave "{#chave}" deve ser um nome de tabela com uma lista de nomes de colunas'
+        },
+        { chave }
+      )
+    }
+  }
+  return value
+}
+
 models.idParams = Joi.object().keys({
   id: Joi.number().integer().required()
 })
@@ -143,6 +182,41 @@ models.temasAtualizacao = Joi.object().keys({
 
 models.temasIds = Joi.object().keys({
   temas_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
+models.colunasOcultas = Joi.object().keys({
+  colunas_ocultas: Joi.array()
+    .items(
+      Joi.object().keys({
+        nome: Joi.string().required(),
+        definicao_colunas: Joi.string().custom(validaDefinicaoColunas).required()
+      })
+    )
+    .unique('nome')
+    .required()
+    .min(1)
+})
+
+models.colunasOcultasAtualizacao = Joi.object().keys({
+  colunas_ocultas: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        nome: Joi.string().required(),
+        definicao_colunas: Joi.string().custom(validaDefinicaoColunas).required()
+      })
+    )
+    .unique('id')
+    .required()
+    .min(1)
+})
+
+models.colunasOcultasIds = Joi.object().keys({
+  colunas_ocultas_ids: Joi.array()
     .items(Joi.number().integer().strict().required())
     .unique()
     .required()
@@ -480,6 +554,14 @@ models.perfilEstilosIds = Joi.object().keys({
     .min(1)
 })
 
+models.perfilColunasOcultasIds = Joi.object().keys({
+  perfil_colunas_ocultas_ids: Joi.array()
+    .items(Joi.number().integer().strict().required())
+    .unique()
+    .required()
+    .min(1)
+})
+
 models.perfilTemasIds = Joi.object().keys({
   perfil_temas_ids: Joi.array()
     .items(Joi.number().integer().strict().required())
@@ -622,6 +704,33 @@ models.perfilTemasAtualizacao = Joi.object().keys({
       Joi.object().keys({
         id: Joi.number().integer().strict().required(),
         tema_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilColunasOcultas = Joi.object().keys({
+  perfis_colunas_ocultas: Joi.array()
+    .items(
+      Joi.object().keys({
+        colunas_ocultas_id: Joi.number().integer().strict().required(),
+        subfase_id: Joi.number().integer().strict().required(),
+        lote_id: Joi.number().integer().strict().required()
+      })
+    )
+    .required()
+    .min(1)
+})
+
+models.perfilColunasOcultasAtualizacao = Joi.object().keys({
+  perfis_colunas_ocultas: Joi.array()
+    .items(
+      Joi.object().keys({
+        id: Joi.number().integer().strict().required(),
+        colunas_ocultas_id: Joi.number().integer().strict().required(),
         subfase_id: Joi.number().integer().strict().required(),
         lote_id: Joi.number().integer().strict().required()
       })
@@ -1276,6 +1385,7 @@ models.configuracaoLoteCopiar = Joi.object().keys({
   copiar_linhagem: Joi.boolean().strict().required(),
   copiar_finalizacao: Joi.boolean().strict().required(),
   copiar_tema: Joi.boolean().strict().required(),
+  copiar_colunas_ocultas: Joi.boolean().strict().default(false),
   copiar_fme: Joi.boolean().strict().required(),
   copiar_configuracao_qgis: Joi.boolean().strict().required(),
   copiar_monitoramento: Joi.boolean().strict().required()
@@ -1553,6 +1663,49 @@ models.ativoQuery = Joi.object().keys({
  *       required:
  *         - temas_ids
  *     
+ *     colunasOcultas:
+ *       type: object
+ *       properties:
+ *         colunas_ocultas:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               definicao_colunas:
+ *                 type: string
+ *                 description: 'JSON em texto no formato {"tabela": ["coluna"]}; a chave "*" vale para toda camada'
+ *       required:
+ *         - colunas_ocultas
+ *
+ *     colunasOcultasAtualizacao:
+ *       type: object
+ *       properties:
+ *         colunas_ocultas:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               nome:
+ *                 type: string
+ *               definicao_colunas:
+ *                 type: string
+ *       required:
+ *         - colunas_ocultas
+ *
+ *     colunasOcultasIds:
+ *       type: object
+ *       properties:
+ *         colunas_ocultas_ids:
+ *           type: array
+ *           items:
+ *             type: integer
+ *       required:
+ *         - colunas_ocultas_ids
+ *
  *     regras:
  *       type: object
  *       properties:
@@ -2118,6 +2271,52 @@ models.ativoQuery = Joi.object().keys({
  *       required:
  *         - perfis_temas
  *     
+ *     perfilColunasOcultas:
+ *       type: object
+ *       properties:
+ *         perfis_colunas_ocultas:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               colunas_ocultas_id:
+ *                 type: integer
+ *               subfase_id:
+ *                 type: integer
+ *               lote_id:
+ *                 type: integer
+ *       required:
+ *         - perfis_colunas_ocultas
+ *
+ *     perfilColunasOcultasAtualizacao:
+ *       type: object
+ *       properties:
+ *         perfis_colunas_ocultas:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               colunas_ocultas_id:
+ *                 type: integer
+ *               subfase_id:
+ *                 type: integer
+ *               lote_id:
+ *                 type: integer
+ *       required:
+ *         - perfis_colunas_ocultas
+ *
+ *     perfilColunasOcultasIds:
+ *       type: object
+ *       properties:
+ *         perfil_colunas_ocultas_ids:
+ *           type: array
+ *           items:
+ *             type: integer
+ *       required:
+ *         - perfil_colunas_ocultas_ids
+ *
  *     perfisRequisito:
  *       type: object
  *       properties:
@@ -2232,6 +2431,9 @@ models.ativoQuery = Joi.object().keys({
  *           type: boolean
  *         copiar_tema:
  *           type: boolean
+ *         copiar_colunas_ocultas:
+ *           type: boolean
+ *           description: Opcional; assume false quando omitido
  *         copiar_fme:
  *           type: boolean
  *         copiar_configuracao_qgis:

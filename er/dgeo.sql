@@ -160,6 +160,15 @@ CREATE TABLE dgeo.layer_alias(
     CONSTRAINT unique_alias UNIQUE (nome)
 );
 
+CREATE TABLE dgeo.layer_colunas_ocultas(
+	  id SERIAL NOT NULL PRIMARY KEY,
+    nome text NOT NULL,
+    definicao_colunas text NOT NULL,
+    owner varchar(255) NOT NULL,
+	  update_time timestamp without time zone NOT NULL DEFAULT now(),
+    CONSTRAINT unique_colunas_ocultas UNIQUE (nome)
+);
+
 CREATE TABLE dgeo.group_styles(
   	id SERIAL NOT NULL PRIMARY KEY,
     nome varchar(255) NOT NULL,

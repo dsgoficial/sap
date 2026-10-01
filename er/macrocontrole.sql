@@ -180,6 +180,14 @@ CREATE TABLE macrocontrole.perfil_regras(
 	UNIQUE(layer_rules_id,subfase_id,lote_id)
 );
 
+CREATE TABLE macrocontrole.perfil_colunas_ocultas(
+	id SERIAL NOT NULL PRIMARY KEY,
+	colunas_ocultas_id INTEGER NOT NULL REFERENCES dgeo.layer_colunas_ocultas (id),
+	subfase_id INTEGER NOT NULL REFERENCES macrocontrole.subfase (id),
+	lote_id INTEGER NOT NULL REFERENCES macrocontrole.lote (id),
+	UNIQUE(colunas_ocultas_id,subfase_id,lote_id)
+);
+
 CREATE TABLE macrocontrole.perfil_menu(
 	id SERIAL NOT NULL PRIMARY KEY,
 	menu_id INTEGER NOT NULL REFERENCES dgeo.qgis_menus (id),
