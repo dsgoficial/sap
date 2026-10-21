@@ -874,6 +874,24 @@ const resolveLicenca = infoEdicao => {
   return infoEdicao.licenca_produto || 'CC-BY-SA 4.0'
 }
 
+// Localizacao da folha no JSON: SCN leva inom; nao-SCN leva center + escala.
+// So e SCN quem tem INOM de verdade (SH-22-Y-B-III-2-NO); o cadastro grava
+// marcadores como 'Não-SCN' em mi/inom das cartas especiais, e tratar isso como
+// INOM fazia o plugin receber inom invalido em vez do centro. Sem
+// latitude/longitude_centro gravados (a API de produto nao os aceita), o centro
+// sai do centroide da geometria (centro_lat/centro_lon do SELECT).
+const INOM_SCN = /^[NS][A-Z]-\d{2}(-|$)/i
+const resolveLocalizacao = produto => {
+  if (produto.inom && INOM_SCN.test(produto.inom.trim())) return { inom: produto.inom }
+  const lat = produto.latitude_centro != null ? produto.latitude_centro : produto.centro_lat
+  const lon = produto.longitude_centro != null ? produto.longitude_centro : produto.centro_lon
+  if (lat == null || lon == null) return {}
+  return {
+    center: { latitude: Number(lat), longitude: Number(lon) },
+    escala: Number(produto.denominador_escala)
+  }
+}
+
 const LICENCAS_VALIDAS = ['CC-BY-SA 4.0', 'CC-BY-NC-SA 4.0']
 const TIPOS_VALIDOS = [
   'Carta Topográfica', 'Carta Ortoimagem', 'Carta Ortoimagem OM',
@@ -1031,12 +1049,7 @@ const montaJsonEdicao = async (t, produto) => {
     }
   }
 
-  if (produto.inom) {
-    json.inom = produto.inom
-  } else if (produto.latitude_centro != null && produto.longitude_centro != null) {
-    json.center = { latitude: produto.latitude_centro, longitude: produto.longitude_centro }
-    json.escala = produto.denominador_escala
-  }
+  Object.assign(json, resolveLocalizacao(produto))
 
   json.territorio_internacional = !!infoEdicao.territorio_internacional
   if (infoProduto && infoProduto.especificacao) json.info_tecnica.especificacao_representacao = infoProduto.especificacao
@@ -1087,7 +1100,9 @@ const montaJsonEdicao = async (t, produto) => {
 }
 
 const SELECT_PRODUTO = `SELECT id, uuid, nome, mi, inom, denominador_escala, edicao,
-  latitude_centro, longitude_centro, tipo_produto_id, lote_id`
+  latitude_centro, longitude_centro, tipo_produto_id, lote_id,
+  ROUND(ST_Y(ST_Centroid(geom))::numeric, 7) AS centro_lat,
+  ROUND(ST_X(ST_Centroid(geom))::numeric, 7) AS centro_lon`
 
 // JSON de edicao de um unico produto (pelo uuid). Usado pela rota publica.
 controller.gerarJsonEdicaoProduto = async uuid => {
@@ -1501,6 +1516,7 @@ controller._helpers = {
   isoData,
   normalizaCaminhoRede,
   resolveLicenca,
+  resolveLocalizacao,
   resolveTipoVersao,
   validarJsonEdicao
 }

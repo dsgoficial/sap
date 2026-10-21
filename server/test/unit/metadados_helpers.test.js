@@ -9,6 +9,7 @@ const {
   isoData,
   normalizaCaminhoRede,
   resolveLicenca,
+  resolveLocalizacao,
   resolveTipoVersao,
   validarJsonEdicao,
 } = metadadosCtrl._helpers
@@ -81,6 +82,30 @@ describe('metadados.resolveLicenca', () => {
   })
   it('sem contaminação e sem valor → default CC-BY-SA 4.0', () => {
     expect(resolveLicenca({})).toBe('CC-BY-SA 4.0')
+  })
+})
+
+describe('metadados.resolveLocalizacao', () => {
+  const centroide = { centro_lat: '-30.0655190', centro_lon: '-51.2358697', denominador_escala: 10000 }
+  it('folha SCN leva o inom e não leva center', () => {
+    const r = resolveLocalizacao({ inom: 'SH-22-Y-B-III-2-NO', ...centroide })
+    expect(r).toEqual({ inom: 'SH-22-Y-B-III-2-NO' })
+  })
+  it("marcador 'Não-SCN' no inom não é INOM: sai center + escala do centroide", () => {
+    const r = resolveLocalizacao({ inom: 'Não-SCN', mi: 'Não-SCN', ...centroide })
+    expect(r.inom).toBeUndefined()
+    expect(r.center).toEqual({ latitude: -30.065519, longitude: -51.2358697 })
+    expect(r.escala).toBe(10000)
+  })
+  it('inom vazio também é não-SCN', () => {
+    expect(resolveLocalizacao({ inom: '', ...centroide }).center).toBeDefined()
+  })
+  it('latitude/longitude_centro gravados vencem o centroide', () => {
+    const r = resolveLocalizacao({ inom: null, latitude_centro: -30.1, longitude_centro: -51.2, ...centroide })
+    expect(r.center).toEqual({ latitude: -30.1, longitude: -51.2 })
+  })
+  it('sem inom e sem centro nenhum devolve vazio (o portão de QA acusa)', () => {
+    expect(resolveLocalizacao({ inom: 'Não-SCN', denominador_escala: 10000 })).toEqual({})
   })
 })
 
