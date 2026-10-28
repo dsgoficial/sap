@@ -2,6 +2,7 @@
 
 const logger = require('./logger')
 const { VERSION } = require('../config')
+const { shouldLog } = require('./log_throttle')
 
 // Retorna uma CÓPIA saneada (mascara senha, trunca strings longas) sem mutar o
 // objeto original (antes mutava req.body in-place e ainda retornava undefined).
@@ -42,13 +43,36 @@ const sendJsonAndLogMiddleware = (req, res, next) => {
   res.sendJsonAndLog = (success, message, status, dados = null, error = null, metadata = {}) => {
     const url = req.protocol + '://' + req.get('host') + req.originalUrl
 
-    logger.info(message, {
-      url,
-      information: truncate(req.body),
-      status,
-      success,
-      error
-    })
+    if (status === 401 && error && error.name === 'TokenExpiredError') {
+      // Só JWT expirado (cliente com QGIS aberto reenviando sem relogar): no
+      // máximo uma linha curta por IP+rota a cada 5 min, sem stack nem corpo,
+      // com a contagem do que foi suprimido. Os demais 401 (token inválido,
+      // ausente, acesso a dado de outro usuário) seguem com log completo.
+      res.locals.jwtExpirado = true
+      const { log, suppressed } = shouldLog(`401|${req.ip}|${req.method}|${req.originalUrl}`)
+      if (log) {
+        logger.info(message, {
+          url,
+          ip: req.ip,
+          status,
+          success,
+          suprimidos: suppressed,
+          error: {
+            name: error.name,
+            message: error.message,
+            expiredAt: error.expiredAt
+          }
+        })
+      }
+    } else {
+      logger.info(message, {
+        url,
+        information: truncate(req.body),
+        status,
+        success,
+        error
+      })
+    }
 
     const userMessage = status === 500 ? 'Erro no servidor' : message
     const jsonData = {

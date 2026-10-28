@@ -81,9 +81,16 @@ app.use(limiter)
 app.use((req, res, next) => {
   const url = req.protocol + '://' + req.get('host') + req.originalUrl
 
-  logger.info(`${req.method} request`, {
-    url,
-    ip: req.ip
+  // Registra ao terminar, para omitir as respostas por JWT expirado: elas já
+  // têm log próprio com limite por IP+rota (sendJsonAndLog) e, repetidas por um
+  // cliente sem relogar, inundariam o log. Demais status são sempre registrados.
+  res.on('finish', () => {
+    if (res.locals.jwtExpirado) return
+    logger.info(`${req.method} request`, {
+      url,
+      ip: req.ip,
+      status: res.statusCode
+    })
   })
   return next()
 })
