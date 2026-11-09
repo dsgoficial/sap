@@ -147,6 +147,18 @@ describe('metadados.validarJsonEdicao (portão de QA)', () => {
   it('um JSON completo não acusa erros', () => {
     expect(validarJsonEdicao(jsonValido())).toEqual([])
   })
+  it('carta militar sem PEC não acusa erro de PEC; a civil acusa', () => {
+    for (const tipo of ['Carta Topográfica Militar', 'Carta Ortoimagem Militar']) {
+      const j = jsonValido()
+      j.tipo_produto = tipo
+      delete j.info_tecnica.pec_planimetrico
+      delete j.info_tecnica.pec_altimetrico
+      expect(validarJsonEdicao(j).filter(e => /pec_/.test(e))).toEqual([])
+    }
+    const civil = jsonValido()
+    delete civil.info_tecnica.pec_planimetrico
+    expect(validarJsonEdicao(civil)).toContain('info_tecnica.pec_planimetrico ausente')
+  })
   it('acusa nome ausente', () => {
     const j = jsonValido()
     delete j.nome

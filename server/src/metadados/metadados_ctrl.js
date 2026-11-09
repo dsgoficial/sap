@@ -897,6 +897,9 @@ const TIPOS_VALIDOS = [
   'Carta Topográfica', 'Carta Ortoimagem', 'Carta Ortoimagem OM',
   'Carta Topográfica Militar', 'Carta Ortoimagem Militar'
 ]
+// A carta militar e expedita, recortada da base continua, e nao declara PEC
+// (plugin ferramentas_edicao 2.3.8: PEC opcional e fora da tabela tecnica).
+const TIPOS_MILITARES = ['Carta Topográfica Militar', 'Carta Ortoimagem Militar']
 
 // Porta de QA: mesmas obrigatorias que o plugin (config/jsonStructure.py) confere.
 const validarJsonEdicao = json => {
@@ -921,7 +924,9 @@ const validarJsonEdicao = json => {
   }
   if (!Array.isArray(json.fases) || json.fases.length === 0) erros.push('fases ausente (quadro_fases)')
   const it = json.info_tecnica || {}
-  for (const k of ['data_criacao', 'pec_planimetrico', 'pec_altimetrico', 'datum_vertical', 'origem_dados_altimetricos']) {
+  const obrigatorias = ['data_criacao', 'pec_planimetrico', 'pec_altimetrico', 'datum_vertical', 'origem_dados_altimetricos']
+    .filter(k => !(TIPOS_MILITARES.includes(json.tipo_produto) && k.startsWith('pec_')))
+  for (const k of obrigatorias) {
     if (!it[k]) erros.push(`info_tecnica.${k} ausente`)
   }
   if (!Array.isArray(it.dados_terceiros)) erros.push('info_tecnica.dados_terceiros ausente')
@@ -1047,6 +1052,11 @@ const montaJsonEdicao = async (t, produto) => {
       origem_dados_altimetricos: infoEdicao.origem_dados_altimetricos,
       dados_terceiros: infoEdicao.dados_terceiro || []
     }
+  }
+
+  if (TIPOS_MILITARES.includes(tipo)) {
+    delete json.info_tecnica.pec_planimetrico
+    delete json.info_tecnica.pec_altimetrico
   }
 
   Object.assign(json, resolveLocalizacao(produto))
