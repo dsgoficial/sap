@@ -12,6 +12,8 @@ const {
   resolveLocalizacao,
   resolveTipoVersao,
   validarJsonEdicao,
+  ehInomScn,
+  EQUIDISTANCIA_POR_ESCALA,
 } = metadadosCtrl._helpers
 
 describe('metadados.escapeXml', () => {
@@ -106,6 +108,29 @@ describe('metadados.resolveLocalizacao', () => {
   })
   it('sem inom e sem centro nenhum devolve vazio (o portão de QA acusa)', () => {
     expect(resolveLocalizacao({ inom: 'Não-SCN', denominador_escala: 10000 })).toEqual({})
+  })
+})
+
+describe('metadados.ehInomScn (escolhe o template SCN ou o especial do XML)', () => {
+  it('INOM de verdade e SCN', () => {
+    expect(ehInomScn('SH-22-Y-B-III-2-NO')).toBe(true)
+    expect(ehInomScn(' SG-22-X-C-IV-1 ')).toBe(true)
+  })
+  it("marcador 'Não-SCN' ou 'Especial' no inom NAO e SCN (carta especial de Porto Alegre, 2026-11-18)", () => {
+    expect(ehInomScn('Não-SCN')).toBe(false)
+    expect(ehInomScn('Especial')).toBe(false)
+  })
+  it('inom vazio ou nulo nao e SCN', () => {
+    expect(ehInomScn('')).toBe(false)
+    expect(ehInomScn(null)).toBe(false)
+    expect(ehInomScn(undefined)).toBe(false)
+  })
+})
+
+describe('metadados.EQUIDISTANCIA_POR_ESCALA', () => {
+  it('1:2.000 tem curva normal de 1 m (selo da carta 2k de Porto Alegre)', () => {
+    expect(EQUIDISTANCIA_POR_ESCALA[2000]).toBe('1')
+    expect(EQUIDISTANCIA_POR_ESCALA[25000]).toBe('10')
   })
 })
 

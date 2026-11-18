@@ -881,6 +881,7 @@ const resolveLicenca = infoEdicao => {
 // latitude/longitude_centro gravados (a API de produto nao os aceita), o centro
 // sai do centroide da geometria (centro_lat/centro_lon do SELECT).
 const INOM_SCN = /^[NS][A-Z]-\d{2}(-|$)/i
+const ehInomScn = inom => !!(inom && INOM_SCN.test(String(inom).trim()))
 const resolveLocalizacao = produto => {
   if (produto.inom && INOM_SCN.test(produto.inom.trim())) return { inom: produto.inom }
   const lat = produto.latitude_centro != null ? produto.latitude_centro : produto.centro_lat
@@ -1182,7 +1183,7 @@ const XML_TEMPLATE_ESPECIAL = {
 // Equidistancia da curva de nivel por escala (ET-RDG). Sub-25k (1:10.000) incluido
 // porque ha cartas urbanas/especiais nessa escala; confira o valor com a ET-RDG ao
 // adicionar uma escala nova (depende tambem do relevo na pratica).
-const EQUIDISTANCIA_POR_ESCALA = { 10000: '5', 25000: '10', 50000: '20', 100000: '50', 250000: '100' }
+const EQUIDISTANCIA_POR_ESCALA = { 2000: '1', 10000: '5', 25000: '10', 50000: '20', 100000: '50', 250000: '100' }
 
 // rationale (descricao do passo de linhagem) por Fase do SAP (dominio.tipo_fase).
 // Mapa de FASE de producao -> etapa de linhagem: descricao canonica (NAO o nome
@@ -1258,8 +1259,12 @@ const montaMetadadoXml = async (t, produto) => {
       httpCode.BadRequest
     )
   }
-  // SCN (tem INOM) usa o template base; nao-SCN/especial usa o -especial.
-  const templateNome = produto.inom ? XML_TEMPLATE[kind] : XML_TEMPLATE_ESPECIAL[kind]
+  // SCN (tem INOM de verdade) usa o template base; nao-SCN/especial usa o -especial.
+  // O cadastro grava o marcador 'Não-SCN' em inom/mi das especiais: testar so se o
+  // inom esta preenchido mandava a carta especial para o template SCN (titulo com
+  // ' - Não-SCN - ', serie SCN e bbox vazio). Mesma regua do JSON (INOM_SCN).
+  const ehScn = ehInomScn(produto.inom)
+  const templateNome = ehScn ? XML_TEMPLATE[kind] : XML_TEMPLATE_ESPECIAL[kind]
 
   const loteId = produto.lote_id
 
@@ -1297,14 +1302,14 @@ const montaMetadadoXml = async (t, produto) => {
 
   const hoje = new Date().toISOString().slice(0, 10)
   const escala = produto.denominador_escala
-  const nome = produto.nome || produto.mi || produto.inom || ''
+  const nome = produto.nome || (ehScn ? (produto.mi || produto.inom) : '') || ''
   const escalaFmt = fmtEscala(escala)
   // Titulo do produto: nas folhas SCN e "NOME - INOM - escala"; nas nao-SCN
   // (carta especial, sem INOM) e so o NOME, sem o " -  - " com INOM vazio.
-  const titulo = produto.inom ? `${nome} - ${produto.inom} - ${escalaFmt}` : nome
+  const titulo = ehScn ? `${nome} - ${produto.inom} - ${escalaFmt}` : nome
   const valores = {
-    INOM: produto.inom || '',
-    MI: produto.mi || '',
+    INOM: ehScn ? produto.inom : '',
+    MI: ehScn ? (produto.mi || '') : '',
     NOME: nome,
     TITULO: titulo,
     UUID: produto.uuid,
@@ -1528,7 +1533,9 @@ controller._helpers = {
   resolveLicenca,
   resolveLocalizacao,
   resolveTipoVersao,
-  validarJsonEdicao
+  validarJsonEdicao,
+  ehInomScn,
+  EQUIDISTANCIA_POR_ESCALA
 }
 
 module.exports = controller
