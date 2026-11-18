@@ -1270,7 +1270,7 @@ const montaMetadadoXml = async (t, produto) => {
 
   const infoProduto = await fetchUmComFallback(
     t,
-    col => `SELECT ip.projeto_bdgex, dv.nome AS datum_vertical, e.nome AS especificacao,
+    col => `SELECT ip.projeto_bdgex, ip.declaracao_linhagem, dv.nome AS datum_vertical, e.nome AS especificacao,
     u.nome AS responsavel, cc.nome AS classificacao,
     org.nome AS org_nome, org.site AS org_site, org.endereco AS org_endereco, org.telefone AS org_telefone
     FROM metadado.informacoes_produto AS ip
@@ -1402,7 +1402,15 @@ const montaMetadadoXml = async (t, produto) => {
       '\t\t\t\t\t</gmd:processStep>'
     ].join('\n')
   }).join('\n\t\t\t\t\t')
-  xml = xml.split('{{LINHAGEM_PROCESSO}}').join(linhagemProcesso)
+  // Sem passo de linhagem (produto sem atividade de producao no SAP, como o CDGV que
+  // nasce do banco de edicao da carta), a declaracao livre do metadado vira o
+  // gmd:statement do LI_Lineage. O formulario do BDGEx exige a 'Declaracao' quando a
+  // linhagem vem vazia e nao deixa gravar (CDGV de Porto Alegre no Op, 2026-11-18).
+  const declaracao = infoProduto && infoProduto.declaracao_linhagem ? String(infoProduto.declaracao_linhagem).trim() : ''
+  const linhagem = linhagemProcesso || (declaracao
+    ? `<gmd:statement>\n\t\t\t\t\t\t<gco:CharacterString>${escapeXml(declaracao)}</gco:CharacterString>\n\t\t\t\t\t</gmd:statement>`
+    : '')
+  xml = xml.split('{{LINHAGEM_PROCESSO}}').join(linhagem)
 
   // Palavras-chave (MD_Keywords): agrupadas por tipo, de metadado.palavra_chave_produto.
   // Keyword e EXCLUSIVAMENTE nivel produto (nao tem nivel lote): toponimia e descricao
