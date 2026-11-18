@@ -331,6 +331,11 @@ test('pipeline precisa de servidor SO com --executar', () => {
   assert.strictEqual(crud.precisaServidor(parse(['campo', 'listar'])), true)
 })
 
+test('lote fechar precisa de servidor ate no --dry-run, porque le o lote', () => {
+  assert.strictEqual(lote.precisaServidor(parse(['lote', 'fechar', '--id', '9', '--dry-run'])), true)
+  assert.strictEqual(lote.precisaServidor(parse(['lote', 'fechar', '--id', '9', '--confirmar', '9'])), true)
+})
+
 test('preencher troca so os nulls das chaves resolvidas', () => {
   const r = lote.preencher(
     { a: null, lote_id: null, dentro: [{ bloco_id: null, x: null }] },

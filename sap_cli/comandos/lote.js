@@ -592,6 +592,10 @@ const precisaServidor = args => {
   // `fase` precisa de servidor ate no --dry-run: o molde a clonar so existe no
   // banco. O dry-run aqui garante que nada e ESCRITO, nao que nada e lido.
   if (args._[1] === 'fase') return true
+  // `fechar` tambem: o PUT exige o objeto inteiro, entao ate o dry-run le o lote
+  // e o codigo de Finalizado no servidor. Sem isto o cfg chegava null e o
+  // --dry-run estourava em "reading 'token'" (2026-11-17, lotes 99 e 100).
+  if (args._[1] === 'fechar') return true
   return args.flags['dry-run'] !== true
 }
 
